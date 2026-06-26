@@ -1,0 +1,62 @@
+---
+import type { Locale } from "../../lib/config";
+import { labels, localePath } from "../../lib/i18n";
+import type { ContentEntry } from "../../lib/profile-loader";
+
+type Props = {
+  locale: Locale;
+  entry: ContentEntry;
+};
+
+const { locale, entry } = Astro.props;
+const l = labels[locale];
+---
+
+<article class="writing-row">
+  <div>
+    <span>{entry.data.date || "Writing"}</span>
+    <h3>{entry.data.title}</h3>
+    <p>{entry.data.summary}</p>
+  </div>
+  <a href={localePath(locale, `writing/${entry.slug}`)}>{l.readMore}</a>
+</article>
+
+<style>
+  .writing-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    border-top: 1px solid var(--color-border);
+    padding: 18px 0;
+  }
+
+  span {
+    color: var(--color-accent);
+    font-size: 0.82rem;
+    font-weight: 750;
+  }
+
+  h3 {
+    margin: 6px 0;
+    font-size: 1.25rem;
+    line-height: 1.18;
+  }
+
+  p {
+    margin: 0;
+    color: var(--color-muted);
+  }
+
+  a {
+    align-self: center;
+    color: var(--color-accent);
+    font-weight: 750;
+    white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .writing-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

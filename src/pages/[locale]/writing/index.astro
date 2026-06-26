@@ -1,0 +1,45 @@
+---
+import WritingCard from "../../../components/dossier/WritingCard.astro";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { locales, type Locale } from "../../../lib/config";
+import { getCollection } from "../../../lib/content-query";
+import { labels } from "../../../lib/i18n";
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale as Locale;
+const entries = getCollection(locale, "writing");
+const l = labels[locale];
+---
+
+<BaseLayout locale={locale} title={l.writing}>
+  <section class="page-shell list-page">
+    <header>
+      <p>{l.writing}</p>
+      <h1>{l.latestWriting}</h1>
+    </header>
+    <div>
+      {entries.map((entry) => <WritingCard locale={locale} entry={entry} />)}
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .list-page {
+    padding: 46px 0 72px;
+  }
+
+  header p {
+    margin: 0 0 8px;
+    color: var(--color-accent);
+    font-weight: 750;
+  }
+
+  h1 {
+    margin: 0 0 28px;
+    font-size: clamp(2rem, 4vw, 4rem);
+    line-height: 1;
+  }
+</style>

@@ -1,0 +1,54 @@
+---
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+import { defaultLocale, type Locale } from "../lib/config";
+import { loadProfilePack } from "../lib/profile-loader";
+import { pageDescription, pageTitle } from "../lib/seo";
+import "../styles/global.css";
+import "../styles/theme.css";
+
+type Props = {
+  locale?: Locale;
+  title?: string;
+  description?: string;
+};
+
+const { locale = defaultLocale, title, description } = Astro.props;
+const pack = loadProfilePack();
+const theme = pack.theme;
+const titleText = pageTitle(pack, locale, title);
+const descriptionText = pageDescription(pack, locale, description);
+const cssVars = [
+  `--color-background: ${theme.colors.background}`,
+  `--color-surface: ${theme.colors.surface}`,
+  `--color-foreground: ${theme.colors.foreground}`,
+  `--color-muted: ${theme.colors.muted}`,
+  `--color-border: ${theme.colors.border}`,
+  `--color-accent: ${theme.colors.accent}`,
+  `--color-accent-soft: ${theme.colors.accentSoft}`,
+  `--color-warm: ${theme.colors.warm}`,
+  `--layout-max-width: ${theme.layout.maxWidth}`,
+  `--card-radius: ${theme.layout.cardRadius}`
+].join("; ");
+---
+
+<!doctype html>
+<html lang={locale} style={cssVars}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={descriptionText} />
+    <meta property="og:title" content={titleText} />
+    <meta property="og:description" content={descriptionText} />
+    <meta property="og:type" content="website" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{titleText}</title>
+  </head>
+  <body>
+    <Header locale={locale} pack={pack} />
+    <main data-pagefind-body>
+      <slot />
+    </main>
+    <Footer locale={locale} pack={pack} />
+  </body>
+</html>

@@ -1,0 +1,19 @@
+---
+import ContactPanel from "../../components/dossier/ContactPanel.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { locales, type Locale } from "../../lib/config";
+import { labels } from "../../lib/i18n";
+import { loadProfilePack } from "../../lib/profile-loader";
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale as Locale;
+const pack = loadProfilePack();
+const l = labels[locale];
+---
+
+<BaseLayout locale={locale} title={l.contact}>
+  <ContactPanel locale={locale} pack={pack} />
+</BaseLayout>

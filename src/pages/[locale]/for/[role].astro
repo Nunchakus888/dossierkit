@@ -1,0 +1,116 @@
+---
+import CaseCard from "../../../components/dossier/CaseCard.astro";
+import LabCard from "../../../components/dossier/LabCard.astro";
+import ContactPanel from "../../../components/dossier/ContactPanel.astro";
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { locales, type Locale } from "../../../lib/config";
+import { getContent } from "../../../lib/content-query";
+import { labels, localize } from "../../../lib/i18n";
+import { loadProfilePack } from "../../../lib/profile-loader";
+
+export function getStaticPaths() {
+  const packForPaths = loadProfilePack();
+  return locales.flatMap((locale) =>
+    packForPaths.roles.roles.map((role) => ({
+      params: { locale, role: role.path },
+      props: { role }
+    }))
+  );
+}
+
+const locale = Astro.params.locale as Locale;
+const pack = loadProfilePack();
+const { role } = Astro.props as { role: (typeof pack.roles.roles)[number] };
+const l = labels[locale];
+const cases = role.relatedCases.map((slug) => getContent(locale, "cases", slug)).filter(Boolean);
+const labs = role.relatedLabs.map((slug) => getContent(locale, "lab", slug)).filter(Boolean);
+---
+
+<BaseLayout locale={locale} title={localize(role.title, locale)} description={localize(role.summary, locale)}>
+  <section class="page-shell role-page">
+    <header>
+      <p>{l.roles}</p>
+      <h1>{localize(role.headline, locale)}</h1>
+      <div class="summary">{localize(role.summary, locale)}</div>
+      <ul class="tag-list">
+        {role.focusAreas.map((area) => <li class="tag">{area}</li>)}
+      </ul>
+    </header>
+  </section>
+
+  <section class="section-band">
+    <div class="page-shell">
+      <div class="section-heading">
+        <div>
+          <h2>{l.relatedWork}</h2>
+          <p>{locale === "zh" ? "与该目标岗位最相关的案例。" : "Most relevant case studies for this target role."}</p>
+        </div>
+      </div>
+      <div class="card-grid">
+        {cases.map((entry) => entry && <CaseCard locale={locale} entry={entry} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="section-band">
+    <div class="page-shell">
+      <div class="section-heading">
+        <div>
+          <h2>{l.relatedLab}</h2>
+          <p>{locale === "zh" ? "与该岗位能力匹配的实验记录。" : "Lab notes that match the role capability profile."}</p>
+        </div>
+      </div>
+      <div class="card-grid">
+        {labs.map((entry) => entry && <LabCard locale={locale} entry={entry} />)}
+      </div>
+    </div>
+  </section>
+
+  <ContactPanel locale={locale} pack={pack} />
+</BaseLayout>
+
+<style>
+  .role-page {
+    padding: 48px 0 20px;
+  }
+
+  header {
+    max-width: 920px;
+  }
+
+  header p {
+    margin: 0 0 8px;
+    color: var(--color-accent);
+    font-weight: 750;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 5vw, 4.8rem);
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .summary {
+    max-width: 760px;
+    margin-top: 18px;
+    color: var(--color-muted);
+    font-size: 1.15rem;
+  }
+
+  .tag-list {
+    margin-top: 22px;
+  }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: 760px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

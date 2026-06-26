@@ -1,0 +1,19 @@
+---
+import LabLayout from "../../../layouts/LabLayout.astro";
+import { locales, type Locale } from "../../../lib/config";
+import { readContentCollection, type ContentEntry } from "../../../lib/profile-loader";
+
+export function getStaticPaths() {
+  return locales.flatMap((locale) =>
+    readContentCollection(locale, "lab").map((entry) => ({
+      params: { locale, slug: entry.slug },
+      props: { entry }
+    }))
+  );
+}
+
+const locale = Astro.params.locale as Locale;
+const { entry } = Astro.props as { entry: ContentEntry };
+---
+
+<LabLayout locale={locale} entry={entry} />

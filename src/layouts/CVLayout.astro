@@ -1,0 +1,202 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+import type { Locale } from "../lib/config";
+import { labels, localize } from "../lib/i18n";
+import type { ProfilePack } from "../lib/profile-loader";
+
+type Props = {
+  locale: Locale;
+  pack: ProfilePack;
+};
+
+const { locale, pack } = Astro.props;
+const l = labels[locale];
+---
+
+<BaseLayout locale={locale} title={l.cv} description={localize(pack.profile.summary, locale)}>
+  <section class="page-shell cv-page">
+    <header class="cv-header">
+      <div>
+        <p>{l.cv}</p>
+        <h1>{localize(pack.profile.name, locale)}</h1>
+        <h2>{localize(pack.profile.headline, locale)}</h2>
+      </div>
+      <div class="contact">
+        <span>{pack.profile.links.email}</span>
+        <span>{localize(pack.profile.location, locale)}</span>
+        <span>{pack.profile.yearsOfExperience} years</span>
+      </div>
+    </header>
+
+    <section>
+      <h3>{locale === "zh" ? "概述" : "Summary"}</h3>
+      <p>{localize(pack.profile.summary, locale)}</p>
+      <ul>
+        {pack.resume.highlights.map((highlight) => <li>{localize(highlight, locale)}</li>)}
+      </ul>
+    </section>
+
+    <section>
+      <h3>{l.experience}</h3>
+      {pack.experience.experiences.map((item) => (
+        <article class="cv-item">
+          <div>
+            <strong>{localize(item.role, locale)}</strong>
+            <span>{item.company}</span>
+          </div>
+          <time>{item.period}</time>
+          <p>{localize(item.summary, locale)}</p>
+          <ul>
+            {item.highlights.map((highlight) => <li>{localize(highlight, locale)}</li>)}
+          </ul>
+        </article>
+      ))}
+    </section>
+
+    <section>
+      <h3>{l.skills}</h3>
+      <div class="skills-grid">
+        {pack.skills.skillGroups.map((group) => (
+          <div>
+            <strong>{localize(group.title, locale)}</strong>
+            <p>{group.skills.join(" / ")}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section>
+      <h3>{locale === "zh" ? "教育" : "Education"}</h3>
+      {pack.education.education.map((item) => (
+        <article class="cv-item compact">
+          <div>
+            <strong>{item.school}</strong>
+            <span>{localize(item.degree, locale)}</span>
+          </div>
+          <time>{item.period}</time>
+        </article>
+      ))}
+    </section>
+  </section>
+</BaseLayout>
+
+<style>
+  .cv-page {
+    padding: 42px 0 70px;
+  }
+
+  .cv-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px;
+    border-bottom: 2px solid var(--color-foreground);
+    padding-bottom: 24px;
+  }
+
+  .cv-header p {
+    margin: 0 0 8px;
+    color: var(--color-accent);
+    font-weight: 750;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.2rem, 5vw, 4.8rem);
+    line-height: 1;
+  }
+
+  h2 {
+    max-width: 760px;
+    margin: 12px 0 0;
+    color: var(--color-muted);
+    font-size: 1.25rem;
+    font-weight: 600;
+  }
+
+  .contact {
+    display: grid;
+    gap: 4px;
+    align-self: end;
+    color: var(--color-muted);
+    text-align: right;
+  }
+
+  section {
+    margin-top: 32px;
+  }
+
+  h3 {
+    margin: 0 0 14px;
+    color: var(--color-accent);
+    font-size: 1rem;
+    text-transform: uppercase;
+  }
+
+  p,
+  li {
+    color: color-mix(in srgb, var(--color-foreground), var(--color-muted) 30%);
+  }
+
+  .cv-item {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 140px;
+    gap: 8px 18px;
+    border-top: 1px solid var(--color-border);
+    padding: 16px 0;
+  }
+
+  .cv-item strong,
+  .cv-item span {
+    display: block;
+  }
+
+  .cv-item span,
+  time {
+    color: var(--color-muted);
+  }
+
+  .cv-item p,
+  .cv-item ul {
+    grid-column: 1 / -1;
+    margin: 0;
+  }
+
+  .skills-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .skills-grid div {
+    border-top: 1px solid var(--color-border);
+    padding-top: 12px;
+  }
+
+  @media (max-width: 720px) {
+    .cv-header,
+    .cv-item,
+    .skills-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .contact {
+      text-align: left;
+    }
+  }
+
+  @media print {
+    .cv-page {
+      width: 100%;
+      padding: 0;
+    }
+
+    section {
+      break-inside: avoid;
+      margin-top: 22px;
+    }
+
+    h1 {
+      font-size: 34px;
+    }
+  }
+</style>

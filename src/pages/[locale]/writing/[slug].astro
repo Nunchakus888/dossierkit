@@ -1,0 +1,66 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import { locales, type Locale } from "../../../lib/config";
+import { labels, localePath } from "../../../lib/i18n";
+import { readContentCollection, type ContentEntry } from "../../../lib/profile-loader";
+
+export function getStaticPaths() {
+  return locales.flatMap((locale) =>
+    readContentCollection(locale, "writing").map((entry) => ({
+      params: { locale, slug: entry.slug },
+      props: { entry }
+    }))
+  );
+}
+
+const locale = Astro.params.locale as Locale;
+const { entry } = Astro.props as { entry: ContentEntry };
+const l = labels[locale];
+---
+
+<BaseLayout locale={locale} title={entry.data.title} description={entry.data.summary}>
+  <article class="page-shell article-page">
+    <a class="back-link no-print" href={localePath(locale, "writing")}>{l.backToList}</a>
+    <header>
+      <p>{entry.data.date || l.writing}</p>
+      <h1>{entry.data.title}</h1>
+      <div class="summary">{entry.data.summary}</div>
+    </header>
+    <div class="prose" set:html={entry.html} />
+  </article>
+</BaseLayout>
+
+<style>
+  .article-page {
+    padding: 46px 0 72px;
+  }
+
+  .back-link {
+    color: var(--color-accent);
+    font-weight: 750;
+  }
+
+  header {
+    max-width: 820px;
+    margin: 18px 0 42px;
+  }
+
+  header p {
+    margin: 0 0 10px;
+    color: var(--color-accent);
+    font-weight: 750;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(2.1rem, 4.5vw, 4.3rem);
+    line-height: 1;
+    letter-spacing: 0;
+  }
+
+  .summary {
+    margin-top: 18px;
+    color: var(--color-muted);
+    font-size: 1.15rem;
+  }
+</style>

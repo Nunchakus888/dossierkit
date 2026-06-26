@@ -1,0 +1,104 @@
+---
+import BentoDashboard from "../../components/dossier/BentoDashboard.astro";
+import CaseCard from "../../components/dossier/CaseCard.astro";
+import ContactPanel from "../../components/dossier/ContactPanel.astro";
+import ExperienceTimeline from "../../components/dossier/ExperienceTimeline.astro";
+import Hero from "../../components/dossier/Hero.astro";
+import LabCard from "../../components/dossier/LabCard.astro";
+import ProofWall from "../../components/dossier/ProofWall.astro";
+import RoleFitPanel from "../../components/dossier/RoleFitPanel.astro";
+import WritingCard from "../../components/dossier/WritingCard.astro";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { locales, type Locale } from "../../lib/config";
+import { getFeatured } from "../../lib/content-query";
+import { labels } from "../../lib/i18n";
+import { loadProfilePack } from "../../lib/profile-loader";
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+
+const locale = Astro.params.locale as Locale;
+const pack = loadProfilePack();
+const l = labels[locale];
+---
+
+<BaseLayout locale={locale}>
+  {pack.home.sections.map((section) => {
+    if (section.type === "hero") return <Hero locale={locale} pack={pack} />;
+    if (section.type === "bento") return <BentoDashboard locale={locale} pack={pack} />;
+    if (section.type === "targetRoles") return <RoleFitPanel locale={locale} pack={pack} />;
+    if (section.type === "proofWall") return <ProofWall locale={locale} pack={pack} />;
+    if (section.type === "contact") return <ContactPanel locale={locale} pack={pack} />;
+    if (section.type === "featuredCases") {
+      const entries = getFeatured(locale, "cases", section.limit || 3);
+      return (
+        <section class="section-band">
+          <div class="page-shell">
+            <div class="section-heading">
+              <div>
+                <h2>{l.featuredCases}</h2>
+                <p>{locale === "zh" ? "用深度 Case Study 展示架构、协作、评测和复盘能力。" : "Deep case studies covering architecture, collaboration, evaluation, and lessons."}</p>
+              </div>
+            </div>
+            <div class="card-grid">
+              {entries.map((entry) => <CaseCard locale={locale} entry={entry} />)}
+            </div>
+          </div>
+        </section>
+      );
+    }
+    if (section.type === "posttrainingLab") {
+      const entries = getFeatured(locale, "lab", section.limit || 3);
+      return (
+        <section class="section-band">
+          <div class="page-shell">
+            <div class="section-heading">
+              <div>
+                <h2>{l.featuredLab}</h2>
+                <p>{locale === "zh" ? "用实验记录展示评测、数据闭环和应用算法补强能力。" : "Lab notes showing evaluation, data loops, and applied algorithm depth."}</p>
+              </div>
+            </div>
+            <div class="card-grid">
+              {entries.map((entry) => <LabCard locale={locale} entry={entry} />)}
+            </div>
+          </div>
+        </section>
+      );
+    }
+    if (section.type === "writing") {
+      const entries = getFeatured(locale, "writing", section.limit || 3);
+      return (
+        <section class="section-band">
+          <div class="page-shell">
+            <div class="section-heading">
+              <div>
+                <h2>{l.latestWriting}</h2>
+                <p>{locale === "zh" ? "沉淀方法论、复盘和系统化表达。" : "Method notes, retrospectives, and structured thinking."}</p>
+              </div>
+            </div>
+            <div>
+              {entries.map((entry) => <WritingCard locale={locale} entry={entry} />)}
+            </div>
+          </div>
+        </section>
+      );
+    }
+    if (section.type === "experience") return <ExperienceTimeline locale={locale} pack={pack} />;
+    return null;
+  })}
+</BaseLayout>
+
+<style>
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  @media (max-width: 900px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

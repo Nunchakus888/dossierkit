@@ -1,0 +1,54 @@
+---
+import type { Locale } from "../../lib/config";
+import { labels, localePath } from "../../lib/i18n";
+import type { ContentEntry } from "../../lib/profile-loader";
+
+type Props = {
+  locale: Locale;
+  entry: ContentEntry;
+};
+
+const { locale, entry } = Astro.props;
+const l = labels[locale];
+const method = typeof entry.data.method === "string" ? entry.data.method : "Lab";
+---
+
+<article class="card lab-card">
+  <span>{method}</span>
+  <h3>{entry.data.title}</h3>
+  <p>{entry.data.summary}</p>
+  <ul class="tag-list">
+    {entry.data.tags.slice(0, 5).map((tag) => <li class="tag">{tag}</li>)}
+  </ul>
+  <a href={localePath(locale, `lab/${entry.slug}`)}>{l.readMore}</a>
+</article>
+
+<style>
+  .lab-card {
+    min-height: 240px;
+    padding: 20px;
+  }
+
+  span {
+    color: var(--color-warm);
+    font-size: 0.82rem;
+    font-weight: 750;
+  }
+
+  h3 {
+    margin: 12px 0 10px;
+    font-size: 1.3rem;
+    line-height: 1.18;
+  }
+
+  p {
+    color: var(--color-muted);
+  }
+
+  a {
+    display: inline-block;
+    margin-top: 18px;
+    color: var(--color-accent);
+    font-weight: 750;
+  }
+</style>

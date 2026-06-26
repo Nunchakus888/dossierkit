@@ -1,0 +1,92 @@
+---
+import type { Locale } from "../../lib/config";
+import { labels, localize } from "../../lib/i18n";
+import type { ProfilePack } from "../../lib/profile-loader";
+
+type Props = {
+  locale: Locale;
+  pack: ProfilePack;
+};
+
+const { locale, pack } = Astro.props;
+const l = labels[locale];
+---
+
+<section class="section-band">
+  <div class="page-shell">
+    <div class="section-heading">
+      <div>
+        <h2>{l.experience}</h2>
+        <p>{locale === "zh" ? "按交付阶段梳理关键职责、系统边界和可验证结果。" : "Key responsibilities, system boundaries, and verifiable results by delivery stage."}</p>
+      </div>
+    </div>
+    <div class="timeline">
+      {pack.experience.experiences.map((item) => (
+        <article>
+          <time>{item.period}</time>
+          <div class="card">
+            <h3>{localize(item.role, locale)}</h3>
+            <strong>{item.company}</strong>
+            <p>{localize(item.summary, locale)}</p>
+            <ul>
+              {item.highlights.map((highlight) => <li>{localize(highlight, locale)}</li>)}
+            </ul>
+          </div>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .timeline {
+    display: grid;
+    gap: 16px;
+  }
+
+  article {
+    display: grid;
+    grid-template-columns: 160px minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  time {
+    padding-top: 18px;
+    color: var(--color-accent);
+    font-weight: 750;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+
+  strong {
+    display: block;
+    margin-top: 4px;
+  }
+
+  p,
+  li {
+    color: var(--color-muted);
+  }
+
+  ul {
+    padding-left: 1.2rem;
+  }
+
+  @media (max-width: 720px) {
+    article {
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    time {
+      padding-top: 0;
+    }
+  }
+</style>

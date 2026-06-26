@@ -1,0 +1,126 @@
+---
+import type { Locale } from "../../lib/config";
+import { labels, localePath, localize, otherLocale, switchLocalePath } from "../../lib/i18n";
+import type { ProfilePack } from "../../lib/profile-loader";
+
+type Props = {
+  locale: Locale;
+  pack: ProfilePack;
+};
+
+const { locale, pack } = Astro.props;
+const l = labels[locale];
+const nav = [
+  { href: localePath(locale), label: l.home },
+  { href: localePath(locale, "cv"), label: l.cv },
+  { href: localePath(locale, "work"), label: l.work },
+  { href: localePath(locale, "lab"), label: l.lab },
+  { href: localePath(locale, "writing"), label: l.writing },
+  { href: localePath(locale, "contact"), label: l.contact }
+];
+const altLocale = otherLocale(locale);
+const altHref = switchLocalePath(Astro.url.pathname, altLocale);
+---
+
+<header class="site-header no-print">
+  <div class="page-shell header-inner">
+    <a class="brand" href={localePath(locale)} aria-label={localize(pack.profile.name, locale)}>
+      <span class="brand-mark">DK</span>
+      <span>{localize(pack.profile.name, locale)}</span>
+    </a>
+    <nav aria-label="Primary navigation">
+      {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+    </nav>
+    <a class="language-link" href={altHref}>{l.switchLanguage}</a>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border), transparent 10%);
+    background: color-mix(in srgb, var(--color-background), white 52%);
+    backdrop-filter: blur(14px);
+  }
+
+  .header-inner {
+    display: grid;
+    min-height: 64px;
+    grid-template-columns: minmax(170px, 1fr) auto auto;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .brand {
+    display: inline-flex;
+    min-width: 0;
+    align-items: center;
+    gap: 10px;
+    font-weight: 750;
+  }
+
+  .brand span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .brand-mark {
+    display: inline-grid;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 8px;
+    background: var(--color-accent);
+    color: white;
+    font-size: 0.82rem;
+    letter-spacing: 0;
+  }
+
+  nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  nav a,
+  .language-link {
+    border-radius: 7px;
+    padding: 8px 10px;
+    color: var(--color-muted);
+    font-size: 0.93rem;
+    font-weight: 650;
+  }
+
+  nav a:hover,
+  .language-link:hover {
+    background: var(--color-accent-soft);
+    color: var(--color-accent);
+  }
+
+  .language-link {
+    justify-self: end;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  @media (max-width: 860px) {
+    .header-inner {
+      grid-template-columns: 1fr auto;
+      padding: 10px 0;
+    }
+
+    nav {
+      grid-column: 1 / -1;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    nav a {
+      white-space: nowrap;
+    }
+  }
+</style>
