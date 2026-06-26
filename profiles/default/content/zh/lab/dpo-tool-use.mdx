@@ -1,0 +1,49 @@
+---
+slug: "dpo-tool-use"
+locale: "zh"
+translationKey: "dpo-tool-use"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-06-26"
+title: "DPO for Tool-use Preference"
+method: "DPO"
+summary: "用 chosen/rejected 偏好数据优化企业 Agent 的工具调用决策。"
+featured: true
+baseModel: "Qwen / Llama small model"
+dataset:
+  source: "Agent badcases and synthetic preference pairs"
+  size: "2k pairs"
+  format: "prompt / chosen / rejected"
+evaluation:
+  - "tool selection accuracy"
+  - "task success rate"
+  - "hallucination rate"
+results:
+  - metric: "win-rate"
+    before: "baseline"
+    after: "+12%"
+limitations:
+  - "小规模实验，结果用于证明闭环能力，不代表生产级模型效果。"
+relatedRoles:
+  - "posttraining"
+  - "agent-platform"
+tags:
+  - "DPO"
+  - "Tool-use"
+  - "Preference Data"
+---
+
+## Hypothesis
+
+如果把工具调用失败样本整理成 chosen/rejected 偏好对，小模型可以学习更稳定的工具选择倾向，并减少明显不合理的参数生成。
+
+## Dataset
+
+数据来自脱敏 badcase、人工构造边界样本和少量合成偏好对。每条样本保留任务目标、可用工具、业务约束、chosen 行为和 rejected 行为。
+
+## Evaluation
+
+评测不只看 win-rate，还要看工具选择准确率、参数有效率、拒答合理性和是否触发人工接管。
+
+## Result
+
+小规模实验显示工具选择更稳定，但对复杂多步任务的收益有限。后续需要把任务分解和工具选择分开建模。

@@ -1,0 +1,24 @@
+preset: "swiss-bento"
+colors:
+  background: "#F8FAF7"
+  surface: "#FFFFFF"
+  foreground: "#18201B"
+  muted: "#66736B"
+  border: "#D8E0D7"
+  accent: "#175F64"
+  accentSoft: "#DFF0EE"
+  warm: "#9A4D2F"
+typography:
+  sans: "Inter, Noto Sans SC, system-ui"
+  mono: "JetBrains Mono, IBM Plex Mono, monospace"
+  headingWeight: 650
+  bodyWeight: 400
+layout:
+  maxWidth: "1120px"
+  cardRadius: "8px"
+  density: "comfortable"
+  heroStyle: "editorial"
+  dashboardStyle: "bento"
+motion:
+  enabled: true
+  level: "subtle"

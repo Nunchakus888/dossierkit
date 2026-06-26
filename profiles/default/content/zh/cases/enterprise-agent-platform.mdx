@@ -1,0 +1,61 @@
+---
+slug: "enterprise-agent-platform"
+locale: "zh"
+translationKey: "enterprise-agent-platform"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-06-26"
+title: "企业级 Agent 平台"
+summary: "建设可评测、可审计、可扩展的企业级 Agent Runtime 与工具调用体系。"
+role: "架构设计 / 核心模块 / 评测体系 / 跨部门推进"
+period: "2025"
+confidentiality: "sanitized"
+featured: true
+tags:
+  - "Agent Runtime"
+  - "Tool-use"
+  - "LLMOps"
+  - "Evaluation"
+targetRoles:
+  - "agent-platform"
+metrics:
+  - label: "任务成功率"
+    value: "+18%"
+    description: "基于脱敏回放集的示例指标。"
+  - label: "工具误调用"
+    value: "-31%"
+    description: "通过权限门控与评测回归降低。"
+---
+
+## Context
+
+团队需要把多个内部流程接入 LLM Agent，但早期原型缺少统一运行时、权限边界和质量评估。每个业务线都在重复构建 prompt、工具调用和人工兜底逻辑。
+
+## Problem
+
+主要风险不是模型能力本身，而是生产环境里的不可控行为：工具误调用、状态不可追踪、失败难以复盘、上线前没有回归门槛。
+
+## My Role
+
+我负责定义平台边界、核心模块拆分和上线质量门槛，并协调产品、算法、业务系统和安全团队完成第一批生产流程接入。
+
+## Architecture
+
+平台拆成五层：任务编排、工具注册、权限审计、运行时观测和评测回放。业务方只声明流程和工具能力，平台负责权限、日志、重试、人工接管和质量回归。
+
+## Key Decisions
+
+- 将工具注册和权限审批拆开，避免工具上线等同于 Agent 可调用。
+- 为每次任务保留结构化 trace，支持失败定位和评测样本沉淀。
+- 用回放集作为上线门槛，而不是只依赖人工试用体验。
+
+## Evaluation
+
+评测集由历史任务、人工构造边界样本和线上 badcase 组成。每次 prompt、工具 schema 或模型变更都需要跑成功率、误调用率和人工接管率。
+
+## Impact
+
+首批流程完成后，团队获得了可复用 runtime 和评测基线。后续业务线接入时不再重复建设工具调用、审计和回放能力。
+
+## Failure & Lessons
+
+最早把评测放在平台后期才补，导致若干设计缺少可量化反馈。后续把评测集建设前置到需求阶段，明显降低了上线争议。

@@ -1,0 +1,49 @@
+id: "default"
+name:
+  zh: "DossierKit 示例专家"
+  en: "DossierKit Demo Expert"
+headline:
+  zh: "企业级 Agent 平台与大模型应用架构专家"
+  en: "Agent Platform & LLM Application Architect"
+summary:
+  zh: "一个虚构示例档案：10 年工程与 AI 产品落地经验，专注将 LLM/Agent 从演示原型落到可评测、可审计、可扩展的企业核心流程。"
+  en: "A fictional demo profile with 10 years of engineering and AI product delivery experience, focused on turning LLM and Agent prototypes into evaluable, auditable, scalable enterprise workflows."
+yearsOfExperience: 10
+location:
+  zh: "中国 / 可远程 / 可 relocation"
+  en: "China / Remote / Open to relocation"
+avatar: "avatar.png"
+companies:
+  - name: "Alibaba"
+    type: "work"
+  - name: "SenseTime"
+    type: "work"
+targetRoles:
+  - id: "agent-platform"
+    priority: 1
+  - id: "llm-application-architect"
+    priority: 2
+  - id: "posttraining"
+    priority: 3
+  - id: "ai-fde"
+    priority: 4
+links:
+  email: "demo@example.com"
+  github: "https://github.com/example"
+  linkedin: "https://linkedin.com/in/example"
+  maimai: ""
+  huggingface: ""
+  website: "https://example.com"
+availability:
+  status:
+    zh: "开放高质量 AI 平台、Agent 产品和应用算法机会"
+    en: "Open to high-quality AI platform, Agent product, and applied algorithm opportunities"
+  preferredLocations:
+    - "Shanghai"
+    - "Beijing"
+    - "Hangzhou"
+    - "Shenzhen"
+    - "Remote"
+  expectedPackage:
+    zh: "面议，优先长期价值与技术影响力"
+    en: "Open, prioritizing long-term scope and technical impact"

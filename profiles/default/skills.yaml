@@ -1,0 +1,50 @@
+skillGroups:
+  - id: "agent-platform"
+    title:
+      zh: "Agent 平台工程"
+      en: "Agent Platform Engineering"
+    description:
+      zh: "从工具调用、状态管理、权限审计到运行时可靠性的端到端平台能力。"
+      en: "End-to-end platform capability across tool-use, state, permissions, audit, and runtime reliability."
+    skills:
+      - "Agent Runtime"
+      - "Tool-use"
+      - "MCP"
+      - "Workflow Orchestration"
+      - "Guardrails"
+  - id: "evaluation"
+    title:
+      zh: "评测与 LLMOps"
+      en: "Evaluation and LLMOps"
+    description:
+      zh: "把主观体验转成可回放、可比较、可上线门控的评测系统。"
+      en: "Turning subjective quality into replayable, comparable, release-gating evaluation systems."
+    skills:
+      - "Golden Set"
+      - "Replay Harness"
+      - "Regression Gates"
+      - "Observability"
+  - id: "posttraining"
+    title:
+      zh: "后训练数据闭环"
+      en: "Post-training Data Loops"
+    description:
+      zh: "从 badcase、偏好数据、SFT/DPO 实验到产品反馈闭环。"
+      en: "From badcases and preference data to SFT/DPO experiments and product feedback loops."
+    skills:
+      - "SFT"
+      - "DPO"
+      - "Preference Data"
+      - "Data Flywheel"
+  - id: "architecture"
+    title:
+      zh: "产品工程架构"
+      en: "Product Engineering Architecture"
+    description:
+      zh: "面向复杂业务系统的配置化、多租户、可观测和可扩展架构。"
+      en: "Configurable, multi-tenant, observable, and scalable architecture for complex business systems."
+    skills:
+      - "TypeScript"
+      - "Python"
+      - "Distributed Systems"
+      - "SaaS"

@@ -1,0 +1,27 @@
+---
+slug: "agent-evaluation-playbook"
+locale: "en"
+translationKey: "agent-evaluation-playbook"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-06-26"
+title: "Enterprise Agent Evaluation Playbook"
+summary: "Turning Agent evaluation from subjective trial into replayable, layered, release-gating engineering."
+featured: true
+date: "2026-06-26"
+tags:
+  - "Evaluation"
+  - "LLMOps"
+  - "Agent"
+---
+
+## Why
+
+Enterprise Agent launch risk comes from several layers: model output, tool side effects, business permissions, and human fallback. Final-answer checks cannot cover all of this.
+
+## Playbook
+
+A practical evaluation system needs at least three layers: offline replay sets, online staged metrics, and human review samples. Replay blocks obvious regressions, online metrics observe real distribution, and human review discovers new failure categories.
+
+## Operating Rhythm
+
+Classify new badcases weekly and promote valuable examples into the golden set. Run fixed evaluations before each release, and after incidents, add missing assertions back into the evaluation harness.

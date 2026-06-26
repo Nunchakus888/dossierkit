@@ -1,0 +1,30 @@
+---
+slug: "eval-harness"
+locale: "en"
+translationKey: "eval-harness"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-06-26"
+title: "Agent Replay Evaluation Harness"
+method: "Replay Eval"
+summary: "Built reproducible Agent regression evaluation from production traces for prompt, tool, and model changes."
+featured: true
+relatedRoles:
+  - "agent-platform"
+  - "ai-fde"
+tags:
+  - "Evaluation"
+  - "Replay"
+  - "Regression"
+---
+
+## Goal
+
+Convert production task traces into offline replay evaluations so teams can understand risk when changing prompts, tool schemas, or model versions.
+
+## Design
+
+Each sample includes user goal, context, available tools, expected intermediate behavior, final output assertions, and human fallback policy. Results are aggregated by task type, tool type, and failure reason.
+
+## Lesson
+
+Final-answer checks miss important risks. Agent evaluation must inspect process, tools, side effects, and recovery strategy.

@@ -1,0 +1,44 @@
+experiences:
+  - company: "Enterprise AI Platform Team"
+    role:
+      zh: "Agent 平台负责人"
+      en: "Agent Platform Lead"
+    period: "2024 - 2026"
+    location:
+      zh: "上海 / 远程协作"
+      en: "Shanghai / Remote"
+    summary:
+      zh: "负责企业 Agent Runtime、工具调用权限、评测体系和数据闭环，推动多个业务流程从 POC 进入生产。"
+      en: "Led enterprise Agent runtime, tool permissions, evaluation, and data loops, moving multiple workflows from POC to production."
+    highlights:
+      - zh: "设计任务编排、工具注册、权限审计、回放评测和灰度发布机制。"
+        en: "Designed task orchestration, tool registry, permission audit, replay evaluation, and staged rollout mechanisms."
+      - zh: "建立 badcase 标注、偏好数据沉淀和 post-training 反馈闭环。"
+        en: "Built a badcase review, preference data, and post-training feedback loop."
+      - zh: "把成功率、人工接管率、工具误调用率纳入上线门槛。"
+        en: "Made success rate, human handoff rate, and tool misuse rate part of launch gates."
+    tags:
+      - "Agent Runtime"
+      - "LLMOps"
+      - "Evaluation"
+      - "Tool-use"
+  - company: "Large-scale SaaS Product Group"
+    role:
+      zh: "技术架构师"
+      en: "Technical Architect"
+    period: "2020 - 2024"
+    location:
+      zh: "杭州"
+      en: "Hangzhou"
+    summary:
+      zh: "主导多租户 SaaS、工作流平台和数据集成架构，服务跨部门运营与客户成功团队。"
+      en: "Owned multi-tenant SaaS, workflow platform, and data integration architecture for operations and customer success teams."
+    highlights:
+      - zh: "把高频运营流程沉淀为可配置工作流，降低重复研发成本。"
+        en: "Converted repetitive operations into configurable workflows, reducing duplicate engineering effort."
+      - zh: "建设可观测性、审计和 SLA 看板，提升跨团队排障效率。"
+        en: "Built observability, audit, and SLA dashboards to improve cross-team incident response."
+    tags:
+      - "SaaS"
+      - "Workflow"
+      - "Data Integration"

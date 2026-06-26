@@ -1,0 +1,49 @@
+---
+slug: "dpo-tool-use"
+locale: "en"
+translationKey: "dpo-tool-use"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-06-26"
+title: "DPO for Tool-use Preference"
+method: "DPO"
+summary: "Used chosen/rejected preference data to improve enterprise Agent tool-use decisions."
+featured: true
+baseModel: "Qwen / Llama small model"
+dataset:
+  source: "Agent badcases and synthetic preference pairs"
+  size: "2k pairs"
+  format: "prompt / chosen / rejected"
+evaluation:
+  - "tool selection accuracy"
+  - "task success rate"
+  - "hallucination rate"
+results:
+  - metric: "win-rate"
+    before: "baseline"
+    after: "+12%"
+limitations:
+  - "Small-scale experiment for proving the loop, not production-grade model performance."
+relatedRoles:
+  - "posttraining"
+  - "agent-platform"
+tags:
+  - "DPO"
+  - "Tool-use"
+  - "Preference Data"
+---
+
+## Hypothesis
+
+If tool-use failures are converted into chosen/rejected preference pairs, a small model can learn more stable tool selection behavior and reduce clearly invalid parameter generation.
+
+## Dataset
+
+The data came from sanitized badcases, crafted boundary examples, and a small set of synthetic preference pairs. Each example kept the task goal, available tools, business constraints, chosen behavior, and rejected behavior.
+
+## Evaluation
+
+The evaluation looked beyond win-rate. It also tracked tool selection accuracy, parameter validity, refusal quality, and whether human handoff was triggered.
+
+## Result
+
+The small-scale experiment improved tool selection stability, but gains on complex multi-step tasks were limited. Future work should separate task decomposition from tool selection.

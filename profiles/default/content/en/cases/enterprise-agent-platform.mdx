@@ -1,0 +1,61 @@
+---
+slug: "enterprise-agent-platform"
+locale: "en"
+translationKey: "enterprise-agent-platform"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-06-26"
+title: "Enterprise Agent Platform"
+summary: "Built an evaluable, auditable, scalable Agent runtime and tool-use layer for enterprise workflows."
+role: "Architecture / Core modules / Evaluation / Cross-functional delivery"
+period: "2025"
+confidentiality: "sanitized"
+featured: true
+tags:
+  - "Agent Runtime"
+  - "Tool-use"
+  - "LLMOps"
+  - "Evaluation"
+targetRoles:
+  - "agent-platform"
+metrics:
+  - label: "Task success"
+    value: "+18%"
+    description: "Example metric based on a sanitized replay set."
+  - label: "Tool misuse"
+    value: "-31%"
+    description: "Reduced through permission gates and regression evaluation."
+---
+
+## Context
+
+Several internal workflows needed LLM Agents, but early prototypes lacked a shared runtime, permission boundary, and quality evaluation process. Each business team was rebuilding prompts, tool calls, and human fallback logic.
+
+## Problem
+
+The main risk was not model capability alone. Production behavior was hard to control: incorrect tool calls, untraceable state, difficult failure analysis, and no regression gate before launch.
+
+## My Role
+
+I defined the platform boundary, module decomposition, and launch quality gates, then coordinated product, ML, business systems, and security stakeholders for the first production workflows.
+
+## Architecture
+
+The platform had five layers: task orchestration, tool registry, permission audit, runtime observability, and replay evaluation. Business teams declared workflow and tool capabilities while the platform handled permissions, logs, retries, human handoff, and quality regression.
+
+## Key Decisions
+
+- Separate tool registration from permission approval, so publishing a tool did not automatically make it callable by Agents.
+- Preserve structured traces for every task to support failure analysis and evaluation sample collection.
+- Use replay sets as launch gates instead of relying only on subjective manual trials.
+
+## Evaluation
+
+The evaluation set combined historical tasks, crafted boundary cases, and production badcases. Every prompt, tool schema, or model change had to run success rate, tool misuse rate, and human handoff checks.
+
+## Impact
+
+After the first workflows launched, the team had a reusable runtime and evaluation baseline. Later business teams no longer had to rebuild tool-use, audit, and replay capabilities.
+
+## Failure & Lessons
+
+Evaluation was originally added too late, which left several design decisions without quantitative feedback. Moving evaluation design into the requirement phase reduced launch disputes.

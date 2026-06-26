@@ -1,0 +1,31 @@
+---
+slug: "posttraining-data-flywheel"
+locale: "en"
+translationKey: "posttraining-data-flywheel"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-06-26"
+title: "Agent Post-training Data Flywheel"
+summary: "Turned production Agent badcases into evaluable, labelable, trainable preference data loops."
+role: "Data workflow design / Labeling rules / Evaluation set construction"
+period: "2026"
+confidentiality: "sanitized"
+featured: true
+tags:
+  - "Preference Data"
+  - "DPO"
+  - "Evaluation"
+targetRoles:
+  - "posttraining"
+---
+
+## Context
+
+Production Agents create many failure records, but logs alone rarely become continuous model and product quality improvement.
+
+## Approach
+
+I classified badcases into five groups: wrong tool selection, wrong parameters, poor task decomposition, refusal policy errors, and missing business rules. I then defined labeling fields, review workflow, and admission rules for training data.
+
+## Output
+
+The result was a loop from production traces to evaluation samples, preference pairs, prompt improvements, and training experiments. ML teams received structured data, product teams saw failure distribution, and engineering teams used replay results as release gates.

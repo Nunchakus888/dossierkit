@@ -1,0 +1,28 @@
+metrics:
+  - label:
+      zh: "10 年"
+      en: "10 years"
+    value:
+      zh: "工程与 AI 落地经验"
+      en: "Engineering and AI delivery"
+    description:
+      zh: "覆盖平台架构、业务系统、LLM 应用和企业集成。"
+      en: "Across platform architecture, business systems, LLM applications, and enterprise integration."
+  - label:
+      zh: "3 类闭环"
+      en: "3 loops"
+    value:
+      zh: "运行时 / 评测 / 数据"
+      en: "Runtime / Eval / Data"
+    description:
+      zh: "把 Agent 质量管理拆成可运行、可评估、可训练的闭环。"
+      en: "Separates Agent quality into runtime, evaluation, and training data loops."
+  - label:
+      zh: "跨团队"
+      en: "Cross-functional"
+    value:
+      zh: "产品 + 算法 + 工程"
+      en: "Product + ML + Engineering"
+    description:
+      zh: "能够在需求、架构、评测和上线之间建立共同语言。"
+      en: "Builds shared language across requirements, architecture, evaluation, and launch."

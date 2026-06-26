@@ -1,0 +1,31 @@
+---
+slug: "posttraining-data-flywheel"
+locale: "zh"
+translationKey: "posttraining-data-flywheel"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-06-26"
+title: "Agent 后训练数据飞轮"
+summary: "把线上 Agent badcase 转成可评测、可标注、可训练的偏好数据闭环。"
+role: "数据流程设计 / 标注规范 / 评测集建设"
+period: "2026"
+confidentiality: "sanitized"
+featured: true
+tags:
+  - "Preference Data"
+  - "DPO"
+  - "Evaluation"
+targetRoles:
+  - "posttraining"
+---
+
+## Context
+
+Agent 上线后会产生大量失败记录，但这些记录如果只停留在日志里，很难变成模型和产品质量的持续改进。
+
+## Approach
+
+我把 badcase 分成工具选择错误、参数错误、任务分解错误、拒答策略错误和业务规则遗漏五类，并定义标注字段、复盘流程和训练数据准入标准。
+
+## Output
+
+最终形成了从线上 trace 到评测样本、偏好对、prompt 改进和训练实验的闭环。算法团队可以拿到结构化数据，产品团队可以看到失败分布，工程团队可以用回放结果做发布门禁。

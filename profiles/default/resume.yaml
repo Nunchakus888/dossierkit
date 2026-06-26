@@ -1,0 +1,15 @@
+filename: "dossierkit-demo"
+sections:
+  - "summary"
+  - "metrics"
+  - "experience"
+  - "skills"
+  - "cases"
+  - "education"
+highlights:
+  - zh: "能把 Agent 平台拆成 runtime、tool-use、评测和权限审计四个可落地模块。"
+    en: "Can decompose Agent platforms into runtime, tool-use, evaluation, and permission audit modules."
+  - zh: "熟悉从 badcase 到偏好数据再到后训练实验的数据闭环。"
+    en: "Experienced in turning badcases into preference data and post-training experiments."
+  - zh: "适合需要同时推进架构设计、工程实现和业务协作的岗位。"
+    en: "A fit for roles requiring architecture, implementation, and business collaboration."

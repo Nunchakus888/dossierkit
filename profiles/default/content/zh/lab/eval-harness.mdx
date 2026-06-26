@@ -1,0 +1,30 @@
+---
+slug: "eval-harness"
+locale: "zh"
+translationKey: "eval-harness"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-06-26"
+title: "Agent 回放评测框架"
+method: "Replay Eval"
+summary: "用生产 trace 构建可复现的 Agent 回归评测，支撑 prompt、工具和模型变更。"
+featured: true
+relatedRoles:
+  - "agent-platform"
+  - "ai-fde"
+tags:
+  - "Evaluation"
+  - "Replay"
+  - "Regression"
+---
+
+## Goal
+
+把线上任务 trace 转成离线可回放评测，让团队在变更 prompt、工具 schema 或模型版本时知道风险在哪里。
+
+## Design
+
+每个样本包含用户目标、上下文、可用工具、期望中间行为、最终输出断言和人工兜底策略。评测结果按任务类型、工具类型和失败原因聚合。
+
+## Lesson
+
+只看最终答案会漏掉关键风险。Agent 评测必须同时检查过程、工具、副作用和恢复策略。
