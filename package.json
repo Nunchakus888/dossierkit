@@ -1,0 +1,37 @@
+{
+  "name": "dossierkit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Data-driven bilingual expert dossier template with Git-backed CMS and static exports.",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "postbuild": "pagefind --site dist --output-subdir pagefind",
+    "preview": "astro preview",
+    "validate": "tsx scripts/validate-profile.ts",
+    "dossier": "tsx scripts/dossier.ts",
+    "create-profile": "tsx scripts/create-profile.ts",
+    "generate-admin-config": "tsx scripts/generate-admin-config.ts",
+    "generate-pdf": "tsx scripts/generate-pdf.ts",
+    "export-profile": "tsx scripts/export-profile.ts"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.3.1",
+    "@astrojs/sitemap": "^3.5.1",
+    "@tailwindcss/vite": "^4.1.11",
+    "astro": "^5.12.9",
+    "gray-matter": "^4.0.3",
+    "marked": "^16.1.1",
+    "tailwindcss": "^4.1.11",
+    "yaml": "^2.8.1",
+    "zod": "^4.0.14"
+  },
+  "devDependencies": {
+    "pagefind": "1.3.0",
+    "playwright": "^1.54.2",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  },
+  "packageManager": "pnpm@11.7.0"
+}
