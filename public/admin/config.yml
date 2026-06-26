@@ -1,0 +1,787 @@
+backend:
+  name: github
+  repo: Nunchakus888/dossierkit
+  branch: main
+local_backend: true
+media_folder: profiles/default/assets
+public_folder: /profile-assets/default
+publish_mode: editorial_workflow
+collections:
+  - name: profile
+    label: Profile Config
+    files:
+      - label: Profile
+        name: profile
+        file: profiles/default/profile.yaml
+        fields:
+          - label: ID
+            name: id
+            widget: string
+          - label: Name
+            name: name
+            widget: object
+            required: true
+            fields:
+              - label: ZH
+                name: zh
+                widget: string
+              - label: EN
+                name: en
+                widget: string
+          - label: Headline
+            name: headline
+            widget: object
+            required: true
+            fields:
+              - label: ZH
+                name: zh
+                widget: string
+              - label: EN
+                name: en
+                widget: string
+          - label: Summary
+            name: summary
+            widget: object
+            required: true
+            fields:
+              - label: ZH
+                name: zh
+                widget: text
+              - label: EN
+                name: en
+                widget: text
+          - label: Years of Experience
+            name: yearsOfExperience
+            widget: number
+          - label: Location
+            name: location
+            widget: object
+            required: true
+            fields:
+              - label: ZH
+                name: zh
+                widget: string
+              - label: EN
+                name: en
+                widget: string
+          - label: Avatar
+            name: avatar
+            widget: image
+            required: false
+          - label: Companies
+            name: companies
+            widget: list
+            required: false
+            fields:
+              - label: Name
+                name: name
+                widget: string
+              - label: Type
+                name: type
+                widget: string
+          - label: Target Roles
+            name: targetRoles
+            widget: list
+            required: false
+            fields:
+              - label: ID
+                name: id
+                widget: string
+              - label: Priority
+                name: priority
+                widget: number
+          - label: Links
+            name: links
+            widget: object
+            fields:
+              - label: Email
+                name: email
+                widget: string
+              - label: GitHub
+                name: github
+                widget: string
+                required: false
+              - label: LinkedIn
+                name: linkedin
+                widget: string
+                required: false
+              - label: Website
+                name: website
+                widget: string
+                required: false
+          - label: Availability
+            name: availability
+            widget: object
+            fields:
+              - label: Status
+                name: status
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Preferred Locations
+                name: preferredLocations
+                widget: list
+                required: false
+              - label: Expected Package
+                name: expectedPackage
+                widget: object
+                required: false
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+      - label: Experience
+        name: experience
+        file: profiles/default/experience.yaml
+        fields:
+          - label: Experiences
+            name: experiences
+            widget: list
+            fields:
+              - label: Company
+                name: company
+                widget: string
+              - label: Role
+                name: role
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Period
+                name: period
+                widget: string
+              - label: Location
+                name: location
+                widget: object
+                required: false
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Summary
+                name: summary
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: text
+                  - label: EN
+                    name: en
+                    widget: text
+              - label: Highlights
+                name: highlights
+                widget: list
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: text
+                  - label: EN
+                    name: en
+                    widget: text
+              - label: Tags
+                name: tags
+                widget: list
+                required: false
+      - label: Education
+        name: education
+        file: profiles/default/education.yaml
+        fields:
+          - label: Education
+            name: education
+            widget: list
+            fields:
+              - label: School
+                name: school
+                widget: string
+              - label: Degree
+                name: degree
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Period
+                name: period
+                widget: string
+              - label: Summary
+                name: summary
+                widget: object
+                required: false
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: text
+                  - label: EN
+                    name: en
+                    widget: text
+      - label: Skills
+        name: skills
+        file: profiles/default/skills.yaml
+        fields:
+          - label: Skill Groups
+            name: skillGroups
+            widget: list
+            fields:
+              - label: ID
+                name: id
+                widget: string
+              - label: Title
+                name: title
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Description
+                name: description
+                widget: object
+                required: false
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: text
+                  - label: EN
+                    name: en
+                    widget: text
+              - label: Skills
+                name: skills
+                widget: list
+      - label: Roles
+        name: roles
+        file: profiles/default/roles.yaml
+        fields:
+          - label: Roles
+            name: roles
+            widget: list
+            fields:
+              - label: ID
+                name: id
+                widget: string
+              - label: Path
+                name: path
+                widget: string
+              - label: Title
+                name: title
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Headline
+                name: headline
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Summary
+                name: summary
+                widget: object
+                required: false
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: text
+                  - label: EN
+                    name: en
+                    widget: text
+              - label: Focus Areas
+                name: focusAreas
+                widget: list
+                required: false
+              - label: Related Cases
+                name: relatedCases
+                widget: list
+                required: false
+              - label: Related Labs
+                name: relatedLabs
+                widget: list
+                required: false
+      - label: Metrics
+        name: metrics
+        file: profiles/default/metrics.yaml
+        fields:
+          - label: Metrics
+            name: metrics
+            widget: list
+            fields:
+              - label: Label
+                name: label
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Value
+                name: value
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Description
+                name: description
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: text
+                  - label: EN
+                    name: en
+                    widget: text
+      - label: Theme
+        name: theme
+        file: profiles/default/theme.yaml
+        fields:
+          - label: Preset
+            name: preset
+            widget: string
+          - label: Colors
+            name: colors
+            widget: object
+            fields:
+              - label: background
+                name: background
+                widget: string
+              - label: surface
+                name: surface
+                widget: string
+              - label: foreground
+                name: foreground
+                widget: string
+              - label: muted
+                name: muted
+                widget: string
+              - label: border
+                name: border
+                widget: string
+              - label: accent
+                name: accent
+                widget: string
+              - label: accentSoft
+                name: accentSoft
+                widget: string
+              - label: warm
+                name: warm
+                widget: string
+          - label: Typography
+            name: typography
+            widget: object
+            fields:
+              - label: Sans
+                name: sans
+                widget: string
+              - label: Mono
+                name: mono
+                widget: string
+              - label: Heading Weight
+                name: headingWeight
+                widget: number
+              - label: Body Weight
+                name: bodyWeight
+                widget: number
+          - label: Layout
+            name: layout
+            widget: object
+            fields:
+              - label: Max Width
+                name: maxWidth
+                widget: string
+              - label: Card Radius
+                name: cardRadius
+                widget: string
+              - label: Density
+                name: density
+                widget: string
+              - label: Hero Style
+                name: heroStyle
+                widget: string
+              - label: Dashboard Style
+                name: dashboardStyle
+                widget: string
+          - label: Motion
+            name: motion
+            widget: object
+            fields:
+              - label: Enabled
+                name: enabled
+                widget: boolean
+              - label: Level
+                name: level
+                widget: string
+      - label: Resume
+        name: resume
+        file: profiles/default/resume.yaml
+        fields:
+          - label: Filename
+            name: filename
+            widget: string
+          - label: Sections
+            name: sections
+            widget: list
+          - label: Highlights
+            name: highlights
+            widget: list
+            fields:
+              - label: ZH
+                name: zh
+                widget: text
+              - label: EN
+                name: en
+                widget: text
+      - label: Home
+        name: home
+        file: profiles/default/home.yaml
+        fields:
+          - label: Sections
+            name: sections
+            widget: list
+            fields:
+              - label: Type
+                name: type
+                widget: string
+              - label: Variant
+                name: variant
+                widget: string
+                required: false
+              - label: Limit
+                name: limit
+                widget: number
+                required: false
+  - name: cases_zh
+    label: Cases ZH
+    folder: profiles/default/content/zh/cases
+    create: true
+    extension: mdx
+    format: frontmatter
+    slug: "{{slug}}"
+    fields:
+      - label: Slug
+        name: slug
+        widget: string
+      - label: Locale
+        name: locale
+        widget: hidden
+        default: zh
+      - label: Translation Key
+        name: translationKey
+        widget: string
+        required: false
+      - label: Translation Status
+        name: translationStatus
+        widget: select
+        options:
+          - draft
+          - machine-translated
+          - reviewed
+          - complete
+        default: reviewed
+      - label: Title
+        name: title
+        widget: string
+      - label: Summary
+        name: summary
+        widget: text
+      - label: Featured
+        name: featured
+        widget: boolean
+        default: false
+      - label: Tags
+        name: tags
+        widget: list
+        required: false
+      - label: Target Roles
+        name: targetRoles
+        widget: list
+        required: false
+      - label: Body
+        name: body
+        widget: markdown
+  - name: cases_en
+    label: Cases EN
+    folder: profiles/default/content/en/cases
+    create: true
+    extension: mdx
+    format: frontmatter
+    slug: "{{slug}}"
+    fields:
+      - label: Slug
+        name: slug
+        widget: string
+      - label: Locale
+        name: locale
+        widget: hidden
+        default: en
+      - label: Translation Key
+        name: translationKey
+        widget: string
+        required: false
+      - label: Translation Status
+        name: translationStatus
+        widget: select
+        options:
+          - draft
+          - machine-translated
+          - reviewed
+          - complete
+        default: reviewed
+      - label: Title
+        name: title
+        widget: string
+      - label: Summary
+        name: summary
+        widget: text
+      - label: Featured
+        name: featured
+        widget: boolean
+        default: false
+      - label: Tags
+        name: tags
+        widget: list
+        required: false
+      - label: Target Roles
+        name: targetRoles
+        widget: list
+        required: false
+      - label: Body
+        name: body
+        widget: markdown
+  - name: lab_zh
+    label: Lab ZH
+    folder: profiles/default/content/zh/lab
+    create: true
+    extension: mdx
+    format: frontmatter
+    slug: "{{slug}}"
+    fields:
+      - label: Slug
+        name: slug
+        widget: string
+      - label: Locale
+        name: locale
+        widget: hidden
+        default: zh
+      - label: Translation Key
+        name: translationKey
+        widget: string
+        required: false
+      - label: Translation Status
+        name: translationStatus
+        widget: select
+        options:
+          - draft
+          - machine-translated
+          - reviewed
+          - complete
+        default: reviewed
+      - label: Title
+        name: title
+        widget: string
+      - label: Summary
+        name: summary
+        widget: text
+      - label: Featured
+        name: featured
+        widget: boolean
+        default: false
+      - label: Tags
+        name: tags
+        widget: list
+        required: false
+      - label: Target Roles
+        name: targetRoles
+        widget: list
+        required: false
+      - label: Body
+        name: body
+        widget: markdown
+  - name: lab_en
+    label: Lab EN
+    folder: profiles/default/content/en/lab
+    create: true
+    extension: mdx
+    format: frontmatter
+    slug: "{{slug}}"
+    fields:
+      - label: Slug
+        name: slug
+        widget: string
+      - label: Locale
+        name: locale
+        widget: hidden
+        default: en
+      - label: Translation Key
+        name: translationKey
+        widget: string
+        required: false
+      - label: Translation Status
+        name: translationStatus
+        widget: select
+        options:
+          - draft
+          - machine-translated
+          - reviewed
+          - complete
+        default: reviewed
+      - label: Title
+        name: title
+        widget: string
+      - label: Summary
+        name: summary
+        widget: text
+      - label: Featured
+        name: featured
+        widget: boolean
+        default: false
+      - label: Tags
+        name: tags
+        widget: list
+        required: false
+      - label: Target Roles
+        name: targetRoles
+        widget: list
+        required: false
+      - label: Body
+        name: body
+        widget: markdown
+  - name: writing_zh
+    label: Writing ZH
+    folder: profiles/default/content/zh/writing
+    create: true
+    extension: mdx
+    format: frontmatter
+    slug: "{{slug}}"
+    fields:
+      - label: Slug
+        name: slug
+        widget: string
+      - label: Locale
+        name: locale
+        widget: hidden
+        default: zh
+      - label: Translation Key
+        name: translationKey
+        widget: string
+        required: false
+      - label: Translation Status
+        name: translationStatus
+        widget: select
+        options:
+          - draft
+          - machine-translated
+          - reviewed
+          - complete
+        default: reviewed
+      - label: Title
+        name: title
+        widget: string
+      - label: Summary
+        name: summary
+        widget: text
+      - label: Featured
+        name: featured
+        widget: boolean
+        default: false
+      - label: Tags
+        name: tags
+        widget: list
+        required: false
+      - label: Target Roles
+        name: targetRoles
+        widget: list
+        required: false
+      - label: Body
+        name: body
+        widget: markdown
+  - name: writing_en
+    label: Writing EN
+    folder: profiles/default/content/en/writing
+    create: true
+    extension: mdx
+    format: frontmatter
+    slug: "{{slug}}"
+    fields:
+      - label: Slug
+        name: slug
+        widget: string
+      - label: Locale
+        name: locale
+        widget: hidden
+        default: en
+      - label: Translation Key
+        name: translationKey
+        widget: string
+        required: false
+      - label: Translation Status
+        name: translationStatus
+        widget: select
+        options:
+          - draft
+          - machine-translated
+          - reviewed
+          - complete
+        default: reviewed
+      - label: Title
+        name: title
+        widget: string
+      - label: Summary
+        name: summary
+        widget: text
+      - label: Featured
+        name: featured
+        widget: boolean
+        default: false
+      - label: Tags
+        name: tags
+        widget: list
+        required: false
+      - label: Target Roles
+        name: targetRoles
+        widget: list
+        required: false
+      - label: Body
+        name: body
+        widget: markdown
