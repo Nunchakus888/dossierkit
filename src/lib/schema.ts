@@ -222,7 +222,7 @@ export const navigationSchema = z
 
 const titleSegmentSchema = z.object({
   text: z.string(),
-  tone: z.enum(["mint", "blue", "cyan", "purple", "ink", "muted"]).default("ink")
+  tone: z.enum(["mint", "blue", "cyan", "ink", "muted"]).default("ink")
 });
 
 const titleLineSchema = z.object({
@@ -265,7 +265,7 @@ export const designSchema = z
           description: localizedStringSchema,
           path: z.string().min(1),
           icon: z.string().min(1),
-          tone: z.enum(["mint", "blue", "cyan", "purple"]).default("mint")
+          tone: z.enum(["mint", "blue", "cyan"]).default("mint")
         })
         .passthrough()
     ),
