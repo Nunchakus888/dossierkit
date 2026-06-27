@@ -4,10 +4,10 @@ locale: "en"
 translationKey: "enterprise-agent-platform"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
-title: "Enterprise Agent Platform"
-summary: "Built an evaluable, auditable, scalable Agent runtime and tool-use layer for enterprise workflows."
-role: "Architecture / Core modules / Evaluation / Cross-functional delivery"
-period: "2025"
+title: "Enterprise Agent Platform Architecture Framework"
+summary: "A reusable project framework for Agent runtime, tool-use, permission audit, replay evaluation, and enterprise integration."
+role: "Platform architecture / Tooling / Permission audit / Evaluation / Enterprise integration"
+period: "Framework"
 confidentiality: "sanitized"
 featured: true
 tags:
@@ -17,45 +17,54 @@ tags:
   - "Evaluation"
 targetRoles:
   - "agent-platform"
-metrics:
-  - label: "Task success"
-    value: "+18%"
-    description: "Example metric based on a sanitized replay set."
-  - label: "Tool misuse"
-    value: "-31%"
-    description: "Reduced through permission gates and regression evaluation."
+  - "llm-application-architect"
+  - "ai-fde"
 ---
 
-## Context
+## What this case should prove
 
-Several internal workflows needed LLM Agents, but early prototypes lacked a shared runtime, permission boundary, and quality evaluation process. Each business team was rebuilding prompts, tool calls, and human fallback logic.
+This case is meant to prove more than API-based Agent demos. It should show that you can turn Agents into enterprise systems: connected to real workflows, controlled through permissions and audit, observable, replay-evaluable, releasable, and reusable across business teams.
 
-## Problem
+When real project details are added later, focus on the scenario, system scale, personal ownership, rollout scope, and business metrics.
 
-The main risk was not model capability alone. Production behavior was hard to control: incorrect tool calls, untraceable state, difficult failure analysis, and no regression gate before launch.
+## Business scenario framework
 
-## My Role
+Good fits for this template include:
 
-I defined the platform boundary, module decomposition, and launch quality gates, then coordinated product, ML, business systems, and security stakeholders for the first production workflows.
+- Internal knowledge, support, sales, finance, operations, R&D, or supply-chain workflows.
+- Agents that need to call multiple business systems instead of only answering questions.
+- Workflows that require permissions, audit, human handoff, and reliability controls.
+- POCs that must become reusable platform capabilities.
 
-## Architecture
+## Technical architecture framework
 
-The platform had five layers: task orchestration, tool registry, permission audit, runtime observability, and replay evaluation. Business teams declared workflow and tool capabilities while the platform handled permissions, logs, retries, human handoff, and quality regression.
+The platform can be described in six layers:
 
-## Key Decisions
+1. Agent Runtime: task state, planning/execution, retries, timeout, human handoff, and failure recovery.
+2. Tool / MCP / Skills: tool registry, schema management, versioning, permission binding, and call audit.
+3. Context / Memory / RAG: business context, retrieval, long-context strategy, and state memory.
+4. Security / Permission: identity, tenancy, data permission, approval flow, sensitive action confirmation, and audit logs.
+5. Evaluation / Harness: replay sets, golden sets, process assertions, tool side-effect checks, and release gates.
+6. Observability / Cost: traces, logs, metrics, model routing, caching, latency, and token cost analysis.
 
-- Separate tool registration from permission approval, so publishing a tool did not automatically make it callable by Agents.
-- Preserve structured traces for every task to support failure analysis and evaluation sample collection.
-- Use replay sets as launch gates instead of relying only on subjective manual trials.
+## Key design decisions
 
-## Evaluation
+- Tool publication does not equal Agent access. Tool registry, permission approval, and runtime authorization must be separated.
+- Every task should preserve structured traces for debugging, evaluation samples, and later data flywheels.
+- Release checks should cover intermediate steps, tool choice, parameters, permissions, and side effects, not only final answers.
+- High-frequency workflows should become platform capabilities; low-frequency workflows can keep human collaboration.
 
-The evaluation set combined historical tasks, crafted boundary cases, and production badcases. Every prompt, tool schema, or model change had to run success rate, tool misuse rate, and human handoff checks.
+## Evidence to add later
 
-## Impact
+When real project details are available, add:
 
-After the first workflows launched, the team had a reusable runtime and evaluation baseline. Later business teams no longer had to rebuild tool-use, audit, and replay capabilities.
+- Business workflow: which core workflow was integrated and what pain existed before.
+- System scale: users, task volume, tools, business systems, and model calls.
+- Personal ownership: architect, module owner, cross-functional lead, or team lead.
+- Quality metrics: task success, human handoff, tool misuse, and replay pass rate.
+- ROI metrics: process time, productivity, cost reduction, and error/complaint reduction.
+- Reliability metrics: latency, failure rate, alerts, staged rollout, and incident review.
 
-## Failure & Lessons
+## Interview angle
 
-Evaluation was originally added too late, which left several design decisions without quantitative feedback. Moving evaluation design into the requirement phase reduced launch disputes.
+The core message: you can start from business workflow, define the Agent platform boundary, decompose runtime/tooling/permission/evaluation/observability/data loops, and prove production readiness with launch metrics.

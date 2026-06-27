@@ -57,6 +57,10 @@ function navHref(path: string) {
     padding: 58px 0 42px;
   }
 
+  .hero-copy {
+    min-width: 0;
+  }
+
   .eyebrow {
     margin: 0 0 18px;
     color: color-mix(in srgb, var(--color-foreground), transparent 20%);
@@ -102,7 +106,7 @@ function navHref(path: string) {
   }
 
   .summary {
-    max-width: 520px;
+    max-width: min(520px, 100%);
     margin: 28px 0 28px;
     color: #596475;
     font-size: clamp(1.08rem, 1.55vw, 1.35rem);
@@ -150,6 +154,10 @@ function navHref(path: string) {
   @media (max-width: 560px) {
     h1 {
       font-size: clamp(2.7rem, 15vw, 3.65rem);
+    }
+
+    .title-line {
+      white-space: normal;
     }
 
     .button-row {

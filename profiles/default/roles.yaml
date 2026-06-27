@@ -2,65 +2,135 @@ roles:
   - id: "agent-platform"
     path: "agent-platform"
     title:
-      zh: "Agent 平台架构师"
+      zh: "Agent 平台架构专家"
       en: "Agent Platform Architect"
     headline:
-      zh: "如何匹配 Agent 平台架构师岗位"
-      en: "Why this profile fits Agent Platform Architect roles"
+      zh: "把 Agent 从 Demo 推到生产级平台"
+      en: "Moving Agents from demos to production platforms"
     summary:
-      zh: "适合需要把 Agent 从 Demo 推到生产的团队，重点覆盖 runtime、tool-use、评测、权限和企业集成。"
-      en: "A fit for teams moving Agents from demos to production, covering runtime, tool-use, evaluation, permissions, and enterprise integration."
+      zh: "最适合需要建设 Agent Runtime、工具体系、权限审计、评测门禁和企业集成能力的团队。"
+      en: "A fit for teams building Agent runtime, tool systems, permission audit, evaluation gates, and enterprise integration."
     focusAreas:
       - "Agent Runtime"
-      - "Tool-use"
-      - "LLMOps"
-      - "Evaluation"
+      - "Tool-use / Function Calling"
+      - "MCP / Skills"
       - "Permission & Audit"
+      - "Replay Evaluation"
       - "Enterprise Integration"
     relatedCases:
       - "enterprise-agent-platform"
     relatedLabs:
-      - "dpo-tool-use"
       - "eval-harness"
-  - id: "posttraining"
-    path: "posttraining"
-    title:
-      zh: "后训练应用算法专家"
-      en: "Applied Post-training Algorithm Expert"
-    headline:
-      zh: "如何从 Agent 应用切入后训练算法"
-      en: "How Agent applications connect with applied post-training"
-    summary:
-      zh: "适合需要从线上 Agent 反馈构建偏好数据、评测集和训练闭环的团队。"
-      en: "A fit for teams that need to turn production Agent feedback into preference data, evaluation sets, and training loops."
-    focusAreas:
-      - "SFT"
-      - "DPO"
-      - "GRPO"
-      - "RLVR"
-      - "Data Flywheel"
-      - "Evaluation Harness"
-    relatedCases:
-      - "posttraining-data-flywheel"
-    relatedLabs:
       - "dpo-tool-use"
   - id: "ai-fde"
     path: "ai-fde"
     title:
-      zh: "AI Forward Deployed Engineer"
-      en: "AI Forward Deployed Engineer"
+      zh: "AI FDE 技术负责人"
+      en: "AI FDE Technical Lead"
     headline:
-      zh: "如何把复杂客户现场转成可交付 AI 产品"
-      en: "How complex customer contexts become shippable AI products"
+      zh: "把复杂客户现场变成可交付 AI 产品"
+      en: "Turning complex field workflows into shippable AI products"
     summary:
-      zh: "适合需要同时理解业务流程、现场集成和 LLM 产品工程的团队。"
-      en: "A fit for teams that need business process fluency, field integration, and LLM product engineering in one role."
+      zh: "适合 ToB Agent、行业大模型方案和企业 AI 转型团队，重点是流程诊断、系统集成、交付闭环和业务 ROI。"
+      en: "A fit for ToB Agent, industry LLM solution, and enterprise AI transformation teams where workflow discovery, integration, delivery, and ROI matter."
     focusAreas:
-      - "Discovery"
       - "Workflow Mapping"
-      - "Prototype to Production"
       - "Customer Integration"
+      - "ERP / CRM / BI / OA"
+      - "Data Governance"
+      - "Prototype to Production"
+      - "ROI Ownership"
     relatedCases:
       - "enterprise-agent-platform"
     relatedLabs:
+      - "eval-harness"
+  - id: "llm-application-architect"
+    path: "llm-application-architect"
+    title:
+      zh: "大模型应用架构专家"
+      en: "LLM Application Architect"
+    headline:
+      zh: "建设可评测、可控成本、可持续迭代的大模型应用"
+      en: "Building LLM applications that are evaluable, cost-aware, and iteratable"
+    summary:
+      zh: "适合需要把 RAG、工具调用、长上下文、模型路由、缓存和成本延迟纳入统一工程体系的团队。"
+      en: "A fit for teams unifying RAG, tool calling, long context, model routing, caching, and cost/latency control into one engineering system."
+    focusAreas:
+      - "RAG / GraphRAG"
+      - "Context Engineering"
+      - "Model Routing"
+      - "Cost / Latency"
+      - "Hallucination Control"
+      - "Release Gates"
+    relatedCases:
+      - "enterprise-agent-platform"
+    relatedLabs:
+      - "eval-harness"
+  - id: "ai-application-lead"
+    path: "ai-application-lead"
+    title:
+      zh: "AI 应用技术负责人"
+      en: "Head of AI Application Engineering"
+    headline:
+      zh: "对 AI 产品落地、平台复用和团队交付负责"
+      en: "Owning AI product delivery, platform reuse, and team execution"
+    summary:
+      zh: "适合 AI Native SaaS、企业 AI 平台和传统企业 AI 转型部门，重点是路线图、架构所有权、跨团队协同和上线质量。"
+      en: "A fit for AI-native SaaS, enterprise AI platforms, and AI transformation teams where roadmap, architecture ownership, cross-functional delivery, and launch quality matter."
+    focusAreas:
+      - "AI Native SaaS"
+      - "Roadmap Ownership"
+      - "Architecture Review"
+      - "Platform Adoption"
+      - "Team Delivery"
+      - "Business Impact"
+    relatedCases:
+      - "enterprise-agent-platform"
+      - "posttraining-data-flywheel"
+    relatedLabs:
+      - "eval-harness"
+  - id: "ai-infra-llmops"
+    path: "ai-infra-llmops"
+    title:
+      zh: "AI Infra / LLMOps 架构师"
+      en: "AI Infra / LLMOps Architect"
+    headline:
+      zh: "补齐模型服务化、可观测、成本和发布治理能力"
+      en: "Strengthening model serving, observability, cost, and release governance"
+    summary:
+      zh: "适合作为上探方向，需要进一步用 GPU 推理、模型服务化、MaaS 网关、模型路由和成本优化证据增强。"
+      en: "A stretch direction that benefits from stronger proof in GPU inference, model serving, MaaS gateway, model routing, and cost optimization."
+    focusAreas:
+      - "LLMOps"
+      - "Model Serving"
+      - "MaaS Gateway"
+      - "Observability"
+      - "Cost Optimization"
+      - "Release Governance"
+    relatedCases:
+      - "enterprise-agent-platform"
+    relatedLabs:
+      - "eval-harness"
+  - id: "posttraining"
+    path: "posttraining"
+    title:
+      zh: "后训练数据闭环负责人"
+      en: "Post-training Data Loop Lead"
+    headline:
+      zh: "从 Agent 应用反馈切入后训练与评测数据"
+      en: "Connecting Agent feedback with post-training and evaluation data"
+    summary:
+      zh: "适合作为算法侧拓展方向，重点证明 badcase 分类、偏好数据、评测集建设和训练实验接口能力。"
+      en: "A model-side extension path focused on badcase taxonomy, preference data, evaluation set construction, and training experiment interfaces."
+    focusAreas:
+      - "Badcase Taxonomy"
+      - "Preference Data"
+      - "Evaluation Set"
+      - "SFT / DPO Interface"
+      - "Data Flywheel"
+      - "Tool-use Quality"
+    relatedCases:
+      - "posttraining-data-flywheel"
+    relatedLabs:
+      - "dpo-tool-use"
       - "eval-harness"

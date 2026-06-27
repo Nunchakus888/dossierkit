@@ -4,10 +4,10 @@ locale: "en"
 translationKey: "posttraining-data-flywheel"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
-title: "Agent Post-training Data Flywheel"
-summary: "Turned production Agent badcases into evaluable, labelable, trainable preference data loops."
-role: "Data workflow design / Labeling rules / Evaluation set construction"
-period: "2026"
+title: "Agent Data Flywheel and Post-training Interface Framework"
+summary: "Organizing production badcases, evaluation samples, preference data, and training interfaces into a continuous improvement loop."
+role: "Badcase taxonomy / Labeling rules / Evaluation set construction / Training data interface"
+period: "Framework"
 confidentiality: "sanitized"
 featured: true
 tags:
@@ -16,16 +16,46 @@ tags:
   - "Evaluation"
 targetRoles:
   - "posttraining"
+  - "ai-infra-llmops"
 ---
 
-## Context
+## What this case should prove
 
-Production Agents create many failure records, but logs alone rarely become continuous model and product quality improvement.
+This case should show that Agent quality is not improved by prompt tweaks alone. Production failures need to become reviewable, evaluable, labelable, and trainable data assets. It supports post-training data loops, evaluation systems, LLMOps, and Agent platform leadership roles.
 
-## Approach
+The positioning is not "foundation model trainer." It is the bridge between application feedback and model-side improvement.
 
-I classified badcases into five groups: wrong tool selection, wrong parameters, poor task decomposition, refusal policy errors, and missing business rules. I then defined labeling fields, review workflow, and admission rules for training data.
+## Badcase taxonomy framework
 
-## Output
+Useful categories include:
 
-The result was a loop from production traces to evaluation samples, preference pairs, prompt improvements, and training experiments. ML teams received structured data, product teams saw failure distribution, and engineering teams used replay results as release gates.
+- Tool selection errors: wrong tool, missing tool, repeated tool calls.
+- Parameter errors: field mapping, units, time range, or permission parameters.
+- Task decomposition errors: poor plan order, missing subtasks, or failure recovery gaps.
+- Knowledge and context errors: missing retrieval, polluted context, or long-context forgetting.
+- Business rule errors: workflow, approval, compliance, risk, or customer policy violations.
+- Output quality errors: hallucination, poor refusal, formatting errors, or unactionable advice.
+
+## Data loop framework
+
+A mature loop can be described as:
+
+1. Trace capture: user goal, context, tools, parameters, intermediate states, and final result.
+2. Failure attribution: standardize badcase categories across model, tool, data, product, and workflow issues.
+3. Sample routing: send samples into replay evals, golden sets, preference pairs, or manual review pools.
+4. Labeling rules: define chosen/rejected, reason tags, risk levels, and business constraints.
+5. Training interface: feed SFT, DPO, preference optimization, or prompt/tool-schema improvements.
+6. Release gates: use replay sets and online metrics to confirm actual improvement.
+
+## Evidence to add later
+
+When real project details are ready, add:
+
+- Badcase volume, taxonomy size, labeling roles, and quality-control process.
+- Evaluation set size, task coverage, replay pass rate, and regressions caught.
+- Impact after the data entered prompt, tool schema, RAG, model routing, or training experiments.
+- Collaboration workflow with ML, product, and engineering teams.
+
+## Interview angle
+
+The core message: you can turn production Agent failures into a shared data language for product, engineering, and ML teams, making quality improvement sample-driven, measurable, and release-gated.

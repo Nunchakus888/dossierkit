@@ -3,42 +3,36 @@ brand:
   icon: "folder-face"
 hero:
   eyebrow:
-    zh: "DossierKit / AI Expert"
-    en: "DossierKit / AI Expert"
+    zh: "Enterprise Agent / AI FDE"
+    en: "Enterprise Agent / AI FDE"
   title:
     zh:
       - segments:
-          - text: "AI"
-            tone: "mint"
-          - text: " / "
-            tone: "ink"
           - text: "Agent"
-            tone: "blue"
-          - text: " /"
-            tone: "ink"
-      - segments:
-          - text: "LLM"
             tone: "mint"
-          - text: " Expert"
+          - text: " Platform"
+            tone: "blue"
+      - segments:
+          - text: "AI FDE"
+            tone: "mint"
+      - segments:
+          - text: "LLM Architect"
             tone: "ink"
     en:
       - segments:
-          - text: "AI"
-            tone: "mint"
-          - text: " / "
-            tone: "ink"
           - text: "Agent"
-            tone: "blue"
-          - text: " /"
-            tone: "ink"
-      - segments:
-          - text: "LLM"
             tone: "mint"
-          - text: " Expert"
+          - text: " Platform"
+            tone: "blue"
+      - segments:
+          - text: "AI FDE"
+            tone: "mint"
+      - segments:
+          - text: "LLM Architect"
             tone: "ink"
   subtitle:
-    zh: "Building intelligent systems and delightful experiences with AI."
-    en: "Building intelligent systems and delightful experiences with AI."
+    zh: "把大模型和 Agent 接入企业核心流程，建设可评测、可审计、可扩展的生产级 AI 系统。"
+    en: "Bringing LLMs and Agents into enterprise workflows with evaluable, auditable, scalable production systems."
   primaryAction:
     label:
       zh: "View My Work"
@@ -54,32 +48,32 @@ hero:
 quickLinks:
   - id: "projects"
     label:
-      zh: "Projects"
-      en: "Projects"
+      zh: "Platform"
+      en: "Platform"
     description:
-      zh: "Explore things I've built and shipped."
-      en: "Explore things I've built and shipped."
+      zh: "Agent Runtime, tools, audit, evaluation."
+      en: "Agent runtime, tools, audit, evaluation."
     path: "work"
     icon: "folder"
     tone: "mint"
   - id: "experience"
     label:
-      zh: "Experience"
-      en: "Experience"
+      zh: "CV"
+      en: "CV"
     description:
-      zh: "A look at my journey and impact."
-      en: "A look at my journey and impact."
+      zh: "Engineering, AI delivery, enterprise systems."
+      en: "Engineering, AI delivery, enterprise systems."
     path: "cv"
     icon: "briefcase"
     tone: "blue"
   - id: "open-roles"
     label:
-      zh: "Open Roles"
-      en: "Open Roles"
+      zh: "Roles"
+      en: "Roles"
     description:
-      zh: "I'm open to meaningful opportunities."
-      en: "I'm open to meaningful opportunities."
-    path: "contact"
+      zh: "Agent Platform, AI FDE, LLM Architect."
+      en: "Agent Platform, AI FDE, LLM Architect."
+    path: "for/agent-platform"
     icon: "chair"
     tone: "cyan"
 contactStrip:
