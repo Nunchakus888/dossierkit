@@ -197,6 +197,29 @@ export const homeSchema = z
   })
   .passthrough();
 
+export const navigationSchema = z
+  .object({
+    brand: z
+      .object({
+        mark: z.string().min(1).default("DK"),
+        labelMode: z.enum(["name", "headline", "none"]).default("name")
+      })
+      .default({ mark: "DK", labelMode: "name" }),
+    items: z.array(
+      z
+        .object({
+          id: z.string().min(1),
+          label: localizedStringSchema,
+          path: z.string().min(1),
+          icon: z.string().optional(),
+          placement: z.enum(["primary", "secondary", "action"]).default("primary"),
+          external: z.boolean().default(false)
+        })
+        .passthrough()
+    )
+  })
+  .passthrough();
+
 export const contentMetricSchema = z
   .object({
     label: z.string().min(1),
@@ -236,4 +259,5 @@ export type Metrics = z.infer<typeof metricsSchema>;
 export type Theme = z.infer<typeof themeSchema>;
 export type Resume = z.infer<typeof resumeSchema>;
 export type Home = z.infer<typeof homeSchema>;
+export type Navigation = z.infer<typeof navigationSchema>;
 export type ContentFrontmatter = z.infer<typeof contentFrontmatterSchema>;

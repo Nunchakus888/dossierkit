@@ -1,16 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --color-background: #f8faf7;
+  --color-background: #f4f7f8;
   --color-surface: #ffffff;
-  --color-foreground: #18201b;
-  --color-muted: #66736b;
-  --color-border: #d8e0d7;
-  --color-accent: #175f64;
-  --color-accent-soft: #dff0ee;
-  --color-warm: #9a4d2f;
+  --color-foreground: #101416;
+  --color-muted: #68747b;
+  --color-border: #dce5e7;
+  --color-accent: #006b7a;
+  --color-accent-soft: #d9f2ef;
+  --color-warm: #b95f32;
   --layout-max-width: 1120px;
   --card-radius: 8px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   color-scheme: light;
 }
 
@@ -26,12 +27,27 @@ html {
 body {
   margin: 0;
   background:
-    linear-gradient(180deg, rgba(223, 240, 238, 0.42), rgba(248, 250, 247, 0) 34rem),
+    linear-gradient(color-mix(in srgb, var(--color-border), transparent 70%) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--color-border), transparent 70%) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-accent-soft), transparent 18%), transparent 420px),
     var(--color-background);
+  background-size: 56px 56px, 56px 56px, auto, auto;
+  background-position: center top;
   color: var(--color-foreground);
   font-family: Inter, "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.6;
   text-rendering: optimizeLegibility;
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  content: "";
+  background:
+    linear-gradient(180deg, rgba(244, 247, 248, 0.1), var(--color-background) 74%),
+    radial-gradient(900px 420px at 50% -180px, rgba(0, 107, 122, 0.13), transparent 70%);
 }
 
 a {
@@ -44,8 +60,17 @@ img {
   max-width: 100%;
 }
 
+svg {
+  flex: 0 0 auto;
+}
+
 main {
   min-height: 70vh;
+}
+
+main > section,
+main > article {
+  animation: reveal 620ms var(--ease-out) both;
 }
 
 .page-shell {
@@ -54,8 +79,8 @@ main {
 }
 
 .section-band {
-  padding: 56px 0;
-  border-top: 1px solid color-mix(in srgb, var(--color-border), transparent 30%);
+  padding: 64px 0;
+  border-top: 1px solid color-mix(in srgb, var(--color-border), transparent 25%);
 }
 
 .section-heading {
@@ -63,13 +88,15 @@ main {
   align-items: end;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
 }
 
 .section-heading h2 {
   margin: 0;
-  font-size: clamp(1.45rem, 2vw, 2rem);
-  line-height: 1.15;
+  font-size: clamp(1.35rem, 1.8vw, 1.9rem);
+  font-weight: 720;
+  line-height: 1.12;
+  letter-spacing: 0;
 }
 
 .section-heading p {
@@ -79,10 +106,31 @@ main {
 }
 
 .card {
-  border: 1px solid var(--color-border);
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border), transparent 8%);
   border-radius: var(--card-radius);
-  background: color-mix(in srgb, var(--color-surface), transparent 4%);
-  box-shadow: 0 12px 30px rgba(24, 32, 27, 0.06);
+  background: color-mix(in srgb, var(--color-surface), transparent 3%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.78) inset, 0 12px 34px rgba(16, 20, 22, 0.055);
+  transition:
+    transform 220ms var(--ease-out),
+    border-color 220ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
+}
+
+.card::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.32), transparent 42%);
+  opacity: 0.75;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--color-accent), transparent 48%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.88) inset, 0 20px 46px rgba(16, 20, 22, 0.09);
 }
 
 .button-row {
@@ -98,18 +146,33 @@ main {
   justify-content: center;
   gap: 8px;
   border-radius: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(in srgb, var(--color-border), transparent 6%);
   padding: 9px 14px;
-  background: var(--color-surface);
+  background: color-mix(in srgb, var(--color-surface), transparent 2%);
   color: var(--color-foreground);
-  font-weight: 650;
+  font-weight: 700;
   line-height: 1.2;
+  transition:
+    transform 180ms var(--ease-out),
+    border-color 180ms var(--ease-out),
+    background 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out);
+}
+
+.button:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--color-accent), transparent 30%);
+  box-shadow: 0 10px 24px rgba(16, 20, 22, 0.08);
 }
 
 .button.primary {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-  color: white;
+  border-color: var(--color-foreground);
+  background: var(--color-foreground);
+  color: var(--color-background);
+}
+
+.button.primary:hover {
+  background: color-mix(in srgb, var(--color-foreground), var(--color-accent) 15%);
 }
 
 .tag-list {
@@ -122,11 +185,12 @@ main {
 }
 
 .tag {
-  border: 1px solid var(--color-border);
+  border: 1px solid color-mix(in srgb, var(--color-border), transparent 8%);
   border-radius: 999px;
   padding: 4px 10px;
+  background: color-mix(in srgb, var(--color-surface), transparent 8%);
   color: var(--color-muted);
-  font-size: 0.85rem;
+  font-size: 0.83rem;
   line-height: 1.2;
 }
 
@@ -143,7 +207,7 @@ main {
 
 .prose p,
 .prose li {
-  color: color-mix(in srgb, var(--color-foreground), var(--color-muted) 22%);
+  color: color-mix(in srgb, var(--color-foreground), var(--color-muted) 24%);
 }
 
 .prose a {
@@ -164,13 +228,36 @@ main {
   display: none;
 }
 
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 @media (max-width: 760px) {
   .page-shell {
     width: min(100% - 24px, var(--layout-max-width));
   }
 
   .section-band {
-    padding: 38px 0;
+    padding: 42px 0;
   }
 
   .section-heading {
@@ -181,6 +268,10 @@ main {
 @media print {
   body {
     background: #ffffff;
+  }
+
+  body::before {
+    display: none;
   }
 
   .no-print {

@@ -1,0 +1,46 @@
+brand:
+  mark: "DK"
+  labelMode: "name"
+items:
+  - id: "work"
+    label:
+      zh: "案例"
+      en: "Work"
+    path: "work"
+    icon: "briefcase"
+    placement: "primary"
+  - id: "lab"
+    label:
+      zh: "实验"
+      en: "Lab"
+    path: "lab"
+    icon: "flask"
+    placement: "primary"
+  - id: "writing"
+    label:
+      zh: "文章"
+      en: "Writing"
+    path: "writing"
+    icon: "pen"
+    placement: "primary"
+  - id: "roles"
+    label:
+      zh: "定位"
+      en: "Fit"
+    path: "for/agent-platform"
+    icon: "target"
+    placement: "primary"
+  - id: "cv"
+    label:
+      zh: "简历"
+      en: "CV"
+    path: "cv"
+    icon: "file-text"
+    placement: "secondary"
+  - id: "contact"
+    label:
+      zh: "联系"
+      en: "Contact"
+    path: "contact"
+    icon: "mail"
+    placement: "action"

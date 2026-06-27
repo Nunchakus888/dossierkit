@@ -491,6 +491,60 @@ collections:
                 name: limit
                 widget: number
                 required: false
+      - label: Navigation
+        name: navigation
+        file: profiles/default/navigation.yaml
+        fields:
+          - label: Brand
+            name: brand
+            widget: object
+            fields:
+              - label: Mark
+                name: mark
+                widget: string
+              - label: Label Mode
+                name: labelMode
+                widget: select
+                options:
+                  - name
+                  - headline
+                  - none
+          - label: Items
+            name: items
+            widget: list
+            fields:
+              - label: ID
+                name: id
+                widget: string
+              - label: Label
+                name: label
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Path
+                name: path
+                widget: string
+              - label: Icon
+                name: icon
+                widget: string
+                required: false
+              - label: Placement
+                name: placement
+                widget: select
+                options:
+                  - primary
+                  - secondary
+                  - action
+              - label: External
+                name: external
+                widget: boolean
+                default: false
   - name: cases_zh
     label: Cases ZH
     folder: profiles/default/content/zh/cases

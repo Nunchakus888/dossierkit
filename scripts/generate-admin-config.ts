@@ -119,7 +119,8 @@ function profileFiles(profileId: string) {
       metricsFile(profileId),
       themeFile(profileId),
       resumeFile(profileId),
-      homeFile(profileId)
+      homeFile(profileId),
+      navigationFile(profileId)
     ]
   };
 }
@@ -335,6 +336,38 @@ function homeFile(profileId: string) {
           { label: "Type", name: "type", widget: "string" },
           { label: "Variant", name: "variant", widget: "string", required: false },
           { label: "Limit", name: "limit", widget: "number", required: false }
+        ]
+      }
+    ]
+  };
+}
+
+function navigationFile(profileId: string) {
+  return {
+    label: "Navigation",
+    name: "navigation",
+    file: `profiles/${profileId}/navigation.yaml`,
+    fields: [
+      {
+        label: "Brand",
+        name: "brand",
+        widget: "object",
+        fields: [
+          { label: "Mark", name: "mark", widget: "string" },
+          { label: "Label Mode", name: "labelMode", widget: "select", options: ["name", "headline", "none"] }
+        ]
+      },
+      {
+        label: "Items",
+        name: "items",
+        widget: "list",
+        fields: [
+          { label: "ID", name: "id", widget: "string" },
+          localizedField("Label", "label"),
+          { label: "Path", name: "path", widget: "string" },
+          { label: "Icon", name: "icon", widget: "string", required: false },
+          { label: "Placement", name: "placement", widget: "select", options: ["primary", "secondary", "action"] },
+          { label: "External", name: "external", widget: "boolean", default: false }
         ]
       }
     ]

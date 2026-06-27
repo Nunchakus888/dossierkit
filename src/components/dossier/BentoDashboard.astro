@@ -18,20 +18,23 @@ const skillGroups = pack.skills.skillGroups.slice(0, 4);
     <div class="section-heading">
       <div>
         <h2>{l.metrics}</h2>
-        <p>{locale === "zh" ? "用结构化证据快速判断经验、方法和交付范围。" : "Structured proof for evaluating experience, method, and delivery scope."}</p>
+        <p>{locale === "zh" ? "用可扫描的信息密度呈现经验、方法和系统边界。" : "Dense, scannable proof of experience, method, and system boundaries."}</p>
       </div>
     </div>
     <div class="bento">
-      {pack.metrics.metrics.map((metric) => (
-        <article class="card metric-card">
-          <span>{localize(metric.label, locale)}</span>
-          <strong>{localize(metric.value, locale)}</strong>
+      {pack.metrics.metrics.map((metric, index) => (
+        <article class:list={["card", "metric-card", { wide: index === 0 }]}>
+          <span class="index">0{index + 1}</span>
+          <div>
+            <p class="metric-label">{localize(metric.label, locale)}</p>
+            <strong>{localize(metric.value, locale)}</strong>
+          </div>
           <p>{localize(metric.description, locale)}</p>
         </article>
       ))}
-      {skillGroups.map((group) => (
+      {skillGroups.map((group, index) => (
         <article class="card skill-card">
-          <span>{l.skills}</span>
+          <span class="index">S{index + 1}</span>
           <strong>{localize(group.title, locale)}</strong>
           <p>{localize(group.description, locale)}</p>
           <ul class="tag-list">
@@ -47,39 +50,55 @@ const skillGroups = pack.skills.skillGroups.slice(0, 4);
   .bento {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 14px;
+    gap: 12px;
   }
 
   article {
-    min-height: 205px;
-    padding: 20px;
+    display: grid;
+    min-height: 214px;
+    align-content: space-between;
+    gap: 18px;
+    padding: 18px;
   }
 
-  .metric-card:first-child {
+  .wide {
     grid-column: span 2;
   }
 
-  span {
+  .index {
+    width: fit-content;
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
+    border-radius: 999px;
+    padding: 3px 8px;
     color: var(--color-accent);
-    font-size: 0.8rem;
-    font-weight: 750;
-    text-transform: uppercase;
+    font-family: "JetBrains Mono", "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 720;
+    line-height: 1.2;
+  }
+
+  .metric-label {
+    margin: 0 0 8px;
+    color: var(--color-muted);
+    font-size: 0.88rem;
+    font-weight: 700;
   }
 
   strong {
     display: block;
-    margin-top: 18px;
-    font-size: clamp(1.35rem, 2.2vw, 2.1rem);
-    line-height: 1.05;
+    font-size: clamp(1.22rem, 2vw, 1.85rem);
+    font-weight: 740;
+    line-height: 1.08;
+    letter-spacing: 0;
   }
 
   p {
-    margin: 12px 0 0;
+    margin: 0;
     color: var(--color-muted);
   }
 
   .tag-list {
-    margin-top: 18px;
+    margin-top: 2px;
   }
 
   @media (max-width: 980px) {
@@ -93,7 +112,7 @@ const skillGroups = pack.skills.skillGroups.slice(0, 4);
       grid-template-columns: 1fr;
     }
 
-    .metric-card:first-child {
+    .wide {
       grid-column: auto;
     }
   }

@@ -11,6 +11,7 @@ import {
   experienceSchema,
   homeSchema,
   metricsSchema,
+  navigationSchema,
   profileSchema,
   resumeSchema,
   rolesSchema,
@@ -21,6 +22,7 @@ import {
   type Experience,
   type Home,
   type Metrics,
+  type Navigation,
   type Profile,
   type Resume,
   type Roles,
@@ -52,6 +54,7 @@ export type ProfilePack = {
   theme: Theme;
   resume: Resume;
   home: Home;
+  navigation: Navigation;
 };
 
 function formatZodError(error: z.ZodError, filePath: string) {
@@ -94,7 +97,8 @@ export function loadProfilePack(profileId = activeProfile): ProfilePack {
     metrics: readYamlFile(path.join(root, "metrics.yaml"), metricsSchema),
     theme: readYamlFile(path.join(root, "theme.yaml"), themeSchema),
     resume: readYamlFile(path.join(root, "resume.yaml"), resumeSchema),
-    home: readYamlFile(path.join(root, "home.yaml"), homeSchema)
+    home: readYamlFile(path.join(root, "home.yaml"), homeSchema),
+    navigation: readYamlFile(path.join(root, "navigation.yaml"), navigationSchema)
   };
 }
 

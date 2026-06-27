@@ -13,6 +13,7 @@ All profile data lives under `profiles/{profileId}` and is validated by Zod in `
 - `theme.yaml`: color, typography, layout, and motion tokens.
 - `resume.yaml`: PDF resume sections and highlights.
 - `home.yaml`: homepage section order.
+- `navigation.yaml`: brand mark, menu labels, paths, icons, and placement.
 
 ## Localized strings
 

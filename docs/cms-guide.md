@@ -22,6 +22,7 @@ The generated config includes:
 - Chinese and English lab creation
 - Chinese and English writing creation
 - asset uploads to `profiles/{profileId}/assets`
+- navigation menu editing through `navigation.yaml`
 
 ## Local backend
 
