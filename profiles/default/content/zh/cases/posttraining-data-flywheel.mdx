@@ -4,10 +4,10 @@ locale: "zh"
 translationKey: "posttraining-data-flywheel"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
-title: "Agent 后训练数据飞轮"
-summary: "把线上 Agent badcase 转成可评测、可标注、可训练的偏好数据闭环。"
-role: "数据流程设计 / 标注规范 / 评测集建设"
-period: "2026"
+title: "Agent 平台数据反馈闭环"
+summary: "作为生产级 Agent 平台的质量改进支撑证据，连接 trace、badcase、评测样本和偏好数据。"
+role: "数据反馈 / badcase 分类 / 评测样本 / 质量闭环"
+period: "Supporting Evidence"
 confidentiality: "sanitized"
 featured: true
 tags:
@@ -15,17 +15,23 @@ tags:
   - "DPO"
   - "Evaluation"
 targetRoles:
-  - "posttraining"
+  - "agent-platform"
 ---
 
-## Context
+## 定位
 
-Agent 上线后会产生大量失败记录，但这些记录如果只停留在日志里，很难变成模型和产品质量的持续改进。
+这不是独立方向，而是“企业级 Agent 平台架构负责人”的支撑证据。它证明平台负责人不仅能做功能上线，也能把生产 trace 转成持续质量改进机制。
 
-## Approach
+## 闭环
 
-我把 badcase 分成工具选择错误、参数错误、任务分解错误、拒答策略错误和业务规则遗漏五类，并定义标注字段、复盘流程和训练数据准入标准。
+平台侧需要保留结构化 trace，并把 badcase 拆成工具选择错误、参数错误、任务分解错误、拒答策略错误和业务规则遗漏等类型。
 
-## Output
+这些记录可以进入三条路径：
 
-最终形成了从线上 trace 到评测样本、偏好对、prompt 改进和训练实验的闭环。算法团队可以拿到结构化数据，产品团队可以看到失败分布，工程团队可以用回放结果做发布门禁。
+1. 评测样本：作为 prompt、工具 schema、模型版本变更前的回放门禁。
+2. 产品改进：定位规则缺口、流程断点和人工兜底策略。
+3. 数据建设：沉淀 chosen/rejected 偏好对，为后续训练或策略优化提供输入。
+
+## 高阶价值
+
+这部分内容不扩散成新的标签，而是证明平台 owner 有质量闭环意识：能把线上行为、评测体系、模型改进和业务结果连接起来。

@@ -80,7 +80,7 @@ function profileFiles(profileId: string) {
             ]
           },
           {
-            label: "Target Roles",
+            label: "Focus",
             name: "targetRoles",
             widget: "list",
             required: false,
@@ -491,7 +491,7 @@ function contentFolder(profileId: string, name: string, label: string, locale: s
       { label: "Summary", name: "summary", widget: "text" },
       { label: "Featured", name: "featured", widget: "boolean", default: false },
       { label: "Tags", name: "tags", widget: "list", required: false },
-      { label: "Target Roles", name: "targetRoles", widget: "list", required: false },
+      { label: "Focus", name: "targetRoles", widget: "list", required: false },
       { label: "Body", name: "body", widget: "markdown" }
     ]
   };

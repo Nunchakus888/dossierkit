@@ -6,12 +6,12 @@ translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
 title: "DPO for Tool-use Preference"
 method: "DPO"
-summary: "用 chosen/rejected 偏好数据优化企业 Agent 的工具调用决策。"
+summary: "用于说明 Agent 平台如何把工具调用 badcase 转成偏好数据与质量改进接口。"
 featured: true
-baseModel: "Qwen / Llama small model"
+baseModel: "待填充真实实验模型"
 dataset:
-  source: "Agent badcases and synthetic preference pairs"
-  size: "2k pairs"
+  source: "Agent badcase 与人工构造边界样本"
+  size: "待填充真实样本量"
   format: "prompt / chosen / rejected"
 evaluation:
   - "tool selection accuracy"
@@ -20,11 +20,10 @@ evaluation:
 results:
   - metric: "win-rate"
     before: "baseline"
-    after: "+12%"
+    after: "待填充真实评测结果"
 limitations:
-  - "小规模实验，结果用于证明闭环能力，不代表生产级模型效果。"
+  - "当前作为方法框架展示，真实模型、样本量和结果需要用项目实践补充。"
 relatedRoles:
-  - "posttraining"
   - "agent-platform"
 tags:
   - "DPO"
@@ -34,16 +33,16 @@ tags:
 
 ## Hypothesis
 
-如果把工具调用失败样本整理成 chosen/rejected 偏好对，小模型可以学习更稳定的工具选择倾向，并减少明显不合理的参数生成。
+如果把工具调用失败样本整理成 chosen/rejected 偏好对，Agent 平台就能把线上 badcase 进入评测、策略优化和模型改进接口。
 
 ## Dataset
 
-数据来自脱敏 badcase、人工构造边界样本和少量合成偏好对。每条样本保留任务目标、可用工具、业务约束、chosen 行为和 rejected 行为。
+数据设计保留任务目标、可用工具、业务约束、chosen 行为和 rejected 行为。真实项目需要补充模型版本、样本规模、标注规则和质量抽检方式。
 
 ## Evaluation
 
-评测不只看 win-rate，还要看工具选择准确率、参数有效率、拒答合理性和是否触发人工接管。
+评测不只看 win-rate，还要看工具选择准确率、参数有效率、拒答合理性和是否触发人工接管。它服务的是平台发布门禁，而不是单点算法展示。
 
 ## Result
 
-小规模实验显示工具选择更稳定，但对复杂多步任务的收益有限。后续需要把任务分解和工具选择分开建模。
+这里先保留通用框架。等真实项目实践补充后，再填入基座模型、样本量、评测集构成和量化结果。

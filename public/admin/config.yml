@@ -79,7 +79,7 @@ collections:
               - label: Type
                 name: type
                 widget: string
-          - label: Target Roles
+          - label: Focus
             name: targetRoles
             widget: list
             required: false
@@ -801,7 +801,7 @@ collections:
         name: tags
         widget: list
         required: false
-      - label: Target Roles
+      - label: Focus
         name: targetRoles
         widget: list
         required: false
@@ -850,7 +850,7 @@ collections:
         name: tags
         widget: list
         required: false
-      - label: Target Roles
+      - label: Focus
         name: targetRoles
         widget: list
         required: false
@@ -899,7 +899,7 @@ collections:
         name: tags
         widget: list
         required: false
-      - label: Target Roles
+      - label: Focus
         name: targetRoles
         widget: list
         required: false
@@ -948,7 +948,7 @@ collections:
         name: tags
         widget: list
         required: false
-      - label: Target Roles
+      - label: Focus
         name: targetRoles
         widget: list
         required: false
@@ -997,7 +997,7 @@ collections:
         name: tags
         widget: list
         required: false
-      - label: Target Roles
+      - label: Focus
         name: targetRoles
         widget: list
         required: false
@@ -1046,7 +1046,7 @@ collections:
         name: tags
         widget: list
         required: false
-      - label: Target Roles
+      - label: Focus
         name: targetRoles
         widget: list
         required: false

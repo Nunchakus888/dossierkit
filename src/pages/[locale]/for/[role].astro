@@ -43,7 +43,7 @@ const labs = role.relatedLabs.map((slug) => getContent(locale, "lab", slug)).fil
       <div class="section-heading">
         <div>
           <h2>{l.relatedWork}</h2>
-          <p>{locale === "zh" ? "与该目标岗位最相关的案例。" : "Most relevant case studies for this target role."}</p>
+          <p>{locale === "zh" ? "与该主攻方向最相关的案例。" : "Most relevant case studies for this focus."}</p>
         </div>
       </div>
       <div class="card-grid">
@@ -57,7 +57,7 @@ const labs = role.relatedLabs.map((slug) => getContent(locale, "lab", slug)).fil
       <div class="section-heading">
         <div>
           <h2>{l.relatedLab}</h2>
-          <p>{locale === "zh" ? "与该岗位能力匹配的实验记录。" : "Lab notes that match the role capability profile."}</p>
+          <p>{locale === "zh" ? "与该方向能力匹配的实验记录。" : "Lab notes that match this capability profile."}</p>
         </div>
       </div>
       <div class="card-grid">

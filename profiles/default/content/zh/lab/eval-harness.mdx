@@ -10,7 +10,6 @@ summary: "用生产 trace 构建可复现的 Agent 回归评测，支撑 prompt�
 featured: true
 relatedRoles:
   - "agent-platform"
-  - "ai-fde"
 tags:
   - "Evaluation"
   - "Replay"
@@ -24,6 +23,10 @@ tags:
 ## Design
 
 每个样本包含用户目标、上下文、可用工具、期望中间行为、最终输出断言和人工兜底策略。评测结果按任务类型、工具类型和失败原因聚合。
+
+## Release Gate
+
+它应该作为平台发布门禁的一部分，覆盖 prompt、工具 schema、模型版本、权限策略和人工接管规则变更。
 
 ## Lesson
 

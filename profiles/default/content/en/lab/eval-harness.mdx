@@ -10,7 +10,6 @@ summary: "Built reproducible Agent regression evaluation from production traces 
 featured: true
 relatedRoles:
   - "agent-platform"
-  - "ai-fde"
 tags:
   - "Evaluation"
   - "Replay"
@@ -24,6 +23,10 @@ Convert production task traces into offline replay evaluations so teams can unde
 ## Design
 
 Each sample includes user goal, context, available tools, expected intermediate behavior, final output assertions, and human fallback policy. Results are aggregated by task type, tool type, and failure reason.
+
+## Release Gate
+
+It should be part of the platform release gate, covering changes to prompts, tool schemas, model versions, permission policy, and human handoff rules.
 
 ## Lesson
 

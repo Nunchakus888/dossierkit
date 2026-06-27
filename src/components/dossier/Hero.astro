@@ -64,6 +64,10 @@ function navHref(path: string) {
     font-weight: 700;
   }
 
+  .hero-copy {
+    min-width: 0;
+  }
+
   h1 {
     display: grid;
     gap: 8px;
@@ -72,6 +76,7 @@ function navHref(path: string) {
     font-weight: 820;
     line-height: 0.94;
     letter-spacing: 0;
+    max-width: 100%;
   }
 
   .title-line {
@@ -149,7 +154,16 @@ function navHref(path: string) {
 
   @media (max-width: 560px) {
     h1 {
-      font-size: clamp(2.7rem, 15vw, 3.65rem);
+      font-size: 3rem;
+      line-height: 1;
+    }
+
+    .title-line {
+      white-space: normal;
+    }
+
+    .tone {
+      display: inline-block;
     }
 
     .button-row {

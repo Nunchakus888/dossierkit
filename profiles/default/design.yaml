@@ -3,42 +3,30 @@ brand:
   icon: "folder-face"
 hero:
   eyebrow:
-    zh: "DossierKit / AI Expert"
-    en: "DossierKit / AI Expert"
+    zh: "Enterprise Agent Platform"
+    en: "Enterprise Agent Platform"
   title:
     zh:
       - segments:
-          - text: "AI"
-            tone: "mint"
-          - text: " / "
-            tone: "ink"
           - text: "Agent"
-            tone: "blue"
-          - text: " /"
-            tone: "ink"
-      - segments:
-          - text: "LLM"
             tone: "mint"
-          - text: " Expert"
-            tone: "ink"
+          - text: " Platform"
+            tone: "blue"
+      - segments:
+          - text: "Architect"
+            tone: "mint"
     en:
       - segments:
-          - text: "AI"
-            tone: "mint"
-          - text: " / "
-            tone: "ink"
           - text: "Agent"
-            tone: "blue"
-          - text: " /"
-            tone: "ink"
-      - segments:
-          - text: "LLM"
             tone: "mint"
-          - text: " Expert"
-            tone: "ink"
+          - text: " Platform"
+            tone: "blue"
+      - segments:
+          - text: "Architect"
+            tone: "mint"
   subtitle:
-    zh: "Building intelligent systems and delightful experiences with AI."
-    en: "Building intelligent systems and delightful experiences with AI."
+    zh: "专注把大模型能力接入企业核心流程，建设可评测、可审计、可扩展的生产级 Agent 平台。"
+    en: "Focused on bringing LLM capabilities into enterprise workflows through evaluable, auditable, scalable production Agent platforms."
   primaryAction:
     label:
       zh: "View My Work"
@@ -54,33 +42,33 @@ hero:
 quickLinks:
   - id: "projects"
     label:
-      zh: "Projects"
-      en: "Projects"
+      zh: "Platform"
+      en: "Platform"
     description:
-      zh: "Explore things I've built and shipped."
-      en: "Explore things I've built and shipped."
+      zh: "Runtime, tools, permission, audit."
+      en: "Runtime, tools, permission, audit."
     path: "work"
     icon: "folder"
     tone: "mint"
   - id: "experience"
     label:
-      zh: "Experience"
-      en: "Experience"
+      zh: "Proof"
+      en: "Proof"
     description:
-      zh: "A look at my journey and impact."
-      en: "A look at my journey and impact."
-    path: "cv"
+      zh: "Evaluation, LLMOps, data loop."
+      en: "Evaluation, LLMOps, data loop."
+    path: "lab"
     icon: "briefcase"
     tone: "blue"
   - id: "open-roles"
     label:
-      zh: "Open Roles"
-      en: "Open Roles"
+      zh: "CV"
+      en: "CV"
     description:
-      zh: "I'm open to meaningful opportunities."
-      en: "I'm open to meaningful opportunities."
-    path: "contact"
-    icon: "chair"
+      zh: "Senior platform ownership."
+      en: "Senior platform ownership."
+    path: "cv"
+    icon: "file-text"
     tone: "cyan"
 contactStrip:
   label:

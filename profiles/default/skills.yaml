@@ -1,50 +1,53 @@
 skillGroups:
-  - id: "agent-platform"
+  - id: "runtime"
     title:
-      zh: "Agent 平台工程"
-      en: "Agent Platform Engineering"
+      zh: "Agent Runtime 架构"
+      en: "Agent Runtime Architecture"
     description:
-      zh: "从工具调用、状态管理、权限审计到运行时可靠性的端到端平台能力。"
-      en: "End-to-end platform capability across tool-use, state, permissions, audit, and runtime reliability."
+      zh: "围绕任务状态、计划执行、工具调用、失败恢复和人工接管建设生产级运行时。"
+      en: "Production runtime design across task state, planning, tool calls, failure recovery, and human handoff."
     skills:
       - "Agent Runtime"
-      - "Tool-use"
-      - "MCP"
       - "Workflow Orchestration"
+      - "Tool-use / Function Calling"
+      - "MCP / Skills"
+      - "Human-in-the-loop"
+  - id: "governance"
+    title:
+      zh: "权限、安全与审计"
+      en: "Permission, Security, and Audit"
+    description:
+      zh: "把工具、数据、身份、租户和敏感操作纳入可控边界，支撑企业级上线。"
+      en: "Bringing tools, data, identity, tenancy, and sensitive actions into controlled enterprise boundaries."
+    skills:
+      - "Permission Model"
+      - "Tool Registry"
+      - "Audit Trail"
       - "Guardrails"
+      - "Data Governance"
   - id: "evaluation"
     title:
-      zh: "评测与 LLMOps"
-      en: "Evaluation and LLMOps"
+      zh: "评测与发布门禁"
+      en: "Evaluation and Release Gates"
     description:
-      zh: "把主观体验转成可回放、可比较、可上线门控的评测系统。"
-      en: "Turning subjective quality into replayable, comparable, release-gating evaluation systems."
+      zh: "用回放评测、golden set、过程断言和线上指标替代主观试用。"
+      en: "Replacing subjective trials with replay evaluation, golden sets, process assertions, and online metrics."
     skills:
-      - "Golden Set"
       - "Replay Harness"
+      - "Golden Set"
       - "Regression Gates"
-      - "Observability"
-  - id: "posttraining"
+      - "Trace Observability"
+      - "Release Governance"
+  - id: "platform-delivery"
     title:
-      zh: "后训练数据闭环"
-      en: "Post-training Data Loops"
+      zh: "企业系统集成与平台交付"
+      en: "Enterprise Integration and Platform Delivery"
     description:
-      zh: "从 badcase、偏好数据、SFT/DPO 实验到产品反馈闭环。"
-      en: "From badcases and preference data to SFT/DPO experiments and product feedback loops."
+      zh: "把 Agent 接入真实业务流程，沉淀可复用平台能力，并对稳定性和交付结果负责。"
+      en: "Integrating Agents into real workflows, building reusable platform capabilities, and owning reliability and delivery outcomes."
     skills:
-      - "SFT"
-      - "DPO"
-      - "Preference Data"
+      - "ERP / CRM / BI / OA"
+      - "RAG / Context Engineering"
+      - "LLMOps"
       - "Data Flywheel"
-  - id: "architecture"
-    title:
-      zh: "产品工程架构"
-      en: "Product Engineering Architecture"
-    description:
-      zh: "面向复杂业务系统的配置化、多租户、可观测和可扩展架构。"
-      en: "Configurable, multi-tenant, observable, and scalable architecture for complex business systems."
-    skills:
-      - "TypeScript"
-      - "Python"
-      - "Distributed Systems"
-      - "SaaS"
+      - "Platform Adoption"

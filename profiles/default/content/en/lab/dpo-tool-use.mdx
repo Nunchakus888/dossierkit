@@ -6,12 +6,12 @@ translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
 title: "DPO for Tool-use Preference"
 method: "DPO"
-summary: "Used chosen/rejected preference data to improve enterprise Agent tool-use decisions."
+summary: "Shows how an Agent platform can turn tool-use badcases into preference data and quality improvement interfaces."
 featured: true
-baseModel: "Qwen / Llama small model"
+baseModel: "To be filled with real experiment model"
 dataset:
-  source: "Agent badcases and synthetic preference pairs"
-  size: "2k pairs"
+  source: "Agent badcases and crafted boundary samples"
+  size: "To be filled with real sample size"
   format: "prompt / chosen / rejected"
 evaluation:
   - "tool selection accuracy"
@@ -20,11 +20,10 @@ evaluation:
 results:
   - metric: "win-rate"
     before: "baseline"
-    after: "+12%"
+    after: "To be filled with real evaluation result"
 limitations:
-  - "Small-scale experiment for proving the loop, not production-grade model performance."
+  - "Presented as a method framework. Real model, sample size, and measured result should be filled with project evidence."
 relatedRoles:
-  - "posttraining"
   - "agent-platform"
 tags:
   - "DPO"
@@ -34,16 +33,16 @@ tags:
 
 ## Hypothesis
 
-If tool-use failures are converted into chosen/rejected preference pairs, a small model can learn more stable tool selection behavior and reduce clearly invalid parameter generation.
+If tool-use failures are converted into chosen/rejected preference pairs, the Agent platform can route production badcases into evaluation, policy optimization, and model improvement interfaces.
 
 ## Dataset
 
-The data came from sanitized badcases, crafted boundary examples, and a small set of synthetic preference pairs. Each example kept the task goal, available tools, business constraints, chosen behavior, and rejected behavior.
+The data design keeps task goal, available tools, business constraints, chosen behavior, and rejected behavior. Real project details should add model version, sample size, labeling rules, and quality review method.
 
 ## Evaluation
 
-The evaluation looked beyond win-rate. It also tracked tool selection accuracy, parameter validity, refusal quality, and whether human handoff was triggered.
+The evaluation should look beyond win-rate. It also tracks tool selection accuracy, parameter validity, refusal quality, and whether human handoff is triggered. It supports platform release gates, not a standalone algorithm showcase.
 
 ## Result
 
-The small-scale experiment improved tool selection stability, but gains on complex multi-step tasks were limited. Future work should separate task decomposition from tool selection.
+This page keeps the general framework for now. Once real project practice is added, fill in the base model, sample size, evaluation set design, and measured result.

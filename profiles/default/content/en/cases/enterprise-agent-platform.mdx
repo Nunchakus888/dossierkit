@@ -4,10 +4,10 @@ locale: "en"
 translationKey: "enterprise-agent-platform"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
-title: "Enterprise Agent Platform"
-summary: "Built an evaluable, auditable, scalable Agent runtime and tool-use layer for enterprise workflows."
-role: "Architecture / Core modules / Evaluation / Cross-functional delivery"
-period: "2025"
+title: "Production-grade Agent Platform Architecture"
+summary: "A focused evidence framework for Agent runtime, tool systems, permission audit, replay evaluation, and enterprise integration."
+role: "Platform architecture / Runtime / Tooling / Permission audit / Evaluation"
+period: "Framework"
 confidentiality: "sanitized"
 featured: true
 tags:
@@ -17,45 +17,39 @@ tags:
   - "Evaluation"
 targetRoles:
   - "agent-platform"
-metrics:
-  - label: "Task success"
-    value: "+18%"
-    description: "Example metric based on a sanitized replay set."
-  - label: "Tool misuse"
-    value: "-31%"
-    description: "Reduced through permission gates and regression evaluation."
 ---
 
-## Context
+## Positioning
 
-Several internal workflows needed LLM Agents, but early prototypes lacked a shared runtime, permission boundary, and quality evaluation process. Each business team was rebuilding prompts, tool calls, and human fallback logic.
+This case supports one primary direction: enterprise Agent platform architect. It is not a demo story or a broad AI application narrative. The value is turning LLM and Agent capability into a governed platform that can enter core business workflows.
 
-## Problem
+## Architecture Scope
 
-The main risk was not model capability alone. Production behavior was hard to control: incorrect tool calls, untraceable state, difficult failure analysis, and no regression gate before launch.
+The platform boundary should cover five production capabilities:
 
-## My Role
+1. Agent runtime: task state, orchestration, retries, handoff, and trace replay.
+2. Tool system: tool registry, schema governance, capability release, and MCP-style integration.
+3. Permission and audit: callable scopes, approval flow, risk control, and operation logs.
+4. Evaluation gates: replay sets, badcase taxonomy, regression checks, and release thresholds.
+5. Enterprise integration: CRM, ERP, BI, OA, customer service, sales, finance, and internal workflow systems.
 
-I defined the platform boundary, module decomposition, and launch quality gates, then coordinated product, ML, business systems, and security stakeholders for the first production workflows.
+## Senior Ownership
 
-## Architecture
+- Not a single workflow: define reusable platform capability.
+- Not prompt-only work: own runtime, permission, evaluation, observability, and release quality.
+- Not isolated engineering: connect product, algorithms, business systems, security, and operations.
+- Not pure delivery: explain reliability, cost, risk, adoption, and ROI with measurable evidence.
 
-The platform had five layers: task orchestration, tool registry, permission audit, runtime observability, and replay evaluation. Business teams declared workflow and tool capabilities while the platform handled permissions, logs, retries, human handoff, and quality regression.
+## Evidence To Add
 
-## Key Decisions
+Future project details should fill in the real evidence:
 
-- Separate tool registration from permission approval, so publishing a tool did not automatically make it callable by Agents.
-- Preserve structured traces for every task to support failure analysis and evaluation sample collection.
-- Use replay sets as launch gates instead of relying only on subjective manual trials.
+- Platform scale: number of workflows, tools, users, departments, and integrated systems.
+- Quality gates: task success rate, tool misuse rate, human handoff rate, and regression pass rate.
+- Reliability: latency, availability, rollback, traceability, and production incident handling.
+- Cost: model routing, cache, token cost, inference cost, and operational cost.
+- Business result: hours saved, throughput improvement, conversion lift, service quality, or revenue impact.
 
-## Evaluation
+## Interview Angle
 
-The evaluation set combined historical tasks, crafted boundary cases, and production badcases. Every prompt, tool schema, or model change had to run success rate, tool misuse rate, and human handoff checks.
-
-## Impact
-
-After the first workflows launched, the team had a reusable runtime and evaluation baseline. Later business teams no longer had to rebuild tool-use, audit, and replay capabilities.
-
-## Failure & Lessons
-
-Evaluation was originally added too late, which left several design decisions without quantitative feedback. Moving evaluation design into the requirement phase reduced launch disputes.
+This is the anchor case for senior positioning. The narrative should show that the candidate can own a production Agent platform, not only implement Agent features.

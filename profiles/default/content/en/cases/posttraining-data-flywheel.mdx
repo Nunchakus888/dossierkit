@@ -4,10 +4,10 @@ locale: "en"
 translationKey: "posttraining-data-flywheel"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
-title: "Agent Post-training Data Flywheel"
-summary: "Turned production Agent badcases into evaluable, labelable, trainable preference data loops."
-role: "Data workflow design / Labeling rules / Evaluation set construction"
-period: "2026"
+title: "Agent Platform Data Feedback Loop"
+summary: "Supporting evidence for a production Agent platform: connecting traces, badcases, evaluation samples, and preference data."
+role: "Data feedback / Badcase taxonomy / Evaluation samples / Quality loop"
+period: "Supporting Evidence"
 confidentiality: "sanitized"
 featured: true
 tags:
@@ -15,17 +15,23 @@ tags:
   - "DPO"
   - "Evaluation"
 targetRoles:
-  - "posttraining"
+  - "agent-platform"
 ---
 
-## Context
+## Positioning
 
-Production Agents create many failure records, but logs alone rarely become continuous model and product quality improvement.
+This is not a standalone career direction. It supports the enterprise Agent platform architect positioning by showing how production traces become a continuous quality improvement system.
 
-## Approach
+## Loop
 
-I classified badcases into five groups: wrong tool selection, wrong parameters, poor task decomposition, refusal policy errors, and missing business rules. I then defined labeling fields, review workflow, and admission rules for training data.
+The platform needs structured traces and a clear badcase taxonomy: wrong tool selection, wrong parameters, poor task decomposition, refusal policy errors, and missing business rules.
 
-## Output
+These records can feed three paths:
 
-The result was a loop from production traces to evaluation samples, preference pairs, prompt improvements, and training experiments. ML teams received structured data, product teams saw failure distribution, and engineering teams used replay results as release gates.
+1. Evaluation samples for prompt, tool schema, and model release gates.
+2. Product improvement through workflow gaps, rule gaps, and human fallback design.
+3. Data construction through chosen/rejected preference pairs for later training or policy optimization.
+
+## Senior Value
+
+The point is not claiming a separate title. The point is proving platform ownership: connecting production behavior, evaluation, model improvement, and business outcomes.

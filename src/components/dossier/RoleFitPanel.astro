@@ -18,7 +18,7 @@ const l = labels[locale];
     <div class="section-heading">
       <div>
         <h2>{l.roles}</h2>
-        <p>{locale === "zh" ? "每个角色页都来自 roles.yaml，可按目标岗位重组案例、实验和能力证明。" : "Each role page is generated from roles.yaml and reassembles work, lab notes, and proof for a target role."}</p>
+        <p>{locale === "zh" ? "聚焦一个高阶主线：企业级 Agent 平台架构与生产落地。" : "Focused on one senior track: enterprise Agent platform architecture and production delivery."}</p>
       </div>
     </div>
     <div class="role-grid">
@@ -44,8 +44,9 @@ const l = labels[locale];
 <style>
   .role-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
     gap: 12px;
+    max-width: 820px;
   }
 
   .role-card {

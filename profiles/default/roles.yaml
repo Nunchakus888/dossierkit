@@ -2,65 +2,24 @@ roles:
   - id: "agent-platform"
     path: "agent-platform"
     title:
-      zh: "Agent 平台架构师"
-      en: "Agent Platform Architect"
+      zh: "企业级 Agent 平台架构负责人"
+      en: "Enterprise Agent Platform Architect"
     headline:
-      zh: "如何匹配 Agent 平台架构师岗位"
-      en: "Why this profile fits Agent Platform Architect roles"
+      zh: "主攻方向：生产级 Agent 平台架构"
+      en: "Primary focus: production-grade Agent platform architecture"
     summary:
-      zh: "适合需要把 Agent 从 Demo 推到生产的团队，重点覆盖 runtime、tool-use、评测、权限和企业集成。"
-      en: "A fit for teams moving Agents from demos to production, covering runtime, tool-use, evaluation, permissions, and enterprise integration."
+      zh: "聚焦 Agent Runtime、工具体系、权限审计、评测回放、LLMOps 与企业系统集成，把大模型能力稳定接入核心业务流程。"
+      en: "Focused on Agent runtime, tool systems, permission audit, replay evaluation, LLMOps, and enterprise integration to bring LLM capabilities into core business workflows."
     focusAreas:
       - "Agent Runtime"
-      - "Tool-use"
-      - "LLMOps"
-      - "Evaluation"
+      - "Tool-use / MCP"
       - "Permission & Audit"
+      - "Replay Evaluation"
+      - "LLMOps"
       - "Enterprise Integration"
     relatedCases:
       - "enterprise-agent-platform"
-    relatedLabs:
-      - "dpo-tool-use"
-      - "eval-harness"
-  - id: "posttraining"
-    path: "posttraining"
-    title:
-      zh: "后训练应用算法专家"
-      en: "Applied Post-training Algorithm Expert"
-    headline:
-      zh: "如何从 Agent 应用切入后训练算法"
-      en: "How Agent applications connect with applied post-training"
-    summary:
-      zh: "适合需要从线上 Agent 反馈构建偏好数据、评测集和训练闭环的团队。"
-      en: "A fit for teams that need to turn production Agent feedback into preference data, evaluation sets, and training loops."
-    focusAreas:
-      - "SFT"
-      - "DPO"
-      - "GRPO"
-      - "RLVR"
-      - "Data Flywheel"
-      - "Evaluation Harness"
-    relatedCases:
       - "posttraining-data-flywheel"
     relatedLabs:
-      - "dpo-tool-use"
-  - id: "ai-fde"
-    path: "ai-fde"
-    title:
-      zh: "AI Forward Deployed Engineer"
-      en: "AI Forward Deployed Engineer"
-    headline:
-      zh: "如何把复杂客户现场转成可交付 AI 产品"
-      en: "How complex customer contexts become shippable AI products"
-    summary:
-      zh: "适合需要同时理解业务流程、现场集成和 LLM 产品工程的团队。"
-      en: "A fit for teams that need business process fluency, field integration, and LLM product engineering in one role."
-    focusAreas:
-      - "Discovery"
-      - "Workflow Mapping"
-      - "Prototype to Production"
-      - "Customer Integration"
-    relatedCases:
-      - "enterprise-agent-platform"
-    relatedLabs:
       - "eval-harness"
+      - "dpo-tool-use"

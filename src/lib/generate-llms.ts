@@ -19,7 +19,7 @@ function renderLocale(pack: ProfilePack, locale: Locale) {
     `Location: ${localize(pack.profile.location, locale)}`,
     `Experience: ${pack.profile.yearsOfExperience} years`,
     "",
-    "## Target roles",
+    "## Primary focus",
     ...pack.roles.roles.map((role) => `- ${localize(role.title, locale)}: ${role.focusAreas.join(", ")}`),
     "",
     "## Featured work",

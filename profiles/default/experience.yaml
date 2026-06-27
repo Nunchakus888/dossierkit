@@ -13,8 +13,8 @@ experiences:
     highlights:
       - zh: "设计任务编排、工具注册、权限审计、回放评测和灰度发布机制。"
         en: "Designed task orchestration, tool registry, permission audit, replay evaluation, and staged rollout mechanisms."
-      - zh: "建立 badcase 标注、偏好数据沉淀和 post-training 反馈闭环。"
-        en: "Built a badcase review, preference data, and post-training feedback loop."
+      - zh: "建立 badcase 标注、偏好数据沉淀和 Agent 质量反馈闭环。"
+        en: "Built a badcase review, preference data, and Agent quality feedback loop."
       - zh: "把成功率、人工接管率、工具误调用率纳入上线门槛。"
         en: "Made success rate, human handoff rate, and tool misuse rate part of launch gates."
     tags:

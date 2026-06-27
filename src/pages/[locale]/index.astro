@@ -50,7 +50,7 @@ const l = labels[locale];
         </section>
       );
     }
-    if (section.type === "posttrainingLab") {
+    if (section.type === "labNotes") {
       const entries = getFeatured(locale, "lab", section.limit || 3);
       return (
         <section class="section-band">

@@ -3,11 +3,11 @@ name:
   zh: "DossierKit 示例专家"
   en: "DossierKit Demo Expert"
 headline:
-  zh: "企业级 Agent 平台与大模型应用架构专家"
-  en: "Agent Platform & LLM Application Architect"
+  zh: "企业级 Agent 平台架构负责人"
+  en: "Enterprise Agent Platform Architect"
 summary:
-  zh: "一个虚构示例档案：10 年工程与 AI 产品落地经验，专注将 LLM/Agent 从演示原型落到可评测、可审计、可扩展的企业核心流程。"
-  en: "A fictional demo profile with 10 years of engineering and AI product delivery experience, focused on turning LLM and Agent prototypes into evaluable, auditable, scalable enterprise workflows."
+  zh: "10 年工程与 AI 落地经验，阿里 + 商汤背景，主攻企业级 Agent 平台架构：把大模型能力接入核心业务流程，建设可评测、可审计、可扩展、可持续运营的生产级 Agent 系统。"
+  en: "10 years of engineering and AI delivery experience with Alibaba and SenseTime context, focused on enterprise Agent platform architecture: bringing LLM capabilities into core business workflows through evaluable, auditable, scalable, operable production systems."
 yearsOfExperience: 10
 location:
   zh: "中国 / 可远程 / 可 relocation"
@@ -21,12 +21,6 @@ companies:
 targetRoles:
   - id: "agent-platform"
     priority: 1
-  - id: "llm-application-architect"
-    priority: 2
-  - id: "posttraining"
-    priority: 3
-  - id: "ai-fde"
-    priority: 4
 links:
   email: "demo@example.com"
   github: "https://github.com/example"
@@ -36,8 +30,8 @@ links:
   website: "https://example.com"
 availability:
   status:
-    zh: "开放高质量 AI 平台、Agent 产品和应用算法机会"
-    en: "Open to high-quality AI platform, Agent product, and applied algorithm opportunities"
+    zh: "聚焦企业级 Agent 平台架构负责人 / 大模型应用平台负责人机会"
+    en: "Focused on enterprise Agent platform architect / LLM application platform lead opportunities"
   preferredLocations:
     - "Shanghai"
     - "Beijing"
@@ -45,5 +39,5 @@ availability:
     - "Shenzhen"
     - "Remote"
   expectedPackage:
-    zh: "面议，优先长期价值与技术影响力"
-    en: "Open, prioritizing long-term scope and technical impact"
+    zh: "优先平台所有权、核心业务场景、长期技术影响力和团队协作深度"
+    en: "Prioritizing platform ownership, core business scenarios, long-term technical impact, and deep cross-functional scope"
