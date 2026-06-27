@@ -120,7 +120,8 @@ function profileFiles(profileId: string) {
       themeFile(profileId),
       resumeFile(profileId),
       homeFile(profileId),
-      navigationFile(profileId)
+      navigationFile(profileId),
+      designFile(profileId)
     ]
   };
 }
@@ -267,7 +268,7 @@ function themeFile(profileId: string) {
         label: "Colors",
         name: "colors",
         widget: "object",
-        fields: ["background", "surface", "foreground", "muted", "border", "accent", "accentSoft", "warm"].map((name) => ({
+        fields: ["background", "surface", "foreground", "muted", "border", "accent", "accentSoft", "warm", "mint", "purple", "cyan"].map((name) => ({
           label: name,
           name,
           widget: "string"
@@ -370,6 +371,98 @@ function navigationFile(profileId: string) {
           { label: "External", name: "external", widget: "boolean", default: false }
         ]
       }
+    ]
+  };
+}
+
+function designFile(profileId: string) {
+  return {
+    label: "Design",
+    name: "design",
+    file: `profiles/${profileId}/design.yaml`,
+    fields: [
+      { label: "Style", name: "style", widget: "select", options: ["minimal-tech", "playful-tech"] },
+      {
+        label: "Brand",
+        name: "brand",
+        widget: "object",
+        fields: [{ label: "Icon", name: "icon", widget: "select", options: ["folder-face", "monogram"] }]
+      },
+      {
+        label: "Hero",
+        name: "hero",
+        widget: "object",
+        fields: [
+          localizedField("Eyebrow", "eyebrow"),
+          {
+            label: "Title",
+            name: "title",
+            widget: "object",
+            fields: [
+              titleLinesField("ZH", "zh"),
+              titleLinesField("EN", "en")
+            ]
+          },
+          localizedField("Subtitle", "subtitle", "text"),
+          actionField("Primary Action", "primaryAction"),
+          actionField("Secondary Action", "secondaryAction")
+        ]
+      },
+      {
+        label: "Quick Links",
+        name: "quickLinks",
+        widget: "list",
+        fields: [
+          { label: "ID", name: "id", widget: "string" },
+          localizedField("Label", "label"),
+          localizedField("Description", "description", "text"),
+          { label: "Path", name: "path", widget: "string" },
+          { label: "Icon", name: "icon", widget: "string" },
+          { label: "Tone", name: "tone", widget: "select", options: ["mint", "purple", "cyan"] }
+        ]
+      },
+      {
+        label: "Contact Strip",
+        name: "contactStrip",
+        widget: "object",
+        fields: [
+          localizedField("Label", "label"),
+          localizedField("Action Label", "actionLabel"),
+          { label: "Icon", name: "icon", widget: "string" }
+        ]
+      }
+    ]
+  };
+}
+
+function titleLinesField(label: string, name: string) {
+  return {
+    label,
+    name,
+    widget: "list",
+    fields: [
+      {
+        label: "Segments",
+        name: "segments",
+        widget: "list",
+        fields: [
+          { label: "Text", name: "text", widget: "string" },
+          { label: "Tone", name: "tone", widget: "select", options: ["mint", "purple", "ink", "muted"] }
+        ]
+      }
+    ]
+  };
+}
+
+function actionField(label: string, name: string) {
+  return {
+    label,
+    name,
+    widget: "object",
+    fields: [
+      localizedField("Label", "label"),
+      { label: "Path", name: "path", widget: "string" },
+      { label: "Icon", name: "icon", widget: "string", required: false }
     ]
   };
 }

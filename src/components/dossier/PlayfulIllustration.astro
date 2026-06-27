@@ -1,0 +1,207 @@
+<div class="illustration" aria-hidden="true">
+  <svg viewBox="0 0 720 520" role="img">
+    <path class="cloud" d="M560 94c8-42 68-39 75 0 31 0 44 45 13 59h-120c-38-17-14-73 32-59Z" />
+    <path class="bubble" d="M613 264c-25-12-34-45-17-68 20-27 63-27 83 1 19 28 4 68-30 77l-25 20Z" />
+    <path class="bubble-heart" d="M634 219c12-17 39 0 23 20l-23 21-23-21c-16-20 11-37 23-20Z" />
+    <path class="spark one" d="M675 169 689 183 675 197 661 183Z" />
+    <ellipse class="ground" cx="368" cy="454" rx="290" ry="17" />
+
+    <g class="person">
+      <path class="hair" d="M273 138c-10-48 41-89 96-83 72 8 111 67 91 134-3-22-17-33-36-37 1 18-11 34-29 39-3-18-12-31-30-37-7 29-32 48-64 48-32 0-55-23-28-64Z" />
+      <circle class="skin" cx="338" cy="218" r="78" />
+      <circle class="skin blush" cx="286" cy="235" r="18" />
+      <circle class="skin blush" cx="390" cy="235" r="18" />
+      <circle class="eye" cx="314" cy="220" r="10" />
+      <circle class="eye" cx="365" cy="220" r="10" />
+      <path class="smile" d="M323 254c12 12 31 12 43 0" />
+      <path class="jacket" d="M238 329c14-48 51-76 100-76 58 0 101 29 121 77l21 119H216Z" />
+      <path class="shirt" d="M315 285h55l20 164h-99Z" />
+      <path class="lapel left" d="M315 285 266 338l48 10-34 46" />
+      <path class="lapel right" d="M371 285l50 54-49 10 35 45" />
+      <path class="arm left" d="M260 371c-39 15-68 45-78 78h96Z" />
+      <path class="arm right" d="M424 370c42 13 76 45 87 79h-99Z" />
+    </g>
+
+    <g class="laptop">
+      <path class="screen" d="M120 287h229c16 0 30 12 33 28l24 133H146Z" />
+      <path class="base" d="M112 447h310c9 0 13 12 5 17H93c-8-5-4-17 5-17Z" />
+      <path class="heart" d="M263 356c10-16 35 0 21 19l-21 20-21-20c-14-19 11-35 21-19Z" />
+    </g>
+
+    <g class="robot">
+      <path class="antenna" d="M573 276v-35" />
+      <circle class="antenna-dot" cx="573" cy="235" r="12" />
+      <rect class="bot-head" x="501" y="276" width="144" height="104" rx="45" />
+      <rect class="bot-face" x="522" y="300" width="102" height="52" rx="24" />
+      <circle class="bot-eye" cx="552" cy="326" r="9" />
+      <circle class="bot-eye" cx="594" cy="326" r="9" />
+      <path class="bot-mouth" d="M562 343c6 7 16 7 22 0" />
+      <path class="bot-body" d="M525 373h96c17 0 31 14 31 31v43H494v-43c0-17 14-31 31-31Z" />
+      <path class="bot-arm left" d="M500 394c-26 8-44 27-54 51" />
+      <path class="bot-arm right" d="M645 394c27 8 45 27 55 51" />
+    </g>
+  </svg>
+</div>
+
+<style>
+  .illustration {
+    width: min(100%, 650px);
+    margin-inline: auto;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  .cloud,
+  .bubble {
+    fill: rgba(255, 255, 255, 0.72);
+    stroke: color-mix(in srgb, var(--color-cyan, #86d7ea), #b7c4cf 32%);
+    stroke-width: 6;
+  }
+
+  .bubble-heart,
+  .heart {
+    fill: color-mix(in srgb, var(--color-mint, #55bea2), white 38%);
+  }
+
+  .spark {
+    fill: var(--color-purple, #8d6be8);
+    opacity: 0.72;
+  }
+
+  .ground {
+    fill: color-mix(in srgb, var(--color-mint, #55bea2), transparent 62%);
+  }
+
+  .hair,
+  .eye {
+    fill: #2b2933;
+  }
+
+  .skin {
+    fill: #ffe4d8;
+    stroke: #2b2933;
+    stroke-width: 5;
+  }
+
+  .blush {
+    fill: #ffb4ad;
+    stroke: none;
+    opacity: 0.72;
+  }
+
+  .smile,
+  .lapel,
+  .antenna,
+  .bot-mouth {
+    fill: none;
+    stroke: #2b2933;
+    stroke-width: 5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .jacket,
+  .arm.left,
+  .arm.right {
+    fill: color-mix(in srgb, var(--color-mint, #55bea2), white 38%);
+    stroke: #2b2933;
+    stroke-width: 5;
+  }
+
+  .shirt {
+    fill: #fff;
+    stroke: #dcd8e9;
+    stroke-width: 4;
+  }
+
+  .screen {
+    fill: #f2effb;
+    stroke: #676079;
+    stroke-width: 5;
+  }
+
+  .base {
+    fill: #e8e4f4;
+    stroke: #676079;
+    stroke-width: 5;
+  }
+
+  .antenna-dot,
+  .bot-eye {
+    fill: color-mix(in srgb, var(--color-mint, #55bea2), white 20%);
+    stroke: #2b2933;
+    stroke-width: 4;
+  }
+
+  .bot-head,
+  .bot-body {
+    fill: #ffffff;
+    stroke: #2b2933;
+    stroke-width: 5;
+  }
+
+  .bot-face {
+    fill: #2b3343;
+  }
+
+  .bot-arm {
+    fill: none;
+    stroke: #2b2933;
+    stroke-width: 12;
+    stroke-linecap: round;
+  }
+
+  .person,
+  .robot {
+    animation: float-soft 4.6s ease-in-out infinite;
+  }
+
+  .robot {
+    animation-delay: 0.5s;
+  }
+
+  .cloud,
+  .bubble,
+  .spark {
+    animation: drift 5s ease-in-out infinite;
+  }
+
+  .spark {
+    animation-delay: 1.2s;
+  }
+
+  @keyframes float-soft {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-7px);
+    }
+  }
+
+  @keyframes drift {
+    0%,
+    100% {
+      transform: translateY(0) translateX(0);
+    }
+    50% {
+      transform: translateY(-8px) translateX(5px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .person,
+    .robot,
+    .cloud,
+    .bubble,
+    .spark {
+      animation: none;
+    }
+  }
+</style>

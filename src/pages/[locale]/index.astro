@@ -6,6 +6,7 @@ import ExperienceTimeline from "../../components/dossier/ExperienceTimeline.astr
 import Hero from "../../components/dossier/Hero.astro";
 import LabCard from "../../components/dossier/LabCard.astro";
 import ProofWall from "../../components/dossier/ProofWall.astro";
+import QuickLinks from "../../components/dossier/QuickLinks.astro";
 import RoleFitPanel from "../../components/dossier/RoleFitPanel.astro";
 import WritingCard from "../../components/dossier/WritingCard.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
@@ -27,6 +28,7 @@ const l = labels[locale];
   {pack.home.sections.map((section) => {
     if (section.type === "hero") return <Hero locale={locale} pack={pack} />;
     if (section.type === "bento") return <BentoDashboard locale={locale} pack={pack} />;
+    if (section.type === "quickLinks") return <QuickLinks locale={locale} pack={pack} />;
     if (section.type === "targetRoles") return <RoleFitPanel locale={locale} pack={pack} />;
     if (section.type === "proofWall") return <ProofWall locale={locale} pack={pack} />;
     if (section.type === "contact") return <ContactPanel locale={locale} pack={pack} />;

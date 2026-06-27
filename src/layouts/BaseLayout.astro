@@ -16,17 +16,21 @@ type Props = {
 const { locale = defaultLocale, title, description } = Astro.props;
 const pack = loadProfilePack();
 const theme = pack.theme;
+const colors = theme.colors as typeof theme.colors & Record<string, string | undefined>;
 const titleText = pageTitle(pack, locale, title);
 const descriptionText = pageDescription(pack, locale, description);
 const cssVars = [
-  `--color-background: ${theme.colors.background}`,
-  `--color-surface: ${theme.colors.surface}`,
-  `--color-foreground: ${theme.colors.foreground}`,
-  `--color-muted: ${theme.colors.muted}`,
-  `--color-border: ${theme.colors.border}`,
-  `--color-accent: ${theme.colors.accent}`,
-  `--color-accent-soft: ${theme.colors.accentSoft}`,
-  `--color-warm: ${theme.colors.warm}`,
+  `--color-background: ${colors.background}`,
+  `--color-surface: ${colors.surface}`,
+  `--color-foreground: ${colors.foreground}`,
+  `--color-muted: ${colors.muted}`,
+  `--color-border: ${colors.border}`,
+  `--color-accent: ${colors.accent}`,
+  `--color-accent-soft: ${colors.accentSoft}`,
+  `--color-warm: ${colors.warm}`,
+  `--color-mint: ${colors.mint || colors.accent}`,
+  `--color-purple: ${colors.purple || colors.warm}`,
+  `--color-cyan: ${colors.cyan || colors.accentSoft}`,
   `--layout-max-width: ${theme.layout.maxWidth}`,
   `--card-radius: ${theme.layout.cardRadius}`
 ].join("; ");

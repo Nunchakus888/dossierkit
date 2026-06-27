@@ -220,6 +220,65 @@ export const navigationSchema = z
   })
   .passthrough();
 
+const titleSegmentSchema = z.object({
+  text: z.string(),
+  tone: z.enum(["mint", "purple", "ink", "muted"]).default("ink")
+});
+
+const titleLineSchema = z.object({
+  segments: z.array(titleSegmentSchema)
+});
+
+export const designSchema = z
+  .object({
+    style: z.enum(["minimal-tech", "playful-tech"]).default("playful-tech"),
+    brand: z
+      .object({
+        icon: z.enum(["folder-face", "monogram"]).default("folder-face")
+      })
+      .default({ icon: "folder-face" }),
+    hero: z
+      .object({
+        eyebrow: localizedStringSchema,
+        title: z.object({
+          zh: z.array(titleLineSchema),
+          en: z.array(titleLineSchema)
+        }),
+        subtitle: localizedStringSchema,
+        primaryAction: z.object({
+          label: localizedStringSchema,
+          path: z.string().min(1),
+          icon: z.string().optional()
+        }),
+        secondaryAction: z.object({
+          label: localizedStringSchema,
+          path: z.string().min(1),
+          icon: z.string().optional()
+        })
+      })
+      .passthrough(),
+    quickLinks: z.array(
+      z
+        .object({
+          id: z.string().min(1),
+          label: localizedStringSchema,
+          description: localizedStringSchema,
+          path: z.string().min(1),
+          icon: z.string().min(1),
+          tone: z.enum(["mint", "purple", "cyan"]).default("mint")
+        })
+        .passthrough()
+    ),
+    contactStrip: z
+      .object({
+        label: localizedStringSchema,
+        actionLabel: localizedStringSchema,
+        icon: z.string().min(1).default("mail")
+      })
+      .passthrough()
+  })
+  .passthrough();
+
 export const contentMetricSchema = z
   .object({
     label: z.string().min(1),
@@ -260,4 +319,5 @@ export type Theme = z.infer<typeof themeSchema>;
 export type Resume = z.infer<typeof resumeSchema>;
 export type Home = z.infer<typeof homeSchema>;
 export type Navigation = z.infer<typeof navigationSchema>;
+export type Design = z.infer<typeof designSchema>;
 export type ContentFrontmatter = z.infer<typeof contentFrontmatterSchema>;

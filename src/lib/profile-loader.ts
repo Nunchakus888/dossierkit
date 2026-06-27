@@ -7,6 +7,7 @@ import type { z } from "zod";
 import { activeProfile, type Locale, profileRoot } from "./config";
 import {
   contentFrontmatterSchema,
+  designSchema,
   educationSchema,
   experienceSchema,
   homeSchema,
@@ -18,6 +19,7 @@ import {
   skillsSchema,
   themeSchema,
   type ContentFrontmatter,
+  type Design,
   type Education,
   type Experience,
   type Home,
@@ -55,6 +57,7 @@ export type ProfilePack = {
   resume: Resume;
   home: Home;
   navigation: Navigation;
+  design: Design;
 };
 
 function formatZodError(error: z.ZodError, filePath: string) {
@@ -98,7 +101,8 @@ export function loadProfilePack(profileId = activeProfile): ProfilePack {
     theme: readYamlFile(path.join(root, "theme.yaml"), themeSchema),
     resume: readYamlFile(path.join(root, "resume.yaml"), resumeSchema),
     home: readYamlFile(path.join(root, "home.yaml"), homeSchema),
-    navigation: readYamlFile(path.join(root, "navigation.yaml"), navigationSchema)
+    navigation: readYamlFile(path.join(root, "navigation.yaml"), navigationSchema),
+    design: readYamlFile(path.join(root, "design.yaml"), designSchema)
   };
 }
 

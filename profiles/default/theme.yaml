@@ -1,24 +1,27 @@
-preset: "minimal-tech"
+preset: "playful-tech"
 colors:
-  background: "#F4F7F8"
+  background: "#F6FCFD"
   surface: "#FFFFFF"
-  foreground: "#101416"
-  muted: "#68747B"
-  border: "#DCE5E7"
-  accent: "#006B7A"
-  accentSoft: "#D9F2EF"
-  warm: "#B95F32"
+  foreground: "#282B3A"
+  muted: "#657184"
+  border: "#DCECEF"
+  accent: "#55BEA2"
+  accentSoft: "#EAF9F4"
+  warm: "#8D6BE8"
+  mint: "#55BEA2"
+  purple: "#8D6BE8"
+  cyan: "#78CDE1"
 typography:
   sans: "Inter, Noto Sans SC, system-ui"
   mono: "JetBrains Mono, IBM Plex Mono, monospace"
-  headingWeight: 650
+  headingWeight: 760
   bodyWeight: 400
 layout:
   maxWidth: "1120px"
-  cardRadius: "8px"
+  cardRadius: "20px"
   density: "comfortable"
-  heroStyle: "editorial"
-  dashboardStyle: "bento"
+  heroStyle: "playful"
+  dashboardStyle: "soft-cards"
 motion:
   enabled: true
-  level: "subtle"
+  level: "soft"

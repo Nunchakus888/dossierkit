@@ -1,0 +1,92 @@
+style: "playful-tech"
+brand:
+  icon: "folder-face"
+hero:
+  eyebrow:
+    zh: "DossierKit / AI Expert"
+    en: "DossierKit / AI Expert"
+  title:
+    zh:
+      - segments:
+          - text: "AI"
+            tone: "mint"
+          - text: " / "
+            tone: "ink"
+          - text: "Agent"
+            tone: "purple"
+          - text: " /"
+            tone: "ink"
+      - segments:
+          - text: "LLM"
+            tone: "mint"
+          - text: " Expert"
+            tone: "ink"
+    en:
+      - segments:
+          - text: "AI"
+            tone: "mint"
+          - text: " / "
+            tone: "ink"
+          - text: "Agent"
+            tone: "purple"
+          - text: " /"
+            tone: "ink"
+      - segments:
+          - text: "LLM"
+            tone: "mint"
+          - text: " Expert"
+            tone: "ink"
+  subtitle:
+    zh: "Building intelligent systems and delightful experiences with AI."
+    en: "Building intelligent systems and delightful experiences with AI."
+  primaryAction:
+    label:
+      zh: "View My Work"
+      en: "View My Work"
+    path: "work"
+    icon: "sparkle"
+  secondaryAction:
+    label:
+      zh: "About Me"
+      en: "About Me"
+    path: "cv"
+    icon: "user"
+quickLinks:
+  - id: "projects"
+    label:
+      zh: "Projects"
+      en: "Projects"
+    description:
+      zh: "Explore things I've built and shipped."
+      en: "Explore things I've built and shipped."
+    path: "work"
+    icon: "folder"
+    tone: "mint"
+  - id: "experience"
+    label:
+      zh: "Experience"
+      en: "Experience"
+    description:
+      zh: "A look at my journey and impact."
+      en: "A look at my journey and impact."
+    path: "cv"
+    icon: "briefcase"
+    tone: "purple"
+  - id: "open-roles"
+    label:
+      zh: "Open Roles"
+      en: "Open Roles"
+    description:
+      zh: "I'm open to meaningful opportunities."
+      en: "I'm open to meaningful opportunities."
+    path: "contact"
+    icon: "chair"
+    tone: "cyan"
+contactStrip:
+  label:
+    zh: "Contact"
+    en: "Contact"
+  actionLabel:
+    zh: "Send a Message"
+    en: "Send a Message"
+  icon: "send"

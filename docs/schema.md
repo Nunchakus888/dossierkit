@@ -14,6 +14,7 @@ All profile data lives under `profiles/{profileId}` and is validated by Zod in `
 - `resume.yaml`: PDF resume sections and highlights.
 - `home.yaml`: homepage section order.
 - `navigation.yaml`: brand mark, menu labels, paths, icons, and placement.
+- `design.yaml`: hero copy, segmented title colors, quick links, contact strip, and visual style.
 
 ## Localized strings
 

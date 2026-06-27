@@ -1,16 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --color-background: #f4f7f8;
+  --color-background: #f6fcfd;
   --color-surface: #ffffff;
-  --color-foreground: #101416;
-  --color-muted: #68747b;
-  --color-border: #dce5e7;
-  --color-accent: #006b7a;
-  --color-accent-soft: #d9f2ef;
-  --color-warm: #b95f32;
+  --color-foreground: #272b3a;
+  --color-muted: #657184;
+  --color-border: #dcecef;
+  --color-accent: #55bea2;
+  --color-accent-soft: #eaf9f4;
+  --color-warm: #8d6be8;
+  --color-mint: #55bea2;
+  --color-purple: #8d6be8;
+  --color-cyan: #78cde1;
   --layout-max-width: 1120px;
-  --card-radius: 8px;
+  --card-radius: 20px;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   color-scheme: light;
 }
@@ -27,11 +30,8 @@ html {
 body {
   margin: 0;
   background:
-    linear-gradient(color-mix(in srgb, var(--color-border), transparent 70%) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in srgb, var(--color-border), transparent 70%) 1px, transparent 1px),
-    linear-gradient(180deg, color-mix(in srgb, var(--color-accent-soft), transparent 18%), transparent 420px),
+    linear-gradient(180deg, rgba(239, 252, 253, 0.96) 0%, rgba(250, 255, 255, 0.95) 55%, rgba(255, 255, 255, 0.98) 100%),
     var(--color-background);
-  background-size: 56px 56px, 56px 56px, auto, auto;
   background-position: center top;
   color: var(--color-foreground);
   font-family: Inter, "Noto Sans SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -45,9 +45,7 @@ body::before {
   z-index: -1;
   pointer-events: none;
   content: "";
-  background:
-    linear-gradient(180deg, rgba(244, 247, 248, 0.1), var(--color-background) 74%),
-    radial-gradient(900px 420px at 50% -180px, rgba(0, 107, 122, 0.13), transparent 70%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.56), rgba(234, 249, 244, 0.34), rgba(244, 240, 255, 0.28));
 }
 
 a {
@@ -80,7 +78,7 @@ main > article {
 
 .section-band {
   padding: 64px 0;
-  border-top: 1px solid color-mix(in srgb, var(--color-border), transparent 25%);
+  border-top: 1px solid color-mix(in srgb, var(--color-border), transparent 36%);
 }
 
 .section-heading {
@@ -111,7 +109,7 @@ main > article {
   border: 1px solid color-mix(in srgb, var(--color-border), transparent 8%);
   border-radius: var(--card-radius);
   background: color-mix(in srgb, var(--color-surface), transparent 3%);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.78) inset, 0 12px 34px rgba(16, 20, 22, 0.055);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.86) inset, 0 14px 34px rgba(38, 47, 58, 0.052);
   transition:
     transform 220ms var(--ease-out),
     border-color 220ms var(--ease-out),
@@ -129,8 +127,8 @@ main > article {
 
 .card:hover {
   transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--color-accent), transparent 48%);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.88) inset, 0 20px 46px rgba(16, 20, 22, 0.09);
+  border-color: color-mix(in srgb, var(--color-accent), transparent 42%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 20px 46px rgba(38, 47, 58, 0.085);
 }
 
 .button-row {
@@ -145,7 +143,7 @@ main > article {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border-radius: 8px;
+  border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--color-border), transparent 6%);
   padding: 9px 14px;
   background: color-mix(in srgb, var(--color-surface), transparent 2%);
@@ -166,13 +164,13 @@ main > article {
 }
 
 .button.primary {
-  border-color: var(--color-foreground);
-  background: var(--color-foreground);
-  color: var(--color-background);
+  border-color: color-mix(in srgb, var(--color-mint), #2f3140 12%);
+  background: var(--color-mint);
+  color: white;
 }
 
 .button.primary:hover {
-  background: color-mix(in srgb, var(--color-foreground), var(--color-accent) 15%);
+  background: color-mix(in srgb, var(--color-mint), var(--color-foreground) 8%);
 }
 
 .tag-list {

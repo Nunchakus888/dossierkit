@@ -1,0 +1,53 @@
+---
+type Props = {
+  label?: string;
+};
+
+const { label = "DossierKit" } = Astro.props;
+---
+
+<svg class="brand-svg" viewBox="0 0 72 58" role="img" aria-label={label}>
+  <path class="tab" d="M10 12.5C10 8.9 12.9 6 16.5 6h14.2c2.1 0 4.1 1 5.3 2.7l3.1 4.3h16.4c3.6 0 6.5 2.9 6.5 6.5v24C62 47.1 59.1 50 55.5 50h-39C12.9 50 10 47.1 10 43.5Z" />
+  <path class="body" d="M6 19c0-4.4 3.6-8 8-8h16.1c2.4 0 4.7 1.1 6.2 3l2.5 3H58c4.4 0 8 3.6 8 8v18c0 4.4-3.6 8-8 8H14c-4.4 0-8-3.6-8-8Z" />
+  <circle class="eye" cx="27" cy="35" r="2.6" />
+  <circle class="eye" cx="45" cy="35" r="2.6" />
+  <path class="mouth" d="M32 40c2.2 2 5.8 2 8 0" />
+  <circle class="spark" cx="16" cy="27" r="2" />
+</svg>
+
+<style>
+  .brand-svg {
+    display: block;
+    width: 40px;
+    height: auto;
+    filter: drop-shadow(0 8px 12px rgba(77, 190, 162, 0.22));
+  }
+
+  .tab {
+    fill: color-mix(in srgb, var(--color-mint, #55bea2), white 38%);
+    stroke: color-mix(in srgb, var(--color-mint, #55bea2), #2d3245 18%);
+    stroke-width: 3;
+  }
+
+  .body {
+    fill: color-mix(in srgb, var(--color-mint, #55bea2), white 18%);
+    stroke: color-mix(in srgb, var(--color-mint, #55bea2), #2d3245 18%);
+    stroke-width: 3;
+  }
+
+  .eye {
+    fill: var(--color-foreground);
+  }
+
+  .mouth {
+    fill: none;
+    stroke: var(--color-foreground);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+  }
+
+  .spark {
+    fill: #ffffff;
+    opacity: 0.75;
+  }
+</style>

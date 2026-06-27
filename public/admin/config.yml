@@ -407,6 +407,15 @@ collections:
               - label: warm
                 name: warm
                 widget: string
+              - label: mint
+                name: mint
+                widget: string
+              - label: purple
+                name: purple
+                widget: string
+              - label: cyan
+                name: cyan
+                widget: string
           - label: Typography
             name: typography
             widget: object
@@ -545,6 +554,209 @@ collections:
                 name: external
                 widget: boolean
                 default: false
+      - label: Design
+        name: design
+        file: profiles/default/design.yaml
+        fields:
+          - label: Style
+            name: style
+            widget: select
+            options:
+              - minimal-tech
+              - playful-tech
+          - label: Brand
+            name: brand
+            widget: object
+            fields:
+              - label: Icon
+                name: icon
+                widget: select
+                options:
+                  - folder-face
+                  - monogram
+          - label: Hero
+            name: hero
+            widget: object
+            fields:
+              - label: Eyebrow
+                name: eyebrow
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Title
+                name: title
+                widget: object
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: list
+                    fields:
+                      - label: Segments
+                        name: segments
+                        widget: list
+                        fields:
+                          - label: Text
+                            name: text
+                            widget: string
+                          - label: Tone
+                            name: tone
+                            widget: select
+                            options:
+                              - mint
+                              - purple
+                              - ink
+                              - muted
+                  - label: EN
+                    name: en
+                    widget: list
+                    fields:
+                      - label: Segments
+                        name: segments
+                        widget: list
+                        fields:
+                          - label: Text
+                            name: text
+                            widget: string
+                          - label: Tone
+                            name: tone
+                            widget: select
+                            options:
+                              - mint
+                              - purple
+                              - ink
+                              - muted
+              - label: Subtitle
+                name: subtitle
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: text
+                  - label: EN
+                    name: en
+                    widget: text
+              - label: Primary Action
+                name: primaryAction
+                widget: object
+                fields:
+                  - label: Label
+                    name: label
+                    widget: object
+                    required: true
+                    fields:
+                      - label: ZH
+                        name: zh
+                        widget: string
+                      - label: EN
+                        name: en
+                        widget: string
+                  - label: Path
+                    name: path
+                    widget: string
+                  - label: Icon
+                    name: icon
+                    widget: string
+                    required: false
+              - label: Secondary Action
+                name: secondaryAction
+                widget: object
+                fields:
+                  - label: Label
+                    name: label
+                    widget: object
+                    required: true
+                    fields:
+                      - label: ZH
+                        name: zh
+                        widget: string
+                      - label: EN
+                        name: en
+                        widget: string
+                  - label: Path
+                    name: path
+                    widget: string
+                  - label: Icon
+                    name: icon
+                    widget: string
+                    required: false
+          - label: Quick Links
+            name: quickLinks
+            widget: list
+            fields:
+              - label: ID
+                name: id
+                widget: string
+              - label: Label
+                name: label
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Description
+                name: description
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: text
+                  - label: EN
+                    name: en
+                    widget: text
+              - label: Path
+                name: path
+                widget: string
+              - label: Icon
+                name: icon
+                widget: string
+              - label: Tone
+                name: tone
+                widget: select
+                options:
+                  - mint
+                  - purple
+                  - cyan
+          - label: Contact Strip
+            name: contactStrip
+            widget: object
+            fields:
+              - label: Label
+                name: label
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Action Label
+                name: actionLabel
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
+              - label: Icon
+                name: icon
+                widget: string
   - name: cases_zh
     label: Cases ZH
     folder: profiles/default/content/zh/cases

@@ -17,12 +17,13 @@ public/admin/config.yml
 The generated config includes:
 
 - profile YAML editing
-- experience, education, skills, roles, metrics, theme, resume, and home config editing
+- experience, education, skills, roles, metrics, theme, resume, home, and design config editing
 - Chinese and English case creation
 - Chinese and English lab creation
 - Chinese and English writing creation
 - asset uploads to `profiles/{profileId}/assets`
 - navigation menu editing through `navigation.yaml`
+- hero, quick links, and contact strip editing through `design.yaml`
 
 ## Local backend
 
