@@ -13,7 +13,7 @@ hero:
           - text: " / "
             tone: "ink"
           - text: "Agent"
-            tone: "purple"
+            tone: "blue"
           - text: " /"
             tone: "ink"
       - segments:
@@ -28,7 +28,7 @@ hero:
           - text: " / "
             tone: "ink"
           - text: "Agent"
-            tone: "purple"
+            tone: "blue"
           - text: " /"
             tone: "ink"
       - segments:
@@ -47,10 +47,10 @@ hero:
     icon: "sparkle"
   secondaryAction:
     label:
-      zh: "About Me"
-      en: "About Me"
+      zh: "View CV"
+      en: "View CV"
     path: "cv"
-    icon: "user"
+    icon: "file-text"
 quickLinks:
   - id: "projects"
     label:
@@ -71,7 +71,7 @@ quickLinks:
       en: "A look at my journey and impact."
     path: "cv"
     icon: "briefcase"
-    tone: "purple"
+    tone: "blue"
   - id: "open-roles"
     label:
       zh: "Open Roles"

@@ -23,12 +23,12 @@ items:
     path: "lab"
     icon: "flask"
     placement: "primary"
-  - id: "about"
+  - id: "cv"
     label:
-      zh: "About"
-      en: "About"
+      zh: "CV"
+      en: "CV"
     path: "cv"
-    icon: "user"
+    icon: "file-text"
     placement: "primary"
   - id: "roles"
     label:

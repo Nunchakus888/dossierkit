@@ -7,9 +7,9 @@ colors:
   border: "#DCECEF"
   accent: "#55BEA2"
   accentSoft: "#EAF9F4"
-  warm: "#8D6BE8"
+  warm: "#4FA9B8"
   mint: "#55BEA2"
-  purple: "#8D6BE8"
+  blue: "#4FA9D8"
   cyan: "#78CDE1"
 typography:
   sans: "Inter, Noto Sans SC, system-ui"

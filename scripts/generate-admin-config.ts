@@ -268,7 +268,7 @@ function themeFile(profileId: string) {
         label: "Colors",
         name: "colors",
         widget: "object",
-        fields: ["background", "surface", "foreground", "muted", "border", "accent", "accentSoft", "warm", "mint", "purple", "cyan"].map((name) => ({
+        fields: ["background", "surface", "foreground", "muted", "border", "accent", "accentSoft", "warm", "mint", "blue", "cyan"].map((name) => ({
           label: name,
           name,
           widget: "string"
@@ -418,7 +418,7 @@ function designFile(profileId: string) {
           localizedField("Description", "description", "text"),
           { label: "Path", name: "path", widget: "string" },
           { label: "Icon", name: "icon", widget: "string" },
-          { label: "Tone", name: "tone", widget: "select", options: ["mint", "purple", "cyan"] }
+          { label: "Tone", name: "tone", widget: "select", options: ["mint", "blue", "cyan"] }
         ]
       },
       {
@@ -447,7 +447,7 @@ function titleLinesField(label: string, name: string) {
         widget: "list",
         fields: [
           { label: "Text", name: "text", widget: "string" },
-          { label: "Tone", name: "tone", widget: "select", options: ["mint", "purple", "ink", "muted"] }
+          { label: "Tone", name: "tone", widget: "select", options: ["mint", "blue", "cyan", "ink", "muted"] }
         ]
       }
     ]

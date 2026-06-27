@@ -410,8 +410,8 @@ collections:
               - label: mint
                 name: mint
                 widget: string
-              - label: purple
-                name: purple
+              - label: blue
+                name: blue
                 widget: string
               - label: cyan
                 name: cyan
@@ -609,7 +609,8 @@ collections:
                             widget: select
                             options:
                               - mint
-                              - purple
+                              - blue
+                              - cyan
                               - ink
                               - muted
                   - label: EN
@@ -628,7 +629,8 @@ collections:
                             widget: select
                             options:
                               - mint
-                              - purple
+                              - blue
+                              - cyan
                               - ink
                               - muted
               - label: Subtitle
@@ -726,7 +728,7 @@ collections:
                 widget: select
                 options:
                   - mint
-                  - purple
+                  - blue
                   - cyan
           - label: Contact Strip
             name: contactStrip
