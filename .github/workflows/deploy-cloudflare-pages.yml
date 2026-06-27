@@ -1,6 +1,9 @@
 name: Deploy Cloudflare Pages
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       active_profile:
@@ -10,7 +13,11 @@ on:
       site_url:
         description: Public site URL
         required: true
-        default: https://example.com
+        default: https://dossierkit.pages.dev
+
+concurrency:
+  group: cloudflare-pages-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -20,9 +27,9 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      ACTIVE_PROFILE: ${{ inputs.active_profile }}
+      ACTIVE_PROFILE: ${{ inputs.active_profile || 'default' }}
       DEFAULT_LOCALE: zh
-      PUBLIC_SITE_URL: ${{ inputs.site_url }}
+      PUBLIC_SITE_URL: ${{ inputs.site_url || 'https://dossierkit.pages.dev' }}
       GITHUB_REPOSITORY: ${{ github.repository }}
     steps:
       - name: Checkout

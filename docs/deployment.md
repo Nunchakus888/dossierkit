@@ -7,7 +7,7 @@ DossierKit is a static Astro project and can deploy to Cloudflare Pages, Vercel,
 This repository includes two GitHub Actions workflows:
 
 - `.github/workflows/ci.yml`: validates the active profile, builds the static site, generates Pagefind, and uploads `dist` as an artifact on every push to `main` and pull request.
-- `.github/workflows/deploy-cloudflare-pages.yml`: manually deploys `dist` to Cloudflare Pages after secrets and variables are configured.
+- `.github/workflows/deploy-cloudflare-pages.yml`: deploys `dist` to Cloudflare Pages on every push to `main`; it also supports manual dispatch for redeploys.
 
 ## Build command
 
@@ -50,7 +50,9 @@ gh variable set CLOUDFLARE_PROJECT_NAME --body dossierkit
 
 The API token needs Cloudflare Pages edit access for the account.
 
-After that, run the `Deploy Cloudflare Pages` workflow from GitHub Actions and provide:
+After that, every push to `main` will validate, build, and deploy automatically.
+
+For a manual redeploy, run the `Deploy Cloudflare Pages` workflow from GitHub Actions and provide:
 
 ```text
 active_profile=default
