@@ -3,11 +3,11 @@ name:
   zh: "DossierKit 示例专家"
   en: "DossierKit Demo Expert"
 headline:
-  zh: "企业级 Agent 平台 / AI FDE / 大模型应用架构专家"
-  en: "Agent Platform / AI FDE / LLM Application Architect"
+  zh: "企业级 Agent 平台与大模型应用架构专家"
+  en: "Agent Platform & LLM Application Architect"
 summary:
-  zh: "10 年大厂工程与 AI 落地经验，具备阿里与商汤背景，擅长把大模型/Agent 接入企业核心流程，建设可评测、可审计、可扩展的 Agent 平台，并对业务效率、交付质量和系统稳定性负责。"
-  en: "10 years of engineering and AI delivery experience with Alibaba and SenseTime context, focused on bringing LLM/Agent systems into enterprise workflows, building evaluable, auditable, scalable Agent platforms, and owning delivery quality, business impact, and system reliability."
+  zh: "一个虚构示例档案：10 年工程与 AI 产品落地经验，专注将 LLM/Agent 从演示原型落到可评测、可审计、可扩展的企业核心流程。"
+  en: "A fictional demo profile with 10 years of engineering and AI product delivery experience, focused on turning LLM and Agent prototypes into evaluable, auditable, scalable enterprise workflows."
 yearsOfExperience: 10
 location:
   zh: "中国 / 可远程 / 可 relocation"
@@ -21,16 +21,12 @@ companies:
 targetRoles:
   - id: "agent-platform"
     priority: 1
-  - id: "ai-fde"
-    priority: 2
   - id: "llm-application-architect"
-    priority: 3
-  - id: "ai-application-lead"
-    priority: 4
-  - id: "ai-infra-llmops"
-    priority: 5
+    priority: 2
   - id: "posttraining"
-    priority: 6
+    priority: 3
+  - id: "ai-fde"
+    priority: 4
 links:
   email: "demo@example.com"
   github: "https://github.com/example"
@@ -40,8 +36,8 @@ links:
   website: "https://example.com"
 availability:
   status:
-    zh: "开放 Agent 平台架构、AI FDE、行业大模型方案和 AI Native SaaS 技术负责人机会"
-    en: "Open to Agent platform architecture, AI FDE, industry LLM solution, and AI-native SaaS technical leadership opportunities"
+    zh: "开放高质量 AI 平台、Agent 产品和应用算法机会"
+    en: "Open to high-quality AI platform, Agent product, and applied algorithm opportunities"
   preferredLocations:
     - "Shanghai"
     - "Beijing"
@@ -49,5 +45,5 @@ availability:
     - "Shenzhen"
     - "Remote"
   expectedPackage:
-    zh: "优先专家/负责人级岗位，重视业务影响、平台所有权与长期激励"
-    en: "Prioritizing senior expert or leadership scope with clear business impact, platform ownership, and long-term incentives"
+    zh: "面议，优先长期价值与技术影响力"
+    en: "Open, prioritizing long-term scope and technical impact"

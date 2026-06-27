@@ -6,12 +6,11 @@ translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
 title: "Agent Replay Evaluation Harness"
 method: "Replay Eval"
-summary: "Built reproducible Agent regression evaluation from production traces for prompt, tool, model, and workflow changes."
+summary: "Built reproducible Agent regression evaluation from production traces for prompt, tool, and model changes."
 featured: true
 relatedRoles:
   - "agent-platform"
   - "ai-fde"
-  - "llm-application-architect"
 tags:
   - "Evaluation"
   - "Replay"
@@ -22,26 +21,10 @@ tags:
 
 Convert production task traces into offline replay evaluations so teams can understand risk when changing prompts, tool schemas, or model versions.
 
-## Sample design
+## Design
 
-Each sample should include the user goal, business context, available tools, permission boundary, expected intermediate behavior, final output assertions, tool side-effect checks, and human fallback policy.
-
-## Metric layers
-
-Evaluation should cover at least three layers:
-
-- Process metrics: tool choice, parameter validity, permission match, step order, and recovery strategy.
-- Outcome metrics: task success, actionability, formatting correctness, and business-rule compliance.
-- Operating metrics: human handoff rate, average latency, token cost, failure distribution, and regressions caught.
-
-## Release gate
-
-Every change to prompt, tool schema, RAG strategy, model version, or system permission should run fixed replay sets. High-risk workflows need staged rollout, and new production badcases should flow back into the golden set.
+Each sample includes user goal, context, available tools, expected intermediate behavior, final output assertions, and human fallback policy. Results are aggregated by task type, tool type, and failure reason.
 
 ## Lesson
 
 Final-answer checks miss important risks. Agent evaluation must inspect process, tools, side effects, and recovery strategy.
-
-## To fill later
-
-Add real sample scale, task coverage, release thresholds, regressions caught, online metric movement, and representative failure cases when project details are ready.

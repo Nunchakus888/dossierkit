@@ -3,36 +3,42 @@ brand:
   icon: "folder-face"
 hero:
   eyebrow:
-    zh: "Enterprise Agent / AI FDE"
-    en: "Enterprise Agent / AI FDE"
+    zh: "DossierKit / AI Expert"
+    en: "DossierKit / AI Expert"
   title:
     zh:
       - segments:
+          - text: "AI"
+            tone: "mint"
+          - text: " / "
+            tone: "ink"
           - text: "Agent"
-            tone: "mint"
-          - text: " Platform"
             tone: "blue"
+          - text: " /"
+            tone: "ink"
       - segments:
-          - text: "AI FDE"
+          - text: "LLM"
             tone: "mint"
-      - segments:
-          - text: "LLM Architect"
+          - text: " Expert"
             tone: "ink"
     en:
       - segments:
+          - text: "AI"
+            tone: "mint"
+          - text: " / "
+            tone: "ink"
           - text: "Agent"
-            tone: "mint"
-          - text: " Platform"
             tone: "blue"
+          - text: " /"
+            tone: "ink"
       - segments:
-          - text: "AI FDE"
+          - text: "LLM"
             tone: "mint"
-      - segments:
-          - text: "LLM Architect"
+          - text: " Expert"
             tone: "ink"
   subtitle:
-    zh: "把大模型和 Agent 接入企业核心流程，建设可评测、可审计、可扩展的生产级 AI 系统。"
-    en: "Bringing LLMs and Agents into enterprise workflows with evaluable, auditable, scalable production systems."
+    zh: "Building intelligent systems and delightful experiences with AI."
+    en: "Building intelligent systems and delightful experiences with AI."
   primaryAction:
     label:
       zh: "View My Work"
@@ -48,32 +54,32 @@ hero:
 quickLinks:
   - id: "projects"
     label:
-      zh: "Platform"
-      en: "Platform"
+      zh: "Projects"
+      en: "Projects"
     description:
-      zh: "Agent Runtime, tools, audit, evaluation."
-      en: "Agent runtime, tools, audit, evaluation."
+      zh: "Explore things I've built and shipped."
+      en: "Explore things I've built and shipped."
     path: "work"
     icon: "folder"
     tone: "mint"
   - id: "experience"
     label:
-      zh: "CV"
-      en: "CV"
+      zh: "Experience"
+      en: "Experience"
     description:
-      zh: "Engineering, AI delivery, enterprise systems."
-      en: "Engineering, AI delivery, enterprise systems."
+      zh: "A look at my journey and impact."
+      en: "A look at my journey and impact."
     path: "cv"
     icon: "briefcase"
     tone: "blue"
   - id: "open-roles"
     label:
-      zh: "Roles"
-      en: "Roles"
+      zh: "Open Roles"
+      en: "Open Roles"
     description:
-      zh: "Agent Platform, AI FDE, LLM Architect."
-      en: "Agent Platform, AI FDE, LLM Architect."
-    path: "for/agent-platform"
+      zh: "I'm open to meaningful opportunities."
+      en: "I'm open to meaningful opportunities."
+    path: "contact"
     icon: "chair"
     tone: "cyan"
 contactStrip:

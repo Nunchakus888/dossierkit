@@ -6,12 +6,11 @@ translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
 title: "Agent 回放评测框架"
 method: "Replay Eval"
-summary: "用生产 trace 构建可复现的 Agent 回归评测，支撑 prompt、工具、模型和流程变更。"
+summary: "用生产 trace 构建可复现的 Agent 回归评测，支撑 prompt、工具和模型变更。"
 featured: true
 relatedRoles:
   - "agent-platform"
   - "ai-fde"
-  - "llm-application-architect"
 tags:
   - "Evaluation"
   - "Replay"
@@ -22,26 +21,10 @@ tags:
 
 把线上任务 trace 转成离线可回放评测，让团队在变更 prompt、工具 schema 或模型版本时知道风险在哪里。
 
-## Sample Design
+## Design
 
-每个样本建议包含用户目标、业务上下文、可用工具、权限边界、期望中间行为、最终输出断言、工具副作用检查和人工兜底策略。
-
-## Metric Layers
-
-评测至少分三层：
-
-- 过程指标：工具选择、参数有效性、权限命中、步骤顺序和恢复策略。
-- 结果指标：任务成功率、答案可执行性、格式正确性和业务规则符合度。
-- 运营指标：人工接管率、平均延迟、token 成本、失败原因分布和回归发现数。
-
-## Release Gate
-
-每次变更 prompt、工具 schema、RAG 策略、模型版本或系统权限前，都应跑固定回放集。高风险流程需要灰度发布，并把线上新增 badcase 回灌到 golden set。
+每个样本包含用户目标、上下文、可用工具、期望中间行为、最终输出断言和人工兜底策略。评测结果按任务类型、工具类型和失败原因聚合。
 
 ## Lesson
 
 只看最终答案会漏掉关键风险。Agent 评测必须同时检查过程、工具、副作用和恢复策略。
-
-## To Fill Later
-
-后续项目实践建议补充样本规模、任务覆盖、上线门槛、回归发现数量、线上指标变化和典型失败案例。

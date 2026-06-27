@@ -32,8 +32,8 @@ items:
     placement: "primary"
   - id: "roles"
     label:
-      zh: "Roles"
-      en: "Roles"
+      zh: "Open Roles"
+      en: "Fit"
     path: "for/agent-platform"
     icon: "target"
     placement: "secondary"

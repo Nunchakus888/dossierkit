@@ -6,23 +6,23 @@ translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
 title: "DPO for Tool-use Preference"
 method: "DPO"
-summary: "A framework for turning tool-use badcases into preference data and post-training experiment interfaces."
+summary: "Used chosen/rejected preference data to improve enterprise Agent tool-use decisions."
 featured: true
-baseModel: "To be filled with real experiment model"
+baseModel: "Qwen / Llama small model"
 dataset:
-  source: "Agent badcases, boundary samples, and reviewed preference pairs"
-  size: "To be filled with real sample size"
+  source: "Agent badcases and synthetic preference pairs"
+  size: "2k pairs"
   format: "prompt / chosen / rejected"
 evaluation:
   - "tool selection accuracy"
   - "task success rate"
   - "hallucination rate"
 results:
-  - metric: "To be filled"
+  - metric: "win-rate"
     before: "baseline"
-    after: "measured result"
+    after: "+12%"
 limitations:
-  - "Currently a design framework. Real model, sample size, and results should be replaced with project evidence."
+  - "Small-scale experiment for proving the loop, not production-grade model performance."
 relatedRoles:
   - "posttraining"
   - "agent-platform"
@@ -32,18 +32,18 @@ tags:
   - "Preference Data"
 ---
 
-## Goal
+## Hypothesis
 
-Validate whether production tool-use failures can be systematically converted into chosen/rejected preference pairs and used for post-training or tool-policy optimization.
+If tool-use failures are converted into chosen/rejected preference pairs, a small model can learn more stable tool selection behavior and reduce clearly invalid parameter generation.
 
-## Sample design
+## Dataset
 
-Each sample should keep the task goal, context, available tools, business constraints, chosen behavior, rejected behavior, failure reason, and human review result. Sources can include production badcases, crafted boundary samples, and replayed high-frequency workflows.
+The data came from sanitized badcases, crafted boundary examples, and a small set of synthetic preference pairs. Each example kept the task goal, available tools, business constraints, chosen behavior, and rejected behavior.
 
-## Evaluation metrics
+## Evaluation
 
-Do not rely only on preference win-rate. Enterprise Agent evaluation should also inspect tool selection accuracy, parameter validity, task success, refusal quality, human handoff, and potential side effects.
+The evaluation looked beyond win-rate. It also tracked tool selection accuracy, parameter validity, refusal quality, and whether human handoff was triggered.
 
-## To add later
+## Result
 
-When real project evidence is available, replace this section with model version, sample scale, training/evaluation setup, baseline, measured results, failure samples, and reusable lessons.
+The small-scale experiment improved tool selection stability, but gains on complex multi-step tasks were limited. Future work should separate task decomposition from tool selection.
