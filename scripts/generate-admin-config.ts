@@ -1,19 +1,22 @@
 import fs from "node:fs";
 import path from "node:path";
 import { stringify } from "yaml";
-import { activeProfile, repository } from "../src/lib/config";
+import { activeProfile, repository, siteUrl } from "../src/lib/config";
 
 export async function main(args = process.argv.slice(2)) {
   const profileId = valueAfter(args, "--profile") || activeProfile;
   const repo = valueAfter(args, "--repo") || repository || detectGitHubRepository() || "owner/dossierkit";
   const branch = valueAfter(args, "--branch") || "main";
+  const publicSiteUrl = normalizeSiteUrl(valueAfter(args, "--site-url") || siteUrl);
   const out = path.join(process.cwd(), "public", "admin", "config.yml");
 
   const config = {
     backend: {
       name: "github",
       repo,
-      branch
+      branch,
+      base_url: `${publicSiteUrl}/api`,
+      auth_endpoint: "auth"
     },
     local_backend: true,
     media_folder: `profiles/${profileId}/assets`,
@@ -40,6 +43,10 @@ export async function main(args = process.argv.slice(2)) {
 function valueAfter(args: string[], flag: string) {
   const index = args.indexOf(flag);
   return index >= 0 ? args[index + 1] : undefined;
+}
+
+function normalizeSiteUrl(value: string) {
+  return value.replace(/\/+$/, "");
 }
 
 function detectGitHubRepository() {

@@ -38,4 +38,29 @@ Then open `/admin`.
 
 ## Production protection
 
-Protect `/admin` with GitHub OAuth in Decap and Cloudflare Access or your hosting provider's access-control layer.
+Production `/admin` uses Decap CMS with the GitHub backend and a Cloudflare Pages Functions OAuth proxy.
+
+Create a GitHub OAuth App:
+
+- Homepage URL: `https://dossierkit.pages.dev`
+- Authorization callback URL: `https://dossierkit.pages.dev/api/callback`
+
+Configure Cloudflare Pages production environment variables:
+
+```text
+GITHUB_OAUTH_CLIENT_ID=...
+GITHUB_OAUTH_CLIENT_SECRET=...
+```
+
+The generated `public/admin/config.yml` points Decap at:
+
+```yaml
+backend:
+  name: github
+  base_url: https://dossierkit.pages.dev/api
+  auth_endpoint: auth
+```
+
+Do not use `https://api.netlify.com/auth` for Cloudflare Pages deployments. That endpoint only works for Netlify-managed OAuth and returns Not Found for `dossierkit.pages.dev`.
+
+For private repositories, keep the Decap scope as `repo`. Also consider Cloudflare Access in front of `/admin` if the admin UI itself should not be publicly reachable.

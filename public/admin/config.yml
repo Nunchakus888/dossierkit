@@ -2,6 +2,8 @@ backend:
   name: github
   repo: Nunchakus888/dossierkit
   branch: main
+  base_url: https://dossierkit.pages.dev/api
+  auth_endpoint: auth
 local_backend: true
 media_folder: profiles/default/assets
 public_folder: /profile-assets/default
