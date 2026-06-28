@@ -55,7 +55,7 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
             <strong>{localize(item.role, locale)}</strong>
             <span>{item.company}</span>
           </div>
-          <time>{item.period}</time>
+          <time>{localize(item.period, locale)}</time>
           <p>{localize(item.summary, locale)}</p>
           <ul>
             {item.highlights.map((highlight) => <li>{localize(highlight, locale)}</li>)}

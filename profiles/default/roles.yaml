@@ -51,6 +51,8 @@ roles:
           en: "Builds a quality loop from badcase -> content gap -> knowledge / Skill / Memory -> evaluation / release gate."
         - zh: "已有量化结果：自动解决率 60%+、token 消耗下降 60%、平均耗时从约 50s 降到约 7s。"
           en: "Has quantified outcomes: 60%+ auto-resolution, 60% token reduction, and average processing time from about 50s to about 7s."
+        - zh: "在 YC 担任 Agent 平台负责人期间，推动团队 AI 开发 Harness、开发规范、Spec/EPIC 流程和 Supervisor 验收门禁落地。"
+          en: "As Agent Platform Lead at YC, drove team adoption of an AI development harness, development standards, Spec/EPIC workflow, and supervisor acceptance gates."
       gaps:
         - title:
             zh: "平台规模"
@@ -74,8 +76,8 @@ roles:
             zh: "协作边界"
             en: "Collaboration scope"
           summary:
-            zh: "独立负责能体现 owner，但还需要补团队规模、协作对象、决策边界、带人、规范和评审机制。"
-            en: "Ownership is clear, but the case still needs team size, partner teams, decision scope, people leadership, standards, and review mechanisms."
+            zh: "已补充团队 Harness 和规范建设，但还需要补团队规模、协作对象、决策边界、带人、规范覆盖范围和落地结果。"
+            en: "Team harness and standards are now covered, but the case still needs team size, partner teams, decision scope, people leadership, standards coverage, and adoption results."
         - title:
             zh: "架构取舍"
             en: "Architecture tradeoffs"
@@ -115,6 +117,18 @@ roles:
               en: "How content gaps move into human review, knowledge updates, and release gates."
             - zh: "业务价值：节省人力、降低工单、提升 CSAT、支撑 ARR 或续费。"
               en: "Business value: staffing saved, ticket reduction, CSAT lift, ARR support, or renewal impact."
+        - title:
+            zh: "团队与 Harness"
+            en: "Team and harness"
+          items:
+            - zh: "团队规模、角色构成、是否带人，以及你负责的决策边界。"
+              en: "Team size, role composition, people leadership, and your decision scope."
+            - zh: "AI Harness 覆盖哪些仓库、服务或项目，团队采用比例如何。"
+              en: "Repositories, services, or projects covered by the AI Harness, and team adoption rate."
+            - zh: "Spec/EPIC、Supervisor gate、自检脚本和 PR 模板对交付质量的实际改善。"
+              en: "Actual delivery-quality improvements from Spec/EPIC, supervisor gates, self-check scripts, and PR templates."
+            - zh: "是否有可量化结果：返工减少、评审效率提升、缺陷减少、上线失败减少或新人上手周期缩短。"
+              en: "Quantified outcomes: reduced rework, faster review, fewer defects, fewer failed launches, or shorter onboarding time."
       resumeBullets:
         - zh: "独立负责多行业客服 Agent SaaS 平台 0-1 架构与迭代，建设多租户 Agent Runtime，支持多语言、多渠道、RAG、Memory、Skill、MCP/API 扩展和复杂任务编排，推动客户问题自动解决率达到 60%+。"
           en: "Independently owned the 0-1 architecture and iteration of a multi-industry customer service Agent SaaS platform, building a multi-tenant Agent Runtime with multilingual, multi-channel, RAG, Memory, Skill, MCP/API extension, and complex task orchestration capabilities, driving 60%+ customer issue auto-resolution."
@@ -122,9 +136,11 @@ roles:
           en: "Led the evolution from code-guided Agent 1.0 to model-driven Agent 2.0 through dynamic Skill loading, tool gating, flow fast path, async execution, inspection traces, and usage/cost governance, reducing average processing time from about 50s to 7s and token consumption by 60%."
         - zh: "构建 badcase 到知识库、Skill、Memory 和评测集的质量闭环，结合 content gap 识别、LLM 诊断、embedding 聚类、人工审核和发布门禁，提升客服 Agent 的准确性、稳定性和可运营性。"
           en: "Built a quality loop from badcases to knowledge base, Skill, Memory, and evaluation sets, combining content gap detection, LLM diagnosis, embedding clustering, human review, and release gates to improve accuracy, stability, and operability."
+        - zh: "推动团队 AI 开发 Harness 落地，建立架构规则、Spec/EPIC 工作流、Supervisor 验收门禁、自检脚本和 AI Harness trace 交付要求，降低架构漂移、失控重构和验收缺口。"
+          en: "Drove team adoption of an AI development harness, establishing architecture rules, Spec/EPIC workflow, supervisor gates, self-check scripts, and AI Harness trace handoff requirements to reduce architecture drift, runaway refactors, and acceptance gaps."
       interviewNarrative:
-        zh: "1.0 版本解决 LLM 在真实客服业务中可控落地的问题：用 Guideline/Journey 表达规则和流程，用 ARQ 把模型决策拆成可审计 artifacts，并通过 async session、callback、inspection 和 token usage 保证线上可追踪。2.0 让模型成为 tool calling 和多步决策中心，Runtime 负责上下文、行动空间、Skill 动态加载、RAG/Memory、工具边界、并发控制和成本治理。"
-        en: "Agent 1.0 solved controlled LLM adoption in real customer service workflows: Guideline/Journey represented rules and flows, ARQ decomposed model decisions into auditable artifacts, and async session, callback, inspection, and token usage made behavior traceable. Agent 2.0 moved the model to the center of tool calling and multi-step decisions while the runtime owned context, action space, dynamic Skill loading, RAG/Memory, tool boundaries, concurrency, and cost governance."
+        zh: "1.0 版本解决 LLM 在真实客服业务中可控落地的问题：用 Guideline/Journey 表达规则和流程，用 ARQ 把模型决策拆成可审计 artifacts，并通过 async session、callback、inspection 和 token usage 保证线上可追踪。2.0 让模型成为 tool calling 和多步决策中心，Runtime 负责上下文、行动空间、Skill 动态加载、RAG/Memory、工具边界、并发控制和成本治理。团队层面，我推动 AI 开发 Harness 落地，用架构规则、Spec/EPIC、Supervisor gate 和自检脚本把 AI 辅助开发纳入可评审、可验证、可复盘的交付流程。"
+        en: "Agent 1.0 solved controlled LLM adoption in real customer service workflows: Guideline/Journey represented rules and flows, ARQ decomposed model decisions into auditable artifacts, and async session, callback, inspection, and token usage made behavior traceable. Agent 2.0 moved the model to the center of tool calling and multi-step decisions while the runtime owned context, action space, dynamic Skill loading, RAG/Memory, tool boundaries, concurrency, and cost governance. At the team level, I drove AI development harness adoption, using architecture rules, Spec/EPIC, supervisor gates, and self-check scripts to make AI-assisted delivery reviewable, verifiable, and traceable."
       updateRules:
         - zh: "先更新指标口径，避免只加数字。"
           en: "Update metric definitions before adding numbers."

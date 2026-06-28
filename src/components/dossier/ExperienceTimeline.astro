@@ -23,7 +23,7 @@ const l = labels[locale];
     <div class="timeline">
       {pack.experience.experiences.map((item) => (
         <article>
-          <time>{item.period}</time>
+          <time>{localize(item.period, locale)}</time>
           <div class="card">
             <h3>{localize(item.role, locale)}</h3>
             <strong>{item.company}</strong>

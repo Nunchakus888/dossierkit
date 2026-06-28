@@ -30,6 +30,7 @@ tags:
 4. 有可观测和成本治理：correlation_id、events、inspection、token usage、callback payload、压测指标。
 5. 有质量闭环：badcase -> content gap -> knowledge / Skill / Memory -> evaluation / release gate。
 6. 有量化结果：自动解决率 60%+、token 下降 60%、平均耗时从约 50s 降到约 7s。
+7. 有团队工程治理证据：在 YC 推动 AI 开发 Harness、架构规则、Spec/EPIC、Supervisor 验收门禁和自检脚本落地。
 
 ## 当前短板
 
@@ -59,11 +60,11 @@ tags:
 - 高风险操作确认
 - 幂等、重试和回滚
 
-### 4. 团队与协作边界需要补
+### 4. 团队与协作结果需要补
 
-“独立负责”能体现 owner，但高阶岗位也会看是否能带团队、做架构评审、推动产品/算法/交付/客户成功/安全协作。
+已补充团队 AI 开发 Harness 和开发规范建设，能体现 owner 不只是个人实现。但高阶岗位还会追问落地范围和结果。
 
-需要补充团队规模、协作对象、自己负责的决策边界、是否带人、是否制定规范和评审机制。
+需要补充团队规模、协作对象、自己负责的决策边界、是否带人、规范覆盖哪些项目，以及是否带来返工减少、评审效率提升、缺陷减少、上线失败减少或新人上手周期缩短。
 
 ### 5. 架构取舍还可以更强
 
@@ -89,6 +90,8 @@ tags:
 8. side-effect planner 如何保证幂等、审批、回滚和审计。
 9. content gap 如何从未解决会话进入人工审核、知识沉淀和发布门禁。
 10. 业务价值是什么：节省多少人力、降低多少工单、提升多少 CSAT、支撑多少 ARR 或续费。
+11. AI Harness 覆盖哪些仓库、服务或项目，团队采用比例如何。
+12. Spec/EPIC、Supervisor gate、自检脚本和 PR 模板对交付质量有什么可量化改善。
 
 ## 推荐简历表达
 
@@ -97,6 +100,8 @@ tags:
 2. 主导平台从代码引导 Agent 1.0 演进为模型驱动 Agent 2.0，通过动态 Skill、tool gating、flow fast path、异步执行、inspection trace 和 usage/cost 治理，将平均处理耗时从约 50s 降至约 7s，token 消耗下降 60%。
 
 3. 构建 badcase 到知识库、Skill、Memory 和评测集的质量闭环，结合 content gap 识别、LLM 诊断、embedding 聚类、人工审核和发布门禁，提升客服 Agent 的准确性、稳定性和可运营性。
+
+4. 推动团队 AI 开发 Harness 落地，建立架构规则、Spec/EPIC 工作流、Supervisor 验收门禁、自检脚本和 AI Harness trace 交付要求，降低架构漂移、失控重构和验收缺口。
 
 ## 面试展开主线
 
@@ -116,6 +121,7 @@ tags:
 2. 再更新平台规模，包括客户、租户、渠道、请求量、知识库和工具数量。
 3. 再更新治理能力，包括权限、安全、审计、side-effect 和人工接管。
 4. 最后更新简历表达和面试故事。
+5. 团队治理信息只在有 adoption 范围和效果证据后再强化，避免把“制定规范”写成空泛管理动作。
 
 版本记录：
 

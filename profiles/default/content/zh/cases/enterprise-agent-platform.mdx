@@ -5,9 +5,9 @@ translationKey: "enterprise-agent-platform"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
 title: "生产级 Agent 平台架构"
-summary: "围绕 Agent Runtime、工具体系、权限审计、评测回放和企业系统集成组织平台级项目证据。"
-role: "平台架构 / Runtime / 工具体系 / 权限审计 / 评测发布"
-period: "Framework"
+summary: "在 YC 担任 Agent 平台负责人期间，主导企业级客服 Agent SaaS 平台与团队 AI 开发 Harness 落地。"
+role: "YC / Agent 平台负责人 / Runtime / Skill / RAG / Harness"
+period: "2024-03 - Present"
 confidentiality: "sanitized"
 featured: true
 tags:
@@ -15,23 +15,42 @@ tags:
   - "Tool-use"
   - "LLMOps"
   - "Evaluation"
+  - "AI Harness"
 targetRoles:
   - "agent-platform"
 ---
 
 ## Positioning
 
-这个案例用于承载主攻方向：企业级 Agent 平台架构负责人。后续补真实项目时，重点不是写“做了一个 Agent”，而是证明你拥有平台边界、核心模块、上线门槛和跨团队交付的所有权。
+这个案例用于承载主攻方向：企业级 Agent 平台架构负责人。核心不是“做了一个 Agent”，而是在 YC 任职期间对 Agent 平台、团队工程规范和交付质量承担 owner 职责。
 
-## Architecture Scope
+## Platform Scope
 
-平台证据建议围绕五层展开：
+平台主线围绕多行业客服 Agent SaaS 展开，覆盖：
 
-1. Agent Runtime：任务状态、计划执行、重试、超时、人工接管和失败恢复。
-2. Tool / MCP / Skills：工具注册、schema 管理、版本控制、权限绑定和调用审计。
-3. Permission & Audit：身份、租户、数据权限、敏感操作确认和审计日志。
-4. Evaluation Harness：离线回放、golden set、过程断言、工具副作用检查和发布门禁。
-5. Observability & LLMOps：trace、日志、指标、模型路由、缓存、延迟和成本分析。
+1. Agent Runtime：会话级 runtime、复杂任务处理、终止条件、并发控制、异步执行和 callback 回传。
+2. Tool / MCP / Skills：HTTP Tool、MCP adapter、Skill 动态加载卸载、tool gating 和 side-effect planner。
+3. RAG / Memory：文档、QA、网站、附件、商品、session-memory 等多类型知识和上下文增强。
+4. Observability / Cost：correlation_id、events、inspection、token usage、callback payload 和压测指标。
+5. Quality Loop：badcase、content gap、人工审核、知识/Skill/Memory 更新、评测回放和发布门禁。
+
+## Architecture Evolution
+
+1.0 阶段先做可控 Agent Runtime，用 Guideline/Journey/ARQ 把大模型能力约束在确定性的业务执行框架里，优先解决真实客服业务里的可解释、可追踪和可复盘问题。
+
+2.0 阶段升级为模型驱动 Agent Runtime，让 LLM 主导 tool calling 和多步决策，Runtime 负责上下文、行动空间、Skill 动态加载、RAG/Memory、工具边界、并发控制和成本治理。
+
+这条演进线能体现的不是 API 调用能力，而是平台抽象、架构取舍和生产约束下的系统治理能力。
+
+## Team Harness
+
+团队层面，我推动 AI 开发 Harness 落地，把 AI 辅助开发纳入稳定工程流程。核心思想来自三层控制：
+
+1. Outer Loop：沉淀架构规则、语言规范、分层边界、命名、错误处理、日志和可观测要求。
+2. Inner Loop：用 Spec / EPIC 拆解非平凡需求，明确目标、非目标、验收标准、任务阶段和状态。
+3. Supervisor Gate：把变更摘要、文件清单、自检结果、AI Harness trace 和验收 checklist 作为交付门禁。
+
+这个机制主要解决四类问题：架构漂移、失控重构、质量不一致和验收缺口。对高阶岗位来说，它证明的不只是个人能写代码，而是能把团队协作、AI 工具使用和工程质量治理成可复制流程。
 
 ## Senior Ownership
 
@@ -39,19 +58,27 @@ targetRoles:
 
 - 不是接一个工具，而是定义工具接入、权限审批、运行时授权和审计边界。
 - 不是调 prompt，而是建立 prompt、工具 schema、模型版本和 RAG 策略的发布门禁。
-- 不是做单点应用，而是把能力沉淀为多个业务流程可复用的平台资产。
-- 不是只交付功能，而是对稳定性、成本、质量和业务结果负责。
+- 不是做单点应用，而是把 Agent Runtime、Skill、RAG/Memory 和多渠道能力沉淀为平台资产。
+- 不是只交付个人功能，而是推动团队规范、AI Harness、自检和验收流程落地。
+- 不是只讲技术实现，而是对稳定性、成本、质量和业务结果负责。
 
 ## Evidence To Add
 
-后续真实项目实践应补：
+已具备的证据：
 
-- 接入的核心业务流程，以及原流程痛点。
-- 工具数量、业务系统数量、任务量、用户范围和上线阶段。
-- 你负责的架构决策、核心模块和跨团队推进事项。
+- YC / 2024-03 至今 / Agent 平台负责人。
+- 多行业客服 Agent SaaS 平台 0-1 架构与 1.0 到 2.0 演进。
+- Agent Runtime、RAG/Memory、Skill、MCP/API、异步执行、可观测和成本治理。
+- 团队 AI 开发 Harness、开发规范、Spec/EPIC 流程和 Supervisor 验收门禁。
+
+后续仍需补：
+
+- 覆盖的客户、租户、行业、渠道、日均/峰值请求量和会话量。
+- 工具数量、业务系统数量、知识库规模、用户范围和上线阶段。
+- 团队规模、协作对象、评审机制、规范覆盖范围和 adoption 结果。
 - 任务成功率、人工接管率、工具误调用率、回放通过率、延迟、成本和稳定性指标。
-- 业务 ROI，例如流程耗时、人效、错误率、交付周期或客户满意度变化。
+- 业务 ROI，例如流程耗时、人效、错误率、工单减少、CSAT、ARR 或续费影响。
 
 ## Interview Angle
 
-这页的表达重点是：我能把 Agent 从 demo 推进到企业核心流程，建设平台能力、治理边界和质量闭环，而不是只做应用层功能拼装。
+这页的表达重点是：我在 YC 负责的不只是 Agent 应用开发，而是把 Agent 从 demo 推进到真实客服业务流程，建设平台能力、治理边界、质量闭环和团队级 AI 工程流程。

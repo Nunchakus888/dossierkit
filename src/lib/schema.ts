@@ -65,7 +65,7 @@ export const experienceSchema = z.object({
       .object({
         company: z.string().min(1),
         role: localizedStringSchema,
-        period: z.string().min(1),
+        period: localizedStringSchema.or(z.string().min(1)),
         location: localizedStringSchema.optional(),
         summary: localizedStringSchema,
         highlights: z.array(localizedStringSchema).default([]),

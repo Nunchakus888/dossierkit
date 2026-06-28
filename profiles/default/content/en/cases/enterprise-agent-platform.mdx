@@ -5,9 +5,9 @@ translationKey: "enterprise-agent-platform"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-06-26"
 title: "Production-grade Agent Platform Architecture"
-summary: "A focused evidence framework for Agent runtime, tool systems, permission audit, replay evaluation, and enterprise integration."
-role: "Platform architecture / Runtime / Tooling / Permission audit / Evaluation"
-period: "Framework"
+summary: "As Agent Platform Lead at YC, owned an enterprise customer-service Agent SaaS platform and drove team adoption of an AI development harness."
+role: "YC / Agent Platform Lead / Runtime / Skill / RAG / Harness"
+period: "2024-03 - Present"
 confidentiality: "sanitized"
 featured: true
 tags:
@@ -15,41 +15,68 @@ tags:
   - "Tool-use"
   - "LLMOps"
   - "Evaluation"
+  - "AI Harness"
 targetRoles:
   - "agent-platform"
 ---
 
 ## Positioning
 
-This case supports one primary direction: enterprise Agent platform architect. It is not a demo story or a broad AI application narrative. The value is turning LLM and Agent capability into a governed platform that can enter core business workflows.
+This case supports one primary direction: enterprise Agent platform architect. It is not a demo story or a broad AI application narrative. The value is YC ownership over the Agent platform, team engineering standards, and delivery quality.
 
-## Architecture Scope
+## Platform Scope
 
-The platform boundary should cover five production capabilities:
+The core platform is a customer-service Agent SaaS foundation across multiple industries:
 
-1. Agent runtime: task state, orchestration, retries, handoff, and trace replay.
-2. Tool system: tool registry, schema governance, capability release, and MCP-style integration.
-3. Permission and audit: callable scopes, approval flow, risk control, and operation logs.
-4. Evaluation gates: replay sets, badcase taxonomy, regression checks, and release thresholds.
-5. Enterprise integration: CRM, ERP, BI, OA, customer service, sales, finance, and internal workflow systems.
+1. Agent Runtime: session-level runtime, complex task handling, termination conditions, concurrency control, async execution, and callback delivery.
+2. Tool / MCP / Skills: HTTP Tool, MCP adapter, dynamic Skill load/unload, tool gating, and side-effect planner.
+3. RAG / Memory: documents, QA, websites, attachments, products, session memory, and context augmentation.
+4. Observability / Cost: correlation_id, events, inspection, token usage, callback payloads, and load-test metrics.
+5. Quality Loop: badcases, content gaps, human review, knowledge/Skill/Memory updates, replay evaluation, and release gates.
+
+## Architecture Evolution
+
+Agent 1.0 started with a controlled runtime. Guideline, Journey, and ARQ constrained LLM behavior inside a deterministic business execution framework, prioritizing explainability, traceability, and reviewability in real customer-service workflows.
+
+Agent 2.0 evolved into a model-driven runtime. The LLM moved to the center of tool calling and multi-step decisions, while the runtime owned context, action space, dynamic Skill loading, RAG/Memory, tool boundaries, concurrency, and cost governance.
+
+The important signal is not API usage. It is platform abstraction, architecture tradeoff, and system governance under production constraints.
+
+## Team Harness
+
+At the team level, I drove adoption of an AI development harness so AI-assisted engineering became part of a controlled delivery process. The core model has three layers:
+
+1. Outer Loop: architecture rules, language profiles, layering boundaries, naming, error handling, logging, and observability expectations.
+2. Inner Loop: Spec / EPIC workflow for non-trivial changes, including goals, non-goals, acceptance criteria, phases, tasks, and status.
+3. Supervisor Gate: change summary, changed files, self-check result, AI Harness trace, and acceptance checklist as delivery gates.
+
+This reduces four common failure modes: architecture drift, runaway refactors, inconsistent quality, and acceptance gaps. For senior positioning, it shows not only individual delivery ability, but also the ability to turn AI-assisted development and team collaboration into a repeatable engineering process.
 
 ## Senior Ownership
 
 - Not a single workflow: define reusable platform capability.
 - Not prompt-only work: own runtime, permission, evaluation, observability, and release quality.
 - Not isolated engineering: connect product, algorithms, business systems, security, and operations.
-- Not pure delivery: explain reliability, cost, risk, adoption, and ROI with measurable evidence.
+- Not solo feature delivery: drive team standards, AI Harness adoption, self-checks, and acceptance gates.
+- Not pure implementation: explain reliability, cost, risk, adoption, and ROI with measurable evidence.
 
 ## Evidence To Add
 
-Future project details should fill in the real evidence:
+Evidence already available:
 
-- Platform scale: number of workflows, tools, users, departments, and integrated systems.
-- Quality gates: task success rate, tool misuse rate, human handoff rate, and regression pass rate.
-- Reliability: latency, availability, rollback, traceability, and production incident handling.
-- Cost: model routing, cache, token cost, inference cost, and operational cost.
-- Business result: hours saved, throughput improvement, conversion lift, service quality, or revenue impact.
+- YC / 2024-03 to present / Agent Platform Lead.
+- 0-1 architecture and Agent 1.0 to 2.0 evolution of a customer-service Agent SaaS platform.
+- Agent Runtime, RAG/Memory, Skill, MCP/API, async execution, observability, and cost governance.
+- Team AI development harness, development standards, Spec/EPIC workflow, and supervisor acceptance gates.
+
+Still missing:
+
+- Customers, tenants, industries, channels, daily/peak requests, and session volume.
+- Tool count, integrated systems, knowledge base size, user scope, and launch stage.
+- Team size, partner teams, review mechanism, standards coverage, and adoption results.
+- Task success rate, tool misuse rate, human handoff rate, replay pass rate, latency, cost, and stability metrics.
+- Business ROI such as time saved, productivity lift, error reduction, ticket reduction, CSAT, ARR, or renewal impact.
 
 ## Interview Angle
 
-This is the anchor case for senior positioning. The narrative should show that the candidate can own a production Agent platform, not only implement Agent features.
+This is the anchor case for senior positioning. The narrative should show that at YC I owned not just Agent application development, but the movement from demo to real customer-service workflows, including platform capability, governance boundaries, quality loops, and team-level AI engineering process.

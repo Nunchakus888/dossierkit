@@ -1,27 +1,32 @@
 experiences:
-  - company: "Enterprise AI Platform Team"
+  - company: "YC"
     role:
       zh: "Agent 平台负责人"
       en: "Agent Platform Lead"
-    period: "2024 - 2026"
+    period:
+      zh: "2024-03 - 现在"
+      en: "2024-03 - Present"
     location:
       zh: "上海 / 远程协作"
       en: "Shanghai / Remote"
     summary:
-      zh: "负责企业 Agent Runtime、工具调用权限、评测体系和数据闭环，推动多个业务流程从 POC 进入生产。"
-      en: "Led enterprise Agent runtime, tool permissions, evaluation, and data loops, moving multiple workflows from POC to production."
+      zh: "负责企业级 Agent 平台建设与团队工程治理，主导 Agent Runtime、工具/Skill 扩展、RAG/Memory、可观测与成本治理，并推动 AI 开发 Harness 在团队落地。"
+      en: "Owned enterprise Agent platform development and team engineering governance, leading Agent Runtime, tool/Skill extension, RAG/Memory, observability, cost governance, and team adoption of an AI development harness."
     highlights:
-      - zh: "设计任务编排、工具注册、权限审计、回放评测和灰度发布机制。"
-        en: "Designed task orchestration, tool registry, permission audit, replay evaluation, and staged rollout mechanisms."
-      - zh: "建立 badcase 标注、偏好数据沉淀和 Agent 质量反馈闭环。"
-        en: "Built a badcase review, preference data, and Agent quality feedback loop."
-      - zh: "把成功率、人工接管率、工具误调用率纳入上线门槛。"
-        en: "Made success rate, human handoff rate, and tool misuse rate part of launch gates."
+      - zh: "主导平台从代码引导 Agent 1.0 演进为模型驱动 Agent 2.0，收敛 Runtime、动态 Skill、tool gating、flow fast path、异步执行和 usage/cost 治理。"
+        en: "Led the evolution from code-guided Agent 1.0 to model-driven Agent 2.0, consolidating runtime, dynamic Skills, tool gating, flow fast path, async execution, and usage/cost governance."
+      - zh: "围绕真实客服 badcase 建立 content gap、知识/Skill/Memory 更新、评测回放和发布门禁的质量闭环。"
+        en: "Built a quality loop around real customer-service badcases, connecting content gaps, knowledge/Skill/Memory updates, replay evaluation, and release gates."
+      - zh: "推动团队落地 AI 开发 Harness，以架构规则、Spec/EPIC 工作流、Supervisor 验收门禁和自检脚本约束 AI 辅助开发，减少架构漂移、失控重构和验收缺口。"
+        en: "Drove team adoption of an AI development harness with architecture rules, Spec/EPIC workflow, supervisor acceptance gates, and self-check scripts to reduce architecture drift, runaway refactors, and acceptance gaps."
+      - zh: "制定团队开发规范和交付流程，统一需求拆解、实现边界、变更摘要、文件清单、自检结果和 AI Harness trace 的交付要求。"
+        en: "Defined team development standards and delivery workflow, standardizing requirement breakdown, implementation boundaries, change summaries, changed-file lists, self-check results, and AI Harness trace handoffs."
     tags:
       - "Agent Runtime"
       - "LLMOps"
       - "Evaluation"
       - "Tool-use"
+      - "AI Engineering Harness"
   - company: "Large-scale SaaS Product Group"
     role:
       zh: "技术架构师"

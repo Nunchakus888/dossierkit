@@ -165,7 +165,15 @@ collections:
                     widget: string
               - label: Period
                 name: period
-                widget: string
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
               - label: Location
                 name: location
                 widget: object
