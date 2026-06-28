@@ -37,6 +37,8 @@ export async function main() {
     const enCases = contentByKind.get("en:cases") || new Set<string>();
     const zhLabs = contentByKind.get("zh:lab") || new Set<string>();
     const enLabs = contentByKind.get("en:lab") || new Set<string>();
+    const zhWriting = contentByKind.get("zh:writing") || new Set<string>();
+    const enWriting = contentByKind.get("en:writing") || new Set<string>();
 
     for (const role of pack.roles.roles) {
       for (const slug of role.relatedCases) {
@@ -48,6 +50,12 @@ export async function main() {
       for (const slug of role.relatedLabs) {
         if (!zhLabs.has(slug) || !enLabs.has(slug)) {
           errors.push(`roles.yaml: role "${role.id}" references missing bilingual lab "${slug}"`);
+        }
+      }
+
+      for (const slug of role.relatedWriting) {
+        if (!zhWriting.has(slug) || !enWriting.has(slug)) {
+          errors.push(`roles.yaml: role "${role.id}" references missing bilingual writing "${slug}"`);
         }
       }
     }

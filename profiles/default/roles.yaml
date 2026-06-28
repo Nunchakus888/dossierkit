@@ -23,3 +23,117 @@ roles:
     relatedLabs:
       - "eval-harness"
       - "dpo-tool-use"
+    relatedWriting:
+      - "agent-platform-positioning-assessment"
+    positioningAssessment:
+      sourceWriting: "agent-platform-positioning-assessment"
+      fitScore: "8/10"
+      conclusion:
+        zh: "当前项目与高阶岗位需求匹配度很高，适合作为企业级 Agent 平台架构负责人的主案例；外延覆盖大模型应用平台负责人和 AI FDE 技术负责人。"
+        en: "This project is a strong fit for senior roles and works best as the lead case for Enterprise Agent Platform Architect, with adjacent fit for LLM Application Platform Lead and AI FDE Technical Lead."
+      targetPositioning:
+        - zh: "企业级 Agent 平台架构负责人"
+          en: "Enterprise Agent Platform Architect"
+        - zh: "大模型应用平台负责人"
+          en: "LLM Application Platform Lead"
+        - zh: "AI FDE 技术负责人"
+          en: "AI FDE Technical Lead"
+      evidence:
+        - zh: "具备完整 Agent Runtime，不是简单 chatbot demo。"
+          en: "Includes a real Agent Runtime, not a chatbot demo."
+        - zh: "有从代码引导 Agent 1.0 到模型驱动 Agent 2.0 的架构演进。"
+          en: "Shows architecture evolution from code-guided Agent 1.0 to model-driven Agent 2.0."
+        - zh: "覆盖多租户、多语言、多渠道、RAG、Memory、Skill、MCP/API、复杂任务编排和异步执行。"
+          en: "Covers multi-tenancy, multilingual support, multi-channel delivery, RAG, Memory, Skill, MCP/API, complex task orchestration, and async execution."
+        - zh: "通过 correlation_id、events、inspection、token usage、callback payload 和压测指标建立可观测与成本治理。"
+          en: "Uses correlation_id, events, inspection, token usage, callback payloads, and load test metrics for observability and cost governance."
+        - zh: "形成 badcase -> content gap -> knowledge / Skill / Memory -> evaluation / release gate 的质量闭环。"
+          en: "Builds a quality loop from badcase -> content gap -> knowledge / Skill / Memory -> evaluation / release gate."
+        - zh: "已有量化结果：自动解决率 60%+、token 消耗下降 60%、平均耗时从约 50s 降到约 7s。"
+          en: "Has quantified outcomes: 60%+ auto-resolution, 60% token reduction, and average processing time from about 50s to about 7s."
+      gaps:
+        - title:
+            zh: "平台规模"
+            en: "Platform scale"
+          summary:
+            zh: "需要补充客户、租户、行业、渠道、请求量、会话量、知识库规模、工具数量和业务系统数量。"
+            en: "Add customer, tenant, industry, channel, request volume, session volume, knowledge base, tool count, and integrated business system evidence."
+        - title:
+            zh: "指标口径"
+            en: "Metric definitions"
+          summary:
+            zh: "60%+ 自动解决率、7s 耗时、1.12s 压测响应和 RAG 满分指标都需要补统计口径。"
+            en: "Define the 60%+ auto-resolution rate, 7s processing time, 1.12s load-test response, and perfect RAG metrics."
+        - title:
+            zh: "企业级治理"
+            en: "Enterprise governance"
+          summary:
+            zh: "需要明确多租户隔离、PII 脱敏、工具权限、side-effect 审批、注入防护、审计、人工接管、幂等、重试和回滚。"
+            en: "Clarify multi-tenant isolation, PII masking, tool permissions, side-effect approval, injection defense, audit, handoff, idempotency, retry, and rollback."
+        - title:
+            zh: "协作边界"
+            en: "Collaboration scope"
+          summary:
+            zh: "独立负责能体现 owner，但还需要补团队规模、协作对象、决策边界、带人、规范和评审机制。"
+            en: "Ownership is clear, but the case still needs team size, partner teams, decision scope, people leadership, standards, and review mechanisms."
+        - title:
+            zh: "架构取舍"
+            en: "Architecture tradeoffs"
+          summary:
+            zh: "需要补为什么这么做、放弃了什么、踩过什么坑，以及准确率、速度、token 成本和误调用风险之间的权衡。"
+            en: "Add why these decisions were made, what alternatives were rejected, what failed, and how accuracy, latency, token cost, and tool misuse risk were balanced."
+      pendingEvidence:
+        - title:
+            zh: "规模与流量"
+            en: "Scale and traffic"
+          items:
+            - zh: "平台覆盖多少客户、租户、行业和渠道。"
+              en: "Customers, tenants, industries, and channels covered."
+            - zh: "日均/峰值请求量、会话量、知识库规模和工具数量。"
+              en: "Daily/peak request volume, session volume, knowledge base size, and tool count."
+        - title:
+            zh: "指标口径"
+            en: "Metric definitions"
+          items:
+            - zh: "60%+ 自动解决率的统计口径：无人工介入、用户确认解决、客服标注还是工单闭环。"
+              en: "Definition of 60%+ auto-resolution: no human handoff, user-confirmed resolution, agent label, or ticket closure."
+            - zh: "7s 是端到端完成时间、首响应时间，还是 callback 终态耗时。"
+              en: "Whether 7s means end-to-end completion, first response, or callback terminal-state time."
+            - zh: "1.12s 压测响应是否只是 async 接口返回 correlation_id。"
+              en: "Whether the 1.12s load-test response only measures the async API returning correlation_id."
+            - zh: "RAG 评测集规模、ground truth 来源、难例和跨语言样本比例。"
+              en: "RAG evaluation set size, ground truth source, hard-case ratio, and cross-language sample ratio."
+        - title:
+            zh: "治理与业务价值"
+            en: "Governance and business value"
+          items:
+            - zh: "tool gating 如何按租户、渠道、用户身份和风险等级建模。"
+              en: "How tool gating is modeled across tenant, channel, user identity, and risk level."
+            - zh: "side-effect planner 如何保证幂等、审批、回滚和审计。"
+              en: "How the side-effect planner handles idempotency, approval, rollback, and audit."
+            - zh: "content gap 如何进入人工审核、知识沉淀和发布门禁。"
+              en: "How content gaps move into human review, knowledge updates, and release gates."
+            - zh: "业务价值：节省人力、降低工单、提升 CSAT、支撑 ARR 或续费。"
+              en: "Business value: staffing saved, ticket reduction, CSAT lift, ARR support, or renewal impact."
+      resumeBullets:
+        - zh: "独立负责多行业客服 Agent SaaS 平台 0-1 架构与迭代，建设多租户 Agent Runtime，支持多语言、多渠道、RAG、Memory、Skill、MCP/API 扩展和复杂任务编排，推动客户问题自动解决率达到 60%+。"
+          en: "Independently owned the 0-1 architecture and iteration of a multi-industry customer service Agent SaaS platform, building a multi-tenant Agent Runtime with multilingual, multi-channel, RAG, Memory, Skill, MCP/API extension, and complex task orchestration capabilities, driving 60%+ customer issue auto-resolution."
+        - zh: "主导平台从代码引导 Agent 1.0 演进为模型驱动 Agent 2.0，通过动态 Skill、tool gating、flow fast path、异步执行、inspection trace 和 usage/cost 治理，将平均处理耗时从约 50s 降至约 7s，token 消耗下降 60%。"
+          en: "Led the evolution from code-guided Agent 1.0 to model-driven Agent 2.0 through dynamic Skill loading, tool gating, flow fast path, async execution, inspection traces, and usage/cost governance, reducing average processing time from about 50s to 7s and token consumption by 60%."
+        - zh: "构建 badcase 到知识库、Skill、Memory 和评测集的质量闭环，结合 content gap 识别、LLM 诊断、embedding 聚类、人工审核和发布门禁，提升客服 Agent 的准确性、稳定性和可运营性。"
+          en: "Built a quality loop from badcases to knowledge base, Skill, Memory, and evaluation sets, combining content gap detection, LLM diagnosis, embedding clustering, human review, and release gates to improve accuracy, stability, and operability."
+      interviewNarrative:
+        zh: "1.0 版本解决 LLM 在真实客服业务中可控落地的问题：用 Guideline/Journey 表达规则和流程，用 ARQ 把模型决策拆成可审计 artifacts，并通过 async session、callback、inspection 和 token usage 保证线上可追踪。2.0 让模型成为 tool calling 和多步决策中心，Runtime 负责上下文、行动空间、Skill 动态加载、RAG/Memory、工具边界、并发控制和成本治理。"
+        en: "Agent 1.0 solved controlled LLM adoption in real customer service workflows: Guideline/Journey represented rules and flows, ARQ decomposed model decisions into auditable artifacts, and async session, callback, inspection, and token usage made behavior traceable. Agent 2.0 moved the model to the center of tool calling and multi-step decisions while the runtime owned context, action space, dynamic Skill loading, RAG/Memory, tool boundaries, concurrency, and cost governance."
+      updateRules:
+        - zh: "先更新指标口径，避免只加数字。"
+          en: "Update metric definitions before adding numbers."
+        - zh: "再更新平台规模，包括客户、租户、渠道、请求量、知识库和工具数量。"
+          en: "Then update platform scale: customers, tenants, channels, request volume, knowledge base, and tool count."
+        - zh: "再更新治理能力，包括权限、安全、审计、side-effect 和人工接管。"
+          en: "Then update governance: permission, security, audit, side effects, and human handoff."
+        - zh: "最后更新简历表达和面试故事。"
+          en: "Finally update resume bullets and the interview story."
+      versionLog:
+        - zh: "2026-06-27：建立初版评估，匹配度 8/10，主攻方向为企业级 Agent 平台架构负责人。"
+          en: "2026-06-27: Initial assessment. Fit rated 8/10. Primary positioning is Enterprise Agent Platform Architect."

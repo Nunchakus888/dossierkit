@@ -333,6 +333,174 @@ collections:
                 name: relatedLabs
                 widget: list
                 required: false
+              - label: Related Writing
+                name: relatedWriting
+                widget: list
+                required: false
+              - label: Positioning Assessment
+                name: positioningAssessment
+                widget: object
+                required: false
+                fields:
+                  - label: Source Writing Slug
+                    name: sourceWriting
+                    widget: string
+                  - label: Fit Score
+                    name: fitScore
+                    widget: string
+                  - label: Conclusion
+                    name: conclusion
+                    widget: object
+                    required: true
+                    fields:
+                      - label: ZH
+                        name: zh
+                        widget: text
+                      - label: EN
+                        name: en
+                        widget: text
+                  - label: Target Positioning
+                    name: targetPositioning
+                    widget: list
+                    required: false
+                    fields:
+                      - label: ZH
+                        name: zh
+                        widget: text
+                      - label: EN
+                        name: en
+                        widget: text
+                  - label: Evidence
+                    name: evidence
+                    widget: list
+                    required: false
+                    fields:
+                      - label: ZH
+                        name: zh
+                        widget: text
+                      - label: EN
+                        name: en
+                        widget: text
+                  - label: Gaps
+                    name: gaps
+                    widget: list
+                    required: false
+                    fields:
+                      - label: Title
+                        name: title
+                        widget: object
+                        required: true
+                        fields:
+                          - label: ZH
+                            name: zh
+                            widget: string
+                          - label: EN
+                            name: en
+                            widget: string
+                      - label: Summary
+                        name: summary
+                        widget: object
+                        required: false
+                        fields:
+                          - label: ZH
+                            name: zh
+                            widget: text
+                          - label: EN
+                            name: en
+                            widget: text
+                      - label: Items
+                        name: items
+                        widget: list
+                        required: false
+                        fields:
+                          - label: ZH
+                            name: zh
+                            widget: text
+                          - label: EN
+                            name: en
+                            widget: text
+                  - label: Pending Evidence
+                    name: pendingEvidence
+                    widget: list
+                    required: false
+                    fields:
+                      - label: Title
+                        name: title
+                        widget: object
+                        required: true
+                        fields:
+                          - label: ZH
+                            name: zh
+                            widget: string
+                          - label: EN
+                            name: en
+                            widget: string
+                      - label: Summary
+                        name: summary
+                        widget: object
+                        required: false
+                        fields:
+                          - label: ZH
+                            name: zh
+                            widget: text
+                          - label: EN
+                            name: en
+                            widget: text
+                      - label: Items
+                        name: items
+                        widget: list
+                        required: false
+                        fields:
+                          - label: ZH
+                            name: zh
+                            widget: text
+                          - label: EN
+                            name: en
+                            widget: text
+                  - label: Resume Bullets
+                    name: resumeBullets
+                    widget: list
+                    required: false
+                    fields:
+                      - label: ZH
+                        name: zh
+                        widget: text
+                      - label: EN
+                        name: en
+                        widget: text
+                  - label: Interview Narrative
+                    name: interviewNarrative
+                    widget: object
+                    required: false
+                    fields:
+                      - label: ZH
+                        name: zh
+                        widget: text
+                      - label: EN
+                        name: en
+                        widget: text
+                  - label: Update Rules
+                    name: updateRules
+                    widget: list
+                    required: false
+                    fields:
+                      - label: ZH
+                        name: zh
+                        widget: text
+                      - label: EN
+                        name: en
+                        widget: text
+                  - label: Version Log
+                    name: versionLog
+                    widget: list
+                    required: false
+                    fields:
+                      - label: ZH
+                        name: zh
+                        widget: text
+                      - label: EN
+                        name: en
+                        widget: text
       - label: Metrics
         name: metrics
         file: profiles/default/metrics.yaml

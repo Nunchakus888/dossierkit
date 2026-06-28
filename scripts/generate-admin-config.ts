@@ -153,6 +153,30 @@ function localizedValueFields(widget = "string") {
   ];
 }
 
+function localizedListField(label: string, name: string, widget = "text", required = false) {
+  return {
+    label,
+    name,
+    widget: "list",
+    required,
+    fields: localizedValueFields(widget)
+  };
+}
+
+function assessmentSectionField(label: string, name: string) {
+  return {
+    label,
+    name,
+    widget: "list",
+    required: false,
+    fields: [
+      localizedField("Title", "title"),
+      localizedField("Summary", "summary", "text", false),
+      localizedListField("Items", "items", "text")
+    ]
+  };
+}
+
 function experienceFile(profileId: string) {
   return {
     label: "Experience",
@@ -237,7 +261,27 @@ function rolesFile(profileId: string) {
           localizedField("Summary", "summary", "text", false),
           { label: "Focus Areas", name: "focusAreas", widget: "list", required: false },
           { label: "Related Cases", name: "relatedCases", widget: "list", required: false },
-          { label: "Related Labs", name: "relatedLabs", widget: "list", required: false }
+          { label: "Related Labs", name: "relatedLabs", widget: "list", required: false },
+          { label: "Related Writing", name: "relatedWriting", widget: "list", required: false },
+          {
+            label: "Positioning Assessment",
+            name: "positioningAssessment",
+            widget: "object",
+            required: false,
+            fields: [
+              { label: "Source Writing Slug", name: "sourceWriting", widget: "string" },
+              { label: "Fit Score", name: "fitScore", widget: "string" },
+              localizedField("Conclusion", "conclusion", "text"),
+              localizedListField("Target Positioning", "targetPositioning", "text"),
+              localizedListField("Evidence", "evidence", "text"),
+              assessmentSectionField("Gaps", "gaps"),
+              assessmentSectionField("Pending Evidence", "pendingEvidence"),
+              localizedListField("Resume Bullets", "resumeBullets", "text"),
+              localizedField("Interview Narrative", "interviewNarrative", "text", false),
+              localizedListField("Update Rules", "updateRules", "text"),
+              localizedListField("Version Log", "versionLog", "text")
+            ]
+          }
         ]
       }
     ]

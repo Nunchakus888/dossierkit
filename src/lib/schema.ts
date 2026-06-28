@@ -103,6 +103,14 @@ export const skillsSchema = z.object({
   )
 });
 
+const roleAssessmentSectionSchema = z
+  .object({
+    title: localizedStringSchema,
+    summary: localizedStringSchema.optional(),
+    items: z.array(localizedStringSchema).default([])
+  })
+  .passthrough();
+
 export const rolesSchema = z.object({
   roles: z.array(
     z
@@ -114,7 +122,24 @@ export const rolesSchema = z.object({
         summary: localizedStringSchema.optional(),
         focusAreas: z.array(z.string()).default([]),
         relatedCases: z.array(z.string()).default([]),
-        relatedLabs: z.array(z.string()).default([])
+        relatedLabs: z.array(z.string()).default([]),
+        relatedWriting: z.array(z.string()).default([]),
+        positioningAssessment: z
+          .object({
+            sourceWriting: z.string().min(1),
+            fitScore: z.string().min(1),
+            conclusion: localizedStringSchema,
+            targetPositioning: z.array(localizedStringSchema).default([]),
+            evidence: z.array(localizedStringSchema).default([]),
+            gaps: z.array(roleAssessmentSectionSchema).default([]),
+            pendingEvidence: z.array(roleAssessmentSectionSchema).default([]),
+            resumeBullets: z.array(localizedStringSchema).default([]),
+            interviewNarrative: localizedStringSchema.optional(),
+            updateRules: z.array(localizedStringSchema).default([]),
+            versionLog: z.array(localizedStringSchema).default([])
+          })
+          .passthrough()
+          .optional()
       })
       .passthrough()
   )

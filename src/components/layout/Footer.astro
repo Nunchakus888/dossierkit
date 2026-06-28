@@ -27,7 +27,6 @@ function navHref(path: string, external?: boolean) {
       {footerItems.map((item) => <a href={navHref(item.path, item.external)}>{localize(item.label, locale)}</a>)}
       <a href="/profile.json">profile.json</a>
       <a href="/llms.txt">llms.txt</a>
-      <a href="/admin">admin</a>
     </div>
   </div>
 </footer>
