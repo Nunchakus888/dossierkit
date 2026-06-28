@@ -14,6 +14,15 @@ export const onRequestGet = async ({ request, env }: any) => {
   authorizeUrl.searchParams.set("scope", scope);
   authorizeUrl.searchParams.set("state", state);
 
+  console.log(
+    JSON.stringify({
+      event: "cms_oauth_authorize_redirect",
+      provider: "github",
+      scope,
+      redirectUri
+    })
+  );
+
   return new Response(null, {
     status: 302,
     headers: {

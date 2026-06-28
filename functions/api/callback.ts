@@ -14,6 +14,13 @@ export const onRequestGet = async ({ request, env }: any) => {
 
   const expectedState = parseCookie(request.headers.get("Cookie") || "").cms_oauth_state;
   if (!expectedState || expectedState !== state) {
+    console.log(
+      JSON.stringify({
+        event: "cms_oauth_state_invalid",
+        provider: "github",
+        hasExpectedState: Boolean(expectedState)
+      })
+    );
     return oauthError("Invalid GitHub OAuth state.");
   }
 
@@ -45,10 +52,25 @@ export const onRequestGet = async ({ request, env }: any) => {
   };
 
   if (!tokenResponse.ok || !tokenPayload.access_token) {
+    console.log(
+      JSON.stringify({
+        event: "cms_oauth_token_exchange_failed",
+        provider: "github",
+        status: tokenResponse.status,
+        error: tokenPayload.error || "missing_access_token"
+      })
+    );
     return oauthError(
       tokenPayload.error_description || tokenPayload.error || "GitHub token exchange failed."
     );
   }
+
+  console.log(
+    JSON.stringify({
+      event: "cms_oauth_token_exchange_succeeded",
+      provider: "github"
+    })
+  );
 
   return oauthResult("success", { token: tokenPayload.access_token, provider: "github" }, true);
 };
@@ -70,11 +92,43 @@ function oauthResult(status: "success" | "error", payload: unknown, clearCookie 
     <p>${title}. You can close this window.</p>
     <script>
       (function () {
-        var message = ${JSON.stringify(message)};
-        if (window.opener) {
-          window.opener.postMessage(message, window.location.origin);
+        var provider = "github";
+        var origin = window.location.origin;
+        var handshake = "authorizing:" + provider;
+        var result = ${JSON.stringify(message)};
+        var closed = false;
+        var interval;
+        var timeout;
+
+        function finish() {
+          if (closed) return;
+          closed = true;
+          clearInterval(interval);
+          clearTimeout(timeout);
+          if (window.opener) {
+            window.opener.postMessage(result, origin);
+          }
+          window.setTimeout(function () {
+            window.close();
+          }, 100);
         }
-        window.close();
+
+        if (!window.opener) {
+          return;
+        }
+
+        window.addEventListener("message", function (event) {
+          if (event.origin !== origin || event.data !== handshake) return;
+          finish();
+        });
+
+        window.opener.postMessage(handshake, origin);
+        interval = window.setInterval(function () {
+          if (!closed && window.opener) {
+            window.opener.postMessage(handshake, origin);
+          }
+        }, 250);
+        timeout = window.setTimeout(finish, 4000);
       })();
     </script>
   </body>
