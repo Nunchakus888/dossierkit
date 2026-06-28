@@ -57,8 +57,8 @@ The generated `public/admin/config.yml` points Decap at:
 ```yaml
 backend:
   name: github
-  base_url: https://dossierkit.pages.dev/api
-  auth_endpoint: auth
+  base_url: https://dossierkit.pages.dev
+  auth_endpoint: api/auth
 ```
 
 Do not use `https://api.netlify.com/auth` for Cloudflare Pages deployments. That endpoint only works for Netlify-managed OAuth and returns Not Found for `dossierkit.pages.dev`.

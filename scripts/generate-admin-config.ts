@@ -15,8 +15,8 @@ export async function main(args = process.argv.slice(2)) {
       name: "github",
       repo,
       branch,
-      base_url: `${publicSiteUrl}/api`,
-      auth_endpoint: "auth"
+      base_url: publicSiteUrl,
+      auth_endpoint: "api/auth"
     },
     local_backend: true,
     media_folder: `profiles/${profileId}/assets`,
