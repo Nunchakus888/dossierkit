@@ -51,6 +51,22 @@ skillGroups:
       - "LLMOps"
       - "Data Flywheel"
       - "Platform Adoption"
+  - id: "platform-stack"
+    title:
+      zh: "平台技术栈"
+      en: "Platform Stack"
+    description:
+      zh: "覆盖 Agent 平台后端、前端、向量检索、云服务和多模型接入。"
+      en: "Backend, frontend, vector retrieval, cloud services, and multi-model integration for Agent platforms."
+    skills:
+      - "Python / FastAPI"
+      - "TypeScript"
+      - "Rust"
+      - "Java"
+      - "Milvus"
+      - "Alibaba Cloud"
+      - "Google Cloud"
+      - "Gemini"
   - id: "ai-engineering-governance"
     title:
       zh: "AI 工程治理与团队规范"

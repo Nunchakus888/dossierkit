@@ -27,7 +27,7 @@ roles:
       - "agent-platform-positioning-assessment"
     positioningAssessment:
       sourceWriting: "agent-platform-positioning-assessment"
-      fitScore: "8/10"
+      fitScore: "8.5/10"
       conclusion:
         zh: "当前项目与高阶岗位需求匹配度很高，适合作为企业级 Agent 平台架构负责人的主案例；外延覆盖大模型应用平台负责人和 AI FDE 技术负责人。"
         en: "This project is a strong fit for senior roles and works best as the lead case for Enterprise Agent Platform Architect, with adjacent fit for LLM Application Platform Lead and AI FDE Technical Lead."
@@ -51,15 +51,17 @@ roles:
           en: "Builds a quality loop from badcase -> content gap -> knowledge / Skill / Memory -> evaluation / release gate."
         - zh: "已有量化结果：自动解决率 60%+、token 消耗下降 60%、平均耗时从约 50s 降到约 7s。"
           en: "Has quantified outcomes: 60%+ auto-resolution, 60% token reduction, and average processing time from about 50s to about 7s."
-        - zh: "在 YC 担任 Agent 平台负责人期间，推动团队 AI 开发 Harness、开发规范、Spec/EPIC 流程和 Supervisor 验收门禁落地。"
-          en: "As Agent Platform Lead at YC, drove team adoption of an AI development harness, development standards, Spec/EPIC workflow, and supervisor acceptance gates."
+        - zh: "平台已支撑 2k+ 租户、23w+ 用户、过去一个月参考峰值 6w 请求/天，平均响应约 7s。"
+          en: "The platform supports 2k+ tenants, 230k+ users, a recent-month peak of 60k requests/day, and about 7s average response time."
+        - zh: "在 20 人产研团队中负责 AI Agent 业务方向，带 3 人小组（2 开发 + 1 测试），并推动 AI Harness 覆盖 40 个仓库。"
+          en: "Owned the AI Agent business track within a 20-person product-engineering team, led a 3-person squad of 2 developers and 1 QA, and expanded the AI Harness across 40 repositories."
       gaps:
         - title:
             zh: "平台规模"
             en: "Platform scale"
           summary:
-            zh: "需要补充客户、租户、行业、渠道、请求量、会话量、知识库规模、工具数量和业务系统数量。"
-            en: "Add customer, tenant, industry, channel, request volume, session volume, knowledge base, tool count, and integrated business system evidence."
+            zh: "已补 2k+ 租户、23w+ 用户、峰值 6w 请求/天和 7s 平均响应；仍需补行业/渠道拆分、日均请求、会话量、知识库规模、工具数量和业务系统数量。"
+            en: "Scale now includes 2k+ tenants, 230k+ users, 60k peak requests/day, and 7s average response time; still add industry/channel breakdown, daily requests, sessions, knowledge base size, tool count, and integrated systems."
         - title:
             zh: "指标口径"
             en: "Metric definitions"
@@ -76,8 +78,8 @@ roles:
             zh: "协作边界"
             en: "Collaboration scope"
           summary:
-            zh: "已补充团队 Harness 和规范建设，但还需要补团队规模、协作对象、决策边界、带人、规范覆盖范围和落地结果。"
-            en: "Team harness and standards are now covered, but the case still needs team size, partner teams, decision scope, people leadership, standards coverage, and adoption results."
+            zh: "已补 20 人产研团队、3 人 Agent 小组和 40 个仓库 Harness 覆盖；仍需补跨团队协作对象、评审机制和落地效果。"
+            en: "Team scope now includes a 20-person product-engineering team, 3-person Agent squad, and 40-repository harness coverage; still add partner teams, review mechanisms, and adoption outcomes."
         - title:
             zh: "架构取舍"
             en: "Architecture tradeoffs"
@@ -89,10 +91,10 @@ roles:
             zh: "规模与流量"
             en: "Scale and traffic"
           items:
-            - zh: "平台覆盖多少客户、租户、行业和渠道。"
-              en: "Customers, tenants, industries, and channels covered."
-            - zh: "日均/峰值请求量、会话量、知识库规模和工具数量。"
-              en: "Daily/peak request volume, session volume, knowledge base size, and tool count."
+            - zh: "已补：2k+ 租户、23w+ 用户、峰值 6w 请求/天、平均响应约 7s。"
+              en: "Added: 2k+ tenants, 230k+ users, 60k peak requests/day, and about 7s average response time."
+            - zh: "待补：行业/渠道拆分、日均请求量、会话量、知识库规模和工具/API 数量。"
+              en: "Still needed: industry/channel breakdown, daily request volume, session volume, knowledge base size, and tool/API count."
         - title:
             zh: "指标口径"
             en: "Metric definitions"
@@ -121,26 +123,26 @@ roles:
             zh: "团队与 Harness"
             en: "Team and harness"
           items:
-            - zh: "团队规模、角色构成、是否带人，以及你负责的决策边界。"
-              en: "Team size, role composition, people leadership, and your decision scope."
-            - zh: "AI Harness 覆盖哪些仓库、服务或项目，团队采用比例如何。"
-              en: "Repositories, services, or projects covered by the AI Harness, and team adoption rate."
-            - zh: "Spec/EPIC、Supervisor gate、自检脚本和 PR 模板对交付质量的实际改善。"
-              en: "Actual delivery-quality improvements from Spec/EPIC, supervisor gates, self-check scripts, and PR templates."
+            - zh: "已补：20 人产研团队，AI Agent 业务方向 3 人小组（2 开发 + 1 测试）。"
+              en: "Added: 20-person product-engineering team and 3-person AI Agent squad of 2 developers and 1 QA."
+            - zh: "已补：AI Harness 覆盖 40 个仓库。"
+              en: "Added: AI Harness coverage across 40 repositories."
+            - zh: "待补：Spec/EPIC、Supervisor gate、自检脚本和 PR 模板对交付质量的实际改善。"
+              en: "Still needed: actual delivery-quality improvements from Spec/EPIC, supervisor gates, self-check scripts, and PR templates."
             - zh: "是否有可量化结果：返工减少、评审效率提升、缺陷减少、上线失败减少或新人上手周期缩短。"
               en: "Quantified outcomes: reduced rework, faster review, fewer defects, fewer failed launches, or shorter onboarding time."
       resumeBullets:
-        - zh: "独立负责多行业客服 Agent SaaS 平台 0-1 架构与迭代，建设多租户 Agent Runtime，支持多语言、多渠道、RAG、Memory、Skill、MCP/API 扩展和复杂任务编排，推动客户问题自动解决率达到 60%+。"
-          en: "Independently owned the 0-1 architecture and iteration of a multi-industry customer service Agent SaaS platform, building a multi-tenant Agent Runtime with multilingual, multi-channel, RAG, Memory, Skill, MCP/API extension, and complex task orchestration capabilities, driving 60%+ customer issue auto-resolution."
+        - zh: "负责跨行业 AI Agent 客服 SaaS 平台架构与迭代，建设多租户 Agent Runtime，支持多语言、多渠道、RAG、Memory、Skill、MCP/API 扩展和复杂任务编排，支撑 2k+ 租户、23w+ 用户和峰值 6w 请求/天。"
+          en: "Owned architecture and iteration of a cross-industry AI Agent customer-service SaaS platform, building a multi-tenant Agent Runtime with multilingual, multi-channel, RAG, Memory, Skill, MCP/API extension, and complex task orchestration capabilities, supporting 2k+ tenants, 230k+ users, and 60k peak requests/day."
         - zh: "主导平台从代码引导 Agent 1.0 演进为模型驱动 Agent 2.0，通过动态 Skill、tool gating、flow fast path、异步执行、inspection trace 和 usage/cost 治理，将平均处理耗时从约 50s 降至约 7s，token 消耗下降 60%。"
           en: "Led the evolution from code-guided Agent 1.0 to model-driven Agent 2.0 through dynamic Skill loading, tool gating, flow fast path, async execution, inspection traces, and usage/cost governance, reducing average processing time from about 50s to 7s and token consumption by 60%."
         - zh: "构建 badcase 到知识库、Skill、Memory 和评测集的质量闭环，结合 content gap 识别、LLM 诊断、embedding 聚类、人工审核和发布门禁，提升客服 Agent 的准确性、稳定性和可运营性。"
           en: "Built a quality loop from badcases to knowledge base, Skill, Memory, and evaluation sets, combining content gap detection, LLM diagnosis, embedding clustering, human review, and release gates to improve accuracy, stability, and operability."
-        - zh: "推动团队 AI 开发 Harness 落地，建立架构规则、Spec/EPIC 工作流、Supervisor 验收门禁、自检脚本和 AI Harness trace 交付要求，降低架构漂移、失控重构和验收缺口。"
-          en: "Drove team adoption of an AI development harness, establishing architecture rules, Spec/EPIC workflow, supervisor gates, self-check scripts, and AI Harness trace handoff requirements to reduce architecture drift, runaway refactors, and acceptance gaps."
+        - zh: "在 20 人产研团队中负责 AI Agent 业务方向，带 3 人小组，并推动 AI 开发 Harness 覆盖 40 个仓库，建立架构规则、Spec/EPIC、Supervisor gate、自检脚本和 PR 模板。"
+          en: "Owned the AI Agent business track within a 20-person product-engineering team, led a 3-person squad, and expanded the AI development harness across 40 repositories with architecture rules, Spec/EPIC, supervisor gates, self-check scripts, and PR templates."
       interviewNarrative:
-        zh: "1.0 版本解决 LLM 在真实客服业务中可控落地的问题：用 Guideline/Journey 表达规则和流程，用 ARQ 把模型决策拆成可审计 artifacts，并通过 async session、callback、inspection 和 token usage 保证线上可追踪。2.0 让模型成为 tool calling 和多步决策中心，Runtime 负责上下文、行动空间、Skill 动态加载、RAG/Memory、工具边界、并发控制和成本治理。团队层面，我推动 AI 开发 Harness 落地，用架构规则、Spec/EPIC、Supervisor gate 和自检脚本把 AI 辅助开发纳入可评审、可验证、可复盘的交付流程。"
-        en: "Agent 1.0 solved controlled LLM adoption in real customer service workflows: Guideline/Journey represented rules and flows, ARQ decomposed model decisions into auditable artifacts, and async session, callback, inspection, and token usage made behavior traceable. Agent 2.0 moved the model to the center of tool calling and multi-step decisions while the runtime owned context, action space, dynamic Skill loading, RAG/Memory, tool boundaries, concurrency, and cost governance. At the team level, I drove AI development harness adoption, using architecture rules, Spec/EPIC, supervisor gates, and self-check scripts to make AI-assisted delivery reviewable, verifiable, and traceable."
+        zh: "1.0 版本解决 LLM 在真实客服业务中可控落地的问题：用 Guideline/Journey 表达规则和流程，用 ARQ 把模型决策拆成可审计 artifacts，并通过 async session、callback、inspection 和 token usage 保证线上可追踪。2.0 让模型成为 tool calling 和多步决策中心，Runtime 负责上下文、行动空间、Skill 动态加载、RAG/Memory、工具边界、并发控制和成本治理。平台目前支撑 2k+ 租户、23w+ 用户、峰值 6w 请求/天和约 7s 平均响应。团队层面，我在 20 人产研团队中负责 AI Agent 业务方向，带 3 人小组，并推动 AI Harness 覆盖 40 个仓库，用架构规则、Spec/EPIC、Supervisor gate 和自检脚本把 AI 辅助开发纳入可评审、可验证、可复盘的交付流程。"
+        en: "Agent 1.0 solved controlled LLM adoption in real customer service workflows: Guideline/Journey represented rules and flows, ARQ decomposed model decisions into auditable artifacts, and async session, callback, inspection, and token usage made behavior traceable. Agent 2.0 moved the model to the center of tool calling and multi-step decisions while the runtime owned context, action space, dynamic Skill loading, RAG/Memory, tool boundaries, concurrency, and cost governance. The platform now supports 2k+ tenants, 230k+ users, 60k peak requests/day, and about 7s average response time. At the team level, I owned the AI Agent track within a 20-person product-engineering team, led a 3-person squad, and expanded the AI Harness across 40 repositories, using architecture rules, Spec/EPIC, supervisor gates, and self-check scripts to make AI-assisted delivery reviewable, verifiable, and traceable."
       updateRules:
         - zh: "先更新指标口径，避免只加数字。"
           en: "Update metric definitions before adding numbers."

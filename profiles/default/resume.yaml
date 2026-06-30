@@ -9,9 +9,9 @@ sections:
 highlights:
   - zh: "主攻企业级 Agent 平台架构，核心是 runtime、工具体系、权限审计、评测回放和企业系统集成。"
     en: "Focused on enterprise Agent platform architecture across runtime, tool systems, permission audit, replay evaluation, and enterprise integration."
+  - zh: "在 YC 负责跨行业 AI Agent 客服 SaaS 平台，支撑 2k+ 租户、23w+ 用户、峰值 6w 请求/天，平均响应约 7s。"
+    en: "At YC, owned a cross-industry AI Agent customer-service SaaS platform supporting 2k+ tenants, 230k+ users, 60k peak requests/day, and about 7s average response time."
   - zh: "模型数据反馈、LLMOps 与企业集成只作为平台落地证据，服务同一个平台 owner 定位。"
     en: "Model data feedback, LLMOps, and enterprise integration are supporting proof for one platform-owner positioning."
-  - zh: "在 YC 担任 Agent 平台负责人期间，同时推动 AI 开发 Harness、团队规范和交付流程落地，把 AI 辅助开发纳入可评审、可验证、可复盘的工程体系。"
-    en: "As Agent Platform Lead at YC, also drove AI development harness adoption, team standards, and delivery workflow so AI-assisted engineering became reviewable, verifiable, and traceable."
-  - zh: "后续项目实践应补真实平台规模、业务流程、质量门槛、稳定性指标和 ROI 结果。"
-    en: "Project evidence should add real platform scale, workflows, quality gates, reliability metrics, and ROI outcomes."
+  - zh: "在 20 人产研团队中负责 AI Agent 业务方向，带 3 人小组，并推动 AI Harness 覆盖 40 个仓库。"
+    en: "Led the AI Agent business track within a 20-person product-engineering team, managed a 3-person squad, and expanded the AI Harness across 40 repositories."

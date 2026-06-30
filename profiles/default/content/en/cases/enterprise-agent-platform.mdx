@@ -3,9 +3,9 @@ slug: "enterprise-agent-platform"
 locale: "en"
 translationKey: "enterprise-agent-platform"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-06-26"
+lastReviewedAt: "2026-06-30"
 title: "Production-grade Agent Platform Architecture"
-summary: "As Agent Platform Lead at YC, owned an enterprise customer-service Agent SaaS platform and drove team adoption of an AI development harness."
+summary: "As Agent Platform Lead at YC, owned a cross-industry AI Agent customer-service SaaS platform and drove team adoption of an AI development harness."
 role: "YC / Agent Platform Lead / Runtime / Skill / RAG / Harness"
 period: "2024-03 - Present"
 confidentiality: "sanitized"
@@ -26,7 +26,7 @@ This case supports one primary direction: enterprise Agent platform architect. I
 
 ## Platform Scope
 
-The core platform is a customer-service Agent SaaS foundation across multiple industries:
+The core platform is a cross-industry AI Agent customer-service SaaS foundation supporting 2k+ tenants, 230k+ users, a recent-month peak of 60k requests/day, and about 7s average response time. Its production boundary covers:
 
 1. Agent Runtime: session-level runtime, complex task handling, termination conditions, concurrency control, async execution, and callback delivery.
 2. Tool / MCP / Skills: HTTP Tool, MCP adapter, dynamic Skill load/unload, tool gating, and side-effect planner.
@@ -44,13 +44,17 @@ The important signal is not API usage. It is platform abstraction, architecture 
 
 ## Team Harness
 
-At the team level, I drove adoption of an AI development harness so AI-assisted engineering became part of a controlled delivery process. The core model has three layers:
+At the team level, YC has a product-engineering team of about 20 people. I owned the AI Agent business track and led a 3-person squad of 2 developers and 1 QA. I drove AI development harness adoption across 40 repositories so AI-assisted engineering became part of a controlled delivery process. The core model has three layers:
 
 1. Outer Loop: architecture rules, language profiles, layering boundaries, naming, error handling, logging, and observability expectations.
 2. Inner Loop: Spec / EPIC workflow for non-trivial changes, including goals, non-goals, acceptance criteria, phases, tasks, and status.
 3. Supervisor Gate: change summary, changed files, self-check result, AI Harness trace, and acceptance checklist as delivery gates.
 
 This reduces four common failure modes: architecture drift, runaway refactors, inconsistent quality, and acceptance gaps. For senior positioning, it shows not only individual delivery ability, but also the ability to turn AI-assisted development and team collaboration into a repeatable engineering process.
+
+## Stack
+
+The main stack includes Python, TypeScript, Rust, Java, FastAPI, Milvus, Alibaba Cloud, Google Cloud, and Gemini. The stack is supporting evidence for platform complexity and engineering breadth; the main story remains Agent Runtime, tooling, RAG/Memory, evaluation gates, observability, and team engineering governance.
 
 ## Senior Ownership
 
@@ -65,15 +69,18 @@ This reduces four common failure modes: architecture drift, runaway refactors, i
 Evidence already available:
 
 - YC / 2024-03 to present / Agent Platform Lead.
+- Enterprise SaaS for cross-industry AI Agent customer-service scenarios; YC is intentionally kept as an abbreviation for privacy.
+- 2k+ tenants, 230k+ users, recent-month peak of 60k requests/day, and about 7s average response time.
+- 20-person product-engineering team; owned the AI Agent business track and led a 3-person squad of 2 developers and 1 QA.
 - 0-1 architecture and Agent 1.0 to 2.0 evolution of a customer-service Agent SaaS platform.
 - Agent Runtime, RAG/Memory, Skill, MCP/API, async execution, observability, and cost governance.
-- Team AI development harness, development standards, Spec/EPIC workflow, and supervisor acceptance gates.
+- AI development harness coverage across 40 repositories, including development standards, Spec/EPIC workflow, supervisor acceptance gates, self-check scripts, and PR templates.
 
 Still missing:
 
-- Customers, tenants, industries, channels, daily/peak requests, and session volume.
-- Tool count, integrated systems, knowledge base size, user scope, and launch stage.
-- Team size, partner teams, review mechanism, standards coverage, and adoption results.
+- Industry and channel breakdown, daily request volume, session volume, and knowledge base size.
+- Tool count, integrated systems, user scope, and launch stage.
+- Harness adoption depth, such as which teams use it as a required process and which steps are enforced in CI/PR gates.
 - Task success rate, tool misuse rate, human handoff rate, replay pass rate, latency, cost, and stability metrics.
 - Business ROI such as time saved, productivity lift, error reduction, ticket reduction, CSAT, ARR, or renewal impact.
 

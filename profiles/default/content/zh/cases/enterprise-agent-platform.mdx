@@ -3,9 +3,9 @@ slug: "enterprise-agent-platform"
 locale: "zh"
 translationKey: "enterprise-agent-platform"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-06-26"
+lastReviewedAt: "2026-06-30"
 title: "生产级 Agent 平台架构"
-summary: "在 YC 担任 Agent 平台负责人期间，主导企业级客服 Agent SaaS 平台与团队 AI 开发 Harness 落地。"
+summary: "在 YC 担任 Agent 平台负责人期间，主导跨行业 AI Agent 客服 SaaS 平台与团队 AI 开发 Harness 落地。"
 role: "YC / Agent 平台负责人 / Runtime / Skill / RAG / Harness"
 period: "2024-03 - 现在"
 confidentiality: "sanitized"
@@ -26,7 +26,7 @@ targetRoles:
 
 ## Platform Scope
 
-平台主线围绕多行业客服 Agent SaaS 展开，覆盖：
+平台主线围绕跨行业 AI Agent 客服 SaaS 展开，已支撑 2k+ 租户、23w+ 用户、过去一个月参考峰值 6w 请求/天，平均响应约 7s。核心边界覆盖：
 
 1. Agent Runtime：会话级 runtime、复杂任务处理、终止条件、并发控制、异步执行和 callback 回传。
 2. Tool / MCP / Skills：HTTP Tool、MCP adapter、Skill 动态加载卸载、tool gating 和 side-effect planner。
@@ -44,13 +44,17 @@ targetRoles:
 
 ## Team Harness
 
-团队层面，我推动 AI 开发 Harness 落地，把 AI 辅助开发纳入稳定工程流程。核心思想来自三层控制：
+团队层面，YC 产研团队约 20 人，AI Agent 业务方向由我负责，直接带 3 人小组（2 开发 + 1 测试）。我推动 AI 开发 Harness 覆盖 40 个仓库，把 AI 辅助开发纳入稳定工程流程。核心思想来自三层控制：
 
 1. Outer Loop：沉淀架构规则、语言规范、分层边界、命名、错误处理、日志和可观测要求。
 2. Inner Loop：用 Spec / EPIC 拆解非平凡需求，明确目标、非目标、验收标准、任务阶段和状态。
 3. Supervisor Gate：把变更摘要、文件清单、自检结果、AI Harness trace 和验收 checklist 作为交付门禁。
 
 这个机制主要解决四类问题：架构漂移、失控重构、质量不一致和验收缺口。对高阶岗位来说，它证明的不只是个人能写代码，而是能把团队协作、AI 工具使用和工程质量治理成可复制流程。
+
+## Stack
+
+主要技术栈包括 Python、TypeScript、Rust、Java、FastAPI、Milvus、阿里云、Google Cloud 和 Gemini。技术栈表达只作为平台复杂度和工程全面性的支撑证据，不替代主线：Agent Runtime、工具体系、RAG/Memory、评测门禁、可观测和团队工程治理。
 
 ## Senior Ownership
 
@@ -67,15 +71,18 @@ targetRoles:
 已具备的证据：
 
 - YC / 2024-03 至今 / Agent 平台负责人。
+- 企业 SaaS 服务，跨行业 AI Agent 客服场景，YC 暂不展示全称。
+- 2k+ 租户、23w+ 用户、过去一个月参考峰值 6w 请求/天、平均响应约 7s。
+- 20 人产研团队，负责 AI Agent 业务方向，带 3 人小组（2 开发 + 1 测试）。
 - 多行业客服 Agent SaaS 平台 0-1 架构与 1.0 到 2.0 演进。
 - Agent Runtime、RAG/Memory、Skill、MCP/API、异步执行、可观测和成本治理。
-- 团队 AI 开发 Harness、开发规范、Spec/EPIC 流程和 Supervisor 验收门禁。
+- AI 开发 Harness 覆盖 40 个仓库，沉淀开发规范、Spec/EPIC 流程、Supervisor 验收门禁、自检脚本和 PR 模板。
 
 后续仍需补：
 
-- 覆盖的客户、租户、行业、渠道、日均/峰值请求量和会话量。
-- 工具数量、业务系统数量、知识库规模、用户范围和上线阶段。
-- 团队规模、协作对象、评审机制、规范覆盖范围和 adoption 结果。
+- 行业和渠道拆分、日均请求量、会话量、知识库规模。
+- 工具数量、业务系统数量、用户范围和上线阶段。
+- Harness adoption 深度，例如哪些团队强制使用、哪些环节纳入 CI/PR 门禁。
 - 任务成功率、人工接管率、工具误调用率、回放通过率、延迟、成本和稳定性指标。
 - 业务 ROI，例如流程耗时、人效、错误率、工单减少、CSAT、ARR 或续费影响。
 
