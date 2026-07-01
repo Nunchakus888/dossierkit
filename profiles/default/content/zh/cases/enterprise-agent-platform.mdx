@@ -22,7 +22,7 @@ targetRoles:
 
 ## 项目概览
 
-YC 提供面向多行业的企业 SaaS 服务，核心场景为 AI Agent 客服。任职期间负责 Agent 平台方向，覆盖平台架构、运行时治理、知识与工具体系、质量闭环和团队工程规范。
+YC 提供面向多行业的企业 SaaS 服务，核心场景为 AI Agent 客服。任职期间负责 Agent 平台方向，覆盖平台架构、运行时治理、知识与工具体系、质量治理和团队工程规范。
 
 平台已支撑 2k+ 租户、23w+ 用户，过去一个月参考峰值 6w 请求/天，平均响应约 7s。
 
@@ -34,7 +34,7 @@ YC 提供面向多行业的企业 SaaS 服务，核心场景为 AI Agent 客服�
 2. Tool / MCP / Skills：HTTP Tool、MCP adapter、Skill 动态加载卸载、tool gating 和 side-effect planner。
 3. RAG / Memory：文档、QA、网站、附件、商品、session-memory 等多类型知识和上下文增强。
 4. Observability / Cost：correlation_id、events、inspection、token usage、callback payload 和压测指标。
-5. Quality Loop：badcase、content gap、人工审核、知识/Skill/Memory 更新、评测回放和发布门禁。
+5. Quality Governance：badcase、content gap、人工审核、知识/Skill/Memory 更新、评测回放和发布门禁。
 
 ## 架构演进
 
@@ -54,7 +54,7 @@ YC 产研团队约 20 人，AI Agent 方向带领 3 人小组（2 开发 + 1 测
 2. Inner Loop：用 Spec / EPIC 拆解非平凡需求，明确目标、非目标、验收标准、任务阶段和状态。
 3. Supervisor Gate：以变更摘要、文件清单、自检结果、AI Harness trace 和验收 checklist 作为交付门禁。
 
-该机制降低架构漂移、失控重构、质量不一致和验收缺口，使 AI 辅助开发形成可评审、可验证、可复盘的团队流程。
+该机制降低架构漂移、失控重构、质量不一致和验收缺口，提升 AI 辅助开发的评审效率、交付一致性和回滚能力。
 
 ## 技术栈
 

@@ -92,8 +92,8 @@ skillGroups:
       zh: "AI 工程治理与团队规范"
       en: "AI Engineering Governance"
     description:
-      zh: "把 AI 辅助开发纳入团队可控流程，通过规则、Spec、EPIC、验收门禁和自检脚本保证变更可评审、可验证、可回滚。"
-      en: "Bringing AI-assisted development into controlled team workflows through rules, Specs, EPICs, acceptance gates, and self-check scripts so changes stay reviewable, verifiable, and reversible."
+      zh: "把 AI 辅助开发纳入团队工程流程，通过规则、Spec、EPIC、验收门禁和自检脚本提升评审效率、交付一致性和回滚能力。"
+      en: "Bringing AI-assisted development into team engineering workflows through rules, Specs, EPICs, acceptance gates, and self-check scripts to improve review efficiency, delivery consistency, and rollback readiness."
     skills:
       - "AI Development Harness"
       - "Architecture Rules"

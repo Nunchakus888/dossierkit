@@ -6,8 +6,8 @@ headline:
   zh: "企业级 Agent 平台架构负责人"
   en: "Enterprise Agent Platform Architect"
 summary:
-  zh: "10 年工程与 AI 落地经验，阿里 + 商汤背景，聚焦企业级 Agent 平台架构：把大模型能力接入核心业务流程，建设可评测、可审计、可扩展、可持续运营的生产级 Agent 系统。"
-  en: "10 years of engineering and AI delivery experience with Alibaba and SenseTime context, focused on enterprise Agent platform architecture: bringing LLM capabilities into core business workflows through evaluable, auditable, scalable, operable production systems."
+  zh: "10 年工程与 AI 落地经验，阿里 + 商汤背景，主攻生产级 Agent 平台架构与大模型应用工程化。"
+  en: "10 years of engineering and AI delivery experience with Alibaba and SenseTime context, focused on production-grade Agent platform architecture and LLM application engineering."
 yearsOfExperience: 10
 location:
   zh: "中国"
@@ -37,5 +37,5 @@ availability:
   preferredLocations:
     - "China"
   expectedPackage:
-    zh: "优先平台所有权、核心业务场景、长期技术影响力和团队协作深度"
-    en: "Prioritizing platform ownership, core business scenarios, long-term technical impact, and deep cross-functional scope"
+    zh: "优先平台级职责、核心业务场景、长期技术影响力和深度跨团队协作"
+    en: "Prioritizing platform-level ownership, core business scenarios, long-term technical impact, and deep cross-functional collaboration"

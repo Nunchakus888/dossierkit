@@ -55,8 +55,8 @@ quickLinks:
       zh: "Eval"
       en: "Eval"
     description:
-      zh: "Evaluation, LLMOps, data loop."
-      en: "Evaluation, LLMOps, data loop."
+      zh: "Evaluation, LLMOps, data feedback."
+      en: "Evaluation, LLMOps, data feedback."
     path: "lab"
     icon: "briefcase"
     tone: "blue"
@@ -65,8 +65,8 @@ quickLinks:
       zh: "CV"
       en: "CV"
     description:
-      zh: "Senior platform ownership."
-      en: "Senior platform ownership."
+      zh: "Platform leadership."
+      en: "Platform leadership."
     path: "cv"
     icon: "file-text"
     tone: "cyan"

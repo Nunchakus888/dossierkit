@@ -10,15 +10,15 @@ experiences:
       zh: "中国"
       en: "China"
     summary:
-      zh: "负责跨行业 AI Agent 客服 SaaS 平台与团队工程治理，支撑 2k+ 租户、23w+ 用户、峰值 6w 请求/天，主导 Agent Runtime、工具/Skill 扩展、RAG/Memory、可观测与成本治理。"
-      en: "Owned a cross-industry AI Agent customer-service SaaS platform and team engineering governance, supporting 2k+ tenants, 230k+ users, and 60k peak requests/day while leading Agent Runtime, tool/Skill extension, RAG/Memory, observability, and cost governance."
+      zh: "负责跨行业 AI Agent 客服 SaaS 平台和团队工程治理，覆盖 2k+ 租户、23w+ 用户、峰值 6w 请求/天，主导 Agent Runtime、工具/Skill 扩展、RAG/Memory、可观测与成本治理。"
+      en: "Led a cross-industry AI Agent customer-service SaaS platform and team engineering governance, covering 2k+ tenants, 230k+ users, and 60k peak requests/day while owning Agent Runtime, tool/Skill extension, RAG/Memory, observability, and cost governance."
     highlights:
       - zh: "主导平台从代码引导 Agent 1.0 演进为模型驱动 Agent 2.0，收敛 Runtime、动态 Skill、tool gating、flow fast path、异步执行和 usage/cost 治理。"
         en: "Led the evolution from code-guided Agent 1.0 to model-driven Agent 2.0, consolidating runtime, dynamic Skills, tool gating, flow fast path, async execution, and usage/cost governance."
-      - zh: "围绕真实客服 badcase 建立 content gap、知识/Skill/Memory 更新、评测回放和发布门禁的质量闭环。"
-        en: "Built a quality loop around real customer-service badcases, connecting content gaps, knowledge/Skill/Memory updates, replay evaluation, and release gates."
-      - zh: "在 20 人产研团队中负责 AI Agent 业务方向，带 3 人小组（2 开发 + 1 测试）推进平台能力、质量闭环和交付流程。"
-        en: "Led the AI Agent business track within a 20-person product-engineering team, managing a 3-person squad of 2 developers and 1 QA across platform capability, quality loops, and delivery workflow."
+      - zh: "围绕真实客服 badcase 建立 content gap 识别、知识/Skill/Memory 更新、评测回放和发布门禁机制。"
+        en: "Built mechanisms around real customer-service badcases for content gap detection, knowledge/Skill/Memory updates, replay evaluation, and release gates."
+      - zh: "在 20 人产研团队中负责 AI Agent 业务方向，带 3 人小组（2 开发 + 1 测试）推进平台能力、质量治理和交付流程。"
+        en: "Led the AI Agent business track within a 20-person product-engineering team, managing a 3-person squad of 2 developers and 1 QA across platform capability, quality governance, and delivery workflow."
       - zh: "推动 AI 开发 Harness 覆盖 40 个仓库，以架构规则、Spec/EPIC、Supervisor 验收门禁、自检脚本和 PR 模板约束 AI 辅助开发。"
         en: "Expanded the AI development harness across 40 repositories, using architecture rules, Spec/EPIC, supervisor gates, self-check scripts, and PR templates to govern AI-assisted development."
     tags:
@@ -93,8 +93,8 @@ experiences:
     highlights:
       - zh: "设计基于 shell / iframe 的微前端架构，统一多业务子应用通信、路由定义、静态资源加载和部署方式。"
         en: "Designed a shell / iframe based micro-frontend architecture to standardize sub-application communication, routing, static resource loading, and deployment."
-      - zh: "沉淀 Vue / React 脚手架、跨平台 JsBridge、广告日志上报 SDK 和通用组件库，参与下单、广告结算、订单归因到商家经营分析的闭环建设。"
-        en: "Built Vue / React scaffolds, cross-platform JsBridge, ad logging SDK, and reusable components, contributing to the loop from ordering and ad settlement to attribution and merchant analysis."
+      - zh: "沉淀 Vue / React 脚手架、跨平台 JsBridge、广告日志上报 SDK 和通用组件库，参与下单、广告结算、订单归因到商家经营分析的关键链路建设。"
+        en: "Built Vue / React scaffolds, cross-platform JsBridge, ad logging SDK, and reusable components, contributing to key flows from ordering and ad settlement to attribution and merchant analysis."
     tags:
       - "Ads Platform"
       - "Attribution"
