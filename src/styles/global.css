@@ -12,6 +12,11 @@
   --color-mint: #55bea2;
   --color-blue: #4fa9d8;
   --color-cyan: #78cde1;
+  --gradient-primary: linear-gradient(100deg, #207f72 0%, #2fb98f 34%, #55bea2 64%, #4fa9d8 100%);
+  --gradient-panel: linear-gradient(135deg, rgba(255, 255, 255, 0.84) 0%, rgba(244, 253, 250, 0.74) 48%, rgba(238, 250, 255, 0.78) 100%);
+  --gradient-border: linear-gradient(120deg, rgba(85, 190, 162, 0.5), rgba(120, 205, 225, 0.36), rgba(255, 255, 255, 0.7));
+  --shadow-soft: 0 18px 44px rgba(38, 47, 58, 0.07);
+  --shadow-glow: 0 18px 38px rgba(47, 185, 143, 0.2);
   --layout-max-width: 1120px;
   --card-radius: 20px;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -30,6 +35,7 @@ html {
 body {
   margin: 0;
   background:
+    linear-gradient(115deg, rgba(232, 252, 246, 0.78) 0%, rgba(247, 253, 255, 0.62) 37%, rgba(236, 250, 255, 0.82) 100%),
     linear-gradient(180deg, rgba(239, 252, 253, 0.96) 0%, rgba(250, 255, 255, 0.95) 55%, rgba(255, 255, 255, 0.98) 100%),
     var(--color-background);
   background-position: center top;
@@ -45,7 +51,21 @@ body::before {
   z-index: -1;
   pointer-events: none;
   content: "";
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.56), rgba(234, 249, 244, 0.34), rgba(244, 240, 255, 0.28));
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.58), rgba(234, 249, 244, 0.28), rgba(231, 249, 255, 0.24)),
+    repeating-linear-gradient(90deg, rgba(47, 185, 143, 0.08) 0 1px, transparent 1px 96px),
+    repeating-linear-gradient(180deg, rgba(79, 169, 216, 0.055) 0 1px, transparent 1px 96px);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.62), transparent 74%);
+}
+
+body::after {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: -1;
+  height: 34vh;
+  pointer-events: none;
+  content: "";
+  background: linear-gradient(0deg, rgba(85, 190, 162, 0.11), rgba(120, 205, 225, 0));
 }
 
 a {
@@ -91,10 +111,15 @@ main > article {
 
 .section-heading h2 {
   margin: 0;
+  background: var(--gradient-primary);
+  background-clip: text;
+  color: var(--color-foreground);
   font-size: clamp(1.35rem, 1.8vw, 1.9rem);
   font-weight: 720;
   line-height: 1.12;
   letter-spacing: 0;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .section-heading p {
@@ -106,10 +131,12 @@ main > article {
 .card {
   position: relative;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--color-border), transparent 8%);
+  border: 1px solid transparent;
   border-radius: var(--card-radius);
-  background: color-mix(in srgb, var(--color-surface), transparent 3%);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.86) inset, 0 14px 34px rgba(38, 47, 58, 0.052);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(248, 255, 253, 0.82)) padding-box,
+    var(--gradient-border) border-box;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.88) inset, var(--shadow-soft);
   transition:
     transform 220ms var(--ease-out),
     border-color 220ms var(--ease-out),
@@ -121,14 +148,26 @@ main > article {
   inset: 0;
   pointer-events: none;
   content: "";
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.32), transparent 42%);
-  opacity: 0.75;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.48), transparent 38%),
+    linear-gradient(180deg, rgba(85, 190, 162, 0.09), transparent 48%);
+  opacity: 0.78;
+}
+
+.card::after {
+  position: absolute;
+  top: 0;
+  right: 18px;
+  left: 18px;
+  height: 1px;
+  pointer-events: none;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgba(85, 190, 162, 0.56), rgba(79, 169, 216, 0.42), transparent);
 }
 
 .card:hover {
   transform: translateY(-3px);
-  border-color: color-mix(in srgb, var(--color-accent), transparent 42%);
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 20px 46px rgba(38, 47, 58, 0.085);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 22px 54px rgba(38, 47, 58, 0.09), 0 16px 42px rgba(85, 190, 162, 0.12);
 }
 
 .button-row {
@@ -144,9 +183,11 @@ main > article {
   justify-content: center;
   gap: 8px;
   border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--color-border), transparent 6%);
+  border: 1px solid transparent;
   padding: 9px 14px;
-  background: color-mix(in srgb, var(--color-surface), transparent 2%);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(247, 254, 252, 0.72)) padding-box,
+    linear-gradient(120deg, rgba(85, 190, 162, 0.34), rgba(79, 169, 216, 0.22), rgba(220, 236, 239, 0.72)) border-box;
   color: var(--color-foreground);
   font-weight: 700;
   line-height: 1.2;
@@ -159,18 +200,18 @@ main > article {
 
 .button:hover {
   transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--color-accent), transparent 30%);
-  box-shadow: 0 10px 24px rgba(16, 20, 22, 0.08);
+  box-shadow: 0 12px 28px rgba(16, 20, 22, 0.08), 0 10px 28px rgba(85, 190, 162, 0.12);
 }
 
 .button.primary {
-  border-color: color-mix(in srgb, var(--color-mint), #2f3140 12%);
-  background: var(--color-mint);
+  border-color: transparent;
+  background: var(--gradient-primary);
   color: white;
+  box-shadow: var(--shadow-glow);
 }
 
 .button.primary:hover {
-  background: color-mix(in srgb, var(--color-mint), var(--color-foreground) 8%);
+  box-shadow: 0 20px 42px rgba(47, 185, 143, 0.24);
 }
 
 .tag-list {
@@ -183,11 +224,13 @@ main > article {
 }
 
 .tag {
-  border: 1px solid color-mix(in srgb, var(--color-border), transparent 8%);
+  border: 1px solid transparent;
   border-radius: 999px;
   padding: 4px 10px;
-  background: color-mix(in srgb, var(--color-surface), transparent 8%);
-  color: var(--color-muted);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(246, 255, 252, 0.72)) padding-box,
+    linear-gradient(120deg, rgba(85, 190, 162, 0.28), rgba(120, 205, 225, 0.24)) border-box;
+  color: color-mix(in srgb, var(--color-foreground), var(--color-accent) 26%);
   font-size: 0.83rem;
   line-height: 1.2;
 }
@@ -238,6 +281,7 @@ main > article {
   }
 
   body::before,
+  body::after,
   .no-print {
     display: none !important;
   }
@@ -245,6 +289,12 @@ main > article {
   main > section,
   main > article {
     animation: none !important;
+  }
+
+  .section-heading h2 {
+    background: none !important;
+    color: var(--color-foreground) !important;
+    -webkit-text-fill-color: currentColor !important;
   }
 }
 

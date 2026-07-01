@@ -12,6 +12,8 @@ type Props = {
 
 const { locale, pack } = Astro.props;
 const l = labels[locale];
+const displayName = localize(pack.profile.name, locale);
+const signatureGradientId = `signature-gradient-${locale}`;
 const pdfHref = `/resumes/${pack.resume.filename}-${locale}.pdf`;
 const downloadLabel = locale === "zh" ? "下载 PDF 简历" : "Download PDF";
 const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PDF";
@@ -21,7 +23,20 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
   <section class={`page-shell cv-page cv-${locale}`}>
     <header class="cv-header">
       <div>
-        <h1>{localize(pack.profile.name, locale)}</h1>
+        <h1 aria-label={displayName}>
+          <svg class="signature-svg" viewBox="0 0 390 88" role="img" aria-labelledby={`${signatureGradientId}-title`}>
+            <title id={`${signatureGradientId}-title`}>{displayName}</title>
+            <defs>
+              <linearGradient id={signatureGradientId} x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#207f72" />
+                <stop offset="34%" stop-color="#2fb98f" />
+                <stop offset="66%" stop-color="#55bea2" />
+                <stop offset="100%" stop-color="#2b9f98" />
+              </linearGradient>
+            </defs>
+            <text x="0" y="62" fill={`url(#${signatureGradientId})`}>{displayName}</text>
+          </svg>
+        </h1>
         <h2>{localize(pack.profile.headline, locale)}</h2>
       </div>
       <div class="contact">
@@ -106,12 +121,23 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
 
   h1 {
     margin: 0;
-    color: #9046fa;
+    line-height: 1.12;
+  }
+
+  .signature-svg {
+    display: block;
+    width: min(100%, 330px);
+    height: auto;
+    overflow: visible;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .signature-svg text {
     font-family: "Pacifico", "Brush Script MT", cursive;
-    font-size: clamp(2.25rem, 4.8vw, 3.5rem);
+    font-size: 56px;
     font-weight: 400;
     letter-spacing: 1px;
-    line-height: 1.12;
   }
 
   h2 {
@@ -144,11 +170,13 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
     height: 46px;
     align-items: center;
     justify-content: center;
-    border: 1px solid color-mix(in srgb, var(--color-blue), white 36%);
+    border: 1px solid transparent;
     border-radius: 999px;
     padding: 0;
-    background: rgba(255, 255, 255, 0.72);
-    color: var(--color-blue);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(246, 255, 252, 0.68)) padding-box,
+      linear-gradient(120deg, rgba(85, 190, 162, 0.36), rgba(79, 169, 216, 0.28)) border-box;
+    color: #207f72;
     font: inherit;
     font-weight: 780;
     line-height: 1.1;
@@ -161,16 +189,15 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
   }
 
   .cv-action.primary {
-    border-color: color-mix(in srgb, var(--color-mint), #2f3140 10%);
-    background: var(--color-mint);
+    border-color: transparent;
+    background: var(--gradient-primary);
     color: #ffffff;
-    box-shadow: 0 14px 28px rgba(85, 190, 162, 0.2);
+    box-shadow: var(--shadow-glow);
   }
 
   .cv-action:hover {
     transform: translateY(-1px);
-    border-color: var(--color-blue);
-    box-shadow: 0 16px 30px rgba(49, 125, 154, 0.13);
+    box-shadow: 0 16px 30px rgba(49, 125, 154, 0.13), 0 10px 26px rgba(85, 190, 162, 0.14);
   }
 
   section {
@@ -179,7 +206,8 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
 
   h3 {
     margin: 0 0 14px;
-    color: var(--color-accent);
+    width: fit-content;
+    color: #2fb98f;
     font-size: 1rem;
     text-transform: uppercase;
   }
@@ -302,9 +330,8 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
       padding-top: 8px;
     }
 
-    h1 {
-      font-size: 30px;
-      line-height: 34px;
+    .signature-svg {
+      width: 246px;
     }
   }
 </style>

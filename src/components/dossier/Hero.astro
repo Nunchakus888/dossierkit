@@ -50,6 +50,8 @@ function navHref(path: string) {
 
 <style>
   .hero {
+    position: relative;
+    isolation: isolate;
     display: grid;
     grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
     gap: clamp(24px, 4vw, 56px);
@@ -57,11 +59,29 @@ function navHref(path: string) {
     padding: 58px 0 42px;
   }
 
+  .hero::before {
+    position: absolute;
+    inset: 20px -32px auto;
+    z-index: -1;
+    height: min(62%, 440px);
+    pointer-events: none;
+    content: "";
+    background:
+      linear-gradient(118deg, rgba(234, 249, 244, 0.74), rgba(255, 255, 255, 0.26) 45%, rgba(231, 249, 255, 0.62)),
+      repeating-linear-gradient(90deg, rgba(85, 190, 162, 0.1) 0 1px, transparent 1px 72px);
+    mask-image: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.76) 14%, rgba(0, 0, 0, 0.58) 76%, transparent);
+  }
+
   .eyebrow {
     margin: 0 0 18px;
-    color: color-mix(in srgb, var(--color-foreground), transparent 20%);
+    width: fit-content;
+    background: var(--gradient-primary);
+    background-clip: text;
+    color: #207f72;
     font-size: clamp(0.95rem, 1.2vw, 1.14rem);
     font-weight: 700;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .hero-copy {
@@ -85,17 +105,29 @@ function navHref(path: string) {
   }
 
   .tone.mint {
+    background: linear-gradient(100deg, #207f72, #2fb98f 58%, #55bea2);
+    background-clip: text;
     color: var(--color-mint);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .tone.blue {
+    background: linear-gradient(100deg, #2fb98f, #4fa9d8);
+    background-clip: text;
     color: var(--color-blue);
-    text-shadow: 0 10px 22px rgba(79, 169, 216, 0.16);
+    text-shadow: 0 10px 22px rgba(79, 169, 216, 0.12);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .tone.cyan {
+    background: linear-gradient(100deg, #55bea2, #78cde1);
+    background-clip: text;
     color: var(--color-cyan);
-    text-shadow: 0 10px 22px rgba(120, 205, 225, 0.16);
+    text-shadow: 0 10px 22px rgba(120, 205, 225, 0.12);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .tone.ink {
@@ -123,16 +155,18 @@ function navHref(path: string) {
   }
 
   .playful-button.primary {
-    border-color: color-mix(in srgb, var(--color-mint), #2f3140 12%);
-    background: var(--color-mint);
+    border-color: transparent;
+    background: var(--gradient-primary);
     color: white;
-    box-shadow: 0 14px 28px rgba(85, 190, 162, 0.28);
+    box-shadow: var(--shadow-glow);
   }
 
   .playful-button.secondary {
-    border-color: color-mix(in srgb, var(--color-blue), white 25%);
-    background: rgba(255, 255, 255, 0.68);
-    color: var(--color-blue);
+    border-color: transparent;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.78), rgba(246, 255, 252, 0.66)) padding-box,
+      linear-gradient(120deg, rgba(85, 190, 162, 0.34), rgba(79, 169, 216, 0.34)) border-box;
+    color: #207f72;
   }
 
   .hero-art {

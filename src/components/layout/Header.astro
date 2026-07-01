@@ -102,11 +102,13 @@ function isActive(path: string, external?: boolean) {
     grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr);
     align-items: center;
     gap: 20px;
-    border: 1px solid rgba(207, 221, 224, 0.78);
+    border: 1px solid transparent;
     border-radius: 30px;
     padding: 0 28px;
-    background: rgba(255, 255, 255, 0.78);
-    box-shadow: 0 18px 46px rgba(45, 58, 69, 0.09);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(246, 255, 252, 0.72)) padding-box,
+      linear-gradient(120deg, rgba(85, 190, 162, 0.44), rgba(120, 205, 225, 0.32), rgba(255, 255, 255, 0.74)) border-box;
+    box-shadow: 0 18px 46px rgba(45, 58, 69, 0.09), 0 12px 34px rgba(85, 190, 162, 0.1);
     backdrop-filter: blur(18px) saturate(1.25);
   }
 
@@ -121,12 +123,16 @@ function isActive(path: string, external?: boolean) {
   .brand-word {
     font-size: clamp(1.5rem, 2vw, 2rem);
     font-weight: 850;
-    letter-spacing: -0.03em;
+    letter-spacing: 0;
     color: var(--color-foreground);
   }
 
   .brand-word span + span {
+    background: var(--gradient-primary);
+    background-clip: text;
     color: var(--color-mint);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   .desktop-nav {
@@ -153,7 +159,7 @@ function isActive(path: string, external?: boolean) {
     height: 3px;
     border-radius: 999px;
     content: "";
-    background: var(--color-mint);
+    background: var(--gradient-primary);
     opacity: 0;
     transform: scaleX(0.35);
     transition: opacity 180ms ease, transform 180ms ease;
@@ -161,7 +167,7 @@ function isActive(path: string, external?: boolean) {
 
   .desktop-nav a:hover,
   .desktop-nav a.active {
-    color: var(--color-mint);
+    color: #207f72;
     transform: translateY(-1px);
   }
 
@@ -183,10 +189,12 @@ function isActive(path: string, external?: boolean) {
     min-height: 50px;
     align-items: center;
     gap: 12px;
-    border: 1px solid rgba(207, 221, 224, 0.95);
+    border: 1px solid transparent;
     border-radius: 999px;
     padding: 10px 18px;
-    background: rgba(255, 255, 255, 0.62);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(246, 255, 252, 0.66)) padding-box,
+      linear-gradient(120deg, rgba(85, 190, 162, 0.34), rgba(120, 205, 225, 0.26)) border-box;
     color: #5a6375;
     font-size: 1.02rem;
     font-weight: 760;
@@ -195,8 +203,8 @@ function isActive(path: string, external?: boolean) {
 
   .language-pill:hover {
     transform: translateY(-1px);
-    border-color: color-mix(in srgb, var(--color-mint), white 25%);
-    box-shadow: 0 10px 24px rgba(85, 190, 162, 0.16);
+    color: #207f72;
+    box-shadow: 0 12px 26px rgba(85, 190, 162, 0.18);
   }
 
   .mobile-menu {
@@ -209,9 +217,11 @@ function isActive(path: string, external?: boolean) {
     width: 48px;
     height: 48px;
     place-items: center;
-    border: 1px solid rgba(207, 221, 224, 0.95);
+    border: 1px solid transparent;
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.62);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(246, 255, 252, 0.66)) padding-box,
+      linear-gradient(120deg, rgba(85, 190, 162, 0.34), rgba(120, 205, 225, 0.26)) border-box;
     color: #5a6375;
     cursor: pointer;
     list-style: none;
@@ -228,10 +238,12 @@ function isActive(path: string, external?: boolean) {
     display: grid;
     min-width: 220px;
     gap: 6px;
-    border: 1px solid rgba(207, 221, 224, 0.95);
+    border: 1px solid transparent;
     border-radius: 22px;
     padding: 10px;
-    background: rgba(255, 255, 255, 0.98);
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(246, 255, 252, 0.9)) padding-box,
+      linear-gradient(120deg, rgba(85, 190, 162, 0.36), rgba(120, 205, 225, 0.28)) border-box;
     box-shadow: 0 24px 54px rgba(45, 58, 69, 0.16);
     backdrop-filter: blur(18px) saturate(1.2);
   }
@@ -247,8 +259,8 @@ function isActive(path: string, external?: boolean) {
   }
 
   .mobile-menu-panel a:hover {
-    background: var(--color-accent-soft);
-    color: var(--color-mint);
+    background: linear-gradient(100deg, rgba(234, 249, 244, 0.82), rgba(235, 250, 255, 0.72));
+    color: #207f72;
   }
 
   @media (max-width: 960px) {

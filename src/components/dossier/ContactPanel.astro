@@ -37,18 +37,24 @@ const l = labels[locale];
     grid-template-columns: 1fr auto;
     gap: 30px;
     align-items: center;
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
+    border-top: 1px solid transparent;
+    border-bottom: 1px solid transparent;
+    border-image: var(--gradient-border) 1;
     padding-top: 34px;
     padding-bottom: 34px;
   }
 
   .eyebrow {
     margin: 0 0 8px;
-    color: var(--color-accent);
+    width: fit-content;
+    background: var(--gradient-primary);
+    background-clip: text;
+    color: #207f72;
     font-size: 0.82rem;
     font-weight: 750;
     text-transform: uppercase;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
 
   h2 {

@@ -33,9 +33,12 @@ function navHref(path: string, external?: boolean) {
 
 <style>
   .site-footer {
-    border-top: 1px solid color-mix(in srgb, var(--color-border), transparent 10%);
+    border-top: 1px solid transparent;
+    border-image: var(--gradient-border) 1;
     padding: 34px 0;
-    background: color-mix(in srgb, var(--color-surface), transparent 58%);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(246, 255, 252, 0.72)),
+      linear-gradient(105deg, rgba(234, 249, 244, 0.28), rgba(231, 249, 255, 0.18));
   }
 
   .footer-inner {
@@ -64,8 +67,8 @@ function navHref(path: string, external?: boolean) {
   }
 
   .footer-links a:hover {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
+    border-color: color-mix(in srgb, var(--color-accent), transparent 20%);
+    color: #207f72;
   }
 
   @media (max-width: 720px) {
