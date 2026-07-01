@@ -1,7 +1,7 @@
 id: "default"
 name:
-  zh: "George Zhang"
-  en: "George Zhang"
+  zh: "George"
+  en: "George"
 headline:
   zh: "企业级 Agent 平台架构负责人"
   en: "Enterprise Agent Platform Architect"
@@ -10,8 +10,8 @@ summary:
   en: "10 years of engineering and AI delivery experience with Alibaba and SenseTime context, focused on enterprise Agent platform architecture: bringing LLM capabilities into core business workflows through evaluable, auditable, scalable, operable production systems."
 yearsOfExperience: 10
 location:
-  zh: "中国 / 可远程"
-  en: "China / Remote"
+  zh: "中国"
+  en: "China"
 avatar: "avatar.png"
 companies:
   - name: "YC"
@@ -35,11 +35,7 @@ availability:
     zh: "聚焦企业级 Agent 平台架构负责人 / 大模型应用平台负责人机会"
     en: "Focused on enterprise Agent platform architect / LLM application platform lead opportunities"
   preferredLocations:
-    - "Shanghai"
-    - "Beijing"
-    - "Hangzhou"
-    - "Shenzhen"
-    - "Remote"
+    - "China"
   expectedPackage:
     zh: "优先平台所有权、核心业务场景、长期技术影响力和团队协作深度"
     en: "Prioritizing platform ownership, core business scenarios, long-term technical impact, and deep cross-functional scope"

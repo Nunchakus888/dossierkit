@@ -15,7 +15,7 @@ export const labels = {
     skills: "能力",
     featuredCases: "代表案例",
     featuredLab: "实验记录",
-    latestWriting: "方法论文章",
+    latestWriting: "文章",
     readMore: "查看详情",
     viewCv: "查看简历",
     email: "邮件联系",

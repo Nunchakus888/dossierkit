@@ -8,6 +8,4 @@ sections:
   - type: "labNotes"
     limit: 3
   - type: "proofWall"
-  - type: "writing"
-    limit: 3
   - type: "contact"

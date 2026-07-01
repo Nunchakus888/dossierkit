@@ -226,6 +226,28 @@ main > article {
   display: none;
 }
 
+@page {
+  size: A4;
+  margin: 16mm 15mm 17mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #ffffff !important;
+  }
+
+  body::before,
+  .no-print {
+    display: none !important;
+  }
+
+  main > section,
+  main > article {
+    animation: none !important;
+  }
+}
+
 @keyframes reveal {
   from {
     opacity: 0;
