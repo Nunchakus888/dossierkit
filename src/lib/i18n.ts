@@ -9,7 +9,7 @@ export const labels = {
     lab: "实验",
     writing: "文章",
     contact: "联系",
-    roles: "主攻方向",
+    roles: "定位方向",
     proof: "可信证据",
     experience: "经历",
     skills: "能力",

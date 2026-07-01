@@ -3,9 +3,9 @@ slug: "posttraining-data-flywheel"
 locale: "zh"
 translationKey: "posttraining-data-flywheel"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-06-26"
+lastReviewedAt: "2026-07-01"
 title: "Agent 平台数据反馈闭环"
-summary: "作为生产级 Agent 平台的质量改进支撑证据，连接 trace、badcase、评测样本和偏好数据。"
+summary: "连接生产 trace、badcase、评测样本和偏好数据，将线上行为转化为持续质量改进机制。"
 role: "数据反馈 / badcase 分类 / 评测样本 / 质量闭环"
 period: "Supporting Evidence"
 confidentiality: "sanitized"
@@ -18,9 +18,9 @@ targetRoles:
   - "agent-platform"
 ---
 
-## 定位
+## 项目概览
 
-这不是独立方向，而是“企业级 Agent 平台架构负责人”的支撑证据。它证明平台负责人不仅能做功能上线，也能把生产 trace 转成持续质量改进机制。
+生产级 Agent 平台需要将线上 trace、badcase、评测样本和偏好数据连接成反馈闭环，使模型行为、工具调用和业务规则能够持续被评估、修正和发布。
 
 ## 闭环
 
@@ -30,8 +30,8 @@ targetRoles:
 
 1. 评测样本：作为 prompt、工具 schema、模型版本变更前的回放门禁。
 2. 产品改进：定位规则缺口、流程断点和人工兜底策略。
-3. 数据建设：沉淀 chosen/rejected 偏好对，为后续训练或策略优化提供输入。
+3. 数据建设：沉淀 chosen/rejected 偏好对，为后继训练或策略优化提供输入。
 
-## 高阶价值
+## 平台价值
 
-这部分内容不扩散成新的标签，而是证明平台 owner 有质量闭环意识：能把线上行为、评测体系、模型改进和业务结果连接起来。
+该闭环将线上行为、评测体系、模型改进和业务结果连接起来，使平台不只完成能力上线，也能持续提升准确性、稳定性和可运营性。

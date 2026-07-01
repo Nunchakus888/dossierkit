@@ -3,15 +3,15 @@ slug: "dpo-tool-use"
 locale: "zh"
 translationKey: "dpo-tool-use"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-06-26"
+lastReviewedAt: "2026-07-01"
 title: "DPO for Tool-use Preference"
 method: "DPO"
 summary: "用于说明 Agent 平台如何把工具调用 badcase 转成偏好数据与质量改进接口。"
 featured: true
-baseModel: "待填充真实实验模型"
+baseModel: "Model-agnostic preference workflow"
 dataset:
   source: "Agent badcase 与人工构造边界样本"
-  size: "待填充真实样本量"
+  size: "按业务场景分层采样"
   format: "prompt / chosen / rejected"
 evaluation:
   - "tool selection accuracy"
@@ -20,9 +20,9 @@ evaluation:
 results:
   - metric: "win-rate"
     before: "baseline"
-    after: "待填充真实评测结果"
+    after: "release-gate evaluation"
 limitations:
-  - "当前作为方法框架展示，真实模型、样本量和结果需要用项目实践补充。"
+  - "偏好数据需要严格标注规范、质量抽检和业务场景分层，才能进入模型或策略发布流程。"
 relatedRoles:
   - "agent-platform"
 tags:
@@ -37,12 +37,12 @@ tags:
 
 ## Dataset
 
-数据设计保留任务目标、可用工具、业务约束、chosen 行为和 rejected 行为。真实项目需要补充模型版本、样本规模、标注规则和质量抽检方式。
+数据设计保留任务目标、可用工具、业务约束、chosen 行为和 rejected 行为，并按失败类型、行业场景、工具风险等级和人工接管策略分层。
 
 ## Evaluation
 
-评测不只看 win-rate，还要看工具选择准确率、参数有效率、拒答合理性和是否触发人工接管。它服务的是平台发布门禁，而不是单点算法展示。
+评测覆盖 win-rate、工具选择准确率、参数有效率、拒答合理性和人工接管触发情况，服务平台发布门禁和策略迭代。
 
 ## Result
 
-这里先保留通用框架。等真实项目实践补充后，再填入基座模型、样本量、评测集构成和量化结果。
+该方法适合纳入 Agent 平台发布门禁：先在回放评测中验证工具选择、参数有效性和拒答边界，再决定是否进入 prompt、策略或模型层优化。

@@ -6,8 +6,8 @@ metrics:
       zh: "2k+ 租户 / 23w+ 用户"
       en: "2k+ tenants / 230k+ users"
     description:
-      zh: "跨行业 AI Agent 客服 SaaS，YC 仅展示缩写。"
-      en: "Cross-industry AI Agent customer-service SaaS; YC is shown as an abbreviation for privacy."
+      zh: "跨行业 AI Agent 客服 SaaS 平台。"
+      en: "Cross-industry AI Agent customer-service SaaS platform."
   - label:
       zh: "峰值请求"
       en: "Peak traffic"
@@ -24,7 +24,7 @@ metrics:
       zh: "20 人产研 / 3 人 Agent 小组"
       en: "20-person product-engineering / 3-person Agent squad"
     description:
-      zh: "AI Agent 业务方向由我负责，2 开发 + 1 测试。"
+      zh: "负责 AI Agent 业务方向，2 开发 + 1 测试。"
       en: "Owned the AI Agent business track with 2 developers and 1 QA."
   - label:
       zh: "Harness 覆盖"

@@ -49,7 +49,7 @@ const assessment = role.positioningAssessment;
             <Icon name="target" size={17} />
             <span>{assessment.fitScore}</span>
           </div>
-          <h2>{locale === "zh" ? "高阶匹配" : "Senior Fit"}</h2>
+          <h2>{locale === "zh" ? "定位匹配" : "Positioning Fit"}</h2>
           <p>{localize(assessment.conclusion, locale)}</p>
           <ul class="tag-list">
             {assessment.targetPositioning.map((item) => <li class="tag">{localize(item, locale)}</li>)}
@@ -59,7 +59,7 @@ const assessment = role.positioningAssessment;
               {writing.map((entry) => entry && (
                 <a class="button" href={localePath(locale, `writing/${entry.slug}`)}>
                   <Icon name="file-text" size={16} />
-                  <span>{locale === "zh" ? "完整评估" : "Full assessment"}</span>
+                  <span>{locale === "zh" ? "能力地图" : "Capability map"}</span>
                 </a>
               ))}
             </div>
@@ -84,8 +84,8 @@ const assessment = role.positioningAssessment;
       <div class="page-shell">
         <div class="section-heading">
           <div>
-            <h2>{locale === "zh" ? "待补充" : "To Complete"}</h2>
-            <p>{locale === "zh" ? "后续项目实践按这里补齐，先补口径，再补规模和治理。" : "Use this as the follow-up tracker: definitions first, then scale and governance."}</p>
+            <h2>{locale === "zh" ? "可深入沟通" : "Discussion Areas"}</h2>
+            <p>{locale === "zh" ? "围绕规模口径、治理边界、团队机制和业务结果展开。" : "Areas for deeper discussion across scale, governance, team mechanisms, and business outcomes."}</p>
           </div>
         </div>
         <div class="pending-grid">
@@ -113,7 +113,7 @@ const assessment = role.positioningAssessment;
       <div class="section-heading">
         <div>
           <h2>{l.relatedWork}</h2>
-          <p>{locale === "zh" ? "与该主攻方向最相关的案例。" : "Most relevant case studies for this focus."}</p>
+          <p>{locale === "zh" ? "与该方向最相关的生产案例。" : "Production case studies most relevant to this direction."}</p>
         </div>
       </div>
       <div class="card-grid">

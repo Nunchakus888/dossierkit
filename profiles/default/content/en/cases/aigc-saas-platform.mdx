@@ -20,15 +20,15 @@ targetRoles:
   - "agent-platform"
 ---
 
-## Positioning
+## Overview
 
-This experience strengthens the AI engineering side of the current Agent platform positioning. It shows experience beyond calling an LLM API: generative AI products, model-serving workflows, task pipelines, monitoring, and platformized delivery.
+At SenseTime AIGC, contributed to 0-to-1 generative AI SaaS delivery across web engineering, microservice decomposition, model-serving call chains, task queues, logging, monitoring, and platform operations.
 
-It should not be framed as an algorithm-lead story. The accurate framing is: turning model capabilities into usable, scalable, and operable products and engineering systems.
+The core value was AI productization: connecting model inference, task state, file storage, post-processing, and user experience into usable, scalable, and operable product systems.
 
 ## Platform Scope
 
-At SenseTime, I contributed to AIGC products such as miaohua. The core scope included:
+At SenseTime, the AIGC product work included:
 
 1. AI image generation platform supporting proprietary image models, LoRA training, and third-party open-source model integration.
 2. Web / H5 / mini-program product surfaces and reusable component systems.
@@ -36,17 +36,15 @@ At SenseTime, I contributed to AIGC products such as miaohua. The core scope inc
 4. Microservice boundaries for identity, model inference, model-file storage, and task delivery.
 5. Engineering governance across containerized deployment, logging, monitoring, service communication, load balancing, and throughput optimization.
 
-## Tradeoffs
+## Engineering Tradeoffs
 
-The hard part was not a single generation call. The hard part was bringing generative models into a reliable product system:
+The key challenge was bringing generative models into a reliable product system:
 
 - Model call chains needed clear records of parameters, inputs, outputs, latency, and failure reasons.
 - Task queues, model services, and file storage had to be separated so long-running inference would not block the web path.
 - Prompting, model parameters, post-processing, watermarking, QR overlays, and object storage had to become a reusable pipeline.
 - The web experience had to balance ease of use, responsive layouts, and complex task-state feedback.
 
-## Senior Value
+## Platform Value
 
-The strongest value is AI productization evidence: connecting model capability, service boundaries, task orchestration, logging, monitoring, and user-facing experience in a production generative AI SaaS flow.
-
-It supports the current Agent platform narrative because Agent platforms also need to make model capabilities observable, governable, and operable instead of staying at the demo layer.
+The project established practical experience in model-serving engineering, long-running task orchestration, cross-platform product experience, and platform operations. These patterns transfer directly to model-call governance, task observability, cost control, and production release workflows in enterprise Agent platforms.

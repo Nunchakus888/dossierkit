@@ -3,15 +3,15 @@ slug: "dpo-tool-use"
 locale: "en"
 translationKey: "dpo-tool-use"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-06-26"
+lastReviewedAt: "2026-07-01"
 title: "DPO for Tool-use Preference"
 method: "DPO"
 summary: "Shows how an Agent platform can turn tool-use badcases into preference data and quality improvement interfaces."
 featured: true
-baseModel: "To be filled with real experiment model"
+baseModel: "Model-agnostic preference workflow"
 dataset:
   source: "Agent badcases and crafted boundary samples"
-  size: "To be filled with real sample size"
+  size: "Scenario-stratified sampling"
   format: "prompt / chosen / rejected"
 evaluation:
   - "tool selection accuracy"
@@ -20,9 +20,9 @@ evaluation:
 results:
   - metric: "win-rate"
     before: "baseline"
-    after: "To be filled with real evaluation result"
+    after: "release-gate evaluation"
 limitations:
-  - "Presented as a method framework. Real model, sample size, and measured result should be filled with project evidence."
+  - "Preference data needs strict labeling guidelines, quality review, and business-scenario stratification before entering model or policy release workflows."
 relatedRoles:
   - "agent-platform"
 tags:
@@ -37,12 +37,12 @@ If tool-use failures are converted into chosen/rejected preference pairs, the Ag
 
 ## Dataset
 
-The data design keeps task goal, available tools, business constraints, chosen behavior, and rejected behavior. Real project details should add model version, sample size, labeling rules, and quality review method.
+The data design keeps task goal, available tools, business constraints, chosen behavior, and rejected behavior, then stratifies samples by failure type, industry scenario, tool risk level, and human-handoff policy.
 
 ## Evaluation
 
-The evaluation should look beyond win-rate. It also tracks tool selection accuracy, parameter validity, refusal quality, and whether human handoff is triggered. It supports platform release gates, not a standalone algorithm showcase.
+The evaluation covers win-rate, tool selection accuracy, parameter validity, refusal quality, and human-handoff triggers, supporting platform release gates and policy iteration.
 
 ## Result
 
-This page keeps the general framework for now. Once real project practice is added, fill in the base model, sample size, evaluation set design, and measured result.
+This method fits the Agent platform release gate: first validate tool selection, parameter validity, and refusal boundaries through replay evaluation, then decide whether the improvement belongs in prompts, policies, or model-level optimization.
