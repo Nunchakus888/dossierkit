@@ -220,7 +220,15 @@ collections:
             fields:
               - label: School
                 name: school
-                widget: string
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
               - label: Degree
                 name: degree
                 widget: object

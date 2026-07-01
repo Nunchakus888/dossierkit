@@ -1,9 +1,11 @@
 education:
-  - school: "Demo University"
+  - school:
+      zh: "上海交通大学（网络教育）"
+      en: "Shanghai Jiao Tong University (Online Education)"
     degree:
-      zh: "计算机科学学士"
-      en: "B.S. in Computer Science"
-    period: "2012 - 2016"
+      zh: "本科 / 计算机科学与技术"
+      en: "B.S. in Computer Science and Technology (Online Education)"
+    period: "2015-09 - 2018-07"
     summary:
-      zh: "系统方向，关注分布式系统和机器学习工程。"
-      en: "Systems track, focused on distributed systems and machine learning engineering."
+      zh: "系统学习计算机科学与技术基础，补齐软件工程、网络和系统方向训练。"
+      en: "Computer science and technology foundation across software engineering, networking, and systems."

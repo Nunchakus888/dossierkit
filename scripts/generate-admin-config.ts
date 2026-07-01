@@ -212,7 +212,7 @@ function educationFile(profileId: string) {
         name: "education",
         widget: "list",
         fields: [
-          { label: "School", name: "school", widget: "string" },
+          localizedField("School", "school"),
           localizedField("Degree", "degree"),
           { label: "Period", name: "period", widget: "string" },
           localizedField("Summary", "summary", "text", false)

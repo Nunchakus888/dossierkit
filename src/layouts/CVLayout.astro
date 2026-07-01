@@ -81,7 +81,7 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
       {pack.education.education.map((item) => (
         <article class="cv-item compact">
           <div>
-            <strong>{item.school}</strong>
+            <strong>{localize(item.school, locale)}</strong>
             <span>{localize(item.degree, locale)}</span>
           </div>
           <time>{item.period}</time>
@@ -247,8 +247,22 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
     }
 
     section {
-      break-inside: avoid;
+      break-inside: auto;
       margin-top: 22px;
+    }
+
+    .cv-item {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .skills-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 14px;
+    }
+
+    .skills-grid div {
+      padding-top: 8px;
     }
 
     h1 {

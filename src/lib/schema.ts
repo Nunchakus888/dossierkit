@@ -80,7 +80,7 @@ export const educationSchema = z.object({
     .array(
       z
         .object({
-          school: z.string().min(1),
+          school: localizedStringSchema,
           degree: localizedStringSchema,
           period: z.string().min(1),
           summary: localizedStringSchema.optional()

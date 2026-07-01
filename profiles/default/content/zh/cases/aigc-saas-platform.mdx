@@ -1,0 +1,52 @@
+---
+slug: "aigc-saas-platform"
+locale: "zh"
+translationKey: "aigc-saas-platform"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-07-01"
+title: "AIGC SaaS 与模型服务平台"
+summary: "在商汤 AIGC 业务中参与生成式 AI SaaS 从 0 到 1 建设，负责 Web 工程、微服务拆分、模型服务调用链和平台化交付。"
+role: "SenseTime / AIGC SaaS / 全栈架构 / 模型服务"
+period: "2021-09 - 2024-05"
+confidentiality: "sanitized"
+featured: true
+tags:
+  - "AIGC SaaS"
+  - "Model Serving"
+  - "Stable Diffusion"
+  - "Microservices"
+  - "DevOps"
+targetRoles:
+  - "agent-platform"
+---
+
+## 定位
+
+这段经历用于补强当前 Agent 平台定位里的 AI 工程化背景：它说明我不是只会接 LLM API，而是做过生成式 AI 产品、模型服务、任务链路、监控和平台化交付。
+
+它不需要被包装成“算法负责人”，更准确的表达是：在 AIGC SaaS 产品里负责把模型能力变成可用、可扩展、可运营的产品和工程系统。
+
+## 平台范围
+
+商汤期间参与 miaohua 等 AIGC 产品建设，核心范围包括：
+
+1. AI 绘画平台：支持自研作画模型、LoRA 训练能力和第三方开源模型接入。
+2. Web / H5 / 小程序：建设跨平台产品体验和组件体系。
+3. 模型服务：围绕 Stable Diffusion / PyTorch 推理链路处理参数格式化、prompt 优化、任务队列、模型文件存储和结果后处理。
+4. 微服务拆分：沉淀身份认证、模型推理、模型文件存储、任务推送等服务边界。
+5. 工程治理：容器化部署、日志上报、监控平台、服务通信、负载均衡和吞吐优化。
+
+## 技术取舍
+
+这类产品的难点不是单次生成，而是把生成式模型纳入稳定业务系统：
+
+- 模型调用链需要清晰记录参数、输入、输出、耗时和失败原因，否则无法定位质量和稳定性问题。
+- 任务队列、模型服务和文件存储需要拆开，避免长耗时推理阻塞 Web 主链路。
+- prompt、模型参数、后处理和水印/二维码/OSS 存储等环节需要形成可复用流水线。
+- Web 体验要兼顾低门槛使用、响应式适配和复杂任务状态反馈。
+
+## 高阶价值
+
+这段经历最有价值的是“AI 能力产品化”证据：从模型能力、服务边界、任务编排、日志监控到前端体验，完整参与了一条生成式 AI SaaS 链路。
+
+对当前主攻方向的支撑是：Agent 平台同样需要把模型能力纳入可观察、可治理、可运营的系统，而不是停留在 demo。

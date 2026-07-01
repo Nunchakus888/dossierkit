@@ -61,12 +61,32 @@ skillGroups:
     skills:
       - "Python / FastAPI"
       - "TypeScript"
+      - "React / Vue / Node.js"
       - "Rust"
       - "Java"
       - "Milvus"
+      - "PostgreSQL / Redis"
+      - "PyTorch / Stable Diffusion"
+      - "Docker / Kubernetes"
       - "Alibaba Cloud"
       - "Google Cloud"
       - "Gemini"
+  - id: "high-traffic-platform"
+    title:
+      zh: "高流量 Web 与平台工程"
+      en: "High-traffic Web and Platform Engineering"
+    description:
+      zh: "来自阿里业务场景的微前端、跨端、性能、日志和商业化工程基础，用于支撑复杂平台落地。"
+      en: "Micro-frontend, cross-platform, performance, logging, and monetization engineering foundation from Alibaba-scale product scenarios."
+    skills:
+      - "Micro-frontends"
+      - "SSR / Edge Rendering"
+      - "HTTP2 / Resource Strategy"
+      - "Cross-platform H5 / Mini Programs"
+      - "JsBridge"
+      - "Attribution / Logging SDK"
+      - "Component Systems"
+      - "CI/CD"
   - id: "ai-engineering-governance"
     title:
       zh: "AI 工程治理与团队规范"

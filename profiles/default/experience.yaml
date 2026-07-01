@@ -19,10 +19,8 @@ experiences:
         en: "Built a quality loop around real customer-service badcases, connecting content gaps, knowledge/Skill/Memory updates, replay evaluation, and release gates."
       - zh: "在 20 人产研团队中负责 AI Agent 业务方向，带 3 人小组（2 开发 + 1 测试）推进平台能力、质量闭环和交付流程。"
         en: "Led the AI Agent business track within a 20-person product-engineering team, managing a 3-person squad of 2 developers and 1 QA across platform capability, quality loops, and delivery workflow."
-      - zh: "推动 AI 开发 Harness 覆盖 40 个仓库，以架构规则、Spec/EPIC 工作流、Supervisor 验收门禁、自检脚本和 PR 模板约束 AI 辅助开发。"
-        en: "Expanded the AI development harness across 40 repositories, using architecture rules, Spec/EPIC workflow, supervisor acceptance gates, self-check scripts, and PR templates to govern AI-assisted development."
-      - zh: "制定团队开发规范和交付流程，统一需求拆解、实现边界、变更摘要、文件清单、自检结果和 AI Harness trace 的交付要求，减少架构漂移、失控重构和验收缺口。"
-        en: "Defined team development standards and delivery workflow, standardizing requirement breakdown, implementation boundaries, change summaries, changed-file lists, self-check results, and AI Harness trace handoffs to reduce architecture drift, runaway refactors, and acceptance gaps."
+      - zh: "推动 AI 开发 Harness 覆盖 40 个仓库，以架构规则、Spec/EPIC、Supervisor 验收门禁、自检脚本和 PR 模板约束 AI 辅助开发。"
+        en: "Expanded the AI development harness across 40 repositories, using architecture rules, Spec/EPIC, supervisor gates, self-check scripts, and PR templates to govern AI-assisted development."
     tags:
       - "Agent Runtime"
       - "LLMOps"
@@ -31,23 +29,96 @@ experiences:
       - "AI Engineering Harness"
       - "FastAPI"
       - "Milvus"
-  - company: "Large-scale SaaS Product Group"
+  - company: "SenseTime"
     role:
-      zh: "技术架构师"
-      en: "Technical Architect"
-    period: "2020 - 2024"
+      zh: "AIGC SaaS 全栈架构师"
+      en: "AIGC SaaS Full-stack Architect"
+    period:
+      zh: "2021-09 - 2024-05"
+      en: "2021-09 - 2024-05"
+    location:
+      zh: "上海"
+      en: "Shanghai"
+    summary:
+      zh: "在商汤 AIGC 业务中负责 AI 绘画、模型训练与平台化产品的 Web 工程和微服务架构，参与从 0 到 1 建设生成式 AI SaaS 产品。"
+      en: "At SenseTime AIGC, owned web engineering and microservice architecture for AI image generation, model training, and platform products, contributing to 0-to-1 generative AI SaaS delivery."
+    highlights:
+      - zh: "主导 miaohua 等 AIGC 产品的前后端架构、业务拆分、容器化部署和 DevOps 流程，支撑自研作画模型、LoRA 训练和第三方开源模型接入。"
+        en: "Led frontend/backend architecture, domain decomposition, containerized deployment, and DevOps workflows for AIGC products such as miaohua, supporting proprietary image models, LoRA training, and open-source model integration."
+      - zh: "围绕 Stable Diffusion / PyTorch 推理链路建设模型参数格式化、prompt 优化、任务队列、模型服务分层、日志上报和监控能力。"
+        en: "Built model parameter formatting, prompt optimization, task queues, model-service layering, logging, and monitoring around Stable Diffusion / PyTorch inference workflows."
+      - zh: "设计身份认证、模型推理、模型文件存储、任务推送等微服务边界，并兼顾跨平台 Web / H5 / 小程序产品体验。"
+        en: "Designed service boundaries for identity, model inference, model-file storage, and task delivery while supporting cross-platform Web / H5 / mini-program product experience."
+    tags:
+      - "AIGC SaaS"
+      - "Stable Diffusion"
+      - "PyTorch"
+      - "FastAPI"
+      - "Microservices"
+      - "DevOps"
+  - company: "Alibaba Group - Taobao"
+    role:
+      zh: "高级 Web 前端工程师"
+      en: "Senior Web Frontend Engineer"
+    period:
+      zh: "2020-07 - 2021-08"
+      en: "2020-07 - 2021-08"
     location:
       zh: "杭州"
       en: "Hangzhou"
     summary:
-      zh: "主导多租户 SaaS、工作流平台和数据集成架构，服务跨部门运营与客户成功团队。"
-      en: "Owned multi-tenant SaaS, workflow platform, and data integration architecture for operations and customer success teams."
+      zh: "负责淘宝直播、淘宝逛逛等高流量业务的跨端 Web 工程，重点在微前端编排、组件通信规范、SSR/边缘渲染和性能优化。"
+      en: "Worked on high-traffic Taobao Live and Taobao content scenarios, focusing on micro-frontend orchestration, component communication contracts, SSR/edge rendering, and performance optimization."
     highlights:
-      - zh: "把高频运营流程沉淀为可配置工作流，降低重复研发成本。"
-        en: "Converted repetitive operations into configurable workflows, reducing duplicate engineering effort."
-      - zh: "建设可观测性、审计和 SLA 看板，提升跨团队排障效率。"
-        en: "Built observability, audit, and SLA dashboards to improve cross-team incident response."
+      - zh: "主导直播间 Web 互动层微前端方案，从 Weex 单组件模式演进到 H5 组件编排，统一布局、路由、事件总线和通信规范。"
+        en: "Led the Taobao Live web interaction micro-frontend solution, evolving from isolated Weex components to H5 component orchestration with unified layout, routing, event bus, and communication contracts."
     tags:
-      - "SaaS"
-      - "Workflow"
-      - "Data Integration"
+      - "Micro-frontend"
+      - "SSR"
+      - "Performance"
+      - "Cross-platform"
+  - company: "Alibaba Local Services"
+    role:
+      zh: "资深前端工程师"
+      en: "Senior Frontend Engineer"
+    period:
+      zh: "2017-10 - 2020-07"
+      en: "2017-10 - 2020-07"
+    location:
+      zh: "上海 / 杭州"
+      en: "Shanghai / Hangzhou"
+    summary:
+      zh: "在本地生活商业推广业务中负责广告投放、订单归因、跨平台 H5、小程序和商家后台工程，连接消费侧流量与商家经营数据。"
+      en: "In Alibaba Local Services commercial promotion, owned ad delivery, order attribution, cross-platform H5, mini-program, and merchant-console engineering connecting consumer traffic with merchant operating data."
+    highlights:
+      - zh: "设计基于 shell / iframe 的微前端架构，统一多业务子应用通信、路由定义、静态资源加载和部署方式。"
+        en: "Designed a shell / iframe based micro-frontend architecture to standardize sub-application communication, routing, static resource loading, and deployment."
+      - zh: "沉淀 Vue / React 脚手架、跨平台 JsBridge、广告日志上报 SDK 和通用组件库，参与下单、广告结算、订单归因到商家经营分析的闭环建设。"
+        en: "Built Vue / React scaffolds, cross-platform JsBridge, ad logging SDK, and reusable components, contributing to the loop from ordering and ad settlement to attribution and merchant analysis."
+    tags:
+      - "Ads Platform"
+      - "Attribution"
+      - "JsBridge"
+      - "SDK"
+      - "Micro-frontend"
+  - company: "Ningbo Senpu Rongxun"
+    role:
+      zh: "全栈开发工程师"
+      en: "Full-stack Developer"
+    period:
+      zh: "2016-05 - 2017-09"
+      en: "2016-05 - 2017-09"
+    location:
+      zh: "宁波"
+      en: "Ningbo"
+    summary:
+      zh: "早期负责金融报表、Java Web 服务和前端迁移，完成从 AngularJS 到 Vue 的客户端迁移和 Web UI 组件库建设。"
+      en: "Early full-stack role covering financial reporting, Java web services, and frontend migration from AngularJS to Vue with a shared Web UI component library."
+    highlights:
+      - zh: "基于 Spring Boot、MyBatis、AngularJS/Vue 建设金融报表数据汇总和业务管理系统，作为早期全栈工程基础概括展示。"
+        en: "Built financial-reporting aggregation and business management systems with Spring Boot, MyBatis, AngularJS, and Vue; summarized as early full-stack engineering foundation."
+    tags:
+      - "Java"
+      - "Spring Boot"
+      - "Vue"
+      - "Full-stack"

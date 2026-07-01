@@ -3,7 +3,7 @@ slug: "agent-platform-positioning-assessment"
 locale: "zh"
 translationKey: "agent-platform-positioning-assessment"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-06-30"
+lastReviewedAt: "2026-07-01"
 title: "企业级 Agent 平台主案例评估与补强清单"
 summary: "评估当前 SaaS AI Agent 平台项目对高阶岗位的匹配度，并沉淀后续补充项、指标口径和更新管理规则。"
 featured: true
@@ -32,6 +32,7 @@ tags:
 6. 有量化结果：自动解决率 60%+、token 下降 60%、平均耗时从约 50s 降到约 7s。
 7. 有真实规模：2k+ 租户、23w+ 用户、过去一个月参考峰值 6w 请求/天、平均响应约 7s。
 8. 有团队工程治理证据：20 人产研团队中负责 AI Agent 业务方向，带 3 人小组，并推动 AI Harness 覆盖 40 个仓库。
+9. 有阿里和商汤背景支撑：商汤 AIGC SaaS 0-1、模型服务工程化，以及阿里高流量微前端、广告归因 SDK、跨端性能优化和平台工程经验。
 
 ## 当前短板
 
@@ -104,6 +105,8 @@ tags:
 
 4. 在 20 人产研团队中负责 AI Agent 业务方向，带 3 人小组，并推动 AI 开发 Harness 覆盖 40 个仓库，建立架构规则、Spec/EPIC 工作流、Supervisor 验收门禁、自检脚本和 PR 模板。
 
+5. 过往在商汤 AIGC 业务中参与生成式 AI SaaS 0-1 建设，负责 Web 工程、微服务拆分、模型服务调用链、任务队列、日志监控和容器化交付；在阿里淘宝/本地生活负责高流量跨端 Web、微前端、归因 SDK、JsBridge 和性能优化。
+
 ## 面试展开主线
 
 早期 1.0 版本解决的是“LLM 如何在真实客服业务中可控落地”的问题。系统不是简单 Chatbot，而是配置驱动的 Agent Runtime：用 Guideline/Journey 表达业务规则和流程，用 ARQ 把模型决策拆成意图判断、规则匹配、工具适用性、参数可靠性和响应合规性等可审计 artifacts，再通过 async session、callback、inspection 和 token usage 保证线上可追踪、可复盘。
@@ -128,3 +131,4 @@ tags:
 
 - 2026-06-27：建立初版评估，结论为匹配度 8/10，主攻方向为企业级 Agent 平台架构负责人。
 - 2026-06-30：补充 YC 隐私展示策略、2k+ 租户、23w+ 用户、峰值 6w 请求/天、平均 7s、20 人产研团队、3 人 Agent 小组、40 个仓库 Harness 覆盖和主要技术栈，匹配度更新为 8.5/10。
+- 2026-07-01：补充过往履历支撑，包括商汤 AIGC SaaS / 模型服务平台、阿里淘宝直播 / 本地生活高流量平台工程；强调这些是主攻 Agent 平台架构的支撑证据，不扩散主定位。

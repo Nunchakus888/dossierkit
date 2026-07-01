@@ -1,0 +1,52 @@
+---
+slug: "aigc-saas-platform"
+locale: "en"
+translationKey: "aigc-saas-platform"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-07-01"
+title: "AIGC SaaS and Model-serving Platform"
+summary: "At SenseTime AIGC, contributed to 0-to-1 generative AI SaaS delivery across web engineering, microservice decomposition, model-serving call chains, and platform operations."
+role: "SenseTime / AIGC SaaS / Full-stack Architecture / Model Serving"
+period: "2021-09 - 2024-05"
+confidentiality: "sanitized"
+featured: true
+tags:
+  - "AIGC SaaS"
+  - "Model Serving"
+  - "Stable Diffusion"
+  - "Microservices"
+  - "DevOps"
+targetRoles:
+  - "agent-platform"
+---
+
+## Positioning
+
+This experience strengthens the AI engineering side of the current Agent platform positioning. It shows experience beyond calling an LLM API: generative AI products, model-serving workflows, task pipelines, monitoring, and platformized delivery.
+
+It should not be framed as an algorithm-lead story. The accurate framing is: turning model capabilities into usable, scalable, and operable products and engineering systems.
+
+## Platform Scope
+
+At SenseTime, I contributed to AIGC products such as miaohua. The core scope included:
+
+1. AI image generation platform supporting proprietary image models, LoRA training, and third-party open-source model integration.
+2. Web / H5 / mini-program product surfaces and reusable component systems.
+3. Model serving around Stable Diffusion / PyTorch workflows, including parameter formatting, prompt optimization, task queues, model-file storage, and result post-processing.
+4. Microservice boundaries for identity, model inference, model-file storage, and task delivery.
+5. Engineering governance across containerized deployment, logging, monitoring, service communication, load balancing, and throughput optimization.
+
+## Tradeoffs
+
+The hard part was not a single generation call. The hard part was bringing generative models into a reliable product system:
+
+- Model call chains needed clear records of parameters, inputs, outputs, latency, and failure reasons.
+- Task queues, model services, and file storage had to be separated so long-running inference would not block the web path.
+- Prompting, model parameters, post-processing, watermarking, QR overlays, and object storage had to become a reusable pipeline.
+- The web experience had to balance ease of use, responsive layouts, and complex task-state feedback.
+
+## Senior Value
+
+The strongest value is AI productization evidence: connecting model capability, service boundaries, task orchestration, logging, monitoring, and user-facing experience in a production generative AI SaaS flow.
+
+It supports the current Agent platform narrative because Agent platforms also need to make model capabilities observable, governable, and operable instead of staying at the demo layer.
