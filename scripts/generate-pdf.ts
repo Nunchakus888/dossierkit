@@ -38,6 +38,9 @@ export async function main(args = process.argv.slice(2)) {
     for (const locale of locales) {
       const page = await browser.newPage({ viewport: { width: 1200, height: 1600 } });
       await page.goto(`${server.url}/${locale}/cv/`, { waitUntil: "networkidle" });
+      await page.evaluate(async () => {
+        if ("fonts" in document) await document.fonts.ready;
+      });
       await page.emulateMedia({ media: "print" });
 
       const fileName = `${pack.resume.filename}-${locale}.pdf`;
