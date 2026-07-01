@@ -18,7 +18,7 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
 ---
 
 <BaseLayout locale={locale} title={l.cv} description={localize(pack.profile.summary, locale)}>
-  <section class="page-shell cv-page">
+  <section class={`page-shell cv-page cv-${locale}`}>
     <header class="cv-header">
       <div>
         <h1>{localize(pack.profile.name, locale)}</h1>
@@ -39,7 +39,7 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
       </div>
     </header>
 
-    <section>
+    <section class="summary-section">
       <h3>{locale === "zh" ? "概述" : "Summary"}</h3>
       <p>{localize(pack.profile.summary, locale)}</p>
       <ul>
@@ -47,7 +47,7 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
       </ul>
     </section>
 
-    <section>
+    <section class="experience-section">
       <h3>{l.experience}</h3>
       {pack.experience.experiences.map((item) => (
         <article class="cv-item">
@@ -64,7 +64,7 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
       ))}
     </section>
 
-    <section>
+    <section class="skills-section">
       <h3>{l.skills}</h3>
       <div class="skills-grid">
         {pack.skills.skillGroups.map((group) => (
@@ -76,7 +76,7 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
       </div>
     </section>
 
-    <section>
+    <section class="education-section">
       <h3>{locale === "zh" ? "教育" : "Education"}</h3>
       {pack.education.education.map((item) => (
         <article class="cv-item compact">
@@ -187,7 +187,7 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
 
   .cv-item {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 140px;
+    grid-template-columns: minmax(0, 1fr) max-content;
     gap: 8px 18px;
     border-top: 1px solid var(--color-border);
     padding: 16px 0;
@@ -201,6 +201,12 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
   .cv-item span,
   time {
     color: var(--color-muted);
+  }
+
+  time {
+    white-space: nowrap;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
   }
 
   .cv-item p,
@@ -234,6 +240,15 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
     .cv-actions {
       justify-content: flex-start;
     }
+
+    time {
+      text-align: left;
+    }
+  }
+
+  @page {
+    size: A4;
+    margin: 16mm 15mm 17mm;
   }
 
   @media print {
@@ -243,6 +258,7 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
 
     .cv-page {
       width: 100%;
+      max-width: none;
       padding: 0;
     }
 
@@ -251,9 +267,26 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
       margin-top: 22px;
     }
 
+    h3 {
+      break-after: avoid;
+      page-break-after: avoid;
+    }
+
+    .cv-en .experience-section {
+      break-before: page;
+      page-break-before: always;
+      margin-top: 0;
+    }
+
     .cv-item {
+      grid-template-columns: minmax(0, 1fr) max-content;
       break-inside: avoid;
       page-break-inside: avoid;
+    }
+
+    time {
+      white-space: nowrap;
+      text-align: right;
     }
 
     .skills-grid {

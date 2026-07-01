@@ -386,7 +386,7 @@ collections:
                       - label: EN
                         name: en
                         widget: text
-                  - label: Evidence
+                  - label: Key Capabilities
                     name: evidence
                     widget: list
                     required: false
@@ -435,7 +435,7 @@ collections:
                           - label: EN
                             name: en
                             widget: text
-                  - label: Pending Evidence
+                  - label: To Supplement
                     name: pendingEvidence
                     widget: list
                     required: false

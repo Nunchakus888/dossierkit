@@ -9,7 +9,7 @@ All profile data lives under `profiles/{profileId}` and is validated by Zod in `
 - `education.yaml`: education records.
 - `skills.yaml`: grouped skills and capability descriptions.
 - `roles.yaml`: target role pages and related case/lab references.
-- `metrics.yaml`: proof metrics for the homepage dashboard.
+- `metrics.yaml`: homepage metrics for the dashboard.
 - `theme.yaml`: color, typography, layout, and motion tokens.
 - `resume.yaml`: PDF resume sections and highlights.
 - `home.yaml`: homepage section order.

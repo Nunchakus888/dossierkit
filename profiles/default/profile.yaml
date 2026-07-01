@@ -1,6 +1,6 @@
 id: "default"
 name:
-  zh: "张矫 · George"
+  zh: "George Zhang"
   en: "George Zhang"
 headline:
   zh: "企业级 Agent 平台架构负责人"
@@ -10,8 +10,8 @@ summary:
   en: "10 years of engineering and AI delivery experience with Alibaba and SenseTime context, focused on enterprise Agent platform architecture: bringing LLM capabilities into core business workflows through evaluable, auditable, scalable, operable production systems."
 yearsOfExperience: 10
 location:
-  zh: "中国 / 可远程 / 可 relocation"
-  en: "China / Remote / Open to relocation"
+  zh: "中国 / 可远程"
+  en: "China / Remote"
 avatar: "avatar.png"
 companies:
   - name: "YC"
@@ -24,7 +24,7 @@ targetRoles:
   - id: "agent-platform"
     priority: 1
 links:
-  email: "nunchakus2012@gmail.com"
+  email: "sunionpeaks@gmail.com"
   github: "https://github.com/Nunchakus888"
   linkedin: ""
   maimai: ""

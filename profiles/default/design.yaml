@@ -52,8 +52,8 @@ quickLinks:
     tone: "mint"
   - id: "experience"
     label:
-      zh: "Proof"
-      en: "Proof"
+      zh: "Eval"
+      en: "Eval"
     description:
       zh: "Evaluation, LLMOps, data loop."
       en: "Evaluation, LLMOps, data loop."

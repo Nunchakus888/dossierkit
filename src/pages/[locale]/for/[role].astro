@@ -69,7 +69,7 @@ const assessment = role.positioningAssessment;
         <div class="signal-panel">
           <div class="mini-heading">
             <Icon name="sparkle" size={18} />
-            <h3>{locale === "zh" ? "关键证据" : "Signals"}</h3>
+            <h3>{locale === "zh" ? "关键能力" : "Key Capabilities"}</h3>
           </div>
           <ul class="signal-list">
             {assessment.evidence.slice(0, 6).map((item) => <li>{localize(item, locale)}</li>)}
@@ -113,7 +113,7 @@ const assessment = role.positioningAssessment;
       <div class="section-heading">
         <div>
           <h2>{l.relatedWork}</h2>
-          <p>{locale === "zh" ? "与该方向最相关的生产案例。" : "Production case studies most relevant to this direction."}</p>
+          <p>{locale === "zh" ? "与该方向最相关的实践经历。" : "Work most relevant to this direction."}</p>
         </div>
       </div>
       <div class="card-grid">

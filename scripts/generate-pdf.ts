@@ -52,10 +52,10 @@ export async function main(args = process.argv.slice(2)) {
         format: "A4",
         printBackground: true,
         margin: {
-          top: "12mm",
-          right: "12mm",
-          bottom: "14mm",
-          left: "12mm"
+          top: "16mm",
+          right: "15mm",
+          bottom: "17mm",
+          left: "15mm"
         }
       });
 
