@@ -34,7 +34,15 @@ Core capabilities include:
 2. Tool / MCP / Skills: HTTP Tool, MCP adapter, dynamic Skill load/unload, tool gating, and side-effect planner.
 3. RAG / Memory: documents, QA, websites, attachments, products, session memory, and context augmentation.
 4. Observability / Cost: correlation_id, events, inspection, token usage, callback payloads, and load-test metrics.
-5. Quality Governance: badcases, content gaps, human review, knowledge/Skill/Memory updates, replay evaluation, and release gates.
+5. Quality Governance: production issue cases, content gaps, human review, knowledge/Skill/Memory updates, replay evaluation, and release gates.
+
+## Data Feedback and Knowledge Evolution
+
+Built an unknown-question clustering and topic discovery platform for customer-service Agents, turning unresolved, missed, or low-confidence questions into analyzable topic clusters for knowledge base updates, RAG optimization, and Skill iteration.
+
+The module entered platform support in 2025. At that stage, the platform scale is estimated at about 50% of the current footprint: about 1,000+ tenants, 115,000+ users, and a peak of about 30,000 requests/day. On a weekly request basis, unknown questions moved from about 30% in the early stage to about 10%, then stabilized around 5%, corresponding to about 63,000, 21,000, and 10,500 unknown questions processed per week.
+
+The technical flow included multilingual text cleaning, embeddings, UMAP/HDBSCAN, BERTopic, LLM topic representation, clustering quality metrics, experiment management, visualization reports, and result persistence. About 50% of clusters fed knowledge base, RAG configuration, or Skill iteration; high-frequency topic handling covered about 70% of identified themes; and content-gap closure contributed to about 30% improvement in customer-service Agent auto-resolution.
 
 ## Architecture Evolution
 
@@ -42,7 +50,7 @@ Agent 1.0 centered on a controlled runtime. Guideline, Journey, and ARQ constrai
 
 Agent 2.0 evolved into a model-driven runtime. The LLM handled tool calling and multi-step decisions, while the runtime owned context, action space, dynamic Skill loading, RAG/Memory, tool boundaries, concurrency, and cost governance.
 
-The evolution demonstrates platform abstraction, architectural tradeoffs, and system governance under production constraints.
+The evolution shows platform abstraction, architectural tradeoffs, and system governance under production constraints.
 
 ## Team Engineering Governance
 
@@ -69,5 +77,6 @@ The core value includes:
 - Bringing Agent capabilities into real customer-service workflows.
 - Platformizing tool integration, approval, runtime authorization, and audit boundaries.
 - Bringing prompts, tool schemas, model versions, and RAG strategies into release governance.
+- Bringing unknown-question clustering, content-gap detection, and topic discovery into the knowledge-evolution loop.
 - Turning Agent Runtime, Skills, RAG/Memory, and multi-channel delivery into reusable platform assets.
 - Owning reliability, cost, quality, delivery process, and business outcomes.

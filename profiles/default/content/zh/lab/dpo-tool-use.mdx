@@ -6,11 +6,11 @@ translationStatus: "reviewed"
 lastReviewedAt: "2026-07-01"
 title: "DPO for Tool-use Preference"
 method: "DPO"
-summary: "用于说明 Agent 平台如何把工具调用 badcase 转成偏好数据与质量改进接口。"
+summary: "用于说明 Agent 平台如何把工具调用问题样本转成偏好数据与质量改进接口。"
 featured: true
 baseModel: "Model-agnostic preference workflow"
 dataset:
-  source: "Agent badcase 与人工构造边界样本"
+  source: "Agent 问题样本与人工构造边界样本"
   size: "按业务场景分层采样"
   format: "prompt / chosen / rejected"
 evaluation:
@@ -33,7 +33,7 @@ tags:
 
 ## Hypothesis
 
-如果把工具调用失败样本整理成 chosen/rejected 偏好对，Agent 平台就能把线上 badcase 进入评测、策略优化和模型改进接口。
+如果把工具调用失败样本整理成 chosen/rejected 偏好对，Agent 平台就能将线上问题样本纳入评测、策略优化和模型改进接口。
 
 ## Dataset
 

@@ -34,7 +34,15 @@ YC 提供面向多行业的企业 SaaS 服务，核心场景为 AI Agent 客服�
 2. Tool / MCP / Skills：HTTP Tool、MCP adapter、Skill 动态加载卸载、tool gating 和 side-effect planner。
 3. RAG / Memory：文档、QA、网站、附件、商品、session-memory 等多类型知识和上下文增强。
 4. Observability / Cost：correlation_id、events、inspection、token usage、callback payload 和压测指标。
-5. Quality Governance：badcase、content gap、人工审核、知识/Skill/Memory 更新、评测回放和发布门禁。
+5. Quality Governance：线上问题案例、content gap、人工审核、知识/Skill/Memory 更新、评测回放和发布门禁。
+
+## 数据反馈与知识自进化
+
+围绕客服 Agent 的未知问题建设聚类与主题发现平台，将未解决、未命中或低置信度问题转化为可分析的主题簇，服务知识库补全、RAG 优化和 Skill 迭代。
+
+项目在 2025 年进入平台支持阶段。当时平台规模按当前约 50% 折算，对应约 1,000+ 租户、115,000+ 用户、峰值请求约 30,000 次/日。按周请求规模折算，unknown questions 占比从早期约 30% 逐步下降到约 10%，稳定后约 5%，对应每周约 63,000 条、21,000 条和 10,500 条未知问题处理量。
+
+技术链路包括多语言文本清洗、embedding、UMAP/HDBSCAN、BERTopic、LLM topic representation、聚类质量评估、实验管理、可视化报告和结果回写。约 50% 聚类结果进入知识库、RAG 配置或 Skill 迭代，高频主题运营处理覆盖约 70%，结合 content gap 补全推动客服 Agent 自动解决率提升约 30%。
 
 ## 架构演进
 
@@ -69,5 +77,6 @@ YC 产研团队约 20 人，AI Agent 方向带领 3 人小组（2 开发 + 1 测
 - 将 Agent 能力接入真实客服业务流程。
 - 将工具接入、权限审批、运行时授权和审计边界平台化。
 - 将 prompt、工具 schema、模型版本和 RAG 策略纳入发布门禁。
+- 将 unknown questions 聚类、content gap 识别和主题发现纳入知识自进化闭环。
 - 将 Agent Runtime、Skill、RAG/Memory 和多渠道能力沉淀为平台资产。
 - 对稳定性、成本、质量、交付流程和业务结果负责。

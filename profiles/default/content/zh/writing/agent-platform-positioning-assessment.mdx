@@ -32,7 +32,7 @@ YC 阶段负责跨行业 AI Agent 客服 SaaS 平台，服务 2k+ 租户、23w+ 
 2. **Skill 与工具治理**：将 ActionBook/SOP 收敛为 Skill，按 turn 动态加载，结合 tool gating 控制工具暴露范围，降低上下文污染和误调用风险。
 3. **RAG + Memory**：支持文档、QA、网站、附件、商品和 session-memory 等知识来源，并通过 content gap 将未解决会话转化为知识迭代入口。
 4. **异步执行**：通过 correlation_id、后台执行、latest-wins 取消、callback 终态回传和 worker/claim/retry 机制降低主链路阻塞。
-5. **评测回放**：将 badcase、trace、工具调用和人工兜底结果沉淀为 regression eval，服务 prompt、工具 schema、模型版本和权限策略变更。
+5. **评测回放**：将线上问题样本、trace、工具调用和人工兜底结果沉淀为 regression eval，服务 prompt、工具 schema、模型版本和权限策略变更。
 
 ## 治理能力
 

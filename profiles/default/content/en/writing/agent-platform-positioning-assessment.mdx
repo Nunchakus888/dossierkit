@@ -32,7 +32,7 @@ The platform evolved from code-guided Agent 1.0 to model-driven Agent 2.0. Agent
 2. **Skill and tool governance**: converges ActionBook/SOP into Skills, loads only relevant Skills per turn, and uses tool gating to control exposed tool scope, reducing context pollution and tool misuse.
 3. **RAG + Memory**: supports documents, QA, websites, attachments, products, and session memory, with content gap detection turning unresolved conversations into knowledge iteration inputs.
 4. **Async execution**: uses correlation_id, background execution, latest-wins cancellation, terminal-state callbacks, and worker/claim/retry mechanisms to reduce main-path blocking.
-5. **Replay evaluation**: turns badcases, traces, tool calls, and human fallback results into regression evaluation for prompt, tool schema, model version, and permission-policy changes.
+5. **Replay evaluation**: turns production issue cases, traces, tool calls, and human fallback results into regression evaluation for prompt, tool schema, model version, and permission-policy changes.
 
 ## Governance Capabilities
 

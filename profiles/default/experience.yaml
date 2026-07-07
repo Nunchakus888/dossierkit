@@ -15,8 +15,10 @@ experiences:
     highlights:
       - zh: "主导平台从代码引导 Agent 1.0 演进为模型驱动 Agent 2.0，收敛 Runtime、动态 Skill、tool gating、flow fast path、异步执行和 usage/cost 治理。"
         en: "Led the evolution from code-guided Agent 1.0 to model-driven Agent 2.0, consolidating runtime, dynamic Skills, tool gating, flow fast path, async execution, and usage/cost governance."
-      - zh: "围绕真实客服 badcase 建立 content gap 识别、知识/Skill/Memory 更新、评测回放和发布门禁机制。"
-        en: "Built mechanisms around real customer-service badcases for content gap detection, knowledge/Skill/Memory updates, replay evaluation, and release gates."
+      - zh: "建设未知问题聚类与主题发现平台，将每周约 1w+ 至 6w+ 条 unknown questions 沉淀为 content gap，推动约 50% 聚类结果进入知识库/RAG/Skill 迭代，高频主题运营处理覆盖约 70%。"
+        en: "Built an unknown-question clustering and topic discovery platform, turning about 10k+ to 60k+ weekly unknown questions into content gaps, with about 50% of clusters feeding knowledge base/RAG/Skill iteration and about 70% coverage on high-frequency topics."
+      - zh: "建立线上问题案例到知识/Skill/Memory、评测回放和发布门禁的持续改进机制，结合 content gap 补全推动客服 Agent 自动解决率提升约 30%。"
+        en: "Built a continuous improvement loop from production issue cases to knowledge/Skill/Memory updates, replay evaluation, and release gates, contributing to about 30% auto-resolution improvement through content-gap closure."
       - zh: "在 20 人产研团队中负责 AI Agent 业务方向，带 3 人小组（2 开发 + 1 测试）推进平台能力、质量治理和交付流程。"
         en: "Led the AI Agent business track within a 20-person product-engineering team, managing a 3-person squad of 2 developers and 1 QA across platform capability, quality governance, and delivery workflow."
       - zh: "推动 AI 开发 Harness 覆盖 40 个仓库，以架构规则、Spec/EPIC、Supervisor 验收门禁、自检脚本和 PR 模板约束 AI 辅助开发。"
