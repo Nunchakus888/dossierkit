@@ -18,7 +18,7 @@ const pdfHref = `/resumes/${pack.resume.filename}-${locale}.pdf`;
 const downloadLabel = locale === "zh" ? "下载 PDF 简历" : "Download PDF";
 const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PDF";
 const experienceLabel = locale === "zh" ? "经历" : "Experience";
-const featuredProjectLabel = locale === "zh" ? "代表项目" : "Featured Project";
+const featuredProjectsLabel = locale === "zh" ? "项目经验" : "Selected Projects";
 const profileLabel = locale === "zh" ? "概览" : "Profile";
 const educationLabel = locale === "zh" ? "教育" : "Education";
 const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经验` : `${pack.profile.yearsOfExperience} years`;
@@ -92,13 +92,15 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
           </div>
           <time>{localize(item.period, locale)}</time>
           <p>{localize(item.summary, locale)}</p>
-          {item.featuredProject && (
-            <div class="featured-project">
-              <div class="featured-project-heading">
-                <span>{featuredProjectLabel}</span>
-                <strong>{localize(item.featuredProject.title, locale)}</strong>
-              </div>
-              <p>{localize(item.featuredProject.summary, locale)}</p>
+          {item.featuredProjects.length > 0 && (
+            <div class="featured-projects">
+              <span class="featured-projects-label">{featuredProjectsLabel}</span>
+              {item.featuredProjects.map((project) => (
+                <div class="featured-project">
+                  <strong>{localize(project.title, locale)}</strong>
+                  <p>{localize(project.summary, locale)}</p>
+                </div>
+              ))}
             </div>
           )}
           {item.highlights.length > 0 && (
@@ -319,7 +321,7 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
 
   .cv-item > p,
   .cv-item > ul,
-  .featured-project {
+  .featured-projects {
     grid-column: 1 / -1;
   }
 
@@ -329,9 +331,9 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
     line-height: 1.62;
   }
 
-  .featured-project {
+  .featured-projects {
     display: grid;
-    gap: 5px;
+    gap: 8px;
     border-left: 2px solid color-mix(in srgb, var(--color-accent), white 18%);
     padding: 7px 0 7px 12px;
     background: linear-gradient(90deg, rgba(70, 183, 148, 0.07), transparent 72%);
@@ -339,20 +341,19 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
     -webkit-print-color-adjust: exact;
   }
 
-  .featured-project-heading {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 7px;
-  }
-
-  .featured-project-heading span {
+  .featured-projects-label {
     color: #248f79;
     font-size: 0.72rem;
     font-weight: 800;
   }
 
-  .featured-project-heading strong {
+  .featured-project {
+    display: grid;
+    gap: 3px;
+    break-inside: avoid;
+  }
+
+  .featured-project strong {
     color: var(--color-foreground);
     font-size: 0.92rem;
   }
@@ -523,21 +524,21 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
       line-height: 1.4;
     }
 
-    .featured-project {
-      gap: 2px;
+    .featured-projects {
+      gap: 4px;
       padding: 4px 0 4px 8px;
       background: none;
     }
 
-    .featured-project-heading {
-      gap: 5px;
+    .featured-project {
+      gap: 1px;
     }
 
-    .featured-project-heading span {
+    .featured-projects-label {
       font-size: 7pt;
     }
 
-    .featured-project-heading strong {
+    .featured-project strong {
       font-size: 8.5pt;
     }
 
@@ -547,6 +548,10 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
       margin-top: 1px;
     }
 
+    .cv-en .experience-section .cv-item:not(:first-of-type) > p {
+      display: none;
+    }
+
     .skills-section {
       break-before: auto;
     }
@@ -554,6 +559,11 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
     .skills-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 7px 14px;
+    }
+
+    .cv-en .skills-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px 10px;
     }
 
     .skills-grid div {
@@ -568,6 +578,11 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
       margin-top: 2px;
       font-size: 7.7pt;
       line-height: 1.38;
+    }
+
+    .cv-en .skills-grid p {
+      font-size: 7.4pt;
+      line-height: 1.3;
     }
   }
 </style>

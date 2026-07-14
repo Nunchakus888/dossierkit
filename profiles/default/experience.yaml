@@ -12,30 +12,48 @@ experiences:
       zh: "中国"
       en: "China"
     summary:
-      zh: "负责跨行业 AI Agent 客服 SaaS 平台从架构演进到生产运营，覆盖 2k+ 租户、23w+ 用户、峰值 6w 请求/天；统筹 Runtime、工具与 Skill、RAG/Memory、质量评测、成本治理和团队交付。"
-      en: "Owned a cross-industry AI Agent customer-service SaaS platform from architecture evolution through production operations, covering 2k+ tenants, 230k+ users, and 60k peak requests/day across Runtime, tools and Skills, RAG/Memory, quality evaluation, cost governance, and team delivery."
-    featuredProject:
-      title:
-        zh: "模型驱动 Agent Runtime 2.0"
-        en: "Model-driven Agent Runtime 2.0"
-      summary:
-        zh: "面向 2k+ 租户、23w+ 用户的客服 SaaS，重构 Agentic RAG、多轮工具调用、动态 Skill 与多 Agent 统一上下文；在平均 7k+ tokens 对话负载下将端到端响应稳定在约 7s，token 消耗下降 60%，支撑客户问题自动解决率达到 70%+。"
-        en: "Re-architected Agentic RAG, multi-turn tools, dynamic Skills, and unified multi-agent context for 2k+ tenants and 230k+ users; sustained about 7s end-to-end latency at an average 7k+ tokens per conversation, cut token use by 60%, and supported 70%+ auto-resolution."
-    highlights:
-      - zh: "建立覆盖请求、执行阶段、工具调用与终态回传的可观测和评测链路，以 correlation_id、trace、token usage、回放集和发布门禁定位质量、时延与成本问题。"
-        en: "Established end-to-end observability and evaluation across requests, execution phases, tool calls, and terminal callbacks, using correlation IDs, traces, token usage, replay sets, and release gates to isolate quality, latency, and cost issues."
-      - zh: "建设未知问题聚类与主题发现平台，将每周约 1w+ 至 6w+ 条问题沉淀为 content gap；约 50% 聚类结果进入知识库/RAG/Skill 迭代，高频主题处理覆盖约 70%，自动解决率提升约 30%。"
-        en: "Built an unknown-question clustering and topic-discovery platform that turned about 10k+ to 60k+ weekly questions into content gaps; about 50% of clusters fed knowledge base/RAG/Skill iteration, high-frequency topic handling reached about 70%, and auto-resolution improved by about 30%."
-      - zh: "带领 3 人 Agent 小组推进 Runtime 服务化拆分与平台交付，统一网关鉴权、服务契约、容器构建和发布规范；推动 AI 开发 Harness 覆盖 40 个仓库，形成 Spec/EPIC、验收门禁、自检脚本和 PR 模板。"
-        en: "Led a 3-person Agent squad through Runtime service decomposition and platform delivery, standardizing gateway authentication, service contracts, container builds, and release conventions; expanded the AI development harness across 40 repositories with Spec/EPIC workflows, acceptance gates, self-check scripts, and PR templates."
+      zh: "负责跨行业 WhatsApp AI Agent 客服 SaaS 平台从产品架构演进到生产运营，覆盖 2k+ 租户、23w+ 用户、峰值 6w 请求/天；统筹业务 Agent、RAG/Memory、工具与 Skill、质量运营、成本治理和团队交付。"
+      en: "Owned product architecture and production operations for a cross-industry WhatsApp business-Agent SaaS serving 2k+ tenants, 230k+ users, and 60k peak requests/day across RAG/Memory, tools and Skills, quality, cost, and team delivery."
+    featuredProjects:
+      - title:
+          zh: "WhatsApp SaaS 业务 Agent 平台"
+          en: "WhatsApp SaaS Business Agent Platform"
+        summary:
+          zh: "面向客服问答、业务查询、流程办理和人工转接，主导平台从规则编排演进为 LLM 驱动业务 Agent，将意图路由、SOP、知识、工具调用与结果回传沉淀为租户可配置能力；支撑客户问题自动解决率达到 70%+，平均 7k+ tokens 对话负载下端到端约 7s，token 消耗下降 60%。"
+          en: "Evolved WhatsApp customer service from rule flows to tenant-configurable LLM business Agents across intent routing, SOPs, knowledge, tools, callbacks, and handoff; delivered 70%+ auto-resolution, about 7s end-to-end latency at 7k+ tokens per conversation, and 60% lower token use."
+      - title:
+          zh: "企业级 Agentic RAG 与知识自进化"
+          en: "Agentic RAG and Knowledge Flywheel"
+        summary:
+          zh: "建设多租户 Agentic RAG，统一文档、QA、网站、附件、商品等知识接入、切分、embedding、召回与重排；以 unknown questions 聚类和 content gap 回流驱动知识库、RAG 与 Skill 迭代，约 50% 聚类结果进入生产优化，高频主题处理覆盖约 70%，自动解决率提升约 30%。"
+          en: "Built multi-tenant Agentic RAG for documents, QA, websites, attachments, and product data, with ingestion, retrieval, reranking, and an unknown-question/content-gap flywheel; 50% of clusters entered production optimization, high-frequency coverage reached 70%, and auto-resolution improved about 30%."
+      - title:
+          zh: "注意力引导推理 Agent 与复杂任务编排"
+          en: "Attentive Reasoning for Complex Workflows"
+        summary:
+          zh: "基于 LangChain 有向无环图建设注意力引导推理 Agent，以 Guideline、Journey 和 ARQ 将复杂业务任务拆解为意图、规则、工具、参数与合规判断节点，管理分支依赖、终止条件和异常回退，形成可解释、可回放的多步骤执行链。"
+          en: "Built a LangChain DAG-based attentive reasoning Agent that decomposed workflows into intent, rule, tool, parameter, and compliance decisions, with explicit dependencies, termination, fallbacks, and replayability."
+      - title:
+          zh: "用户与会话 Memory 体系"
+          en: "User and Session Memory"
+        summary:
+          zh: "建设会话级与用户级 Memory，统一事实提取、置信筛选、写入更新、召回注入和租户隔离；将历史结论、用户偏好与任务状态按需带入后续交互，减少重复确认并提升长对话和连续任务的一致性。"
+          en: "Built tenant-isolated session and user Memory for fact extraction, confidence filtering, write/update, and retrieval injection, carrying prior conclusions, preferences, and task state across interactions."
+      - title:
+          zh: "企业 AI 协作 CLI 与共享上下文平台"
+          en: "AI Collaboration CLI and Shared Context"
+        summary:
+          zh: "主导内部 AI 协作 CLI 与全员共享上下文机制，覆盖生产发布、运维自动化、case 排查、项目组织和工程自检；整合 Skill、MCP、CLI、仓库规范与 Spec/EPIC，将服务、环境和项目上下文沉淀为团队共享能力，推动 AI 开发 Harness 覆盖 40 个仓库。"
+          en: "Led an internal AI collaboration CLI and team-wide shared context for releases, operations automation, case diagnosis, project organization, and checks; integrated Skills, MCP, CLI, repository standards, and Spec/EPIC workflows across 40 repositories."
+    highlights: []
     tags:
-      - "Agent Runtime"
+      - "WhatsApp SaaS"
+      - "Business Agent Platform"
+      - "Agentic RAG"
+      - "Memory"
+      - "MCP"
+      - "AI Engineering CLI"
       - "LLMOps"
-      - "Evaluation"
-      - "Tool-use"
-      - "AI Engineering Harness"
-      - "FastAPI"
-      - "Milvus"
   - company:
       zh: "自主创业"
       en: "Independent Venture"
@@ -51,13 +69,13 @@ experiences:
     summary:
       zh: "围绕 AI 数据与模型服务产品开展独立研发和项目交付，负责产品定义、系统架构、全栈实现、容器化部署与生产迭代。"
       en: "Built and delivered independent AI data and model-serving products, owning product definition, system architecture, full-stack implementation, containerized deployment, and production iteration."
-    featuredProject:
-      title:
-        zh: "多模态数据标注与模型服务平台"
-        en: "Multimodal Data Labeling and Model-serving Platform"
-      summary:
-        zh: "从 0 到 1 打通人工标注、训练数据、模型产物、自动标注与质量校验闭环；以 React Canvas、Django、PostgreSQL 和 Redis 承载任务与数据链路，通过 Nuclio、Traefik 封装可插拔 Serverless 推理服务，完成音视频、图像任务的企业生产环境交付。"
-        en: "Built the loop from human annotation and training data through model artifacts, auto-labeling, and quality validation; combined React Canvas, Django, PostgreSQL, and Redis with pluggable Nuclio/Traefik serverless inference to deliver production audio, video, and image workflows."
+    featuredProjects:
+      - title:
+          zh: "多模态数据标注与模型服务平台"
+          en: "Multimodal Data Labeling and Model-serving Platform"
+        summary:
+          zh: "从 0 到 1 打通人工标注、训练数据、模型产物、自动标注与质量校验闭环；以 React Canvas、Django、PostgreSQL 和 Redis 承载任务与数据链路，通过 Nuclio、Traefik 封装可插拔 Serverless 推理服务，完成音视频、图像任务的企业生产环境交付。"
+          en: "Built a production multimodal data and model platform spanning annotation, model artifacts, auto-labeling, quality validation, and pluggable Nuclio/Traefik inference for audio, video, and image workflows."
     highlights: []
     tags:
       - "AI Data Platform"
@@ -80,13 +98,13 @@ experiences:
     summary:
       zh: "负责 AI 绘画、模型训练与平台化产品的 Web 工程和微服务架构，参与生成式 AI SaaS 从 0 到 1 建设。"
       en: "Owned web engineering and microservice architecture for AI image generation, model training, and platform products, contributing to 0-to-1 generative AI SaaS delivery."
-    featuredProject:
-      title:
-        zh: "妙画 AIGC SaaS 与模型服务链路"
-        en: "Miaohua AIGC SaaS and Model-serving Workflow"
-      summary:
-        zh: "面向自研作画模型、LoRA 训练和第三方开源模型，主导前后端架构与服务拆分，将 Stable Diffusion / PyTorch 推理、任务队列、模型文件、结果后处理和日志监控组织为可扩展的异步生产链路，支撑 Web、H5 与小程序交付。"
-        en: "Led architecture and service decomposition for proprietary image models, LoRA training, and open-source integration, organizing Stable Diffusion / PyTorch inference, queues, model files, post-processing, and observability into a scalable asynchronous workflow across Web, H5, and mini-program clients."
+    featuredProjects:
+      - title:
+          zh: "妙画 AIGC SaaS 与模型服务链路"
+          en: "Miaohua AIGC SaaS and Model-serving Workflow"
+        summary:
+          zh: "面向自研作画模型、LoRA 训练和第三方开源模型，主导前后端架构与服务拆分，将 Stable Diffusion / PyTorch 推理、任务队列、模型文件、结果后处理和日志监控组织为可扩展的异步生产链路，支撑 Web、H5 与小程序交付。"
+          en: "Led service architecture for proprietary image models, LoRA, and open-source integration, organizing Stable Diffusion/PyTorch inference, queues, model files, post-processing, and observability into asynchronous Web, H5, and mini-program delivery."
     highlights: []
     tags:
       - "AIGC SaaS"
@@ -110,18 +128,14 @@ experiences:
     summary:
       zh: "先后负责本地生活商业推广与淘宝新零售技术团队的高流量跨端工程，覆盖广告投放与归因、直播互动、微前端、SSR 和性能优化。"
       en: "Worked across Alibaba Local Services commercial promotion and Taobao new-retail engineering on high-traffic cross-platform systems spanning ad delivery and attribution, live interaction, micro-frontends, SSR, and performance."
-    featuredProject:
-      title:
-        zh: "淘宝直播跨端互动与微前端平台"
-        en: "Taobao Live Cross-platform Interaction and Micro-frontend Platform"
-      summary:
-        zh: "主导直播间 Web 互动层从 Weex 单组件模式升级为 H5 微前端编排，统一布局、路由、事件总线和通信协议，并通过 SSR 同构渲染与分级资源策略将 FCP 稳定在 1.5s 以内，支撑高流量、弱网环境下的多业务组件交付。"
-        en: "Led the live-room interaction layer from isolated Weex components to H5 micro-frontend orchestration, unifying layout, routing, event bus, and communication contracts; combined SSR and tiered resources to keep FCP below 1.5s under high traffic and weak networks."
-    highlights:
-      - zh: "设计基于 shell / iframe 的微前端架构，统一多业务子应用通信、路由定义、静态资源加载和部署方式。"
-        en: "Designed a shell / iframe based micro-frontend architecture to standardize sub-application communication, routing, static resource loading, and deployment."
-      - zh: "沉淀 Vue / React 脚手架、跨平台 JsBridge、广告日志上报 SDK 和通用组件库，参与下单、广告结算、订单归因到商家经营分析的关键链路建设。"
-        en: "Built Vue / React scaffolds, cross-platform JsBridge, ad logging SDK, and reusable components, contributing to key flows from ordering and ad settlement to attribution and merchant analysis."
+    featuredProjects:
+      - title:
+          zh: "淘宝直播跨端互动与微前端平台"
+          en: "Taobao Live Cross-platform Interaction and Micro-frontend Platform"
+        summary:
+          zh: "主导直播间 Web 互动层从 Weex 单组件模式升级为 H5 微前端编排，统一布局、路由、事件总线和通信协议，并通过 SSR 同构渲染与分级资源策略将 FCP 稳定在 1.5s 以内，支撑高流量、弱网环境下的多业务组件交付。"
+          en: "Moved Taobao Live interaction from isolated Weex components to H5 micro-frontends with unified routing and communication; combined SSR and tiered resources to keep FCP below 1.5s under high traffic and weak networks."
+    highlights: []
     tags:
       - "High-traffic Web"
       - "SSR"
@@ -146,13 +160,13 @@ experiences:
     summary:
       zh: "负责金融报表、Java Web 服务和前端迁移，完成 AngularJS 到 Vue 的客户端迁移和 Web UI 组件库建设。"
       en: "Owned financial reporting, Java web services, and frontend migration from AngularJS to Vue with a shared Web UI component library."
-    featuredProject:
-      title:
-        zh: "金融报表与业务管理平台"
-        en: "Financial Reporting and Operations Platform"
-      summary:
-        zh: "基于 Spring Boot、MyBatis 建设金融报表数据汇总与业务管理服务，完成 AngularJS 到 Vue 的渐进式迁移并沉淀共享 Web UI 组件，形成跨端平台架构与全栈交付的工程基础。"
-        en: "Built financial-reporting and operations services with Spring Boot and MyBatis, completed the AngularJS-to-Vue migration, and established a shared Web UI component library for cross-platform delivery."
+    featuredProjects:
+      - title:
+          zh: "金融报表与业务管理平台"
+          en: "Financial Reporting and Operations Platform"
+        summary:
+          zh: "基于 Spring Boot、MyBatis 建设金融报表数据汇总与业务管理服务，完成 AngularJS 到 Vue 的渐进式迁移并沉淀共享 Web UI 组件，形成跨端平台架构与全栈交付的工程基础。"
+          en: "Built Spring Boot/MyBatis financial operations services, migrated AngularJS to Vue, and established a shared Web UI library."
     highlights: []
     tags:
       - "Java"

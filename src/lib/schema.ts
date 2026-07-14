@@ -68,12 +68,14 @@ export const experienceSchema = z.object({
         period: localizedStringSchema.or(z.string().min(1)),
         location: localizedStringSchema.optional(),
         summary: localizedStringSchema,
-        featuredProject: z
-          .object({
-            title: localizedStringSchema,
-            summary: localizedStringSchema
-          })
-          .optional(),
+        featuredProjects: z
+          .array(
+            z.object({
+              title: localizedStringSchema,
+              summary: localizedStringSchema
+            })
+          )
+          .default([]),
         highlights: z.array(localizedStringSchema).default([]),
         tags: z.array(z.string()).default([])
       })
