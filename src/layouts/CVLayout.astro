@@ -18,6 +18,7 @@ const pdfHref = `/resumes/${pack.resume.filename}-${locale}.pdf`;
 const downloadLabel = locale === "zh" ? "下载 PDF 简历" : "Download PDF";
 const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PDF";
 const experienceLabel = locale === "zh" ? "经历" : "Experience";
+const featuredProjectLabel = locale === "zh" ? "代表项目" : "Featured Project";
 const profileLabel = locale === "zh" ? "概览" : "Profile";
 const educationLabel = locale === "zh" ? "教育" : "Education";
 const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经验` : `${pack.profile.yearsOfExperience} years`;
@@ -91,6 +92,15 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
           </div>
           <time>{localize(item.period, locale)}</time>
           <p>{localize(item.summary, locale)}</p>
+          {item.featuredProject && (
+            <div class="featured-project">
+              <div class="featured-project-heading">
+                <span>{featuredProjectLabel}</span>
+                <strong>{localize(item.featuredProject.title, locale)}</strong>
+              </div>
+              <p>{localize(item.featuredProject.summary, locale)}</p>
+            </div>
+          )}
           {item.highlights.length > 0 && (
             <ul>
               {item.highlights.map((highlight) => <li>{localize(highlight, locale)}</li>)}
@@ -308,7 +318,8 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
   }
 
   .cv-item > p,
-  .cv-item > ul {
+  .cv-item > ul,
+  .featured-project {
     grid-column: 1 / -1;
   }
 
@@ -316,6 +327,40 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
     margin: 0;
     color: color-mix(in srgb, var(--color-foreground), var(--color-muted) 27%);
     line-height: 1.62;
+  }
+
+  .featured-project {
+    display: grid;
+    gap: 5px;
+    border-left: 2px solid color-mix(in srgb, var(--color-accent), white 18%);
+    padding: 7px 0 7px 12px;
+    background: linear-gradient(90deg, rgba(70, 183, 148, 0.07), transparent 72%);
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .featured-project-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 7px;
+  }
+
+  .featured-project-heading span {
+    color: #248f79;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .featured-project-heading strong {
+    color: var(--color-foreground);
+    font-size: 0.92rem;
+  }
+
+  .featured-project p {
+    margin: 0;
+    color: color-mix(in srgb, var(--color-foreground), var(--color-muted) 24%);
+    line-height: 1.55;
   }
 
   .cv-item > ul {
@@ -472,9 +517,28 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
     }
 
     .cv-item > p,
-    .cv-item li {
+    .cv-item li,
+    .featured-project p {
       font-size: 8.4pt;
       line-height: 1.4;
+    }
+
+    .featured-project {
+      gap: 2px;
+      padding: 4px 0 4px 8px;
+      background: none;
+    }
+
+    .featured-project-heading {
+      gap: 5px;
+    }
+
+    .featured-project-heading span {
+      font-size: 7pt;
+    }
+
+    .featured-project-heading strong {
+      font-size: 8.5pt;
     }
 
     .cv-item > ul {
