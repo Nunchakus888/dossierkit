@@ -15,8 +15,8 @@ experiences:
       zh: "负责跨行业 AI Agent 客服 SaaS 平台从架构演进到生产运营，覆盖 2k+ 租户、23w+ 用户、峰值 6w 请求/天；统筹 Runtime、工具与 Skill、RAG/Memory、质量评测、成本治理和团队交付。"
       en: "Owned a cross-industry AI Agent customer-service SaaS platform from architecture evolution through production operations, covering 2k+ tenants, 230k+ users, and 60k peak requests/day across Runtime, tools and Skills, RAG/Memory, quality evaluation, cost governance, and team delivery."
     highlights:
-      - zh: "主导模型驱动 Agent Runtime 2.0，基于 WorkflowAgent 建设 Agentic RAG、多轮工具调用、终止判断与多 Agent 并行编排；平均 7k+ tokens 对话负载下端到端约 7s，无工具场景约 1-2k tokens。"
-        en: "Led model-driven Agent Runtime 2.0 with WorkflowAgent across Agentic RAG, multi-turn tool calls, termination decisions, and parallel multi-agent orchestration; held end-to-end latency around 7s under 7k+ average conversation-token load, with no-tool scenarios around 1-2k tokens."
+      - zh: "主导模型驱动 Agent Runtime 2.0，基于 WorkflowAgent 建设 Agentic RAG、多轮工具调用、终止判断与多 Agent 并行编排，在平均 7k+ tokens 对话负载下将端到端响应稳定在约 7s。"
+        en: "Led model-driven Agent Runtime 2.0 with WorkflowAgent across Agentic RAG, multi-turn tool calls, termination decisions, and parallel multi-agent orchestration, sustaining end-to-end latency around 7s under an average 7k+ conversation-token load."
       - zh: "设计多 Agent 统一上下文机制，以稳定 prompt 前缀、动态上下文后置、职责节点隔离和阶段级 usage 审计提升 KV cache 复用率，并定位时延与 token 消耗来源。"
         en: "Designed unified context for multi-agent execution, using stable prompt prefixes, deferred dynamic context, role-isolated nodes, and phase-level usage auditing to improve KV cache reuse and pinpoint latency and token drivers."
       - zh: "建设动态 Skill 路由与工具按需挂载，按意图召回 SOP 和专属工具；多 Skill 命中时通过澄清与重新路由控制上下文长度、工具误调用和任务完成质量。"
