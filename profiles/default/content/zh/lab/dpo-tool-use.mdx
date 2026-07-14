@@ -6,8 +6,8 @@ translationStatus: "reviewed"
 lastReviewedAt: "2026-07-01"
 title: "DPO for Tool-use Preference"
 method: "DPO"
-summary: "用于说明 Agent 平台如何把工具调用问题样本转成偏好数据与质量改进接口。"
-featured: true
+summary: "将工具调用问题样本转化为偏好数据，连接回放评测、策略优化与模型改进。"
+featured: false
 baseModel: "Model-agnostic preference workflow"
 dataset:
   source: "Agent 问题样本与人工构造边界样本"
@@ -45,4 +45,4 @@ tags:
 
 ## Result
 
-该方法适合纳入 Agent 平台发布门禁：先在回放评测中验证工具选择、参数有效性和拒答边界，再决定是否进入 prompt、策略或模型层优化。
+先在回放评测中验证工具选择、参数有效性和拒答边界，再将改进分流至 prompt、策略或模型层，形成可审查的发布门禁。

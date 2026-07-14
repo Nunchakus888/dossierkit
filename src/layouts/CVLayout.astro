@@ -17,12 +17,16 @@ const signatureGradientId = `signature-gradient-${locale}`;
 const pdfHref = `/resumes/${pack.resume.filename}-${locale}.pdf`;
 const downloadLabel = locale === "zh" ? "下载 PDF 简历" : "Download PDF";
 const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PDF";
+const experienceLabel = locale === "zh" ? "经历" : "Experience";
+const profileLabel = locale === "zh" ? "概览" : "Profile";
+const educationLabel = locale === "zh" ? "教育" : "Education";
+const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经验` : `${pack.profile.yearsOfExperience} years`;
 ---
 
 <BaseLayout locale={locale} title={l.cv} description={localize(pack.profile.summary, locale)}>
-  <section class={`page-shell cv-page cv-${locale}`}>
+  <article class={`page-shell cv-page cv-${locale}`}>
     <header class="cv-header">
-      <div>
+      <div class="identity">
         <h1 aria-label={displayName}>
           <svg class="signature-svg" viewBox="0 0 390 88" role="img" aria-labelledby={`${signatureGradientId}-title`}>
             <title id={`${signatureGradientId}-title`}>{displayName}</title>
@@ -39,10 +43,20 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
         </h1>
         <h2>{localize(pack.profile.headline, locale)}</h2>
       </div>
-      <div class="contact">
-        <span>{pack.profile.links.email}</span>
-        <span>{localize(pack.profile.location, locale)}</span>
-        <span>{pack.profile.yearsOfExperience} years</span>
+
+      <div class="contact-block">
+        <a href={`mailto:${pack.profile.links.email}`}>
+          <Icon name="mail" size={15} />
+          <span>{pack.profile.links.email}</span>
+        </a>
+        <span>
+          <Icon name="globe" size={15} />
+          {localize(pack.profile.location, locale)}
+        </span>
+        <span>
+          <Icon name="briefcase" size={15} />
+          {yearsLabel}
+        </span>
         <div class="cv-actions no-print">
           <a class="cv-action primary" href={pdfHref} download aria-label={downloadLabel} title={downloadLabel}>
             <Icon name="download" size={18} />
@@ -54,27 +68,34 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
       </div>
     </header>
 
-    <section class="summary-section">
-      <h3>{locale === "zh" ? "概述" : "Summary"}</h3>
-      <p>{localize(pack.profile.summary, locale)}</p>
-      <ul>
-        {pack.resume.highlights.map((highlight) => <li>{localize(highlight, locale)}</li>)}
-      </ul>
+    <section class="profile-section">
+      <h3>{profileLabel}</h3>
+      <p class="profile-summary">{localize(pack.profile.summary, locale)}</p>
+      <dl class="impact-grid">
+        {pack.metrics.metrics.map((metric) => (
+          <div>
+            <dt>{localize(metric.label, locale)}</dt>
+            <dd>{localize(metric.value, locale)}</dd>
+          </div>
+        ))}
+      </dl>
     </section>
 
     <section class="experience-section">
-      <h3>{l.experience}</h3>
+      <h3>{experienceLabel}</h3>
       {pack.experience.experiences.map((item) => (
         <article class="cv-item">
-          <div>
+          <div class="item-heading">
             <strong>{localize(item.role, locale)}</strong>
             <span>{item.company}</span>
           </div>
           <time>{localize(item.period, locale)}</time>
           <p>{localize(item.summary, locale)}</p>
-          <ul>
-            {item.highlights.map((highlight) => <li>{localize(highlight, locale)}</li>)}
-          </ul>
+          {item.highlights.length > 0 && (
+            <ul>
+              {item.highlights.map((highlight) => <li>{localize(highlight, locale)}</li>)}
+            </ul>
+          )}
         </article>
       ))}
     </section>
@@ -92,10 +113,10 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
     </section>
 
     <section class="education-section">
-      <h3>{locale === "zh" ? "教育" : "Education"}</h3>
+      <h3>{educationLabel}</h3>
       {pack.education.education.map((item) => (
         <article class="cv-item compact">
-          <div>
+          <div class="item-heading">
             <strong>{localize(item.school, locale)}</strong>
             <span>{localize(item.degree, locale)}</span>
           </div>
@@ -103,25 +124,32 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
         </article>
       ))}
     </section>
-  </section>
+  </article>
 </BaseLayout>
 
 <style>
   .cv-page {
-    padding: 42px 0 70px;
+    margin-top: 34px;
+    margin-bottom: 64px;
+    border: 1px solid color-mix(in srgb, var(--color-border), transparent 6%);
+    border-radius: 8px;
+    padding: 46px 50px 56px;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 22px 58px rgba(38, 47, 58, 0.08);
   }
 
   .cv-header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 24px;
+    gap: 28px;
+    align-items: end;
     border-bottom: 2px solid var(--color-foreground);
     padding-bottom: 24px;
   }
 
   h1 {
     margin: 0;
-    line-height: 1.12;
+    line-height: 1;
   }
 
   .signature-svg {
@@ -142,54 +170,56 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
 
   h2 {
     max-width: 760px;
-    margin: 12px 0 0;
+    margin: 10px 0 0;
     color: var(--color-muted);
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-size: 1.22rem;
+    font-weight: 680;
   }
 
-  .contact {
+  .contact-block {
     display: grid;
-    gap: 6px;
-    align-self: end;
+    gap: 7px;
+    justify-items: end;
     color: var(--color-muted);
-    text-align: right;
+    font-size: 0.92rem;
+  }
+
+  .contact-block > a,
+  .contact-block > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .contact-block > a:hover {
+    color: #207f72;
   }
 
   .cv-actions {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
     gap: 10px;
-    margin-top: 14px;
+    margin-top: 12px;
   }
 
   .cv-action {
     display: inline-flex;
-    width: 46px;
-    height: 46px;
+    width: 44px;
+    height: 44px;
     align-items: center;
     justify-content: center;
     border: 1px solid transparent;
     border-radius: 999px;
     padding: 0;
     background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(246, 255, 252, 0.68)) padding-box,
-      linear-gradient(120deg, rgba(85, 190, 162, 0.36), rgba(79, 169, 216, 0.28)) border-box;
+      linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(246, 255, 252, 0.76)) padding-box,
+      linear-gradient(120deg, rgba(85, 190, 162, 0.36), rgba(79, 169, 216, 0.26)) border-box;
     color: #207f72;
-    font: inherit;
-    font-weight: 780;
-    line-height: 1.1;
     cursor: pointer;
     box-shadow: 0 10px 24px rgba(49, 125, 154, 0.08);
-    transition:
-      transform 180ms var(--ease-out),
-      box-shadow 180ms var(--ease-out),
-      border-color 180ms var(--ease-out);
+    transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
   }
 
   .cv-action.primary {
-    border-color: transparent;
     background: var(--gradient-primary);
     color: #ffffff;
     box-shadow: var(--shadow-glow);
@@ -197,42 +227,78 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
 
   .cv-action:hover {
     transform: translateY(-1px);
-    box-shadow: 0 16px 30px rgba(49, 125, 154, 0.13), 0 10px 26px rgba(85, 190, 162, 0.14);
+    box-shadow: 0 16px 30px rgba(49, 125, 154, 0.13);
   }
 
-  section {
-    margin-top: 32px;
+  .cv-page > section {
+    margin-top: 30px;
   }
 
   h3 {
-    margin: 0 0 14px;
     width: fit-content;
-    color: #2fb98f;
-    font-size: 1rem;
+    margin: 0 0 13px;
+    color: #2a9f82;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0;
     text-transform: uppercase;
   }
 
-  p,
-  li {
-    color: color-mix(in srgb, var(--color-foreground), var(--color-muted) 30%);
+  .profile-summary {
+    max-width: 860px;
+    margin: 0;
+    color: color-mix(in srgb, var(--color-foreground), var(--color-muted) 22%);
+    font-size: 1rem;
+    line-height: 1.65;
+  }
+
+  .impact-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 18px 0 0;
+  }
+
+  .impact-grid div {
+    border-top: 2px solid color-mix(in srgb, var(--color-accent), white 26%);
+    padding-top: 10px;
+  }
+
+  .impact-grid dt {
+    color: var(--color-muted);
+    font-size: 0.76rem;
+    font-weight: 700;
+  }
+
+  .impact-grid dd {
+    margin: 5px 0 0;
+    color: var(--color-foreground);
+    font-size: 0.96rem;
+    font-weight: 760;
+    line-height: 1.35;
   }
 
   .cv-item {
     display: grid;
     grid-template-columns: minmax(0, 1fr) max-content;
-    gap: 8px 18px;
+    gap: 7px 20px;
     border-top: 1px solid var(--color-border);
-    padding: 16px 0;
+    padding: 17px 0;
   }
 
-  .cv-item strong,
-  .cv-item span {
+  .item-heading strong,
+  .item-heading span {
     display: block;
   }
 
-  .cv-item span,
+  .item-heading strong {
+    font-size: 1rem;
+  }
+
+  .item-heading span,
   time {
     color: var(--color-muted);
+    font-size: 0.92rem;
   }
 
   time {
@@ -241,97 +307,203 @@ const printLabel = locale === "zh" ? "打印 / 另存为 PDF" : "Print / Save PD
     font-variant-numeric: tabular-nums;
   }
 
-  .cv-item p,
-  .cv-item ul {
+  .cv-item > p,
+  .cv-item > ul {
     grid-column: 1 / -1;
+  }
+
+  .cv-item > p {
     margin: 0;
+    color: color-mix(in srgb, var(--color-foreground), var(--color-muted) 27%);
+    line-height: 1.62;
+  }
+
+  .cv-item > ul {
+    display: grid;
+    gap: 5px;
+    padding-left: 1.15rem;
+    margin: 1px 0 0;
+  }
+
+  .cv-item li {
+    padding-left: 3px;
+    color: color-mix(in srgb, var(--color-foreground), var(--color-muted) 25%);
+    line-height: 1.58;
+  }
+
+  .cv-item li::marker {
+    color: var(--color-accent);
   }
 
   .skills-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    gap: 14px 22px;
   }
 
   .skills-grid div {
     border-top: 1px solid var(--color-border);
-    padding-top: 12px;
+    padding-top: 11px;
   }
 
-  @media (max-width: 720px) {
+  .skills-grid strong {
+    font-size: 0.95rem;
+  }
+
+  .skills-grid p {
+    margin: 5px 0 0;
+    color: var(--color-muted);
+    font-size: 0.89rem;
+    line-height: 1.55;
+  }
+
+  .cv-item.compact {
+    padding-bottom: 0;
+  }
+
+  @media (max-width: 760px) {
+    .cv-page {
+      width: min(100% - 24px, var(--layout-max-width));
+      margin-top: 20px;
+      padding: 28px 22px 38px;
+    }
+
     .cv-header,
     .cv-item,
     .skills-grid {
       grid-template-columns: 1fr;
     }
 
-    .contact {
-      text-align: left;
-    }
-
-    .cv-actions {
-      justify-content: flex-start;
+    .contact-block {
+      justify-items: start;
     }
 
     time {
       text-align: left;
+    }
+
+    .impact-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
   @page {
     size: A4;
-    margin: 16mm 15mm 17mm;
+    margin: 15mm;
   }
 
   @media print {
-    .cv-actions {
-      display: none;
-    }
-
     .cv-page {
       width: 100%;
       max-width: none;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
       padding: 0;
+      background: #ffffff;
+      box-shadow: none;
     }
 
-    section {
-      break-inside: auto;
-      margin-top: 22px;
+    .cv-header {
+      gap: 20px;
+      padding-bottom: 12px;
+    }
+
+    .signature-svg {
+      width: 236px;
+    }
+
+    h2 {
+      margin-top: 4px;
+      font-size: 10.5pt;
+    }
+
+    .contact-block {
+      gap: 4px;
+      font-size: 8.5pt;
+    }
+
+    .cv-page > section {
+      margin-top: 14px;
     }
 
     h3 {
-      break-after: avoid;
-      page-break-after: avoid;
+      margin-bottom: 7px;
+      font-size: 8.5pt;
     }
 
-    .cv-en .experience-section {
-      break-before: page;
-      page-break-before: always;
-      margin-top: 0;
+    .profile-summary {
+      font-size: 9pt;
+      line-height: 1.45;
+    }
+
+    .impact-grid {
+      gap: 8px;
+      margin-top: 9px;
+    }
+
+    .impact-grid div {
+      padding-top: 5px;
+    }
+
+    .impact-grid dt {
+      font-size: 7pt;
+    }
+
+    .impact-grid dd {
+      margin-top: 2px;
+      font-size: 8.2pt;
     }
 
     .cv-item {
-      grid-template-columns: minmax(0, 1fr) max-content;
+      gap: 3px 14px;
       break-inside: avoid;
       page-break-inside: avoid;
+      padding: 8px 0;
     }
 
+    .item-heading strong {
+      font-size: 9.2pt;
+    }
+
+    .item-heading span,
     time {
-      white-space: nowrap;
-      text-align: right;
+      font-size: 8.2pt;
+    }
+
+    .cv-item > p,
+    .cv-item li {
+      font-size: 8.4pt;
+      line-height: 1.4;
+    }
+
+    .cv-item > ul {
+      gap: 2px;
+      padding-left: 13px;
+      margin-top: 1px;
+    }
+
+    .skills-section {
+      break-before: auto;
     }
 
     .skills-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px 14px;
+      gap: 7px 14px;
     }
 
     .skills-grid div {
-      padding-top: 8px;
+      padding-top: 5px;
     }
 
-    .signature-svg {
-      width: 246px;
+    .skills-grid strong {
+      font-size: 8.4pt;
+    }
+
+    .skills-grid p {
+      margin-top: 2px;
+      font-size: 7.7pt;
+      line-height: 1.38;
     }
   }
 </style>

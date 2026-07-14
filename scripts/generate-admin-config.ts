@@ -163,16 +163,15 @@ function localizedListField(label: string, name: string, widget = "text", requir
   };
 }
 
-function assessmentSectionField(label: string, name: string) {
+function platformDimensionsField() {
   return {
-    label,
-    name,
+    label: "Operating Dimensions",
+    name: "dimensions",
     widget: "list",
     required: false,
     fields: [
       localizedField("Title", "title"),
-      localizedField("Summary", "summary", "text", false),
-      localizedListField("Items", "items", "text")
+      localizedField("Summary", "summary", "text")
     ]
   };
 }
@@ -264,22 +263,17 @@ function rolesFile(profileId: string) {
           { label: "Related Labs", name: "relatedLabs", widget: "list", required: false },
           { label: "Related Writing", name: "relatedWriting", widget: "list", required: false },
           {
-            label: "Positioning Assessment",
-            name: "positioningAssessment",
+            label: "Platform Profile",
+            name: "platformProfile",
             widget: "object",
             required: false,
             fields: [
-              { label: "Source Writing Slug", name: "sourceWriting", widget: "string" },
-              { label: "Fit Score", name: "fitScore", widget: "string" },
-              localizedField("Conclusion", "conclusion", "text"),
-              localizedListField("Target Positioning", "targetPositioning", "text"),
-              localizedListField("Key Capabilities", "evidence", "text"),
-              assessmentSectionField("Gaps", "gaps"),
-              assessmentSectionField("To Supplement", "pendingEvidence"),
-              localizedListField("Resume Bullets", "resumeBullets", "text"),
-              localizedField("Interview Narrative", "interviewNarrative", "text", false),
-              localizedListField("Update Rules", "updateRules", "text"),
-              localizedListField("Version Log", "versionLog", "text")
+              { label: "Badge", name: "badge", widget: "string" },
+              localizedField("Title", "title"),
+              localizedField("Summary", "summary", "text"),
+              { label: "Source Writing Slug", name: "sourceWriting", widget: "string", required: false },
+              localizedListField("Capabilities", "capabilities", "text"),
+              platformDimensionsField()
             ]
           }
         ]

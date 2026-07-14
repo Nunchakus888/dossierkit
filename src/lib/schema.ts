@@ -103,11 +103,10 @@ export const skillsSchema = z.object({
   )
 });
 
-const roleAssessmentSectionSchema = z
+const rolePlatformDimensionSchema = z
   .object({
     title: localizedStringSchema,
-    summary: localizedStringSchema.optional(),
-    items: z.array(localizedStringSchema).default([])
+    summary: localizedStringSchema
   })
   .passthrough();
 
@@ -124,19 +123,14 @@ export const rolesSchema = z.object({
         relatedCases: z.array(z.string()).default([]),
         relatedLabs: z.array(z.string()).default([]),
         relatedWriting: z.array(z.string()).default([]),
-        positioningAssessment: z
+        platformProfile: z
           .object({
-            sourceWriting: z.string().min(1),
-            fitScore: z.string().min(1),
-            conclusion: localizedStringSchema,
-            targetPositioning: z.array(localizedStringSchema).default([]),
-            evidence: z.array(localizedStringSchema).default([]),
-            gaps: z.array(roleAssessmentSectionSchema).default([]),
-            pendingEvidence: z.array(roleAssessmentSectionSchema).default([]),
-            resumeBullets: z.array(localizedStringSchema).default([]),
-            interviewNarrative: localizedStringSchema.optional(),
-            updateRules: z.array(localizedStringSchema).default([]),
-            versionLog: z.array(localizedStringSchema).default([])
+            badge: z.string().min(1),
+            title: localizedStringSchema,
+            summary: localizedStringSchema,
+            sourceWriting: z.string().min(1).optional(),
+            capabilities: z.array(localizedStringSchema).default([]),
+            dimensions: z.array(rolePlatformDimensionSchema).default([])
           })
           .passthrough()
           .optional()

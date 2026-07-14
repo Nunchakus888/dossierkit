@@ -10,21 +10,21 @@ experiences:
       zh: "中国"
       en: "China"
     summary:
-      zh: "负责跨行业 AI Agent 客服 SaaS 平台和团队工程治理，覆盖 2k+ 租户、23w+ 用户、峰值 6w 请求/天，主导 Agent Runtime、工具/Skill 扩展、RAG/Memory、可观测与成本治理。"
-      en: "Led a cross-industry AI Agent customer-service SaaS platform and team engineering governance, covering 2k+ tenants, 230k+ users, and 60k peak requests/day while owning Agent Runtime, tool/Skill extension, RAG/Memory, observability, and cost governance."
+      zh: "负责跨行业 AI Agent 客服 SaaS 平台从架构演进到生产运营，覆盖 2k+ 租户、23w+ 用户、峰值 6w 请求/天；统筹 Runtime、工具与 Skill、RAG/Memory、质量评测、成本治理和团队交付。"
+      en: "Owned a cross-industry AI Agent customer-service SaaS platform from architecture evolution through production operations, covering 2k+ tenants, 230k+ users, and 60k peak requests/day across Runtime, tools and Skills, RAG/Memory, quality evaluation, cost governance, and team delivery."
     highlights:
-      - zh: "主导模型驱动 Agent Runtime 2.0，基于 WorkflowAgent 建设 Agentic RAG、多轮工具调用、终止判断和多 Agent 并行编排，在平均 7k+ tokens 对话负载下将 e2e 主链路控制在约 7s，无工具场景约 1-2k tokens。"
-        en: "Led model-driven Agent Runtime 2.0 with WorkflowAgent, covering Agentic RAG, multi-turn tool calls, termination decisions, and parallel multi-agent orchestration; kept the e2e main path around 7s under 7k+ average conversation-token load, with no-tool scenarios around 1-2k tokens."
-      - zh: "设计多 Agent 统一上下文维护机制，以稳定 prompt 前缀、动态上下文后置、职责节点隔离和 phase-level usage 审计提升 KV cache 可复用性，并定位耗时与 usage 消耗来源。"
-        en: "Designed unified context maintenance for multi-agent execution, using stable prompt prefixes, deferred dynamic context, role-isolated nodes, and phase-level usage auditing to improve KV cache reuse and pinpoint latency and usage drivers."
-      - zh: "推进 Agent 服务微服务化解耦，统一 monorepo 工程规范、网关鉴权、内部服务契约、shared 模块和项目化 Docker 构建，缩短运行链路并提升发布与排障效率。"
-        en: "Drove microservice-oriented decoupling for the Agent service, standardizing monorepo engineering, gateway authentication, internal service contracts, shared modules, and project-owned Docker builds to shorten runtime paths and improve release/debug efficiency."
-      - zh: "建设动态 Skill 与工具按需挂载机制，按当前意图召回 SOP 和专属工具，多 Skill 命中时先澄清并重新路由，兼顾任务效果、上下文长度和工具误调用风险。"
-        en: "Built dynamic Skill routing and on-demand tool mounting, retrieving SOPs and dedicated tools by current intent, clarifying ambiguous multi-Skill matches, and balancing task quality, context length, and tool-misuse risk."
-      - zh: "建设未知问题聚类与主题发现平台，将每周约 1w+ 至 6w+ 条 unknown questions 沉淀为 content gap，推动约 50% 聚类结果进入知识库/RAG/Skill 迭代，高频主题运营处理覆盖约 70%，自动解决率提升约 30%。"
-        en: "Built an unknown-question clustering and topic discovery platform, turning about 10k+ to 60k+ weekly unknown questions into content gaps, with about 50% of clusters feeding knowledge base/RAG/Skill iteration, about 70% coverage on high-frequency topics, and about 30% auto-resolution improvement."
-      - zh: "在 20 人产研团队中负责 AI Agent 业务方向，带 3 人小组（2 开发 + 1 测试），并推动 AI 开发 Harness 覆盖 40 个仓库，沉淀架构规则、Spec/EPIC、验收门禁、自检脚本和 PR 模板。"
-        en: "Led the AI Agent business track within a 20-person product-engineering team, managed a 3-person squad of 2 developers and 1 QA, and expanded the AI development harness across 40 repositories with architecture rules, Spec/EPIC workflow, acceptance gates, self-check scripts, and PR templates."
+      - zh: "主导模型驱动 Agent Runtime 2.0，基于 WorkflowAgent 建设 Agentic RAG、多轮工具调用、终止判断与多 Agent 并行编排；平均 7k+ tokens 对话负载下端到端约 7s，无工具场景约 1-2k tokens。"
+        en: "Led model-driven Agent Runtime 2.0 with WorkflowAgent across Agentic RAG, multi-turn tool calls, termination decisions, and parallel multi-agent orchestration; held end-to-end latency around 7s under 7k+ average conversation-token load, with no-tool scenarios around 1-2k tokens."
+      - zh: "设计多 Agent 统一上下文机制，以稳定 prompt 前缀、动态上下文后置、职责节点隔离和阶段级 usage 审计提升 KV cache 复用率，并定位时延与 token 消耗来源。"
+        en: "Designed unified context for multi-agent execution, using stable prompt prefixes, deferred dynamic context, role-isolated nodes, and phase-level usage auditing to improve KV cache reuse and pinpoint latency and token drivers."
+      - zh: "建设动态 Skill 路由与工具按需挂载，按意图召回 SOP 和专属工具；多 Skill 命中时通过澄清与重新路由控制上下文长度、工具误调用和任务完成质量。"
+        en: "Built dynamic Skill routing and on-demand tool mounting, retrieving SOPs and dedicated tools by intent while resolving ambiguous multi-Skill matches through clarification and rerouting to balance context length, tool misuse, and task quality."
+      - zh: "建立覆盖请求、执行阶段、工具调用与终态回传的可观测和评测链路，以 correlation_id、trace、token usage、回放集和发布门禁定位质量、时延与成本问题。"
+        en: "Established end-to-end observability and evaluation across requests, execution phases, tool calls, and terminal callbacks, using correlation IDs, traces, token usage, replay sets, and release gates to isolate quality, latency, and cost issues."
+      - zh: "建设未知问题聚类与主题发现平台，将每周约 1w+ 至 6w+ 条问题沉淀为 content gap；约 50% 聚类结果进入知识库/RAG/Skill 迭代，高频主题处理覆盖约 70%，自动解决率提升约 30%。"
+        en: "Built an unknown-question clustering and topic-discovery platform that turned about 10k+ to 60k+ weekly questions into content gaps; about 50% of clusters fed knowledge base/RAG/Skill iteration, high-frequency topic handling reached about 70%, and auto-resolution improved by about 30%."
+      - zh: "带领 3 人 Agent 小组推进 Runtime 服务化拆分与平台交付，统一网关鉴权、服务契约、容器构建和发布规范；推动 AI 开发 Harness 覆盖 40 个仓库，形成 Spec/EPIC、验收门禁、自检脚本和 PR 模板。"
+        en: "Led a 3-person Agent squad through Runtime service decomposition and platform delivery, standardizing gateway authentication, service contracts, container builds, and release conventions; expanded the AI development harness across 40 repositories with Spec/EPIC workflows, acceptance gates, self-check scripts, and PR templates."
     tags:
       - "Agent Runtime"
       - "LLMOps"
@@ -35,8 +35,8 @@ experiences:
       - "Milvus"
   - company: "SenseTime"
     role:
-      zh: "AIGC SaaS 全栈架构师"
-      en: "AIGC SaaS Full-stack Architect"
+      zh: "AIGC SaaS 架构师"
+      en: "AIGC SaaS Architect"
     period:
       zh: "2021-09 - 2024-05"
       en: "2021-09 - 2024-05"
@@ -44,8 +44,8 @@ experiences:
       zh: "上海"
       en: "Shanghai"
     summary:
-      zh: "在商汤 AIGC 业务中负责 AI 绘画、模型训练与平台化产品的 Web 工程和微服务架构，参与从 0 到 1 建设生成式 AI SaaS 产品。"
-      en: "At SenseTime AIGC, owned web engineering and microservice architecture for AI image generation, model training, and platform products, contributing to 0-to-1 generative AI SaaS delivery."
+      zh: "负责 AI 绘画、模型训练与平台化产品的 Web 工程和微服务架构，参与生成式 AI SaaS 从 0 到 1 建设。"
+      en: "Owned web engineering and microservice architecture for AI image generation, model training, and platform products, contributing to 0-to-1 generative AI SaaS delivery."
     highlights:
       - zh: "主导 miaohua 等 AIGC 产品的前后端架构、业务拆分、容器化部署和 DevOps 流程，支撑自研作画模型、LoRA 训练和第三方开源模型接入。"
         en: "Led frontend/backend architecture, domain decomposition, containerized deployment, and DevOps workflows for AIGC products such as miaohua, supporting proprietary image models, LoRA training, and open-source model integration."
@@ -92,8 +92,8 @@ experiences:
       zh: "上海 / 杭州"
       en: "Shanghai / Hangzhou"
     summary:
-      zh: "在本地生活商业推广业务中负责广告投放、订单归因、跨平台 H5、小程序和商家后台工程，连接消费侧流量与商家经营数据。"
-      en: "In Alibaba Local Services commercial promotion, owned ad delivery, order attribution, cross-platform H5, mini-program, and merchant-console engineering connecting consumer traffic with merchant operating data."
+      zh: "负责本地生活商业推广业务的广告投放、订单归因、跨平台 H5、小程序和商家后台工程，连接消费侧流量与商家经营数据。"
+      en: "Owned ad delivery, order attribution, cross-platform H5, mini-program, and merchant-console engineering for Alibaba Local Services commercial promotion, connecting consumer traffic with merchant operating data."
     highlights:
       - zh: "设计基于 shell / iframe 的微前端架构，统一多业务子应用通信、路由定义、静态资源加载和部署方式。"
         en: "Designed a shell / iframe based micro-frontend architecture to standardize sub-application communication, routing, static resource loading, and deployment."
@@ -116,11 +116,11 @@ experiences:
       zh: "宁波"
       en: "Ningbo"
     summary:
-      zh: "早期负责金融报表、Java Web 服务和前端迁移，完成从 AngularJS 到 Vue 的客户端迁移和 Web UI 组件库建设。"
-      en: "Early full-stack role covering financial reporting, Java web services, and frontend migration from AngularJS to Vue with a shared Web UI component library."
+      zh: "负责金融报表、Java Web 服务和前端迁移，完成 AngularJS 到 Vue 的客户端迁移和 Web UI 组件库建设。"
+      en: "Owned financial reporting, Java web services, and frontend migration from AngularJS to Vue with a shared Web UI component library."
     highlights:
-      - zh: "基于 Spring Boot、MyBatis、AngularJS/Vue 建设金融报表数据汇总和业务管理系统，作为早期全栈工程基础概括展示。"
-        en: "Built financial-reporting aggregation and business management systems with Spring Boot, MyBatis, AngularJS, and Vue; summarized as early full-stack engineering foundation."
+      - zh: "基于 Spring Boot、MyBatis、AngularJS/Vue 建设金融报表数据汇总与业务管理系统。"
+        en: "Built financial-reporting aggregation and business management systems with Spring Boot, MyBatis, AngularJS, and Vue."
     tags:
       - "Java"
       - "Spring Boot"

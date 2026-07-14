@@ -6,8 +6,8 @@ translationStatus: "reviewed"
 lastReviewedAt: "2026-07-01"
 title: "DPO for Tool-use Preference"
 method: "DPO"
-summary: "Shows how an Agent platform can turn tool-use issue cases into preference data and quality improvement interfaces."
-featured: true
+summary: "Turns tool-use issue cases into preference data connecting replay evaluation, policy optimization, and model improvement."
+featured: false
 baseModel: "Model-agnostic preference workflow"
 dataset:
   source: "Agent issue cases and crafted boundary samples"
@@ -45,4 +45,4 @@ The evaluation covers win-rate, tool selection accuracy, parameter validity, ref
 
 ## Result
 
-This method fits the Agent platform release gate: first validate tool selection, parameter validity, and refusal boundaries through replay evaluation, then decide whether the improvement belongs in prompts, policies, or model-level optimization.
+Validate tool selection, parameter validity, and refusal boundaries through replay evaluation, then route improvements to prompts, policies, or model-level optimization through a reviewable release gate.

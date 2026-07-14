@@ -25,56 +25,56 @@ hero:
           - text: "Architect"
             tone: "mint"
   subtitle:
-    zh: "专注把大模型能力接入企业核心流程，建设可评测、可审计、可扩展的生产级 Agent 平台。"
-    en: "Focused on bringing LLM capabilities into enterprise workflows through evaluable, auditable, scalable production Agent platforms."
+    zh: "建设从 Runtime、工具治理到评测运营的企业级 Agent 平台，让大模型稳定进入核心业务流程。"
+    en: "Building enterprise Agent platforms from runtime and tool governance through evaluation and operations, bringing LLMs reliably into core workflows."
   primaryAction:
     label:
-      zh: "View My Work"
+      zh: "查看案例"
       en: "View My Work"
     path: "work"
     icon: "sparkle"
   secondaryAction:
     label:
-      zh: "View CV"
+      zh: "查看履历"
       en: "View CV"
     path: "cv"
     icon: "file-text"
 quickLinks:
   - id: "projects"
     label:
-      zh: "Platform"
+      zh: "平台"
       en: "Platform"
     description:
-      zh: "Runtime, tools, permission, audit."
+      zh: "运行时、工具、权限与审计。"
       en: "Runtime, tools, permission, audit."
     path: "work"
     icon: "folder"
     tone: "mint"
   - id: "experience"
     label:
-      zh: "Eval"
+      zh: "评测"
       en: "Eval"
     description:
-      zh: "Evaluation, LLMOps, data feedback."
+      zh: "回放评测、可观测与数据反馈。"
       en: "Evaluation, LLMOps, data feedback."
     path: "lab"
     icon: "briefcase"
     tone: "blue"
   - id: "open-roles"
     label:
-      zh: "CV"
+      zh: "履历"
       en: "CV"
     description:
-      zh: "Platform leadership."
+      zh: "平台职责与代表性交付。"
       en: "Platform leadership."
     path: "cv"
     icon: "file-text"
     tone: "cyan"
 contactStrip:
   label:
-    zh: "Contact"
+    zh: "联系"
     en: "Contact"
   actionLabel:
-    zh: "Send a Message"
+    zh: "发送邮件"
     en: "Send a Message"
   icon: "send"

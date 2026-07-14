@@ -6,8 +6,8 @@ metrics:
       zh: "2k+ 租户 / 23w+ 用户"
       en: "2k+ tenants / 230k+ users"
     description:
-      zh: "跨行业 AI Agent 客服 SaaS 平台。"
-      en: "Cross-industry AI Agent customer-service SaaS platform."
+      zh: "生产级跨行业 AI Agent 客服 SaaS 平台。"
+      en: "Production-grade cross-industry AI Agent customer-service SaaS platform."
   - label:
       zh: "峰值请求"
       en: "Peak traffic"
@@ -15,8 +15,8 @@ metrics:
       zh: "6w / day"
       en: "60k / day"
     description:
-      zh: "过去一个月峰值参考，平均响应约 7s。"
-      en: "Recent-month peak reference, with about 7s average response time."
+      zh: "生产环境峰值，端到端平均响应约 7s。"
+      en: "Production peak, with about 7s average end-to-end response time."
   - label:
       zh: "团队范围"
       en: "Team scope"
@@ -24,8 +24,8 @@ metrics:
       zh: "20 人产研 / 3 人 Agent 小组"
       en: "20-person product-engineering / 3-person Agent squad"
     description:
-      zh: "负责 AI Agent 业务方向，2 开发 + 1 测试。"
-      en: "Owned the AI Agent business track with 2 developers and 1 QA."
+      zh: "带领 3 人 Agent 小组，协同 20 人产研团队。"
+      en: "Led a 3-person Agent squad within a 20-person product-engineering team."
   - label:
       zh: "Harness 覆盖"
       en: "Harness coverage"
@@ -33,5 +33,5 @@ metrics:
       zh: "40 个仓库"
       en: "40 repositories"
     description:
-      zh: "以规则、Spec/EPIC、Supervisor gate、自检脚本和 PR 模板约束 AI 辅助开发。"
-      en: "Governed AI-assisted development through rules, Spec/EPIC, supervisor gates, self-check scripts, and PR templates."
+      zh: "覆盖 40 个代码仓库的 AI 辅助开发治理。"
+      en: "AI-assisted development governance across 40 repositories."
