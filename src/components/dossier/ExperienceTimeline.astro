@@ -26,7 +26,7 @@ const l = labels[locale];
           <time>{localize(item.period, locale)}</time>
           <div class="card">
             <h3>{localize(item.role, locale)}</h3>
-            <strong>{item.company}</strong>
+            <strong>{localize(item.company, locale)}</strong>
             <p>{localize(item.summary, locale)}</p>
             <ul>
               {item.highlights.map((highlight) => <li>{localize(highlight, locale)}</li>)}

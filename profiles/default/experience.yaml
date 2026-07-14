@@ -1,11 +1,13 @@
 experiences:
-  - company: "YC"
+  - company:
+      zh: "YC"
+      en: "YC"
     role:
       zh: "Agent 平台负责人"
       en: "Agent Platform Lead"
     period:
-      zh: "2024-03 - 现在"
-      en: "2024-03 - Present"
+      zh: "2025-03 - 现在"
+      en: "2025-03 - Present"
     location:
       zh: "中国"
       en: "China"
@@ -33,7 +35,35 @@ experiences:
       - "AI Engineering Harness"
       - "FastAPI"
       - "Milvus"
-  - company: "SenseTime"
+  - company:
+      zh: "自主创业"
+      en: "Independent Venture"
+    role:
+      zh: "AI 平台架构与全栈研发"
+      en: "AI Platform Architecture & Full-stack Engineering"
+    period:
+      zh: "2024-05 - 2025-02"
+      en: "2024-05 - 2025-02"
+    location:
+      zh: "中国"
+      en: "China"
+    summary:
+      zh: "围绕 AI 数据与模型服务产品开展独立研发和项目交付，负责产品定义、系统架构、全栈实现、容器化部署与生产迭代。"
+      en: "Built and delivered independent AI data and model-serving products, owning product definition, system architecture, full-stack implementation, containerized deployment, and production iteration."
+    highlights:
+      - zh: "从 0 到 1 建设多模态数据标注与模型服务平台，打通人工标注、训练数据、模型产物、Serverless 推理、自动标注和质量校验闭环。"
+        en: "Built a multimodal data-labeling and model-serving platform from 0 to 1, connecting human annotation, training data, model artifacts, serverless inference, auto-labeling, and quality validation."
+      - zh: "设计插件化模型适配与异步任务架构，支持音视频、图像任务及模型服务按需扩展，并完成企业生产环境交付。"
+        en: "Designed pluggable model adapters and asynchronous job architecture for audio, video, and image workloads with on-demand model-service scaling, then delivered the platform into enterprise production."
+    tags:
+      - "AI Data Platform"
+      - "Model Serving"
+      - "Serverless"
+      - "Django"
+      - "React"
+  - company:
+      zh: "商汤科技"
+      en: "SenseTime"
     role:
       zh: "AIGC SaaS 架构师"
       en: "AIGC SaaS Architect"
@@ -60,52 +90,40 @@ experiences:
       - "FastAPI"
       - "Microservices"
       - "DevOps"
-  - company: "Alibaba Group - Taobao"
+  - company:
+      zh: "阿里巴巴集团"
+      en: "Alibaba Group"
     role:
       zh: "高级 Web 前端工程师"
       en: "Senior Web Frontend Engineer"
     period:
-      zh: "2020-07 - 2021-08"
-      en: "2020-07 - 2021-08"
-    location:
-      zh: "杭州"
-      en: "Hangzhou"
-    summary:
-      zh: "负责淘宝直播、淘宝逛逛等高流量业务的跨端 Web 工程，重点在微前端编排、组件通信规范、SSR/边缘渲染和性能优化。"
-      en: "Worked on high-traffic Taobao Live and Taobao content scenarios, focusing on micro-frontend orchestration, component communication contracts, SSR/edge rendering, and performance optimization."
-    highlights:
-      - zh: "主导直播间 Web 互动层微前端方案，从 Weex 单组件模式演进到 H5 组件编排，统一布局、路由、事件总线和通信规范。"
-        en: "Led the Taobao Live web interaction micro-frontend solution, evolving from isolated Weex components to H5 component orchestration with unified layout, routing, event bus, and communication contracts."
-    tags:
-      - "Micro-frontend"
-      - "SSR"
-      - "Performance"
-      - "Cross-platform"
-  - company: "Alibaba Local Services"
-    role:
-      zh: "资深前端工程师"
-      en: "Senior Frontend Engineer"
-    period:
-      zh: "2017-10 - 2020-07"
-      en: "2017-10 - 2020-07"
+      zh: "2017-10 - 2021-08"
+      en: "2017-10 - 2021-08"
     location:
       zh: "上海 / 杭州"
       en: "Shanghai / Hangzhou"
     summary:
-      zh: "负责本地生活商业推广业务的广告投放、订单归因、跨平台 H5、小程序和商家后台工程，连接消费侧流量与商家经营数据。"
-      en: "Owned ad delivery, order attribution, cross-platform H5, mini-program, and merchant-console engineering for Alibaba Local Services commercial promotion, connecting consumer traffic with merchant operating data."
+      zh: "先后负责本地生活商业推广与淘宝新零售技术团队的高流量跨端工程，覆盖广告投放与归因、直播互动、微前端、SSR 和性能优化。"
+      en: "Worked across Alibaba Local Services commercial promotion and Taobao new-retail engineering on high-traffic cross-platform systems spanning ad delivery and attribution, live interaction, micro-frontends, SSR, and performance."
     highlights:
+      - zh: "主导直播间 Web 互动层微前端方案，从 Weex 单组件模式演进到 H5 组件编排，统一布局、路由、事件总线和通信规范。"
+        en: "Led the Taobao Live web interaction micro-frontend solution, evolving from isolated Weex components to H5 component orchestration with unified layout, routing, event bus, and communication contracts."
       - zh: "设计基于 shell / iframe 的微前端架构，统一多业务子应用通信、路由定义、静态资源加载和部署方式。"
         en: "Designed a shell / iframe based micro-frontend architecture to standardize sub-application communication, routing, static resource loading, and deployment."
       - zh: "沉淀 Vue / React 脚手架、跨平台 JsBridge、广告日志上报 SDK 和通用组件库，参与下单、广告结算、订单归因到商家经营分析的关键链路建设。"
         en: "Built Vue / React scaffolds, cross-platform JsBridge, ad logging SDK, and reusable components, contributing to key flows from ordering and ad settlement to attribution and merchant analysis."
     tags:
+      - "High-traffic Web"
+      - "SSR"
+      - "Performance"
       - "Ads Platform"
       - "Attribution"
       - "JsBridge"
       - "SDK"
       - "Micro-frontend"
-  - company: "Ningbo Senpu Rongxun"
+  - company:
+      zh: "宁波森浦融讯"
+      en: "Ningbo Senpu Rongxun"
     role:
       zh: "全栈开发工程师"
       en: "Full-stack Developer"

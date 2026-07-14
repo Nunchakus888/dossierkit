@@ -59,6 +59,8 @@ export async function main() {
         }
       }
     }
+
+    validateExperienceTimeline(pack.experience.experiences, errors);
   } catch (error) {
     errors.push(error instanceof Error ? error.message : String(error));
   }
@@ -74,6 +76,97 @@ export async function main() {
   }
 
   console.log(warnings.length > 0 ? `Validation passed with ${warnings.length} warning(s).` : "Validation passed.");
+}
+
+type ExperiencePeriod = string | { zh: string; en: string };
+
+type TimelineExperience = {
+  company: { zh: string; en: string };
+  period: ExperiencePeriod;
+};
+
+type ParsedPeriod = {
+  start: number;
+  end: number;
+  current: boolean;
+};
+
+function validateExperienceTimeline(experiences: TimelineExperience[], errors: string[]) {
+  const parsed = experiences.map((experience, index) => {
+    const company = experience.company.en || experience.company.zh;
+    const zhPeriod = typeof experience.period === "string" ? experience.period : experience.period.zh;
+    const enPeriod = typeof experience.period === "string" ? experience.period : experience.period.en;
+    const zh = parseExperiencePeriod(zhPeriod, company, "zh", errors);
+    const en = parseExperiencePeriod(enPeriod, company, "en", errors);
+
+    if (zh && en && (zh.start !== en.start || zh.end !== en.end || zh.current !== en.current)) {
+      errors.push(`experience.yaml: bilingual period mismatch for "${company}"`);
+    }
+
+    const period = zh || en;
+    if (period?.current && index !== 0) {
+      errors.push(`experience.yaml: only the newest experience may use an open-ended period ("${company}")`);
+    }
+
+    return { experience, company, period };
+  });
+
+  const currentRoles = parsed.filter((item) => item.period?.current);
+  if (currentRoles.length > 1) {
+    errors.push("experience.yaml: multiple current roles found");
+  }
+
+  for (let index = 1; index < parsed.length; index += 1) {
+    const newer = parsed[index - 1];
+    const older = parsed[index];
+    if (!newer.period || !older.period) continue;
+
+    if (older.period.start > newer.period.start) {
+      errors.push(`experience.yaml: experiences are not ordered newest-first near "${older.company}"`);
+    }
+
+    // Month-only source records may share one handoff month. Anything beyond that is a real overlap.
+    if (older.period.end > newer.period.start) {
+      errors.push(
+        `experience.yaml: overlapping periods for "${older.company}" and "${newer.company}"`
+      );
+    }
+  }
+}
+
+function parseExperiencePeriod(
+  value: string,
+  company: string,
+  locale: "zh" | "en",
+  errors: string[]
+): ParsedPeriod | undefined {
+  const match = value.match(/^(\d{4})-(\d{2})\s+-\s+(?:(\d{4})-(\d{2})|(现在|Present))$/);
+  if (!match) {
+    errors.push(`experience.yaml: invalid ${locale} period for "${company}": "${value}"`);
+    return undefined;
+  }
+
+  const start = toMonthIndex(match[1], match[2]);
+  const current = Boolean(match[5]);
+  const end = current ? Number.POSITIVE_INFINITY : toMonthIndex(match[3], match[4]);
+
+  if (start === undefined || end === undefined) {
+    errors.push(`experience.yaml: invalid ${locale} month for "${company}": "${value}"`);
+    return undefined;
+  }
+
+  if (!current && start > end) {
+    errors.push(`experience.yaml: period starts after it ends for "${company}": "${value}"`);
+  }
+
+  return { start, end, current };
+}
+
+function toMonthIndex(year: string | undefined, month: string | undefined) {
+  if (!year || !month) return undefined;
+  const numericMonth = Number(month);
+  if (!Number.isInteger(numericMonth) || numericMonth < 1 || numericMonth > 12) return undefined;
+  return Number(year) * 12 + numericMonth - 1;
 }
 
 function compareTranslations(

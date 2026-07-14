@@ -1,0 +1,45 @@
+---
+slug: "ai-data-model-platform"
+locale: "en"
+translationKey: "ai-data-model-platform"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-07-14"
+title: "AI Data Labeling and Model-serving Platform"
+summary: "Built and delivered a multimodal data-labeling and model-serving platform from 0 to 1, connecting training data, model artifacts, auto-labeling, quality validation, and serverless inference."
+role: "Independent Venture / Product Architecture / Full-stack Engineering / Model Serving"
+period: "2024-05 - 2024-10"
+confidentiality: "sanitized"
+featured: true
+tags:
+  - "AI Data Platform"
+  - "Model Serving"
+  - "Serverless"
+  - "Multimodal"
+  - "Full-stack"
+targetRoles:
+  - "agent-platform"
+---
+
+## Overview
+
+Built a multimodal data-labeling and model-serving platform from 0 to 1 for enterprise machine-learning workflows, owning product definition, system architecture, full-stack implementation, containerized deployment, and production delivery.
+
+The platform connected human annotation, training data, model artifacts, inference services, auto-labeling, and quality validation in one data loop. It supported audio, video, and image workloads through a consistent model-extension interface.
+
+## Architecture
+
+1. **Annotation workspace**: React and Canvas powered multimodal annotation, task assignment, result review, and workflow-state feedback.
+2. **Application and data layer**: Django and PostgreSQL managed projects, tasks, datasets, model versions, and annotation results, while Redis decoupled long-running asynchronous jobs.
+3. **Model-serving layer**: Nuclio packaged serverless inference units behind Traefik routing, enabling PyTorch, YOLO, Whisper, Qwen2, and other models to integrate through standard contracts.
+4. **Delivery and runtime layer**: Containerized orchestration standardized application, queue, database, and model-service builds while supporting on-demand scaling and failure isolation.
+
+## Engineering Tradeoffs
+
+- A model-adapter layer normalized input and output differences so annotation workflows did not bind directly to a single algorithm implementation.
+- Inference and auto-labeling ran as asynchronous jobs to keep long-running model calls off the main application path.
+- Human review and correction remained part of the loop so auto-labeling results could return to training data and improve model quality.
+- Unified dataset, task, model-version, and result states created a foundation for diagnosis, retry, and quality traceability.
+
+## Outcome
+
+The platform was delivered into enterprise production for human and automated labeling across audio, video, and image workloads, with extensible model services. It established reusable engineering foundations in model serving, asynchronous job orchestration, multimodal data governance, and end-to-end AI product delivery that carried into later AIGC SaaS and enterprise Agent Runtime work.

@@ -2,7 +2,7 @@ backend:
   name: github
   repo: Nunchakus888/dossierkit
   branch: main
-  base_url: https://dossierkit.pages.dev
+  base_url: https://sunionpeaks.pages.dev
   auth_endpoint: api/auth
 local_backend: true
 media_folder: profiles/default/assets
@@ -151,7 +151,15 @@ collections:
             fields:
               - label: Company
                 name: company
-                widget: string
+                widget: object
+                required: true
+                fields:
+                  - label: ZH
+                    name: zh
+                    widget: string
+                  - label: EN
+                    name: en
+                    widget: string
               - label: Role
                 name: role
                 widget: object

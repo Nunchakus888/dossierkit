@@ -87,7 +87,7 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
         <article class="cv-item">
           <div class="item-heading">
             <strong>{localize(item.role, locale)}</strong>
-            <span>{item.company}</span>
+            <span>{localize(item.company, locale)}</span>
           </div>
           <time>{localize(item.period, locale)}</time>
           <p>{localize(item.summary, locale)}</p>

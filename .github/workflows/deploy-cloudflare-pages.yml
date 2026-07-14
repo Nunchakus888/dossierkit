@@ -13,7 +13,7 @@ on:
       site_url:
         description: Public site URL
         required: true
-        default: https://dossierkit.pages.dev
+        default: https://sunionpeaks.pages.dev
 
 concurrency:
   group: cloudflare-pages-${{ github.ref }}
@@ -29,7 +29,7 @@ jobs:
     env:
       ACTIVE_PROFILE: ${{ inputs.active_profile || 'default' }}
       DEFAULT_LOCALE: zh
-      PUBLIC_SITE_URL: ${{ inputs.site_url || 'https://dossierkit.pages.dev' }}
+      PUBLIC_SITE_URL: ${{ inputs.site_url || 'https://sunionpeaks.pages.dev' }}
       GITHUB_REPOSITORY: ${{ github.repository }}
     steps:
       - name: Checkout

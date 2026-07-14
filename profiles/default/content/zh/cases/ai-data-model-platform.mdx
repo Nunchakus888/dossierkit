@@ -1,0 +1,45 @@
+---
+slug: "ai-data-model-platform"
+locale: "zh"
+translationKey: "ai-data-model-platform"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-07-14"
+title: "AI 数据标注与模型服务平台"
+summary: "自主创业阶段从 0 到 1 交付多模态数据标注与模型服务平台，打通训练数据、模型产物、自动标注、质量校验和 Serverless 推理链路。"
+role: "自主创业 / 产品架构 / 全栈研发 / 模型服务"
+period: "2024-05 - 2024-10"
+confidentiality: "sanitized"
+featured: true
+tags:
+  - "AI Data Platform"
+  - "Model Serving"
+  - "Serverless"
+  - "Multimodal"
+  - "Full-stack"
+targetRoles:
+  - "agent-platform"
+---
+
+## 项目概览
+
+面向企业机器学习场景，从 0 到 1 建设多模态数据标注与模型服务平台，负责产品定义、系统架构、全栈实现、容器化部署和生产交付。
+
+平台将人工标注、训练数据、模型产物、推理服务、自动标注和质量校验纳入同一条数据闭环，支持音视频、图像等任务，并为不同模型提供统一扩展接口。
+
+## 架构设计
+
+1. **标注工作台**：基于 React 与 Canvas 承载多模态标注交互、任务领取、结果校验和状态反馈。
+2. **业务与数据层**：以 Django、PostgreSQL 管理项目、任务、数据集、模型版本和标注结果，以 Redis 解耦长耗时异步任务。
+3. **模型服务层**：通过 Nuclio 封装 Serverless 推理单元，由 Traefik 统一路由，使 PyTorch、YOLO、Whisper、Qwen2 等模型能够按标准接口接入。
+4. **交付与运行层**：采用容器化编排统一应用、队列、数据库和模型服务的构建部署，支持模型服务按需扩展和故障隔离。
+
+## 核心取舍
+
+- 以模型适配层隔离模型输入输出差异，避免标注业务直接绑定单一算法实现。
+- 将推理和自动标注转为异步任务，控制长耗时模型调用对主业务链路的影响。
+- 保留人工校验与纠正环节，使自动标注结果能够回流训练数据并持续改善模型效果。
+- 统一数据、任务、模型版本与结果状态，为问题定位、任务重试和质量追踪提供基础。
+
+## 项目价值
+
+平台完成企业生产环境交付，支持音视频、图像任务的人工与自动标注，并可扩展不同模型服务。该项目沉淀了模型服务化、异步任务编排、多模态数据治理和 AI 产品端到端交付能力，为 AIGC SaaS 与企业级 Agent Runtime 建设提供了连续的工程基础。

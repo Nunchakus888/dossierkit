@@ -42,8 +42,8 @@ Production `/admin` uses Decap CMS with the GitHub backend and a Cloudflare Page
 
 Create a GitHub OAuth App:
 
-- Homepage URL: `https://dossierkit.pages.dev`
-- Authorization callback URL: `https://dossierkit.pages.dev/api/callback`
+- Homepage URL: `https://sunionpeaks.pages.dev`
+- Authorization callback URL: `https://sunionpeaks.pages.dev/api/callback`
 
 Configure Cloudflare Pages production environment variables:
 
@@ -57,10 +57,10 @@ The generated `public/admin/config.yml` points Decap at:
 ```yaml
 backend:
   name: github
-  base_url: https://dossierkit.pages.dev
+  base_url: https://sunionpeaks.pages.dev
   auth_endpoint: api/auth
 ```
 
-Do not use `https://api.netlify.com/auth` for Cloudflare Pages deployments. That endpoint only works for Netlify-managed OAuth and returns Not Found for `dossierkit.pages.dev`.
+Do not use `https://api.netlify.com/auth` for Cloudflare Pages deployments. That endpoint only works for Netlify-managed OAuth and returns Not Found for a Cloudflare Pages deployment.
 
 For private repositories, keep the Decap scope as `repo`. Also consider Cloudflare Access in front of `/admin` if the admin UI itself should not be publicly reachable.

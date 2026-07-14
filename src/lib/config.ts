@@ -7,7 +7,7 @@ export const defaultLocale: Locale =
   process.env.DEFAULT_LOCALE === "en" ? "en" : "zh";
 
 export const activeProfile = process.env.ACTIVE_PROFILE || "default";
-export const siteUrl = process.env.PUBLIC_SITE_URL || "https://dossierkit.pages.dev";
+export const siteUrl = process.env.PUBLIC_SITE_URL || "https://sunionpeaks.pages.dev";
 export const repository = process.env.GITHUB_REPOSITORY || "";
 
 export function rootPath(...segments: string[]) {

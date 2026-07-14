@@ -63,7 +63,7 @@ site_url=https://your-domain.example
 
 ```bash
 ACTIVE_PROFILE=default PUBLIC_SITE_URL=https://your-domain.example pnpm build
-CLOUDFLARE_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... pnpm dlx wrangler pages deploy dist --project-name dossierkit --branch main
+CLOUDFLARE_ACCOUNT_ID=... CLOUDFLARE_API_TOKEN=... pnpm dlx wrangler pages deploy dist --project-name sunionpeaks --branch main
 ```
 
 ## PDF resumes
