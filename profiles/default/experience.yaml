@@ -41,11 +41,30 @@ experiences:
               zh: "建设会话级与用户级 Memory，统一事实提取、置信筛选、写入更新、召回注入和租户隔离，将历史结论、用户偏好与任务状态带入连续交互。"
               en: "Built tenant-isolated session and user Memory with fact extraction, confidence filtering, write/update, and retrieval injection for persistent conclusions, preferences, and task state."
       - title:
-          zh: "注意力引导推理 Agent 与复杂任务编排"
-          en: "Attentive Reasoning for Complex Workflows"
+          zh: "AI 获客 Agent 平台 0-1 建设"
+          en: "0-to-1 AI Lead-generation Agent Platform"
         summary:
-          zh: "基于 LangChain 有向无环图建设注意力引导推理 Agent，引入 ARQ（Attentive Reasoning Queries）领域化推理蓝图，以针对性查询在关键决策点重申业务约束；通过 condition-action Guideline 管理局部规则，以可分支、回退的 Journey 承载多轮 SOP，按轮匹配相关规则与工具，形成可解释、可回放的复杂任务执行链。"
-          en: "Built a LangChain DAG-based attentive reasoning Agent using Attentive Reasoning Queries (ARQ) domain blueprints to reinstate business constraints at critical decisions; combined condition-action Guidelines with branching, backtracking Journeys and per-turn rule/tool matching for explainable, replayable workflows."
+          zh: "主导公司首个 AI 获客 Agent 产品从 0 到 1 建设，推动 Dify 工作流方案升级为自主可控的多租户 Agent 平台，将营销咨询、线索识别、信息收集、资格判断、业务查询和人工转接沉淀为可配置能力，形成可规模化销售与复制交付的 AI 获客产品。"
+          en: "Led the company's first AI lead-generation Agent product from 0 to 1, replacing a Dify workflow with a controllable multi-tenant platform for marketing, lead capture, qualification, business queries, and handoff, establishing an AI acquisition product for repeatable sales and delivery."
+        details:
+          - title:
+              zh: "可控推理体系"
+              en: "Controlled reasoning"
+            summary:
+              zh: "按 tenant/chatbot/session 动态装配语言、语气、RAG、工具、handover 和业务元数据；以 Guideline 管理规则、Journey 承载多轮 SOP，并用 ARQ（Attentive Reasoning Queries）对意图、工具、参数来源和响应合规形成可审计判断。"
+              en: "Assembled language, RAG, tools, handoff, and metadata by tenant, chatbot, and session; combined Guidelines, branching Journeys, and Attentive Reasoning Queries (ARQ) for auditable intent, tool, parameter-provenance, and compliance decisions."
+          - title:
+              zh: "可靠执行边界"
+              en: "Reliable execution"
+            summary:
+              zh: "建设异步会话全生命周期与 latest-wins 机制，以 correlation_id 串联后台执行和 callback；工具调用前校验适用性、参数来源、必填字段和猜测风险，降低错误调用与业务系统误写。"
+              en: "Built an async, latest-wins session lifecycle linked by correlation IDs and callbacks; gated tools by applicability, parameter provenance, required fields, and guessing risk to prevent incorrect calls and business-system writes."
+          - title:
+              zh: "评测运营闭环"
+              en: "Evaluation operations"
+            summary:
+              zh: "将 evaluation、inspection 和 token usage 纳入生产链路，以 correlation_id、events、ARQ artifacts 和 callback payload 支撑评测与线上问题复盘；报表覆盖 123,071 次 inspection、61,585 个 session 和 1.417B tokens。"
+              en: "Embedded evaluation, inspections, and token usage into production, linking issue review through correlation IDs, events, ARQ artifacts, and callbacks across 123,071 inspections, 61,585 sessions, and 1.417B tokens."
       - title:
           zh: "企业 AI 协作 CLI 与共享上下文平台"
           en: "AI Collaboration CLI and Shared Context"
@@ -57,7 +76,7 @@ experiences:
           en: "Multilingual Unknown-question Clustering and Knowledge-gap Learning"
         summary:
           zh: "设计并实现多语言用户问题聚类与主题分析平台，基于 Python、FastAPI、Pydantic 和 MongoDB 构建分层服务，打通数据清洗、语言检测、关键词提取、向量化、降维、聚类、主题归纳与结果持久化；兼容 SentenceTransformer 与 OpenAI 标准 embedding 接口，结合 UMAP、HDBSCAN、BERTopic、c-TF-IDF 与大模型主题生成，并支持 K-Means、层次聚类等可替换算法。通过异步任务、线程池、并发控制和 Webhook 重试保障计算密集型任务稳定运行，引入 Apollo/YAML 动态配置、实验追踪、聚类质量指标、可视化和自动化报告；从早期 HDBSCAN 聚类演进至 LLM 聚类，自主识别知识库 Gap，学习高质量人工会话生成候选知识并提交租户采纳，约 50% 聚类结果进入生产优化，高频主题覆盖约 70%，推动自动解决率提升约 30%。"
-          en: "Built a multilingual unknown-question clustering and knowledge-gap learning platform in Python, FastAPI, Pydantic, and MongoDB, spanning cleaning, language detection, embeddings, dimensionality reduction, clustering, topic synthesis, persistence, experiment tracking, and reports. Combined SentenceTransformer/OpenAI-compatible embeddings with UMAP, HDBSCAN, BERTopic, c-TF-IDF, LLM topic generation, and replaceable K-Means or hierarchical algorithms; stabilized compute-heavy jobs with async workers, concurrency controls, dynamic configuration, and webhook retries. Evolved HDBSCAN into LLM clustering to identify gaps, learn candidate answers from high-quality human conversations, and submit them for tenant adoption; about 50% of clusters entered optimization, high-frequency coverage reached 70%, and auto-resolution improved 30%."
+          en: "Built a multilingual unknown-question clustering and knowledge-gap learning platform in Python, FastAPI, Pydantic, and MongoDB across cleaning, embeddings, UMAP/HDBSCAN, BERTopic, c-TF-IDF, LLM clustering, topic synthesis, persistence, experiment tracking, and reports. Stabilized compute workloads with async workers, concurrency controls, dynamic configuration, and webhook retries while supporting SentenceTransformer/OpenAI-compatible embeddings and replaceable K-Means or hierarchical algorithms. Evolved HDBSCAN into LLM clustering to detect gaps and learn candidate answers from high-quality human conversations for tenant adoption; about 50% of clusters entered optimization, high-frequency coverage reached 70%, and auto-resolution improved 30%."
     highlights: []
     tags:
       - "WhatsApp SaaS"

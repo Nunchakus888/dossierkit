@@ -3,7 +3,7 @@ slug: "enterprise-agent-platform"
 locale: "zh"
 translationKey: "enterprise-agent-platform"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-07-01"
+lastReviewedAt: "2026-07-15"
 title: "生产级 Agent 平台架构"
 summary: "负责跨行业 AI Agent 客服 SaaS 平台从架构演进到生产运营，并推动团队 AI 开发 Harness 覆盖 40 个仓库。"
 role: "YC / Agent 平台负责人 / Runtime / Skill / RAG / Harness"
@@ -25,6 +25,19 @@ targetRoles:
 YC 提供面向多行业的企业 SaaS 服务，核心场景为 AI Agent 客服。任职期间负责 Agent 平台方向，覆盖平台架构、运行时治理、知识与工具体系、质量治理和团队工程规范。
 
 平台已支撑 2k+ 租户、23w+ 用户，生产环境峰值 6w 请求/天，端到端平均响应约 7s。
+
+## AI 获客 Agent 平台 0-1 建设
+
+主导公司首个 AI 获客 Agent 产品从 0 到 1 建设，推动既有 Dify 工作流方案升级为自主可控的多租户 Agent 平台。围绕营销咨询、线索识别、信息收集、资格判断、业务查询和人工转接沉淀租户可配置能力，形成可规模化销售、复制交付和持续运营的 AI 获客产品。
+
+核心架构由四层组成：
+
+1. 配置驱动的 Agent 工厂：按 tenant_id、chatbot_id 和 session_id 创建 Agent，动态装配语言、语气、handover、ActionBook、RAG、工具、最大迭代次数和业务元数据。
+2. 行为与流程控制：用 Guideline 表达局部业务规则，用 Journey 承载可分支、回退的多轮 SOP；每轮只加载相关规则与工具，降低上下文负担和配置冲突。
+3. 注意力引导推理：将 ARQ（Attentive Reasoning Queries）作为领域化决策蓝图，在意图、规则适用性、工具适用性、参数来源、必填字段和响应合规等关键节点生成结构化判断与可审计 artifacts。
+4. 执行与运营闭环：异步会话即时返回 correlation_id，后台完成 Agent 创建、事件处理、latest-wins 取消和 callback 终态回传；evaluation cache、Session Evaluator、response analysis、inspection 与 token usage 共同支撑上线评测、成本分析和问题复盘。
+
+工具执行被约束在明确安全边界内：调用前校验业务适用性、参数来源、必填字段和猜测风险，在信息不足时优先补充询问，降低错误调用和业务系统误写。correlation_id、events、ARQ artifacts、inspection 与 callback payload 贯穿一次响应的完整执行链，相关报表覆盖 123,071 次 inspection、61,585 个 session 和 1.417B tokens。
 
 ## 平台范围
 

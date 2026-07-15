@@ -96,7 +96,7 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
             <div class="featured-projects">
               <span class="featured-projects-label">{featuredProjectsLabel}</span>
               {item.featuredProjects.map((project) => (
-                <div class="featured-project">
+                <div class:list={["featured-project", { "has-details": project.details.length > 0 }]}>
                   <strong>{localize(project.title, locale)}</strong>
                   <p>{localize(project.summary, locale)}</p>
                   {project.details.length > 0 && (
@@ -569,12 +569,19 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
     }
 
     .featured-project-details {
+      display: block;
       gap: 2px;
       margin-top: 1px;
     }
 
     .featured-project-details div {
       gap: 5px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .featured-project-details div + div {
+      margin-top: 2px;
     }
 
     .featured-project-details dd {
@@ -589,6 +596,11 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
 
     .featured-project {
       gap: 1px;
+    }
+
+    .featured-project.has-details {
+      break-inside: auto;
+      page-break-inside: auto;
     }
 
     .featured-project + .featured-project {
@@ -615,7 +627,7 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
       margin-top: 1px;
     }
 
-    .cv-en .experience-section .cv-item:not(:first-of-type) > p {
+    .experience-section .cv-item:not(:first-of-type) > p {
       display: none;
     }
 
@@ -626,7 +638,7 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
 
     .skills-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 7px 14px;
+      gap: 8px 14px;
     }
 
     .skills-grid div {
@@ -634,22 +646,22 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
     }
 
     .skills-grid strong {
-      font-size: 8.4pt;
+      font-size: 8.2pt;
     }
 
     .skills-grid p {
       margin-top: 2px;
-      font-size: 7.5pt;
+      font-size: 7.4pt;
       line-height: 1.28;
     }
 
     .cv-en .skills-grid p {
       font-size: 7.3pt;
-      line-height: 1.24;
+      line-height: 1.26;
     }
 
     .education-section {
-      break-inside: auto;
+      break-inside: avoid;
       margin-top: 8px !important;
     }
 
@@ -659,8 +671,8 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
 
     .education-section .cv-item {
       display: block;
-      break-inside: auto;
-      page-break-inside: auto;
+      break-inside: avoid;
+      page-break-inside: avoid;
       padding: 5px 0 0;
     }
 
