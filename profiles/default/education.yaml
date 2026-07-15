@@ -4,8 +4,18 @@ education:
       en: "Shanghai Jiao Tong University (Online Education)"
     degree:
       zh: "本科 / 计算机科学与技术"
-      en: "B.S. in Computer Science and Technology (Online Education)"
+      en: "Bachelor's / Computer Science and Technology"
     period: "2015-09 - 2018-07"
     summary:
-      zh: "系统学习计算机科学与技术基础，补齐软件工程、网络和系统方向训练。"
-      en: "Computer science and technology foundation across software engineering, networking, and systems."
+      zh: "系统学习软件工程、数据结构、计算机网络与操作系统等计算机科学基础。"
+      en: "Coursework in software engineering, data structures, computer networks, and operating systems."
+  - school:
+      zh: "西安航空职业技术学院"
+      en: "Xi'an Aeronautical Polytechnic Institute"
+    degree:
+      zh: "大专 / 航空机电设备维修"
+      en: "Associate Degree / Aviation Electromechanical Equipment Maintenance"
+    period: "2012-09 - 2015-07"
+    summary:
+      zh: "接受机械、电气控制与航空设备维护等工程基础训练。"
+      en: "Engineering foundation across mechanics, electrical control, and aviation equipment maintenance."
