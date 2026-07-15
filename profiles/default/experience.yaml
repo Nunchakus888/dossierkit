@@ -22,29 +22,42 @@ experiences:
           zh: "面向客服问答、业务查询、流程办理和人工转接，主导平台从规则编排演进为 LLM 驱动业务 Agent，将意图路由、SOP、知识、工具调用与结果回传沉淀为租户可配置能力；支撑客户问题自动解决率达到 70%+，平均 7k+ tokens 对话负载下端到端约 7s，token 消耗下降 60%。"
           en: "Evolved WhatsApp customer service from rule flows to tenant-configurable LLM business Agents across intent routing, SOPs, knowledge, tools, callbacks, and handoff; delivered 70%+ auto-resolution, about 7s end-to-end latency at 7k+ tokens per conversation, and 60% lower token use."
       - title:
-          zh: "企业级 Agentic RAG 与知识自进化"
-          en: "Agentic RAG and Knowledge Flywheel"
+          zh: "企业级 RAG 与 Memory 上下文体系"
+          en: "Enterprise RAG and Memory Context Layer"
         summary:
-          zh: "建设多租户 Agentic RAG，统一文档、QA、网站、附件、商品等知识接入、切分、embedding、召回与重排；以 unknown questions 聚类和 content gap 回流驱动知识库、RAG 与 Skill 迭代，约 50% 聚类结果进入生产优化，高频主题处理覆盖约 70%，自动解决率提升约 30%。"
-          en: "Built multi-tenant Agentic RAG for documents, QA, websites, attachments, and product data, with ingestion, retrieval, reranking, and an unknown-question/content-gap flywheel; 50% of clusters entered production optimization, high-frequency coverage reached 70%, and auto-resolution improved about 30%."
+          zh: "建设面向多租户业务 Agent 的统一知识与记忆层，将可靠知识、会话事实、用户偏好和任务状态按需注入模型上下文。"
+          en: "Built a unified knowledge and memory layer for multi-tenant business Agents, injecting trusted knowledge, conversation facts, user preferences, and task state on demand."
+        details:
+          - title:
+              zh: "RAG 建设"
+              en: "RAG"
+            summary:
+              zh: "统一文档、QA、网站、附件、商品等知识的接入、切分、embedding、召回与重排；在基础检索之上建设 Agentic RAG，由模型按任务规划检索、改写查询、选择知识源并迭代补充证据，提升复杂问题的信息完整性。"
+              en: "Unified ingestion, chunking, embeddings, retrieval, and reranking for documents, QA, websites, attachments, and product data; added model-driven Agentic RAG for retrieval planning, query rewriting, source selection, and iterative evidence gathering."
+          - title:
+              zh: "Memory 建设"
+              en: "Memory"
+            summary:
+              zh: "建设会话级与用户级 Memory，统一事实提取、置信筛选、写入更新、召回注入和租户隔离，将历史结论、用户偏好与任务状态带入连续交互。"
+              en: "Built tenant-isolated session and user Memory with fact extraction, confidence filtering, write/update, and retrieval injection for persistent conclusions, preferences, and task state."
       - title:
           zh: "注意力引导推理 Agent 与复杂任务编排"
           en: "Attentive Reasoning for Complex Workflows"
         summary:
-          zh: "基于 LangChain 有向无环图建设注意力引导推理 Agent，以 Guideline、Journey 和 ARQ 将复杂业务任务拆解为意图、规则、工具、参数与合规判断节点，管理分支依赖、终止条件和异常回退，形成可解释、可回放的多步骤执行链。"
-          en: "Built a LangChain DAG-based attentive reasoning Agent that decomposed workflows into intent, rule, tool, parameter, and compliance decisions, with explicit dependencies, termination, fallbacks, and replayability."
-      - title:
-          zh: "用户与会话 Memory 体系"
-          en: "User and Session Memory"
-        summary:
-          zh: "建设会话级与用户级 Memory，统一事实提取、置信筛选、写入更新、召回注入和租户隔离；将历史结论、用户偏好与任务状态按需带入后续交互，减少重复确认并提升长对话和连续任务的一致性。"
-          en: "Built tenant-isolated session and user Memory for fact extraction, confidence filtering, write/update, and retrieval injection, carrying prior conclusions, preferences, and task state across interactions."
+          zh: "基于 LangChain 有向无环图建设注意力引导推理 Agent，引入 ARQ（Attentive Reasoning Queries）领域化推理蓝图，以针对性查询在关键决策点重申业务约束；通过 condition-action Guideline 管理局部规则，以可分支、回退的 Journey 承载多轮 SOP，按轮匹配相关规则与工具，形成可解释、可回放的复杂任务执行链。"
+          en: "Built a LangChain DAG-based attentive reasoning Agent using Attentive Reasoning Queries (ARQ) domain blueprints to reinstate business constraints at critical decisions; combined condition-action Guidelines with branching, backtracking Journeys and per-turn rule/tool matching for explainable, replayable workflows."
       - title:
           zh: "企业 AI 协作 CLI 与共享上下文平台"
           en: "AI Collaboration CLI and Shared Context"
         summary:
           zh: "主导内部 AI 协作 CLI 与全员共享上下文机制，覆盖生产发布、运维自动化、case 排查、项目组织和工程自检；整合 Skill、MCP、CLI、仓库规范与 Spec/EPIC，将服务、环境和项目上下文沉淀为团队共享能力，推动 AI 开发 Harness 覆盖 40 个仓库。"
           en: "Led an internal AI collaboration CLI and team-wide shared context for releases, operations automation, case diagnosis, project organization, and checks; integrated Skills, MCP, CLI, repository standards, and Spec/EPIC workflows across 40 repositories."
+      - title:
+          zh: "多语言未知问题聚类与知识 Gap 学习平台"
+          en: "Multilingual Unknown-question Clustering and Knowledge-gap Learning"
+        summary:
+          zh: "设计并实现多语言用户问题聚类与主题分析平台，基于 Python、FastAPI、Pydantic 和 MongoDB 构建分层服务，打通数据清洗、语言检测、关键词提取、向量化、降维、聚类、主题归纳与结果持久化；兼容 SentenceTransformer 与 OpenAI 标准 embedding 接口，结合 UMAP、HDBSCAN、BERTopic、c-TF-IDF 与大模型主题生成，并支持 K-Means、层次聚类等可替换算法。通过异步任务、线程池、并发控制和 Webhook 重试保障计算密集型任务稳定运行，引入 Apollo/YAML 动态配置、实验追踪、聚类质量指标、可视化和自动化报告；从早期 HDBSCAN 聚类演进至 LLM 聚类，自主识别知识库 Gap，学习高质量人工会话生成候选知识并提交租户采纳，约 50% 聚类结果进入生产优化，高频主题覆盖约 70%，推动自动解决率提升约 30%。"
+          en: "Built a multilingual unknown-question clustering and knowledge-gap learning platform in Python, FastAPI, Pydantic, and MongoDB, spanning cleaning, language detection, embeddings, dimensionality reduction, clustering, topic synthesis, persistence, experiment tracking, and reports. Combined SentenceTransformer/OpenAI-compatible embeddings with UMAP, HDBSCAN, BERTopic, c-TF-IDF, LLM topic generation, and replaceable K-Means or hierarchical algorithms; stabilized compute-heavy jobs with async workers, concurrency controls, dynamic configuration, and webhook retries. Evolved HDBSCAN into LLM clustering to identify gaps, learn candidate answers from high-quality human conversations, and submit them for tenant adoption; about 50% of clusters entered optimization, high-frequency coverage reached 70%, and auto-resolution improved 30%."
     highlights: []
     tags:
       - "WhatsApp SaaS"
@@ -96,15 +109,15 @@ experiences:
       zh: "上海"
       en: "Shanghai"
     summary:
-      zh: "负责 AI 绘画、模型训练与平台化产品的 Web 工程和微服务架构，参与生成式 AI SaaS 从 0 到 1 建设。"
-      en: "Owned web engineering and microservice architecture for AI image generation, model training, and platform products, contributing to 0-to-1 generative AI SaaS delivery."
+      zh: "负责 AI 绘画、模型训练与平台化产品的服务端工程和微服务架构，参与生成式 AI SaaS 从 0 到 1 建设。"
+      en: "Owned backend engineering and microservice architecture for AI image generation, model training, and platform products, contributing to 0-to-1 generative AI SaaS delivery."
     featuredProjects:
       - title:
-          zh: "妙画 AIGC SaaS 与模型服务链路"
-          en: "Miaohua AIGC SaaS and Model-serving Workflow"
+          zh: "秒画 AIGC SaaS 与模型服务工程"
+          en: "miaohua AIGC SaaS and Model-serving Engineering"
         summary:
-          zh: "面向自研作画模型、LoRA 训练和第三方开源模型，主导前后端架构与服务拆分，将 Stable Diffusion / PyTorch 推理、任务队列、模型文件、结果后处理和日志监控组织为可扩展的异步生产链路，支撑 Web、H5 与小程序交付。"
-          en: "Led service architecture for proprietary image models, LoRA, and open-source integration, organizing Stable Diffusion/PyTorch inference, queues, model files, post-processing, and observability into asynchronous Web, H5, and mini-program delivery."
+          zh: "围绕自研作画模型、LoRA 训练和开源模型接入，负责工程侧推理服务对接与服务化架构，建设模型参数适配、Prompt 处理、异步任务队列、模型文件存储、结果后处理、链路日志和监控体系；制定微服务 RPC、负载均衡与吞吐优化方案，支撑 Stable Diffusion / PyTorch 模型稳定进入 SaaS 生产环境。"
+          en: "Owned engineering integration and service architecture for proprietary image models, LoRA training, and open-source models, covering parameter adaptation, prompt processing, async queues, model storage, post-processing, trace logs, and monitoring; defined RPC, load balancing, and throughput optimization for stable Stable Diffusion/PyTorch production serving."
     highlights: []
     tags:
       - "AIGC SaaS"

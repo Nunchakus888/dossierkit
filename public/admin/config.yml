@@ -231,6 +231,33 @@ collections:
                       - label: EN
                         name: en
                         widget: text
+                  - label: Project Details
+                    name: details
+                    widget: list
+                    required: false
+                    fields:
+                      - label: Detail Title
+                        name: title
+                        widget: object
+                        required: true
+                        fields:
+                          - label: ZH
+                            name: zh
+                            widget: string
+                          - label: EN
+                            name: en
+                            widget: string
+                      - label: Detail Summary
+                        name: summary
+                        widget: object
+                        required: true
+                        fields:
+                          - label: ZH
+                            name: zh
+                            widget: text
+                          - label: EN
+                            name: en
+                            widget: text
               - label: Highlights
                 name: highlights
                 widget: list

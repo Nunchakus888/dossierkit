@@ -72,7 +72,15 @@ export const experienceSchema = z.object({
           .array(
             z.object({
               title: localizedStringSchema,
-              summary: localizedStringSchema
+              summary: localizedStringSchema,
+              details: z
+                .array(
+                  z.object({
+                    title: localizedStringSchema,
+                    summary: localizedStringSchema
+                  })
+                )
+                .default([])
             })
           )
           .default([]),

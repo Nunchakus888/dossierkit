@@ -21,11 +21,11 @@ metrics:
       zh: "团队范围"
       en: "Team scope"
     value:
-      zh: "20 人产研 / 3 人 Agent 小组"
-      en: "20-person product-engineering / 3-person Agent squad"
+      zh: "20 人产研 / 4 人 Agent 小组"
+      en: "20-person product-engineering / 4-person Agent squad"
     description:
-      zh: "带领 3 人 Agent 小组，协同 20 人产研团队。"
-      en: "Led a 3-person Agent squad within a 20-person product-engineering team."
+      zh: "带领 4 人 Agent 小组，协同 20 人产研团队。"
+      en: "Led a 4-person Agent squad within a 20-person product-engineering team."
   - label:
       zh: "Harness 覆盖"
       en: "Harness coverage"

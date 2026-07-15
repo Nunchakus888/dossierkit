@@ -1,5 +1,4 @@
 ---
-import BrandMark from "../common/BrandMark.astro";
 import Icon from "../common/Icon.astro";
 import type { Locale } from "../../lib/config";
 import { labels, localePath, localize, otherLocale, switchLocalePath } from "../../lib/i18n";
@@ -24,9 +23,6 @@ const brandLabel =
     : pack.navigation.brand.labelMode === "none"
       ? ""
       : configuredBrand;
-const brandParts = brandLabel.trim().split(/\s+/).filter(Boolean);
-const brandAccent = brandParts.length > 1 ? brandParts.at(-1) || "" : brandLabel === "DossierKit" ? "Kit" : "";
-const brandFirst = brandParts.length > 1 ? brandParts.slice(0, -1).join(" ") : brandLabel === "DossierKit" ? "Dossier" : brandLabel;
 
 function navHref(path: string, external?: boolean) {
   if (external || /^https?:\/\//.test(path)) return path;
@@ -44,12 +40,7 @@ function isActive(path: string, external?: boolean) {
 <header class="site-header no-print">
   <div class="page-shell nav-card">
     <a class="brand" href={localePath(locale)} aria-label={localize(pack.profile.name, locale)}>
-      <BrandMark label={brandLabel || "DossierKit"} />
-      {brandLabel && (
-        <span class="brand-word">
-          <span>{brandFirst}</span>{brandAccent && <span>{brandAccent}</span>}
-        </span>
-      )}
+      {brandLabel && <span class="brand-word">{brandLabel}</span>}
     </a>
 
     <nav class="desktop-nav" aria-label="Primary navigation">
@@ -130,17 +121,14 @@ function isActive(path: string, external?: boolean) {
   }
 
   .brand-word {
-    font-size: clamp(1.5rem, 2vw, 2rem);
-    font-weight: 850;
-    letter-spacing: 0;
-    color: var(--color-foreground);
-  }
-
-  .brand-word span + span {
-    margin-left: 0.16em;
-    background: var(--gradient-primary);
+    background: linear-gradient(100deg, #207f72 0%, #2fb98f 44%, #55bea2 72%, #2b9f98 100%);
     background-clip: text;
-    color: var(--color-mint);
+    color: transparent;
+    font-family: "Pacifico", "Brush Script MT", cursive;
+    font-size: clamp(1.65rem, 2vw, 2.08rem);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: 0;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -310,7 +298,7 @@ function isActive(path: string, external?: boolean) {
     }
 
     .brand-word {
-      font-size: 1.18rem;
+      font-size: 1.42rem;
     }
   }
 </style>

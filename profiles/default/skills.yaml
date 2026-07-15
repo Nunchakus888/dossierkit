@@ -1,34 +1,33 @@
 skillGroups:
   - id: "agent-platform"
     title:
-      zh: "Agent 平台架构"
-      en: "Agent Platform Architecture"
+      zh: "Agent 平台与 Harness"
+      en: "Agent Platform and Harness"
     description:
-      zh: "覆盖模型驱动运行时、Agentic RAG、多 Agent 编排、上下文与工具执行。"
-      en: "Model-driven runtime, Agentic RAG, multi-agent orchestration, context, and tool execution."
+      zh: "覆盖 Agent 循环、上下文、工具执行、评测回放与生产可观测。"
+      en: "Agent loops, context, tool execution, replay evaluation, and production observability."
     skills:
-      - "Agent Runtime"
+      - "Agent Harness / Loop Engineering"
       - "Agentic RAG / Memory"
       - "Multi-agent Orchestration"
-      - "Workflow Orchestration"
-      - "Tool-use / Function Calling"
+      - "Tool-use"
       - "MCP / Skills"
-      - "Human-in-the-loop"
-  - id: "production-governance"
-    title:
-      zh: "生产治理与质量运营"
-      en: "Production Governance and Quality Operations"
-    description:
-      zh: "将多租户、权限、审计、评测、可观测和成本治理纳入统一运行边界。"
-      en: "Unified operating boundaries for tenancy, permission, audit, evaluation, observability, and cost."
-    skills:
-      - "Multi-tenant Isolation"
-      - "Permission Model"
-      - "Tool Registry"
-      - "Audit Trail / Guardrails"
-      - "Replay Evaluation / Golden Set"
+      - "Replay Evaluation"
       - "Trace Observability"
-      - "Usage / Cost Governance"
+  - id: "retrieval-data-algorithms"
+    title:
+      zh: "检索与数据算法"
+      en: "Retrieval and Data Algorithms"
+    description:
+      zh: "覆盖检索质量、语义表示、聚类、主题分析和知识反馈闭环。"
+      en: "Retrieval quality, semantic representation, clustering, topic analysis, and knowledge feedback loops."
+    skills:
+      - "Embeddings / Reranking"
+      - "UMAP / HDBSCAN"
+      - "BERTopic / c-TF-IDF"
+      - "K-Means / Hierarchical Clustering"
+      - "LLM Clustering / Topic Modeling"
+      - "Knowledge-gap Learning"
   - id: "platform-engineering"
     title:
       zh: "平台工程与企业集成"
@@ -47,31 +46,14 @@ skillGroups:
       - "Alibaba Cloud / Google Cloud"
   - id: "model-data-engineering"
     title:
-      zh: "模型与数据工程"
-      en: "Model and Data Engineering"
+      zh: "模型工程与推理服务"
+      en: "Model Engineering and Serving"
     description:
-      zh: "面向多模型接入、上下文工程、检索质量、推理链路与数据反馈闭环。"
-      en: "Multi-model integration, context engineering, retrieval quality, inference workflows, and data feedback loops."
+      zh: "面向多模型接入、路由、上下文工程、推理服务与生产运营。"
+      en: "Multi-model integration, routing, context engineering, inference serving, and production operations."
     skills:
       - "Model APIs / Routing"
       - "Context Engineering"
-      - "RAG Retrieval / Reranking"
       - "PyTorch / Stable Diffusion"
       - "Gemini"
-      - "Data Feedback Loops"
       - "LLMOps"
-  - id: "engineering-leadership"
-    title:
-      zh: "技术领导与工程治理"
-      en: "Engineering Leadership and Governance"
-    description:
-      zh: "通过架构规则、规格驱动、验收门禁和跨团队协作推进平台稳定演进。"
-      en: "Stable platform evolution through architecture rules, specification-driven delivery, acceptance gates, and cross-functional collaboration."
-    skills:
-      - "Platform Roadmap"
-      - "Architecture Rules"
-      - "Spec / EPIC Workflow"
-      - "Release Gates"
-      - "Cross-functional Delivery"
-      - "AI Development Harness"
-      - "Team Standards"

@@ -5,7 +5,7 @@ translationKey: "aigc-saas-platform"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-07-01"
 title: "AIGC SaaS and Model-serving Platform"
-summary: "Owned web engineering, microservice decomposition, model-serving call chains, and platform operations for 0-to-1 generative AI SaaS delivery."
+summary: "Owned backend engineering, microservice decomposition, inference call chains, and platform operations for 0-to-1 generative AI SaaS delivery."
 role: "SenseTime / AIGC SaaS / Platform Architecture / Model Serving"
 period: "2021-09 - 2024-05"
 confidentiality: "sanitized"
@@ -22,19 +22,18 @@ targetRoles:
 
 ## Overview
 
-At SenseTime AIGC, contributed to 0-to-1 generative AI SaaS delivery across web engineering, microservice decomposition, model-serving call chains, task queues, logging, monitoring, and platform operations.
+At SenseTime AIGC, contributed to 0-to-1 delivery of the miaohua generative AI SaaS, owning engineering integration with inference services, microservice decomposition, async jobs, logging, monitoring, and platform operations.
 
 The core value was AI productization: connecting model inference, task state, file storage, post-processing, and user experience into usable, scalable, and operable product systems.
 
 ## Platform Scope
 
-At SenseTime, the AIGC product work included:
+The miaohua AIGC product work included:
 
 1. AI image generation platform supporting proprietary image models, LoRA training, and third-party open-source model integration.
-2. Web / H5 / mini-program product surfaces and reusable component systems.
-3. Model serving around Stable Diffusion / PyTorch workflows, including parameter formatting, prompt optimization, task queues, model-file storage, and result post-processing.
-4. Microservice boundaries for identity, model inference, model-file storage, and task delivery.
-5. Engineering governance across containerized deployment, logging, monitoring, service communication, load balancing, and throughput optimization.
+2. Inference integration around Stable Diffusion / PyTorch, including parameter adaptation, prompt optimization, async jobs, model-file storage, and result post-processing.
+3. Microservice boundaries and RPC contracts for identity, model inference, model-file storage, and task delivery.
+4. Production engineering across trace logging, monitoring and alerting, containerized deployment, load balancing, and throughput optimization.
 
 ## Engineering Tradeoffs
 
@@ -43,8 +42,8 @@ The key challenge was bringing generative models into a reliable product system:
 - Model call chains needed clear records of parameters, inputs, outputs, latency, and failure reasons.
 - Task queues, model services, and file storage had to be separated so long-running inference would not block the web path.
 - Prompting, model parameters, post-processing, watermarking, QR overlays, and object storage had to become a reusable pipeline.
-- The web experience had to balance ease of use, responsive layouts, and complex task-state feedback.
+- Identity, inference, file, and task-delivery services required explicit RPC contracts, load-balancing policies, scaling boundaries, and fault isolation.
 
 ## Platform Value
 
-Established model-serving engineering, long-running task orchestration, cross-platform product experience, and platform operations, extending these patterns into model-call governance, task observability, cost control, and production release workflows for enterprise Agent platforms.
+Established model-serving engineering, long-running task orchestration, inference observability, and platform operations, extending these patterns into model-call governance, cost control, and production release workflows for enterprise Agent platforms.
