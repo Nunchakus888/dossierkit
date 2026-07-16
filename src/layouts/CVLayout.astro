@@ -425,6 +425,10 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
     padding-top: 11px;
   }
 
+  .skills-grid > div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
   .skills-grid strong {
     font-size: 0.95rem;
   }
@@ -634,6 +638,11 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
     .skills-section {
       break-before: auto;
       margin-top: 8px !important;
+    }
+
+    .cv-zh .skills-section {
+      break-before: page;
+      page-break-before: always;
     }
 
     .skills-grid {

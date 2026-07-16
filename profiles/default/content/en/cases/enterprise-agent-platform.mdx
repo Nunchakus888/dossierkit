@@ -26,28 +26,28 @@ YC provides enterprise SaaS services across multiple industries, with AI Agent c
 
 The platform supports 2k+ tenants, 230k+ users, a production peak of 60k requests/day, and about 7s average end-to-end response time.
 
-## 0-to-1 AI Lead-generation Agent Platform
+## 0-to-1 Launch of the First SaaS AI Agent Product
 
-Led the company's first AI lead-generation Agent product from 0 to 1, evolving a Dify workflow solution into a controllable multi-tenant Agent platform. Tenant-configurable capabilities for marketing conversations, lead identification, data collection, qualification, business queries, and human handoff created a product that could be sold, replicated, and operated at scale.
+Led the company's first AI Agent product from 0 to 1 in its SaaS business, evolving a Dify workflow solution into a controllable multi-tenant Agent platform. Configurable capabilities for marketing, ecommerce shopping assistance, lead identification, data collection, qualification, business queries, and human handoff established repeatable delivery across industries.
 
 The core architecture has four layers:
 
-1. Configuration-driven Agent factory: creates Agents by tenant_id, chatbot_id, and session_id, dynamically assembling language, tone, handoff, ActionBook, RAG, tools, iteration limits, and business metadata.
-2. Behavior and workflow control: Guidelines express local business rules, while Journeys carry branching and backtracking multi-turn SOPs; each turn loads only the relevant rules and tools to reduce context overhead and configuration conflicts.
-3. Attentive reasoning: ARQ (Attentive Reasoning Queries) provides domain decision blueprints for intent, rule applicability, tool suitability, parameter provenance, required fields, and response compliance, producing structured and auditable artifacts.
-4. Execution and operations loop: async sessions return a correlation ID immediately, then complete Agent creation, event processing, latest-wins cancellation, and terminal callbacks in the background; evaluation cache, session evaluation, response analysis, inspections, and token usage support release evaluation, cost analysis, and issue review.
+1. Configuration-driven Agent factory: supports tenant- and Agent-level customization across Instructions, Actions, knowledge bases, Skills, MCP, language style, and human handoff on one platform.
+2. Behavior and reasoning control: Guidelines express business rules, Journeys carry branching and backtracking multi-turn SOPs, and ARQ (Attentive Reasoning Queries) provides structured decisions for intent, tools, parameter provenance, and response compliance.
+3. Engineering controls and runtime assurance: an Agent Harness standardizes engineering rules, tool boundaries, recovery, and release validation to reduce risk in complex tasks and enterprise-system writes.
+4. Observability and quality operations: an operations console presents conversation flows, tool calls, response quality, latency, and cost, while pre-release evaluation, production replay, issue attribution, and version comparison drive continuous optimization.
 
-Tool execution is constrained by explicit safety boundaries. Applicability, parameter provenance, required fields, and guessing risk are checked before a call; when information is incomplete, the Agent asks for clarification instead of writing uncertain data into business systems. Correlation IDs, events, ARQ artifacts, inspections, and callback payloads span the full response lifecycle, with reporting across 123,071 inspections, 61,585 sessions, and 1.417B tokens.
+The system turns operational traces into comparable task-success, tool-accuracy, latency, and token-cost metrics by tenant, scenario, and version, providing the optimization foundation for 70%+ auto-resolution.
 
 ## Platform Scope
 
 Core capabilities include:
 
-1. Agent Runtime: session-level runtime, complex task handling, termination conditions, concurrency control, async execution, and callback delivery.
-2. Tool / MCP / Skills: HTTP Tool, MCP adapter, dynamic Skill load/unload, tool gating, and side-effect planner.
-3. RAG / Memory: documents, QA, websites, attachments, products, session memory, and context augmentation.
-4. Observability / Cost: correlation_id, events, inspection, token usage, callback payloads, and load-test metrics.
-5. Quality Governance: production issue cases, content gaps, human review, knowledge/Skill/Memory updates, replay evaluation, and release gates.
+1. Agent orchestration: multi-turn tasks, tool collaboration, async execution, concurrency, and termination management.
+2. Configuration and extensibility: Instructions, Actions, Skills, MCP, tool boundaries, and tenant-level customization.
+3. RAG / Memory: unified knowledge ingestion, retrieval augmentation, conversation facts, user preferences, and task state.
+4. Quality and observability: replay evaluation, issue attribution, version comparison, response quality, latency, and cost analysis.
+5. Enterprise integration: business APIs, multi-channel delivery, human handoff, permissions, and audit boundaries.
 
 ## Data Feedback and Knowledge Evolution
 
@@ -69,13 +69,19 @@ The architecture continuously balances control, task quality, context efficiency
 
 YC has a product-engineering team of about 20 people. The AI Agent track included a 4-person squad. The AI development harness was expanded across 40 repositories so AI-assisted engineering became part of a controlled delivery process.
 
+The collaboration platform covers three areas:
+
+1. Engineering collaboration: a shared CLI standardizes project organization, code-context loading, engineering checks, and case reproduction across repositories.
+2. Delivery and operations: build and release, environment checks, operations automation, and incident diagnosis are packaged as reusable commands and Skills.
+3. Shared context: repository rules, service dependencies, environment configuration, and Spec / EPIC context are shared through Skills, MCP, and CLI, reducing repeated discovery and verbal handoffs.
+
 The governance model has three layers:
 
 1. Outer Loop: architecture rules, language profiles, layering boundaries, naming, error handling, logging, and observability expectations.
 2. Inner Loop: Spec / EPIC workflow for non-trivial changes, including goals, non-goals, acceptance criteria, phases, tasks, and status.
 3. Supervisor Gate: change summary, changed files, self-check result, AI Harness trace, and acceptance checklist as delivery gates.
 
-Unified specifications, process checks, and delivery gates reduce architecture drift, runaway refactors, inconsistent quality, and acceptance gaps while improving review efficiency, delivery consistency, and rollback readiness.
+Shared context, process checks, and delivery gates reduce architecture drift, runaway refactors, inconsistent quality, and acceptance gaps while improving requirement delivery, issue resolution, reviews, and rollback readiness.
 
 ## Stack
 

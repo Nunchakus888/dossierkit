@@ -41,42 +41,80 @@ experiences:
               zh: "建设会话级与用户级 Memory，统一事实提取、置信筛选、写入更新、召回注入和租户隔离，将历史结论、用户偏好与任务状态带入连续交互。"
               en: "Built tenant-isolated session and user Memory with fact extraction, confidence filtering, write/update, and retrieval injection for persistent conclusions, preferences, and task state."
       - title:
-          zh: "AI 获客 Agent 平台 0-1 建设"
-          en: "0-to-1 AI Lead-generation Agent Platform"
+          zh: "首个 SaaS AI Agent 产品 0-1 建设"
+          en: "0-to-1 Launch of the First SaaS AI Agent Product"
         summary:
-          zh: "主导公司首个 AI 获客 Agent 产品从 0 到 1 建设，推动 Dify 工作流方案升级为自主可控的多租户 Agent 平台，将营销咨询、线索识别、信息收集、资格判断、业务查询和人工转接沉淀为可配置能力，形成可规模化销售与复制交付的 AI 获客产品。"
-          en: "Led the company's first AI lead-generation Agent product from 0 to 1, replacing a Dify workflow with a controllable multi-tenant platform for marketing, lead capture, qualification, business queries, and handoff, establishing an AI acquisition product for repeatable sales and delivery."
+          zh: "主导公司首个 AI Agent 产品在 SaaS 业务中从 0 到 1 落地，推动 Dify 工作流升级为自主可控的多租户 Agent 平台，覆盖营销咨询、电商导购、线索识别、信息收集、资格判断、业务查询与人工转接，沉淀面向多行业复制交付的产品能力。"
+          en: "Led the company's first AI Agent product from 0 to 1 in its SaaS business, evolving a Dify workflow into a controllable multi-tenant platform for marketing, ecommerce shopping assistance, lead identification, data collection, qualification, business queries, and human handoff, with repeatable delivery across industries."
         details:
           - title:
-              zh: "可控推理体系"
-              en: "Controlled reasoning"
+              zh: "配置驱动与可控推理"
+              en: "Configuration and controlled reasoning"
             summary:
-              zh: "按 tenant/chatbot/session 动态装配语言、语气、RAG、工具、handover 和业务元数据；以 Guideline 管理规则、Journey 承载多轮 SOP，并用 ARQ（Attentive Reasoning Queries）对意图、工具、参数来源和响应合规形成可审计判断。"
-              en: "Assembled language, RAG, tools, handoff, and metadata by tenant, chatbot, and session; combined Guidelines, branching Journeys, and Attentive Reasoning Queries (ARQ) for auditable intent, tool, parameter-provenance, and compliance decisions."
+              zh: "建设配置驱动的 Agent 工厂，支持租户与 Agent 维度个性化配置 Instructions、Actions、知识库、Skill、MCP、语言风格与人工转接；以 Guideline、Journey 和 ARQ 管理业务规则、多轮流程及关键决策，兼顾灵活交付与行为可控。"
+              en: "Built a configuration-driven Agent factory with tenant- and Agent-level customization across Instructions, Actions, knowledge bases, Skills, MCP, language style, and human handoff; used Guidelines, Journeys, and ARQ to govern rules, multi-turn workflows, and critical decisions."
           - title:
-              zh: "可靠执行边界"
-              en: "Reliable execution"
+              zh: "工程约束与运行保障"
+              en: "Engineering controls and runtime assurance"
             summary:
-              zh: "建设异步会话全生命周期与 latest-wins 机制，以 correlation_id 串联后台执行和 callback；工具调用前校验适用性、参数来源、必填字段和猜测风险，降低错误调用与业务系统误写。"
-              en: "Built an async, latest-wins session lifecycle linked by correlation IDs and callbacks; gated tools by applicability, parameter provenance, required fields, and guessing risk to prevent incorrect calls and business-system writes."
+              zh: "以 Agent Harness 统一工程规范、工具边界、异常恢复与发布校验，配套可观测后台呈现会话链路、工具调用、响应质量、耗时与成本，保障复杂任务稳定执行并降低业务系统误调用风险。"
+              en: "Used an Agent Harness to standardize engineering rules, tool boundaries, recovery, and release validation, backed by an observability console for conversation flows, tool calls, quality, latency, and cost."
           - title:
-              zh: "评测运营闭环"
-              en: "Evaluation operations"
+              zh: "质量运营闭环"
+              en: "Quality operations"
             summary:
-              zh: "将 evaluation、inspection 和 token usage 纳入生产链路，以 correlation_id、events、ARQ artifacts 和 callback payload 支撑评测与线上问题复盘；报表覆盖 123,071 次 inspection、61,585 个 session 和 1.417B tokens。"
-              en: "Embedded evaluation, inspections, and token usage into production, linking issue review through correlation IDs, events, ARQ artifacts, and callbacks across 123,071 inspections, 61,585 sessions, and 1.417B tokens."
+              zh: "建立上线前评测、线上回放、问题归因与成本分析闭环，支持按租户、场景和版本对比任务成功率、工具准确性、响应耗时与 token 成本，将过程数据转化为持续优化依据，支撑平台自动解决率提升至 70%+。"
+              en: "Established pre-release evaluation, production replay, issue attribution, and cost analysis, comparing task success, tool accuracy, latency, and token cost by tenant, scenario, and version to support continuous optimization and 70%+ auto-resolution."
       - title:
-          zh: "企业 AI 协作 CLI 与共享上下文平台"
-          en: "AI Collaboration CLI and Shared Context"
+          zh: "AI 开发 Harness 与共享上下文平台"
+          en: "AI Development Harness and Shared Context Platform"
         summary:
-          zh: "主导内部 AI 协作 CLI 与全员共享上下文机制，覆盖生产发布、运维自动化、case 排查、项目组织和工程自检；整合 Skill、MCP、CLI、仓库规范与 Spec/EPIC，将服务、环境和项目上下文沉淀为团队共享能力，推动 AI 开发 Harness 覆盖 40 个仓库。"
-          en: "Led an internal AI collaboration CLI and team-wide shared context for releases, operations automation, case diagnosis, project organization, and checks; integrated Skills, MCP, CLI, repository standards, and Spec/EPIC workflows across 40 repositories."
+          zh: "主导企业内部 AI 开发 Harness 与 CLI 平台建设，以统一上下文连接研发、测试、发布与运维流程，覆盖 40 个仓库，减少跨角色信息同步、环境确认和重复排查成本。"
+          en: "Led an internal AI development Harness and CLI platform that connected engineering, testing, release, and operations through shared context across 40 repositories, reducing repeated context gathering and diagnosis."
+        details:
+          - title:
+              zh: "研发协作"
+              en: "Engineering collaboration"
+            summary:
+              zh: "通过统一 CLI 封装项目组织、代码上下文加载、工程自检与 case 复现，为不同仓库提供一致的 AI 协作入口。"
+              en: "Standardized project organization, code-context loading, engineering checks, and case reproduction through a shared CLI across repositories."
+          - title:
+              zh: "交付与运维"
+              en: "Delivery and operations"
+            summary:
+              zh: "串联构建发布、环境检查、运维自动化与故障诊断，将高频流程沉淀为可复用命令与 Skill。"
+              en: "Connected build and release, environment checks, operations automation, and incident diagnosis through reusable commands and Skills."
+          - title:
+              zh: "共享上下文"
+              en: "Shared context"
+            summary:
+              zh: "将仓库规范、服务依赖、环境配置和 Spec/EPIC 通过 Skill、MCP 与 CLI 供产研共享，减少重复查找与口头同步，提升需求交付和问题闭环效率。"
+              en: "Shared repository rules, service dependencies, environment configuration, and Spec/EPIC context through Skills, MCP, and CLI, improving delivery and issue-resolution flow."
       - title:
           zh: "多语言未知问题聚类与知识 Gap 学习平台"
           en: "Multilingual Unknown-question Clustering and Knowledge-gap Learning"
         summary:
-          zh: "设计并实现多语言用户问题聚类与主题分析平台，基于 Python、FastAPI、Pydantic 和 MongoDB 构建分层服务，打通数据清洗、语言检测、关键词提取、向量化、降维、聚类、主题归纳与结果持久化；兼容 SentenceTransformer 与 OpenAI 标准 embedding 接口，结合 UMAP、HDBSCAN、BERTopic、c-TF-IDF 与大模型主题生成，并支持 K-Means、层次聚类等可替换算法。通过异步任务、线程池、并发控制和 Webhook 重试保障计算密集型任务稳定运行，引入 Apollo/YAML 动态配置、实验追踪、聚类质量指标、可视化和自动化报告；从早期 HDBSCAN 聚类演进至 LLM 聚类，自主识别知识库 Gap，学习高质量人工会话生成候选知识并提交租户采纳，约 50% 聚类结果进入生产优化，高频主题覆盖约 70%，推动自动解决率提升约 30%。"
-          en: "Built a multilingual unknown-question clustering and knowledge-gap learning platform in Python, FastAPI, Pydantic, and MongoDB across cleaning, embeddings, UMAP/HDBSCAN, BERTopic, c-TF-IDF, LLM clustering, topic synthesis, persistence, experiment tracking, and reports. Stabilized compute workloads with async workers, concurrency controls, dynamic configuration, and webhook retries while supporting SentenceTransformer/OpenAI-compatible embeddings and replaceable K-Means or hierarchical algorithms. Evolved HDBSCAN into LLM clustering to detect gaps and learn candidate answers from high-quality human conversations for tenant adoption; about 50% of clusters entered optimization, high-frequency coverage reached 70%, and auto-resolution improved 30%."
+          zh: "建设多语言未知问题聚类与知识 Gap 学习平台，将分散的未解决问题转化为可运营主题和候选知识，形成从问题发现、主题归纳、租户采纳到知识回写的持续学习闭环。"
+          en: "Built a multilingual unknown-question clustering and knowledge-gap learning platform that turned unresolved questions into actionable themes and candidate knowledge across discovery, synthesis, tenant adoption, and write-back."
+        details:
+          - title:
+              zh: "算法体系"
+              en: "Algorithm pipeline"
+            summary:
+              zh: "统一多语言清洗、embedding、UMAP/HDBSCAN、BERTopic/c-TF-IDF 与 LLM 聚类，兼容 SentenceTransformer 和 OpenAI 标准接口，支持主题归纳与可替换聚类策略。"
+              en: "Unified multilingual cleaning, embeddings, UMAP/HDBSCAN, BERTopic/c-TF-IDF, and LLM clustering with SentenceTransformer and OpenAI-compatible interfaces."
+          - title:
+              zh: "工程平台"
+              en: "Engineering platform"
+            summary:
+              zh: "基于 Python、FastAPI、Pydantic 和 MongoDB 建设异步任务平台，以并发控制、动态配置、Webhook 重试、实验追踪和质量指标保障计算任务稳定运行。"
+              en: "Built an async Python, FastAPI, Pydantic, and MongoDB platform with concurrency controls, dynamic configuration, webhook retries, experiment tracking, and quality metrics."
+          - title:
+              zh: "知识自进化与成效"
+              en: "Knowledge evolution and outcomes"
+            summary:
+              zh: "从 HDBSCAN 演进至 LLM 聚类，自主识别知识 Gap，并从高质量人工会话学习候选答案供租户采纳；约 50% 聚类结果进入生产优化，高频主题覆盖约 70%，推动自动解决率提升约 30%。"
+              en: "Evolved HDBSCAN into LLM clustering to identify knowledge gaps and learn candidate answers from high-quality human conversations; about 50% of clusters entered production optimization, high-frequency coverage reached 70%, and auto-resolution improved 30%."
     highlights: []
     tags:
       - "WhatsApp SaaS"

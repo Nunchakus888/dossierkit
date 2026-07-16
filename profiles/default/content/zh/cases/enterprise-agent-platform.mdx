@@ -26,28 +26,28 @@ YC 提供面向多行业的企业 SaaS 服务，核心场景为 AI Agent 客服�
 
 平台已支撑 2k+ 租户、23w+ 用户，生产环境峰值 6w 请求/天，端到端平均响应约 7s。
 
-## AI 获客 Agent 平台 0-1 建设
+## 首个 SaaS AI Agent 产品 0-1 建设
 
-主导公司首个 AI 获客 Agent 产品从 0 到 1 建设，推动既有 Dify 工作流方案升级为自主可控的多租户 Agent 平台。围绕营销咨询、线索识别、信息收集、资格判断、业务查询和人工转接沉淀租户可配置能力，形成可规模化销售、复制交付和持续运营的 AI 获客产品。
+主导公司首个 AI Agent 产品在 SaaS 业务中从 0 到 1 落地，推动既有 Dify 工作流方案升级为自主可控的多租户 Agent 平台。围绕营销咨询、电商导购、线索识别、信息收集、资格判断、业务查询和人工转接沉淀可配置能力，形成面向多行业复制交付和持续运营的 Agent 产品。
 
 核心架构由四层组成：
 
-1. 配置驱动的 Agent 工厂：按 tenant_id、chatbot_id 和 session_id 创建 Agent，动态装配语言、语气、handover、ActionBook、RAG、工具、最大迭代次数和业务元数据。
-2. 行为与流程控制：用 Guideline 表达局部业务规则，用 Journey 承载可分支、回退的多轮 SOP；每轮只加载相关规则与工具，降低上下文负担和配置冲突。
-3. 注意力引导推理：将 ARQ（Attentive Reasoning Queries）作为领域化决策蓝图，在意图、规则适用性、工具适用性、参数来源、必填字段和响应合规等关键节点生成结构化判断与可审计 artifacts。
-4. 执行与运营闭环：异步会话即时返回 correlation_id，后台完成 Agent 创建、事件处理、latest-wins 取消和 callback 终态回传；evaluation cache、Session Evaluator、response analysis、inspection 与 token usage 共同支撑上线评测、成本分析和问题复盘。
+1. 配置驱动的 Agent 工厂：支持租户与 Agent 维度个性化配置 Instructions、Actions、知识库、Skill、MCP、语言风格和人工转接，在统一平台上适配不同行业与业务场景。
+2. 行为与推理控制：用 Guideline 表达业务规则，用 Journey 承载可分支、回退的多轮 SOP，并以 ARQ（Attentive Reasoning Queries）在意图、工具、参数来源和响应合规等关键节点形成结构化判断。
+3. 工程约束与运行保障：以 Agent Harness 统一工程规范、工具边界、异常恢复和发布校验，降低复杂任务执行与企业系统写入风险。
+4. 可观测与质量运营：配套可观测后台呈现会话链路、工具调用、响应质量、耗时和成本，通过上线前评测、线上回放、问题归因和版本对比推动持续优化。
 
-工具执行被约束在明确安全边界内：调用前校验业务适用性、参数来源、必填字段和猜测风险，在信息不足时优先补充询问，降低错误调用和业务系统误写。correlation_id、events、ARQ artifacts、inspection 与 callback payload 贯穿一次响应的完整执行链，相关报表覆盖 123,071 次 inspection、61,585 个 session 和 1.417B tokens。
+该体系将运行日志转化为可比较的任务成功率、工具准确性、响应耗时和 token 成本指标，支持按租户、场景与版本评估变更效果，为平台自动解决率提升至 70%+ 提供持续优化依据。
 
 ## 平台范围
 
 核心能力覆盖：
 
-1. Agent Runtime：会话级 runtime、复杂任务处理、终止条件、并发控制、异步执行和 callback 回传。
-2. Tool / MCP / Skills：HTTP Tool、MCP adapter、Skill 动态加载卸载、tool gating 和 side-effect planner。
-3. RAG / Memory：文档、QA、网站、附件、商品、session-memory 等多类型知识和上下文增强。
-4. Observability / Cost：correlation_id、events、inspection、token usage、callback payload 和压测指标。
-5. Quality Governance：线上问题案例、content gap、人工审核、知识/Skill/Memory 更新、评测回放和发布门禁。
+1. Agent 编排：多轮任务、工具协作、异步执行、并发控制与终止管理。
+2. 配置与扩展：Instructions、Actions、Skill、MCP、工具边界和租户级个性化。
+3. RAG / Memory：统一知识接入、检索增强、会话事实、用户偏好和任务状态管理。
+4. 质量与可观测：评测回放、问题归因、版本对比、响应质量、耗时和成本分析。
+5. 企业集成：业务 API、多渠道接入、人工转接、权限与审计边界。
 
 ## 数据反馈与知识自进化
 
@@ -69,13 +69,19 @@ YC 提供面向多行业的企业 SaaS 服务，核心场景为 AI Agent 客服�
 
 YC 产研团队约 20 人，AI Agent 方向带领 4 人小组。同时推动 AI 开发 Harness 覆盖 40 个仓库，把 AI 辅助开发纳入稳定工程流程。
 
+协作平台围绕三个环节建设：
+
+1. 研发协作：通过统一 CLI 封装项目组织、代码上下文加载、工程自检与 case 复现，为不同仓库提供一致的 AI 协作入口。
+2. 交付与运维：串联构建发布、环境检查、运维自动化与故障诊断，将高频流程沉淀为可复用命令与 Skill。
+3. 共享上下文：将仓库规范、服务依赖、环境配置和 Spec / EPIC 通过 Skill、MCP 与 CLI 供产研共享，减少重复查找与口头同步。
+
 治理机制分为三层：
 
 1. Outer Loop：架构规则、语言规范、分层边界、命名、错误处理、日志和可观测要求。
 2. Inner Loop：用 Spec / EPIC 拆解非平凡需求，明确目标、非目标、验收标准、任务阶段和状态。
 3. Supervisor Gate：以变更摘要、文件清单、自检结果、AI Harness trace 和验收 checklist 作为交付门禁。
 
-通过统一规格、过程检查和交付门禁，降低架构漂移、失控重构、质量不一致和验收缺口，提升评审效率、交付一致性和回滚能力。
+通过统一上下文、过程检查和交付门禁，降低架构漂移、失控重构、质量不一致和验收缺口，提升需求交付、问题闭环、评审和回滚效率。
 
 ## 技术栈
 
