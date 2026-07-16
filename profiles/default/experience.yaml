@@ -41,11 +41,12 @@ experiences:
               zh: "建设会话级与用户级 Memory，统一事实提取、置信筛选、写入更新、召回注入和租户隔离，将历史结论、用户偏好与任务状态带入连续交互。"
               en: "Built tenant-isolated session and user Memory with fact extraction, confidence filtering, write/update, and retrieval injection for persistent conclusions, preferences, and task state."
       - title:
-          zh: "首个 SaaS AI Agent 产品 0-1 建设"
-          en: "0-to-1 Launch of the First SaaS AI Agent Product"
+          zh: "SaaS AI Agent 1.0：ARQ 驱动的 0-1 建设"
+          en: "SaaS AI Agent 1.0: ARQ-driven 0-to-1 Delivery"
         summary:
-          zh: "主导公司首个 AI Agent 产品在 SaaS 业务中从 0 到 1 落地，推动 Dify 工作流升级为自主可控的多租户 Agent 平台，覆盖营销咨询、电商导购、线索识别、信息收集、资格判断、业务查询与人工转接，沉淀面向多行业复制交付的产品能力。"
-          en: "Led the company's first AI Agent product from 0 to 1 in its SaaS business, evolving a Dify workflow into a controllable multi-tenant platform for marketing, ecommerce shopping assistance, lead identification, data collection, qualification, business queries, and human handoff, with repeatable delivery across industries."
+          zh: "主导模型驱动 AI Agent 1.0 在 SaaS 业务中从 0 到 1 落地，推动 Dify 工作流升级为自主可控的多租户 Agent 平台，覆盖营销咨询、电商导购、线索识别、信息收集、资格判断、业务查询与人工转接，沉淀面向多行业复制交付的产品能力。"
+          en: "Led model-driven AI Agent 1.0 from 0 to 1 in a SaaS business, evolving a Dify workflow into a controllable multi-tenant platform for marketing, ecommerce shopping assistance, lead identification, data collection, qualification, business queries, and human handoff, with repeatable delivery across industries."
+        link: "https://arxiv.org/abs/2503.03669"
         details:
           - title:
               zh: "配置驱动与可控推理"
@@ -140,6 +141,31 @@ experiences:
       zh: "围绕 AI 数据与模型服务产品开展独立研发和项目交付，负责产品定义、系统架构、全栈实现、容器化部署与生产迭代。"
       en: "Built and delivered independent AI data and model-serving products, owning product definition, system architecture, full-stack implementation, containerized deployment, and production iteration."
     featuredProjects:
+      - title:
+          zh: "ARQ 驱动的可控会话 Agent 框架"
+          en: "ARQ-driven Controlled Conversational Agent Framework"
+        summary:
+          zh: "从 0 到 1 设计面向企业咨询与复杂任务的可控会话 Agent，将业务规则、流程状态、工具调用与响应生成拆分为可治理的执行层，解决长对话中指令衰减、规则冲突、工具误调用和线上问题难复盘等问题。"
+          en: "Designed a controlled conversational Agent framework from 0 to 1 for enterprise consultation and complex tasks, separating business rules, workflow state, tool execution, and response generation into governable layers for reliable long-running conversations."
+        details:
+          - title:
+              zh: "规则与流程模型"
+              en: "Rules and workflow model"
+            summary:
+              zh: "以 condition-action Guideline 表达局部业务规则，运行时按上下文匹配相关约束；以 Journey 承载可分支、回退的多轮流程，在自由对话与确定性 SOP 之间保持平衡。"
+              en: "Modeled local business rules as condition-action Guidelines selected by context, while Journeys carried branching and backtracking multi-turn flows between free-form conversation and deterministic SOPs."
+          - title:
+              zh: "注意力引导推理"
+              en: "Attentive reasoning"
+            summary:
+              zh: "引入 ARQ（Attentive Reasoning Queries）领域化推理蓝图，在意图、规则适用性、工具选择、参数来源与响应合规等关键节点重申约束，提升复杂指令下的决策一致性。"
+              en: "Applied Attentive Reasoning Queries (ARQ) as domain reasoning blueprints that reinstate constraints around intent, rule applicability, tool choice, parameter provenance, and response compliance."
+          - title:
+              zh: "工程化执行框架"
+              en: "Production execution framework"
+            summary:
+              zh: "建设配置驱动的 Agent 工厂、会话运行时、RAG/工具接入、异步执行、评测与可观测链路，将规则、工具和模型版本纳入发布治理与问题回放。"
+              en: "Built a configuration-driven Agent factory, session runtime, RAG and tool integration, async execution, evaluation, and observability, bringing rules, tools, and model versions into release governance and replay."
       - title:
           zh: "多模态数据标注与模型服务平台"
           en: "Multimodal Data Labeling and Model-serving Platform"

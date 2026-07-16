@@ -3,7 +3,7 @@ slug: "enterprise-agent-platform"
 locale: "zh"
 translationKey: "enterprise-agent-platform"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-07-15"
+lastReviewedAt: "2026-07-16"
 title: "生产级 Agent 平台架构"
 summary: "负责跨行业 AI Agent 客服 SaaS 平台从架构演进到生产运营，并推动团队 AI 开发 Harness 覆盖 40 个仓库。"
 role: "YC / Agent 平台负责人 / Runtime / Skill / RAG / Harness"
@@ -26,14 +26,14 @@ YC 提供面向多行业的企业 SaaS 服务，核心场景为 AI Agent 客服�
 
 平台已支撑 2k+ 租户、23w+ 用户，生产环境峰值 6w 请求/天，端到端平均响应约 7s。
 
-## 首个 SaaS AI Agent 产品 0-1 建设
+## SaaS AI Agent 1.0：ARQ 驱动的 0-1 建设
 
-主导公司首个 AI Agent 产品在 SaaS 业务中从 0 到 1 落地，推动既有 Dify 工作流方案升级为自主可控的多租户 Agent 平台。围绕营销咨询、电商导购、线索识别、信息收集、资格判断、业务查询和人工转接沉淀可配置能力，形成面向多行业复制交付和持续运营的 Agent 产品。
+主导模型驱动 AI Agent 1.0 在 SaaS 业务中从 0 到 1 落地，推动既有 Dify 工作流方案升级为自主可控的多租户 Agent 平台。围绕营销咨询、电商导购、线索识别、信息收集、资格判断、业务查询和人工转接沉淀可配置能力，形成面向多行业复制交付和持续运营的 Agent 产品。
 
 核心架构由四层组成：
 
 1. 配置驱动的 Agent 工厂：支持租户与 Agent 维度个性化配置 Instructions、Actions、知识库、Skill、MCP、语言风格和人工转接，在统一平台上适配不同行业与业务场景。
-2. 行为与推理控制：用 Guideline 表达业务规则，用 Journey 承载可分支、回退的多轮 SOP，并以 ARQ（Attentive Reasoning Queries）在意图、工具、参数来源和响应合规等关键节点形成结构化判断。
+2. 行为与推理控制：用 Guideline 表达业务规则，用 Journey 承载可分支、回退的多轮 SOP，并以 [ARQ（Attentive Reasoning Queries）](https://arxiv.org/abs/2503.03669)在意图、工具、参数来源和响应合规等关键节点形成结构化判断。
 3. 工程约束与运行保障：以 Agent Harness 统一工程规范、工具边界、异常恢复和发布校验，降低复杂任务执行与企业系统写入风险。
 4. 可观测与质量运营：配套可观测后台呈现会话链路、工具调用、响应质量、耗时和成本，通过上线前评测、线上回放、问题归因和版本对比推动持续优化。
 

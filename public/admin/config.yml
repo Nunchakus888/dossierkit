@@ -231,6 +231,10 @@ collections:
                       - label: EN
                         name: en
                         widget: text
+                  - label: Project Link
+                    name: link
+                    widget: string
+                    required: false
                   - label: Project Details
                     name: details
                     widget: list
