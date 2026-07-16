@@ -74,6 +74,7 @@ export const experienceSchema = z.object({
               title: localizedStringSchema,
               summary: localizedStringSchema,
               link: z.string().url().optional(),
+              linkText: localizedStringSchema.optional(),
               details: z
                 .array(
                   z.object({

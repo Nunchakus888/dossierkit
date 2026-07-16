@@ -201,6 +201,7 @@ function experienceFile(profileId: string) {
               localizedField("Project Title", "title"),
               localizedField("Project Summary", "summary", "text"),
               { label: "Project Link", name: "link", widget: "string", required: false },
+              localizedField("Linked Title Text", "linkText", "string", false),
               {
                 label: "Project Details",
                 name: "details",

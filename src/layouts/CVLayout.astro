@@ -22,6 +22,17 @@ const featuredProjectsLabel = locale === "zh" ? "项目经验" : "Selected Proje
 const profileLabel = locale === "zh" ? "概览" : "Profile";
 const educationLabel = locale === "zh" ? "教育" : "Education";
 const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经验` : `${pack.profile.yearsOfExperience} years`;
+
+function splitLinkedTitle(title: string, linkText?: string) {
+  if (!linkText) return null;
+  const index = title.indexOf(linkText);
+  if (index < 0) return null;
+  return {
+    before: title.slice(0, index),
+    linked: linkText,
+    after: title.slice(index + linkText.length)
+  };
+}
 ---
 
 <BaseLayout locale={locale} title={l.cv} description={localize(pack.profile.summary, locale)}>
@@ -95,26 +106,37 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
           {item.featuredProjects.length > 0 && (
             <div class="featured-projects">
               <span class="featured-projects-label">{featuredProjectsLabel}</span>
-              {item.featuredProjects.map((project) => (
-                <div class:list={["featured-project", { "has-details": project.details.length > 0 }]}>
+              {item.featuredProjects.map((project) => {
+                const projectTitle = localize(project.title, locale);
+                const linkedTitle = splitLinkedTitle(
+                  projectTitle,
+                  project.linkText ? localize(project.linkText, locale) : undefined
+                );
+
+                return (
+                  <div class:list={["featured-project", { "has-details": project.details.length > 0 }]}>
                   <strong>
-                    {project.link ? (
-                      <a
-                        class="featured-project-title-link"
-                        href={project.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        title={locale === "zh" ? "查看项目参考" : "View project reference"}
-                      >
-                        <span>{localize(project.title, locale)}</span>
-                        <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                          <path d="M15 3h6v6" />
-                          <path d="m10 14 11-11" />
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                        </svg>
-                      </a>
+                    {project.link && linkedTitle ? (
+                      <>
+                        {linkedTitle.before}
+                        <a
+                          class="featured-project-title-link"
+                          href={project.link}
+                          target="_blank"
+                          rel="noreferrer"
+                          title={locale === "zh" ? "查看 ARQs 论文" : "View the ARQs paper"}
+                        >
+                          <span>{linkedTitle.linked}</span>
+                          <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 3h6v6" />
+                            <path d="m10 14 11-11" />
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          </svg>
+                        </a>
+                        {linkedTitle.after}
+                      </>
                     ) : (
-                      localize(project.title, locale)
+                      projectTitle
                     )}
                   </strong>
                   <p>{localize(project.summary, locale)}</p>
@@ -128,8 +150,9 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
                       ))}
                     </dl>
                   )}
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
           {item.highlights.length > 0 && (
@@ -391,12 +414,13 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    color: inherit;
+    color: #2b7d6d;
     text-decoration: none;
+    vertical-align: baseline;
   }
 
   .featured-project-title-link:hover {
-    color: #248f79;
+    color: #176e5d;
   }
 
   .featured-project-title-link svg {
@@ -418,13 +442,16 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
 
   .featured-project-details div {
     display: grid;
-    grid-template-columns: max-content 1fr;
-    gap: 7px;
+    grid-template-columns: 10.5rem minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
   }
 
   .featured-project-details dt {
-    color: #248f79;
-    font-weight: 800;
+    color: #2f756a;
+    font-size: 0.84rem;
+    font-weight: 700;
+    line-height: 1.55;
   }
 
   .featured-project-details dd {
@@ -615,7 +642,8 @@ const yearsLabel = locale === "zh" ? `${pack.profile.yearsOfExperience} 年经�
     }
 
     .featured-project-details div {
-      gap: 5px;
+      grid-template-columns: 108px minmax(0, 1fr);
+      gap: 6px;
       break-inside: avoid;
       page-break-inside: avoid;
     }
