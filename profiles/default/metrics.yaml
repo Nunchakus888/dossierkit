@@ -3,7 +3,7 @@ metrics:
       zh: "服务规模"
       en: "Service scale"
     value:
-      zh: "2k+ 租户 / 23w+ 用户"
+      zh: "2k+ 租户 / 230k+ 用户"
       en: "2k+ tenants / 230k+ users"
     description:
       zh: "生产级跨行业 AI Agent 客服 SaaS 平台。"
@@ -12,7 +12,7 @@ metrics:
       zh: "峰值请求"
       en: "Peak traffic"
     value:
-      zh: "6w / day"
+      zh: "60k / day"
       en: "60k / day"
     description:
       zh: "生产环境峰值，端到端平均响应约 7s。"

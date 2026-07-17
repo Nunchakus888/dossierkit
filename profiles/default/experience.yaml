@@ -12,7 +12,7 @@ experiences:
       zh: "中国"
       en: "China"
     summary:
-      zh: "负责跨行业 WhatsApp AI Agent 客服 SaaS 平台从产品架构演进到生产运营，覆盖 2k+ 租户、23w+ 用户、峰值 6w 请求/天；统筹业务 Agent、RAG/Memory、工具与 Skill、质量运营、成本治理和团队交付。"
+      zh: "负责跨行业 WhatsApp AI Agent 客服 SaaS 平台从产品架构演进到生产运营，覆盖 2k+ 租户、230k+ 用户、峰值 60k 请求/天；统筹业务 Agent、RAG/Memory、工具与 Skill、质量运营、成本治理和团队交付。"
       en: "Owned product architecture and production operations for a cross-industry WhatsApp business-Agent SaaS serving 2k+ tenants, 230k+ users, and 60k peak requests/day across RAG/Memory, tools and Skills, quality, cost, and team delivery."
     featuredProjects:
       - title:
