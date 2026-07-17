@@ -1,6 +1,6 @@
 ---
 import type { Locale } from "../../lib/config";
-import { localePath, localize } from "../../lib/i18n";
+import { localize } from "../../lib/i18n";
 import type { ProfilePack } from "../../lib/profile-loader";
 
 type Props = {
@@ -9,76 +9,35 @@ type Props = {
 };
 
 const { locale, pack } = Astro.props;
-const footerItems = pack.navigation.items;
-
-function navHref(path: string, external?: boolean) {
-  if (external || /^https?:\/\//.test(path)) return path;
-  return localePath(locale, path);
-}
+const tagline = pack.navigation.footer?.tagline;
 ---
 
-<footer class="site-footer no-print">
-  <div class="page-shell footer-inner">
-    <div>
-      <strong>{localize(pack.profile.name, locale)}</strong>
-      <p>{localize(pack.profile.headline, locale)}</p>
-    </div>
-    <div class="footer-links">
-      {footerItems.map((item) => <a href={navHref(item.path, item.external)}>{localize(item.label, locale)}</a>)}
-      <a href="/profile.json">profile.json</a>
-      <a href="/llms.txt">llms.txt</a>
-    </div>
-  </div>
-</footer>
+{
+  tagline && (
+    <footer class="site-footer no-print">
+      <div class="page-shell footer-inner">
+        <p>{localize(tagline, locale)}</p>
+      </div>
+    </footer>
+  )
+}
 
 <style>
   .site-footer {
     border-top: 1px solid transparent;
     border-image: var(--gradient-border) 1;
-    padding: 34px 0;
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(246, 255, 252, 0.72)),
-      linear-gradient(105deg, rgba(234, 249, 244, 0.28), rgba(231, 249, 255, 0.18));
+    padding: 24px 0;
+    background: rgba(255, 255, 255, 0.36);
   }
 
   .footer-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
+    text-align: center;
   }
 
   p {
-    margin: 4px 0 0;
-    color: var(--color-muted);
-  }
-
-  .footer-links {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 12px;
-    color: var(--color-muted);
-    font-size: 0.9rem;
-  }
-
-  .footer-links a {
-    border-bottom: 1px solid transparent;
-  }
-
-  .footer-links a:hover {
-    border-color: color-mix(in srgb, var(--color-accent), transparent 20%);
-    color: #207f72;
-  }
-
-  @media (max-width: 720px) {
-    .footer-inner {
-      display: block;
-    }
-
-    .footer-links {
-      justify-content: flex-start;
-      margin-top: 18px;
-    }
+    margin: 0;
+    color: color-mix(in srgb, var(--color-muted), transparent 10%);
+    font-size: 0.88rem;
+    font-weight: 620;
   }
 </style>

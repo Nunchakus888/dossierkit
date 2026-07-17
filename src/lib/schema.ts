@@ -242,6 +242,11 @@ export const navigationSchema = z
         labelMode: z.enum(["name", "headline", "none"]).default("name")
       })
       .default({ mark: "DK", labelMode: "name" }),
+    footer: z
+      .object({
+        tagline: localizedStringSchema
+      })
+      .optional(),
     items: z.array(
       z
         .object({

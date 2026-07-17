@@ -37,7 +37,7 @@ function isActive(path: string, external?: boolean) {
 }
 ---
 
-<header class="site-header no-print">
+<header class="site-header no-print" data-site-header data-visibility="shown">
   <div class="page-shell nav-card">
     <a class="brand" href={localePath(locale)} aria-label={localize(pack.profile.name, locale)}>
       {brandLabel && <span class="brand-word">{brandLabel}</span>}
@@ -80,12 +80,83 @@ function isActive(path: string, external?: boolean) {
   </div>
 </header>
 
+<script>
+  const header = document.querySelector<HTMLElement>("[data-site-header]");
+
+  if (header) {
+    let lastScrollY = Math.max(0, window.scrollY);
+    let direction: "up" | "down" | null = null;
+    let directionDistance = 0;
+    let frameRequested = false;
+
+    const showHeader = () => {
+      header.dataset.visibility = "shown";
+    };
+
+    const updateHeader = () => {
+      const currentScrollY = Math.max(0, window.scrollY);
+      const delta = currentScrollY - lastScrollY;
+      const nextDirection = delta > 0 ? "down" : delta < 0 ? "up" : direction;
+      const menuOpen = Boolean(header.querySelector("details[open]"));
+
+      if (nextDirection !== direction) {
+        direction = nextDirection;
+        directionDistance = 0;
+      }
+
+      directionDistance += Math.abs(delta);
+
+      if (currentScrollY <= 72 || header.matches(":focus-within") || menuOpen) {
+        showHeader();
+      } else if (direction === "down" && directionDistance >= 24) {
+        header.dataset.visibility = "hidden";
+        directionDistance = 0;
+      } else if (direction === "up" && directionDistance >= 12) {
+        showHeader();
+        directionDistance = 0;
+      }
+
+      lastScrollY = currentScrollY;
+      frameRequested = false;
+    };
+
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (!frameRequested) {
+          frameRequested = true;
+          window.requestAnimationFrame(updateHeader);
+        }
+      },
+      { passive: true }
+    );
+
+    header.addEventListener("focusin", showHeader);
+    header.querySelector("details")?.addEventListener("toggle", showHeader);
+  }
+</script>
+
 <style>
   .site-header {
     position: sticky;
     top: 12px;
     z-index: 20;
     padding-top: 12px;
+    transition:
+      transform 320ms var(--ease-out),
+      opacity 220ms ease;
+    will-change: transform;
+  }
+
+  .site-header[data-visibility="hidden"] {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(calc(-100% - 24px));
+  }
+
+  .site-header[data-visibility="shown"] {
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .nav-card {
@@ -299,6 +370,12 @@ function isActive(path: string, external?: boolean) {
 
     .brand-word {
       font-size: 1.42rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-header {
+      transition: none;
     }
   }
 </style>
