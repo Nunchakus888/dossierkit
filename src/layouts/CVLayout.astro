@@ -57,10 +57,24 @@ function splitLinkedTitle(title: string, linkText?: string) {
       </div>
 
       <div class="contact-block">
-        <a href={`mailto:${pack.profile.links.email}`}>
-          <Icon name="mail" size={15} />
-          <span>{pack.profile.links.email}</span>
-        </a>
+        <div class="contact-primary">
+          <a href={`mailto:${pack.profile.links.email}`}>
+            <Icon name="mail" size={15} />
+            <span>{pack.profile.links.email}</span>
+          </a>
+          {pack.profile.links.github && (
+            <a
+              class="contact-icon-link"
+              href={pack.profile.links.github}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub"
+              title="GitHub"
+            >
+              <Icon name="github" size={17} strokeWidth={1.9} />
+            </a>
+          )}
+        </div>
         <span>
           <Icon name="globe" size={15} />
           {localize(pack.profile.location, locale)}
@@ -248,15 +262,37 @@ function splitLinkedTitle(title: string, linkText?: string) {
     font-size: 0.92rem;
   }
 
-  .contact-block > a,
+  .contact-primary,
+  .contact-primary > a,
   .contact-block > span {
     display: inline-flex;
     align-items: center;
     gap: 8px;
   }
 
-  .contact-block > a:hover {
+  .contact-primary {
+    gap: 9px;
+  }
+
+  .contact-primary > a:hover {
     color: #207f72;
+  }
+
+  .contact-icon-link {
+    width: 28px;
+    height: 28px;
+    justify-content: center;
+    border: 1px solid rgba(85, 190, 162, 0.3);
+    border-radius: 50%;
+    background: rgba(234, 249, 244, 0.62);
+    color: #2b7d6d;
+    transition: border-color 160ms var(--ease-out), background-color 160ms var(--ease-out), transform 160ms var(--ease-out);
+  }
+
+  .contact-icon-link:hover {
+    border-color: rgba(32, 127, 114, 0.48);
+    background: rgba(222, 247, 239, 0.92);
+    transform: translateY(-1px);
   }
 
   .cv-actions {
@@ -524,6 +560,10 @@ function splitLinkedTitle(title: string, linkText?: string) {
       justify-items: start;
     }
 
+    .contact-primary {
+      flex-wrap: wrap;
+    }
+
     time {
       text-align: left;
     }
@@ -572,6 +612,13 @@ function splitLinkedTitle(title: string, linkText?: string) {
     .contact-block {
       gap: 4px;
       font-size: 8.5pt;
+    }
+
+    .contact-icon-link {
+      width: 18px;
+      height: 18px;
+      border: 0;
+      background: transparent;
     }
 
     .cv-page > section {
