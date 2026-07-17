@@ -3,11 +3,11 @@ name:
   zh: "George Zhang"
   en: "George Zhang"
 headline:
-  zh: "企业级 Agent 平台架构负责人"
-  en: "Enterprise Agent Platform Architect"
+  zh: "AI Agent 技术专家"
+  en: "Principal AI Agent Engineer"
 summary:
-  zh: "10 年大型平台与 AI 工程经验，历经阿里、商汤，现负责企业级 Agent 平台架构、产品化与团队交付。"
-  en: "10 years across large-scale platforms and AI engineering at Alibaba and SenseTime, now leading enterprise Agent platform architecture, productization, and delivery."
+  zh: "10 年大型平台与 AI 工程经验，历经阿里、商汤，现负责 AI Agent 平台架构、产品化与生产交付，并推动团队 AI 工程效能建设。"
+  en: "10 years across large-scale platforms and AI engineering at Alibaba and SenseTime, now leading AI Agent platform architecture, productization, production delivery, and team AI engineering effectiveness."
 yearsOfExperience: 10
 location:
   zh: "中国"
@@ -32,8 +32,8 @@ links:
   website: "https://sunionpeaks.pages.dev"
 availability:
   status:
-    zh: "企业级 Agent 平台架构与技术负责人"
-    en: "Enterprise Agent Platform Architecture and Engineering Leadership"
+    zh: "AI Agent 技术专家"
+    en: "Principal AI Agent Engineer"
   preferredLocations:
     - "China"
   expectedPackage:

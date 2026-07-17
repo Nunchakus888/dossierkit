@@ -1,8 +1,8 @@
 skillGroups:
   - id: "agent-platform"
     title:
-      zh: "Agent 平台、Harness 与模型工程"
-      en: "Agent Platform, Harness, and Model Engineering"
+      zh: "AI Agent 平台、Harness 与模型工程"
+      en: "AI Agent Platform, Harness, and Model Engineering"
     description:
       zh: "覆盖 Agent 执行、模型协作、上下文、工具、评测与生产运营。"
       en: "Agent execution, model coordination, context, tools, evaluation, and production operations."

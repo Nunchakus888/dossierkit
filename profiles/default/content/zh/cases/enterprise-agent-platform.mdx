@@ -3,10 +3,10 @@ slug: "enterprise-agent-platform"
 locale: "zh"
 translationKey: "enterprise-agent-platform"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-07-16"
-title: "生产级 Agent 平台架构"
+lastReviewedAt: "2026-07-17"
+title: "生产级 AI Agent 平台架构"
 summary: "负责跨行业 AI Agent 客服 SaaS 平台从架构演进到生产运营，并推动团队 AI 开发 Harness 覆盖 40 个仓库。"
-role: "YC / Agent 平台负责人 / Runtime / Skill / RAG / Harness"
+role: "YC / AI Agent 平台负责人 / Runtime / Skill / RAG / Harness"
 period: "2025-03 - 现在"
 confidentiality: "sanitized"
 featured: true
@@ -22,13 +22,13 @@ targetRoles:
 
 ## 项目概览
 
-YC 提供面向多行业的企业 SaaS 服务，核心场景为 AI Agent 客服。任职期间负责 Agent 平台方向，覆盖平台架构、运行时治理、知识与工具体系、质量治理和团队工程规范。
+YC 提供面向多行业的企业 SaaS 服务，核心场景为 AI Agent 客服。任职期间负责 AI Agent 平台方向，覆盖平台架构、运行时治理、知识与工具体系、质量治理和团队工程效能。
 
 平台已支撑 2k+ 租户、230k+ 用户，生产环境峰值 60k 请求/天，端到端平均响应约 7s。
 
 ## SaaS AI Agent 1.0：ARQs 驱动的 0-1 建设
 
-主导模型驱动 AI Agent 1.0 在 SaaS 业务中从 0 到 1 落地，推动既有 Dify 工作流方案升级为自主可控的多租户 Agent 平台。围绕营销咨询、电商导购、线索识别、信息收集、资格判断、业务查询和人工转接沉淀可配置能力，形成面向多行业复制交付和持续运营的 Agent 产品。
+主导模型驱动 AI Agent 1.0 在 SaaS 业务中从 0 到 1 落地，推动既有 Dify 工作流方案升级为自主可控的多租户 AI Agent 平台。围绕营销咨询、电商导购、线索识别、信息收集、资格判断、业务查询和人工转接沉淀可配置能力，形成面向多行业复制交付和持续运营的 AI Agent 产品。
 
 核心架构由四层组成：
 
@@ -67,13 +67,13 @@ YC 提供面向多行业的企业 SaaS 服务，核心场景为 AI Agent 客服�
 
 ## 团队工程治理
 
-YC 产研团队约 20 人，AI Agent 方向带领 4 人小组。同时推动 AI 开发 Harness 覆盖 40 个仓库，把 AI 辅助开发纳入稳定工程流程。
+YC 产研团队约 20 人，AI Agent 方向带领 4 人小组。同时推动 AI 研发交付 Harness 覆盖 40 个仓库，将开发、测试、发布、部署、验证与运维纳入共享上下文和统一工程流程。
 
 协作平台围绕三个环节建设：
 
-1. 研发协作：通过统一 CLI 封装项目组织、代码上下文加载、工程自检与 case 复现，为不同仓库提供一致的 AI 协作入口。
-2. 交付与运维：串联构建发布、环境检查、运维自动化与故障诊断，将高频流程沉淀为可复用命令与 Skill。
-3. 共享上下文：将仓库规范、服务依赖、环境配置和 Spec / EPIC 通过 Skill、MCP 与 CLI 供产研共享，减少重复查找与口头同步。
+1. 研发与测试收敛：通过统一 CLI、可复用 Skill 和工程自检，将需求理解、代码实现、单元/集成测试、case 复现和验收前检查纳入同一上下文；开发承担并自动化绝大多数测试执行，测试角色聚焦高风险场景和质量门禁。
+2. 全 AI 交付闭环：串联构建、发布、部署、环境检查、回归验证、生产观测与故障诊断，以 AI 驱动命令和 Skill 自动执行并回写结果。
+3. 共享上下文：将仓库规范、服务依赖、环境配置和 Spec / EPIC 通过 Skill、MCP 与 CLI 供产研共享，减少跨角色交接、口头同步与等待。
 
 治理机制分为三层：
 
@@ -81,7 +81,7 @@ YC 产研团队约 20 人，AI Agent 方向带领 4 人小组。同时推动 AI 
 2. Inner Loop：用 Spec / EPIC 拆解非平凡需求，明确目标、非目标、验收标准、任务阶段和状态。
 3. Supervisor Gate：以变更摘要、文件清单、自检结果、AI Harness trace 和验收 checklist 作为交付门禁。
 
-通过统一上下文、过程检查和交付门禁，降低架构漂移、失控重构、质量不一致和验收缺口，提升需求交付、问题闭环、评审和回滚效率。
+通过统一上下文、过程检查和交付门禁，将原本跨开发、测试与运维角色的长链路收敛为开发主导的 AI 闭环，降低架构漂移、质量不一致和验收缺口；标准化需求交付和生产问题闭环效率达到传统协作方式约 10 倍。
 
 ## 技术栈
 
@@ -93,7 +93,7 @@ YC 产研团队约 20 人，AI Agent 方向带领 4 人小组。同时推动 AI 
 
 核心交付价值包括：
 
-- 将 Agent 能力接入真实客服业务流程。
+- 将 AI Agent 能力接入真实客服业务流程。
 - 将工具接入、权限审批、运行时授权和审计边界平台化。
 - 将 prompt、工具 schema、模型版本和 RAG 策略纳入发布门禁。
 - 将 unknown questions 聚类、content gap 识别和主题发现纳入知识自进化闭环。

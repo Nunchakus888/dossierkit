@@ -21,17 +21,17 @@ metrics:
       zh: "团队范围"
       en: "Team scope"
     value:
-      zh: "20 人产研 / 4 人 Agent 小组"
-      en: "20-person product-engineering / 4-person Agent squad"
+      zh: "20 人产研 / 4 人 AI Agent 小组"
+      en: "20-person product-engineering / 4-person AI Agent squad"
     description:
-      zh: "带领 4 人 Agent 小组，协同 20 人产研团队。"
-      en: "Led a 4-person Agent squad within a 20-person product-engineering team."
+      zh: "带领 4 人 AI Agent 小组，协同 20 人产研团队。"
+      en: "Led a 4-person AI Agent squad within a 20-person product-engineering team."
   - label:
-      zh: "Harness 覆盖"
-      en: "Harness coverage"
+      zh: "工程效能"
+      en: "Delivery efficiency"
     value:
-      zh: "40 个仓库"
-      en: "40 repositories"
+      zh: "40 仓库 / 约 10×"
+      en: "40 repos / ~10×"
     description:
-      zh: "覆盖 40 个代码仓库的 AI 辅助开发治理。"
-      en: "AI-assisted development governance across 40 repositories."
+      zh: "开发、测试、发布、部署与验证形成全 AI 闭环。"
+      en: "An AI delivery loop across development, testing, release, deployment, and verification."

@@ -3,8 +3,8 @@ experiences:
       zh: "YC"
       en: "YC"
     role:
-      zh: "Agent 平台负责人"
-      en: "Agent Platform Lead"
+      zh: "AI Agent 平台负责人"
+      en: "AI Agent Platform Lead"
     period:
       zh: "2025-03 - 现在"
       en: "2025-03 - Present"
@@ -12,21 +12,21 @@ experiences:
       zh: "中国"
       en: "China"
     summary:
-      zh: "负责跨行业 WhatsApp AI Agent 客服 SaaS 平台从产品架构演进到生产运营，覆盖 2k+ 租户、230k+ 用户、峰值 60k 请求/天；统筹业务 Agent、RAG/Memory、工具与 Skill、质量运营、成本治理和团队交付。"
-      en: "Owned product architecture and production operations for a cross-industry WhatsApp business-Agent SaaS serving 2k+ tenants, 230k+ users, and 60k peak requests/day across RAG/Memory, tools and Skills, quality, cost, and team delivery."
+      zh: "负责跨行业 WhatsApp AI Agent 客服 SaaS 平台从产品架构演进到生产运营，覆盖 2k+ 租户、230k+ 用户、峰值 60k 请求/天；统筹业务 AI Agent、RAG/Memory、工具与 Skill、质量运营、成本治理和团队交付。"
+      en: "Owned product architecture and production operations for a cross-industry WhatsApp AI Agent SaaS serving 2k+ tenants, 230k+ users, and 60k peak requests/day across business AI Agents, RAG/Memory, tools and Skills, quality, cost, and team delivery."
     featuredProjects:
       - title:
-          zh: "WhatsApp SaaS 业务 Agent 平台"
-          en: "WhatsApp SaaS Business Agent Platform"
+          zh: "WhatsApp SaaS 业务 AI Agent 平台"
+          en: "WhatsApp SaaS Business AI Agent Platform"
         summary:
-          zh: "面向客服问答、业务查询、流程办理和人工转接，主导平台从规则编排演进为 LLM 驱动业务 Agent，将意图路由、SOP、知识、工具调用与结果回传沉淀为租户可配置能力；支撑客户问题自动解决率达到 70%+，平均 7k+ tokens 对话负载下端到端约 7s，token 消耗下降 60%。"
-          en: "Evolved WhatsApp customer service from rule flows to tenant-configurable LLM business Agents across intent routing, SOPs, knowledge, tools, callbacks, and handoff; delivered 70%+ auto-resolution, about 7s end-to-end latency at 7k+ tokens per conversation, and 60% lower token use."
+          zh: "面向客服问答、业务查询、流程办理和人工转接，主导平台从规则编排演进为 LLM 驱动业务 AI Agent，将意图路由、SOP、知识、工具调用与结果回传沉淀为租户可配置能力；支撑客户问题自动解决率达到 70%+，平均 7k+ tokens 对话负载下端到端约 7s，token 消耗下降 60%。"
+          en: "Evolved WhatsApp customer service from rule flows to tenant-configurable LLM-driven business AI Agents across intent routing, SOPs, knowledge, tools, callbacks, and handoff; delivered 70%+ auto-resolution, about 7s end-to-end latency at 7k+ tokens per conversation, and 60% lower token use."
       - title:
           zh: "企业级 RAG 与 Memory 上下文体系"
           en: "Enterprise RAG and Memory Context Layer"
         summary:
-          zh: "建设面向多租户业务 Agent 的统一知识与记忆层，将可靠知识、会话事实、用户偏好和任务状态按需注入模型上下文。"
-          en: "Built a unified knowledge and memory layer for multi-tenant business Agents, injecting trusted knowledge, conversation facts, user preferences, and task state on demand."
+          zh: "建设面向多租户业务 AI Agent 的统一知识与记忆层，将可靠知识、会话事实、用户偏好和任务状态按需注入模型上下文。"
+          en: "Built a unified knowledge and memory layer for multi-tenant business AI Agents, injecting trusted knowledge, conversation facts, user preferences, and task state on demand."
         details:
           - title:
               zh: "RAG 建设"
@@ -44,8 +44,8 @@ experiences:
           zh: "SaaS AI Agent 1.0：ARQs 驱动的 0-1 建设"
           en: "SaaS AI Agent 1.0: ARQs-driven 0-to-1 Delivery"
         summary:
-          zh: "主导模型驱动 AI Agent 1.0 在 SaaS 业务中从 0 到 1 落地，推动 Dify 工作流升级为自主可控的多租户 Agent 平台，覆盖营销咨询、电商导购、线索识别、信息收集、资格判断、业务查询与人工转接，沉淀面向多行业复制交付的产品能力。"
-          en: "Led model-driven AI Agent 1.0 from 0 to 1 in a SaaS business, evolving a Dify workflow into a controllable multi-tenant platform for marketing, ecommerce shopping assistance, lead identification, data collection, qualification, business queries, and human handoff, with repeatable delivery across industries."
+          zh: "主导模型驱动 AI Agent 1.0 在 SaaS 业务中从 0 到 1 落地，推动 Dify 工作流升级为自主可控的多租户 AI Agent 平台，覆盖营销咨询、电商导购、线索识别、信息收集、资格判断、业务查询与人工转接，沉淀面向多行业复制交付的产品能力。"
+          en: "Led model-driven AI Agent 1.0 from 0 to 1 in a SaaS business, evolving a Dify workflow into a controllable multi-tenant AI Agent platform for marketing, ecommerce shopping assistance, lead identification, data collection, qualification, business queries, and human handoff, with repeatable delivery across industries."
         link: "https://arxiv.org/abs/2503.03669"
         linkText:
           zh: "ARQs"
@@ -70,30 +70,30 @@ experiences:
               zh: "建立上线前评测、线上回放、问题归因与成本分析闭环，支持按租户、场景和版本对比任务成功率、工具准确性、响应耗时与 token 成本，将过程数据转化为持续优化依据，支撑平台自动解决率提升至 70%+。"
               en: "Established pre-release evaluation, production replay, issue attribution, and cost analysis, comparing task success, tool accuracy, latency, and token cost by tenant, scenario, and version to support continuous optimization and 70%+ auto-resolution."
       - title:
-          zh: "AI 开发 Harness 与共享上下文平台"
-          en: "AI Development Harness and Shared Context Platform"
+          zh: "AI 研发交付 Harness 与共享上下文平台"
+          en: "AI Engineering Delivery Harness and Shared Context Platform"
         summary:
-          zh: "主导企业内部 AI 开发 Harness 与 CLI 平台建设，以统一上下文连接研发、测试、发布与运维流程，覆盖 40 个仓库，减少跨角色信息同步、环境确认和重复排查成本。"
-          en: "Led an internal AI development Harness and CLI platform that connected engineering, testing, release, and operations through shared context across 40 repositories, reducing repeated context gathering and diagnosis."
+          zh: "主导企业内部 AI 研发交付 Harness 与 CLI 平台建设，以共享上下文贯通开发、测试、发布、部署、验证与运维，覆盖 40 个仓库；将跨角色长链路收敛为开发主导的 AI 闭环，减少协作等待、环境确认和重复排查。"
+          en: "Led an internal AI engineering delivery harness and CLI platform across 40 repositories, using shared context to connect development, testing, release, deployment, verification, and operations while consolidating a long multi-role workflow into a developer-led AI delivery loop."
         details:
           - title:
-              zh: "研发协作"
-              en: "Engineering collaboration"
+              zh: "研发与测试收敛"
+              en: "Engineering and testing convergence"
             summary:
-              zh: "通过统一 CLI 封装项目组织、代码上下文加载、工程自检与 case 复现，为不同仓库提供一致的 AI 协作入口。"
-              en: "Standardized project organization, code-context loading, engineering checks, and case reproduction through a shared CLI across repositories."
+              zh: "通过统一 CLI、可复用 Skill 和工程自检，将需求理解、代码实现、单元/集成测试、case 复现与验收前检查纳入同一上下文；开发承担并自动化绝大多数测试执行，测试角色聚焦高风险场景与质量门禁。"
+              en: "Unified requirements, implementation, unit and integration tests, case reproduction, and pre-acceptance checks through a shared CLI, reusable Skills, and engineering checks; engineers owned and automated most test execution while QA focused on high-risk scenarios and quality gates."
           - title:
-              zh: "交付与运维"
-              en: "Delivery and operations"
+              zh: "全 AI 交付闭环"
+              en: "End-to-end AI delivery loop"
             summary:
-              zh: "串联构建发布、环境检查、运维自动化与故障诊断，将高频流程沉淀为可复用命令与 Skill。"
-              en: "Connected build and release, environment checks, operations automation, and incident diagnosis through reusable commands and Skills."
+              zh: "串联构建、发布、部署、环境检查、回归验证、生产观测与故障诊断，以 AI 驱动可复用命令与 Skill 自动执行并回写结果，实现交付链路端到端闭环。"
+              en: "Connected build, release, deployment, environment checks, regression verification, production observability, and incident diagnosis through AI-driven commands and Skills that execute and write results back into shared context."
           - title:
-              zh: "共享上下文"
-              en: "Shared context"
+              zh: "协作效能"
+              en: "Collaboration efficiency"
             summary:
-              zh: "将仓库规范、服务依赖、环境配置和 Spec/EPIC 通过 Skill、MCP 与 CLI 供产研共享，减少重复查找与口头同步，提升需求交付和问题闭环效率。"
-              en: "Shared repository rules, service dependencies, environment configuration, and Spec/EPIC context through Skills, MCP, and CLI, improving delivery and issue-resolution flow."
+              zh: "将仓库规范、服务依赖、环境配置和 Spec/EPIC 通过 Skill、MCP 与 CLI 供产研共享，减少跨角色交接、口头同步与等待；标准化需求交付和生产问题闭环效率达到传统协作方式约 10 倍。"
+              en: "Shared repository rules, service dependencies, environment configuration, and Spec/EPIC context through Skills, MCP, and CLI, reducing handoffs, verbal synchronization, and wait states; standardized delivery and production issue resolution reached roughly 10x the prior collaboration model's efficiency."
       - title:
           zh: "多语言未知问题聚类与知识 Gap 学习平台"
           en: "Multilingual Unknown-question Clustering and Knowledge-gap Learning"
@@ -122,7 +122,7 @@ experiences:
     highlights: []
     tags:
       - "WhatsApp SaaS"
-      - "Business Agent Platform"
+      - "Business AI Agent Platform"
       - "Agentic RAG"
       - "Memory"
       - "MCP"
@@ -145,8 +145,8 @@ experiences:
       en: "Built and delivered independent AI data and model-serving products, owning product definition, system architecture, full-stack implementation, containerized deployment, and production iteration."
     featuredProjects:
       - title:
-          zh: "ARQs 驱动的可控会话 Agent 框架"
-          en: "ARQs-driven Controlled Conversational Agent Framework"
+          zh: "ARQs 驱动的可控会话 AI Agent 框架"
+          en: "ARQs-driven Controlled Conversational AI Agent Framework"
         summary:
           zh: "从 0 到 1 设计面向企业咨询与复杂任务的可控会话 Agent，将业务规则、流程状态、工具调用与响应生成拆分为可治理的执行层，解决长对话中指令衰减、规则冲突、工具误调用和线上问题难复盘等问题。"
           en: "Designed a controlled conversational Agent framework from 0 to 1 for enterprise consultation and complex tasks, separating business rules, workflow state, tool execution, and response generation into governable layers for reliable long-running conversations."

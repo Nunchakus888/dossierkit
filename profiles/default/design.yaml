@@ -3,30 +3,26 @@ brand:
   icon: "folder-face"
 hero:
   eyebrow:
-    zh: "Enterprise Agent Platform"
-    en: "Enterprise Agent Platform"
+    zh: "AI Agent Platform"
+    en: "AI Agent Platform"
   title:
     zh:
       - segments:
-          - text: "Agent"
+          - text: "AI Agent"
             tone: "mint"
-          - text: " Platform"
-            tone: "blue"
       - segments:
-          - text: "Architect"
+          - text: "Expert"
             tone: "mint"
     en:
       - segments:
-          - text: "Agent"
+          - text: "AI Agent"
             tone: "mint"
-          - text: " Platform"
-            tone: "blue"
       - segments:
-          - text: "Architect"
+          - text: "Expert"
             tone: "mint"
   subtitle:
-    zh: "建设从 Runtime、工具治理到评测运营的企业级 Agent 平台，让大模型稳定进入核心业务流程。"
-    en: "Building enterprise Agent platforms from runtime and tool governance through evaluation and operations, bringing LLMs reliably into core workflows."
+    zh: "建设贯穿业务 AI Agent、知识与工具、评测运营和团队效能的生产级平台，让大模型稳定进入核心业务流程。"
+    en: "Building production platforms across business AI Agents, knowledge and tools, evaluation operations, and team effectiveness to bring LLMs reliably into core workflows."
   primaryAction:
     label:
       zh: "查看案例"

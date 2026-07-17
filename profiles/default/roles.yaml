@@ -2,14 +2,14 @@ roles:
   - id: "agent-platform"
     path: "agent-platform"
     title:
-      zh: "企业级 Agent 平台架构负责人"
-      en: "Enterprise Agent Platform Architect"
+      zh: "AI Agent 技术专家"
+      en: "Principal AI Agent Engineer"
     headline:
-      zh: "从 Runtime 到生产运营的 Agent 平台架构"
-      en: "Agent Platform Architecture from Runtime to Production Operations"
+      zh: "从平台架构到生产运营的 AI Agent 技术体系"
+      en: "AI Agent Platform Engineering from Architecture to Production Operations"
     summary:
-      zh: "负责 Agent Runtime、工具与权限、评测回放、质量运营和企业系统集成，推动大模型能力稳定进入核心业务流程。"
-      en: "Owning Agent Runtime, tools and permissions, replay evaluation, quality operations, and enterprise integration to bring LLM capabilities reliably into core workflows."
+      zh: "负责 AI Agent 平台架构、工具与权限、评测回放、质量运营和企业系统集成，推动大模型能力稳定进入核心业务流程。"
+      en: "Owning AI Agent platform architecture, tools and permissions, replay evaluation, quality operations, and enterprise integration to bring LLM capabilities reliably into core workflows."
     focusAreas:
       - "Agent Runtime"
       - "Agentic RAG"
@@ -44,8 +44,8 @@ roles:
           en: "Established multi-tenant isolation, tool permissions, audit, human handoff, idempotent retries, and high-risk action controls."
         - zh: "贯通生产 trace、回放评测、发布门禁与数据反馈，将线上问题转化为知识、Skill 和策略迭代。"
           en: "Connected production traces, replay evaluation, release gates, and data feedback to turn production issues into knowledge, Skill, and policy improvements."
-        - zh: "带领 Agent 小组交付核心平台能力，并以 AI 开发 Harness 推动 40 个仓库形成一致的工程治理。"
-          en: "Led the Agent squad in core platform delivery and used an AI development harness to establish consistent engineering governance across 40 repositories."
+        - zh: "带领 AI Agent 小组交付核心平台能力，推动 AI 研发 Harness 覆盖 40 个仓库，贯通开发、测试、发布、部署与验证闭环。"
+          en: "Led the AI Agent squad in core platform delivery and expanded the AI development harness across 40 repositories, connecting development, testing, release, deployment, and verification."
       dimensions:
         - title:
             zh: "Runtime 与编排"
@@ -66,8 +66,8 @@ roles:
             zh: "以回放评测、content gap 和 usage 审计驱动持续优化，token 消耗下降 60%，自动解决率提升约 30%。"
             en: "Continuous optimization through replay evaluation, content gaps, and usage auditing, reducing token consumption by 60% and improving auto-resolution by about 30%."
         - title:
-            zh: "团队与平台推广"
-            en: "Team and Platform Adoption"
+            zh: "团队与工程效能"
+            en: "Team and Engineering Effectiveness"
           summary:
-            zh: "带领 4 人 Agent 小组，协同 20 人产研团队；AI 开发 Harness 覆盖 40 个仓库。"
-            en: "Led a 4-person Agent squad within a 20-person product-engineering team; expanded the AI development harness across 40 repositories."
+            zh: "带领 4 人 AI Agent 小组，协同 20 人产研团队；AI 研发 Harness 覆盖 40 个仓库，标准化交付效率达到传统协作方式约 10 倍。"
+            en: "Led a 4-person AI Agent squad within a 20-person product-engineering team; expanded the AI development harness across 40 repositories and reached roughly 10x the prior collaboration model's efficiency for standardized delivery."

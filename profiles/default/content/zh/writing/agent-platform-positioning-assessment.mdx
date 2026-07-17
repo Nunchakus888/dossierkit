@@ -3,22 +3,22 @@ slug: "agent-platform-positioning-assessment"
 locale: "zh"
 translationKey: "agent-platform-positioning-assessment"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-07-01"
-title: "企业级 Agent 平台能力地图"
-summary: "面向生产级 Agent 平台的 runtime、工具治理、评测回放、团队工程和业务价值框架。"
+lastReviewedAt: "2026-07-17"
+title: "企业级 AI Agent 平台能力地图"
+summary: "面向生产级 AI Agent 平台的 runtime、工具治理、评测回放、团队工程和业务价值框架。"
 featured: true
 date: "2026-06-27"
 tags:
-  - "Agent Platform"
+  - "AI Agent Platform"
   - "Architecture"
   - "Operating Model"
 ---
 
 ## 平台边界
 
-企业级 Agent 平台的核心，是把大模型能力接入真实业务流程，并通过 runtime、工具体系、权限边界、评测回放和可观测机制，让模型行为可以被控制、审计、复盘和持续优化。
+企业级 AI Agent 平台的核心，是把大模型能力接入真实业务流程，并通过 runtime、工具体系、权限边界、评测回放和可观测机制，让模型行为可以被控制、审计、复盘和持续优化。
 
-对于面向客服、运营、销售、财务等场景的 SaaS 平台，Agent 能力需要同时满足业务可用性和工程可治理性：既能理解任务、调用工具和完成流程，也能在高风险动作、异常分支和人工接管上保持明确边界。
+对于面向客服、运营、销售、财务等场景的 SaaS 平台，AI Agent 能力需要同时满足业务可用性和工程可治理性：既能理解任务、调用工具和完成流程，也能在高风险动作、异常分支和人工接管上保持明确边界。
 
 ## 平台概况
 
@@ -36,15 +36,15 @@ YC 阶段负责跨行业 AI Agent 客服 SaaS 平台，服务 2k+ 租户、230k+
 
 ## 治理能力
 
-生产级 Agent 平台需要把能力边界写进系统，而非只依赖提示词。关键治理层包括多租户隔离、PII 脱敏、工具权限、side-effect 审批、prompt/tool injection 防护、审计日志、人工接管、高风险确认、幂等、重试和回滚。
+生产级 AI Agent 平台需要把能力边界写进系统，而非只依赖提示词。关键治理层包括多租户隔离、PII 脱敏、工具权限、side-effect 审批、prompt/tool injection 防护、审计日志、人工接管、高风险确认、幂等、重试和回滚。
 
 可观测体系需要贯穿一次响应的完整链路：correlation_id、events、inspection、token usage、ARQ artifacts、callback payload、压测指标和成本统计共同构成可追踪、可评测、可复盘的执行账本。
 
 ## 团队工程
 
-在 20 人产研团队中负责 AI Agent 业务方向，带领 4 人小组推进平台能力、质量治理和交付流程。团队侧推动 AI Harness 覆盖 40 个仓库，以架构规则、Spec/EPIC、Supervisor gate、自检脚本和 PR 模板约束 AI 辅助开发。
+在 20 人产研团队中负责 AI Agent 业务方向，带领 4 人小组推进平台能力、质量治理和交付流程。团队侧推动 AI 研发交付 Harness 覆盖 40 个仓库，以统一上下文贯通开发、测试、发布、部署、验证与运维；开发承担并自动化绝大多数测试执行，测试角色聚焦高风险场景与质量门禁。
 
-通过清晰规格、可审查产物、可执行检查和可复盘过程，让 AI 参与的软件交付保持稳定节奏。
+通过 CLI、Skill、MCP、Spec/EPIC 和 Supervisor gate 将构建、发布、部署、回归验证、生产观测与故障诊断串成全 AI 闭环，减少跨角色交接和等待。标准化需求交付与生产问题闭环效率达到传统协作方式约 10 倍。
 
 ## 平台职责
 
