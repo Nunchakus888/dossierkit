@@ -1,0 +1,107 @@
+---
+import Icon from "../common/Icon.astro";
+import type { Locale } from "../../lib/config";
+import { labels, localePath } from "../../lib/i18n";
+import type { ContentEntry } from "../../lib/profile-loader";
+
+type Props = {
+  locale: Locale;
+  entry: ContentEntry;
+};
+
+const { locale, entry } = Astro.props;
+const l = labels[locale];
+const topics = entry.data.topics.length > 0 ? entry.data.topics : entry.data.tags;
+const kindLabel = {
+  research: locale === "zh" ? "研究" : "Research",
+  learning: locale === "zh" ? "学习" : "Learning",
+  engineering: locale === "zh" ? "工程" : "Engineering"
+}[entry.data.kind || "research"];
+---
+
+<article class="note-card card" data-note-card data-search={`${entry.data.title} ${entry.data.summary} ${topics.join(" ")}`.toLowerCase()}>
+  <div class="note-card-content">
+    <div class="note-meta">
+      <span>{kindLabel}</span>
+      {entry.data.date && <time datetime={entry.data.date}>{entry.data.date}</time>}
+    </div>
+    <h2><a href={localePath(locale, `notes/${entry.slug}`)}>{entry.data.title}</a></h2>
+    <p>{entry.data.summary}</p>
+    {topics.length > 0 && (
+      <ul class="tag-list" aria-label={locale === "zh" ? "主题" : "Topics"}>
+        {topics.slice(0, 6).map((topic) => <li class="tag">{topic}</li>)}
+      </ul>
+    )}
+  </div>
+  <a class="note-link" href={localePath(locale, `notes/${entry.slug}`)} aria-label={`${l.readMore}: ${entry.data.title}`}>
+    <Icon name="arrow-right" size={18} />
+  </a>
+</article>
+
+<style>
+  .note-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px;
+    padding: 26px;
+  }
+
+  .note-card-content,
+  .note-link {
+    position: relative;
+    z-index: 1;
+  }
+
+  .note-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: var(--color-accent);
+    font-size: 0.82rem;
+    font-weight: 760;
+  }
+
+  .note-meta span + time::before {
+    margin-right: 10px;
+    color: var(--color-border);
+    content: "•";
+  }
+
+  h2 {
+    margin: 9px 0 8px;
+    font-size: clamp(1.25rem, 2vw, 1.65rem);
+    line-height: 1.2;
+  }
+
+  h2 a:hover {
+    color: var(--color-accent);
+  }
+
+  p {
+    max-width: 760px;
+    margin: 0 0 16px;
+    color: var(--color-muted);
+  }
+
+  .note-link {
+    display: inline-grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    align-self: center;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    color: var(--color-accent);
+  }
+
+  @media (max-width: 640px) {
+    .note-card {
+      grid-template-columns: 1fr;
+      padding: 20px;
+    }
+
+    .note-link {
+      display: none;
+    }
+  }
+</style>

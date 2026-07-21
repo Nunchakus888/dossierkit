@@ -27,13 +27,20 @@ items:
     path: "lab"
     icon: "flask"
     placement: "primary"
+  - id: "notes"
+    label:
+      zh: "Notes"
+      en: "Notes"
+    path: "notes"
+    icon: "book-open"
+    placement: "primary"
   - id: "cv"
     label:
       zh: "CV"
       en: "CV"
     path: "cv"
     icon: "file-text"
-    placement: "primary"
+    placement: "secondary"
   - id: "roles"
     label:
       zh: "Focus"

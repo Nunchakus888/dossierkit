@@ -4,10 +4,9 @@ DossierKit is a static Astro project and can deploy to Cloudflare Pages, Vercel,
 
 ## Current automation
 
-This repository includes two GitHub Actions workflows:
+This repository uses one GitHub Actions workflow:
 
-- `.github/workflows/ci.yml`: validates the active profile, builds the static site, generates Pagefind, and uploads `dist` as an artifact on every push to `main` and pull request.
-- `.github/workflows/deploy-cloudflare-pages.yml`: deploys `dist` to Cloudflare Pages on every push to `main`; it also supports manual dispatch for redeploys.
+- `.github/workflows/ci.yml`: tests the Notes write contract, validates the active profile, builds the static site and Pagefind index, and deploys to Cloudflare Pages on every push to `main`. Pull requests run the same checks without deployment, and manual dispatch supports redeployment.
 
 ## Build command
 
@@ -31,6 +30,8 @@ DEFAULT_LOCALE=zh
 PUBLIC_SITE_URL=https://your-domain.example
 GITHUB_REPOSITORY=owner/dossierkit
 ```
+
+For the canonical Notes MCP, also configure the variables documented in `docs/notes-mcp.md`. The public MCP endpoint fails closed until its bearer token and GitHub write credentials are present.
 
 ## Cloudflare Pages setup
 

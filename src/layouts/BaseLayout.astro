@@ -11,14 +11,27 @@ type Props = {
   locale?: Locale;
   title?: string;
   description?: string;
+  canonicalPath?: string;
+  ogType?: "website" | "article";
+  publishedTime?: string;
+  modifiedTime?: string;
 };
 
-const { locale = defaultLocale, title, description } = Astro.props;
+const {
+  locale = defaultLocale,
+  title,
+  description,
+  canonicalPath = Astro.url.pathname,
+  ogType = "website",
+  publishedTime,
+  modifiedTime
+} = Astro.props;
 const pack = loadProfilePack();
 const theme = pack.theme;
 const colors = theme.colors as typeof theme.colors & Record<string, string | undefined>;
 const titleText = pageTitle(pack, locale, title);
 const descriptionText = pageDescription(pack, locale, description);
+const canonicalUrl = new URL(canonicalPath, Astro.site || Astro.url.origin).toString();
 const cssVars = [
   `--color-background: ${colors.background}`,
   `--color-surface: ${colors.surface}`,
@@ -42,9 +55,16 @@ const cssVars = [
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={descriptionText} />
+    <link rel="canonical" href={canonicalUrl} />
     <meta property="og:title" content={titleText} />
     <meta property="og:description" content={descriptionText} />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={titleText} />
+    <meta name="twitter:description" content={descriptionText} />
+    {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+    {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

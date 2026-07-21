@@ -34,6 +34,7 @@ Long-form content lives in:
 profiles/{profileId}/content/{locale}/cases
 profiles/{profileId}/content/{locale}/lab
 profiles/{profileId}/content/{locale}/writing
+profiles/{profileId}/content/{locale}/notes
 ```
 
 Common frontmatter:
@@ -51,5 +52,7 @@ tags:
 targetRoles:
   - "agent-platform"
 ```
+
+Notes add `date`, `updatedAt`, `kind`, `topics`, and `contentHash`. Their filename and frontmatter slug must match. New notes should enter through the canonical `save_note` MCP action documented in `docs/notes-mcp.md`; the service owns slug generation and file placement.
 
 Run `pnpm validate` after editing. Missing required fields fail the build with file paths and field names.

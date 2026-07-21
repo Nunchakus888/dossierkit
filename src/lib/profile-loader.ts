@@ -32,7 +32,7 @@ import {
   type Theme
 } from "./schema";
 
-export type ContentKind = "cases" | "lab" | "writing";
+export type ContentKind = "cases" | "lab" | "writing" | "notes";
 
 export type ContentEntry = {
   kind: ContentKind;
@@ -154,7 +154,8 @@ export function readAllLocalizedContent(locale: Locale, profileId = activeProfil
   return {
     cases: readContentCollection(locale, "cases", profileId),
     lab: readContentCollection(locale, "lab", profileId),
-    writing: readContentCollection(locale, "writing", profileId)
+    writing: readContentCollection(locale, "writing", profileId),
+    notes: readContentCollection(locale, "notes", profileId)
   };
 }
 

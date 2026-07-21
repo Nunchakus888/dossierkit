@@ -1,0 +1,1600 @@
+---
+slug: "agent-harness-evaluation-action-governance-memory"
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-07-21"
+title: "构建可持续演进的 Agent Harness：持续评测、动作治理与选择性 Memory"
+summary: "综合四项前沿研究，形成覆盖 Harness 持续优化、行为知识、Canonical Action 治理与选择性持久记忆的统一工程方法。"
+featured: true
+date: "2026-07-17"
+updatedAt: "2026-07-21"
+kind: "research"
+topics:
+  - "Agent Harness"
+  - "Evaluation"
+  - "Action Governance"
+  - "Selective Memory"
+tags:
+  - "Agent Harness"
+  - "Evaluation"
+  - "Action Governance"
+  - "Selective Memory"
+contentHash: "sha256:08cc090a004fc74547f18bc8b99bc25c1893921f45f9e4bb6cdc0844bfe08c7f"
+---
+
+> 研究日期：2026-07-17  
+> 研究对象：
+> 1. *Do Agent Optimizers Compound? A Continual-Learning Evaluation on Terminal-Bench 2.0*
+> 2. *Harness Handbook: Making Evolving Agent Harnesses Readable, Navigable, and Editable*
+> 3. *CAVA: Canonical Action Verification and Attestation for Runtime Governance of Agentic AI Systems*
+> 4. *Shared Selective Persistent Memory for Agentic LLM Systems*
+
+---
+
+## 0. 执行摘要
+
+这四篇材料分别解决生产级 Agent 系统的四个关键问题：
+
+| 问题 | 论文给出的核心方向 | 可沉淀的工程能力 |
+|---|---|---|
+| Agent 怎样持续变好，而不是越改越偏？ | 把回归控制内置到 Harness 优化搜索中 | 持续评测、不可退化门槛、分阶段优化 |
+| Harness 越来越复杂后，怎样知道行为由哪些代码实现？ | 建立“行为 → 执行阶段 → 源码”的 Handbook | 行为知识库、渐进式代码定位、自动同步 |
+| 不同 Runtime 中的 Agent 动作，怎样统一审批和审计？ | 将原始事件规范化为 Canonical Action 并绑定指纹 | 统一动作模型、审批绑定、执行回执、风险路由 |
+| 跨会话记忆究竟该保存什么？ | 只保存稳定、可复用的结构化配置，丢弃推理轨迹 | Workspace Memory、版本化配置、零 Token 数据刷新 |
+
+四篇论文共同指向一个更大的方法论：
+
+> **生产级 Agent 的核心竞争力，正在从“模型回答能力”转向“可持续演进的 Harness、稳定的行为契约、可治理的动作语义，以及经过筛选的持久上下文”。**
+
+推荐将整体系统拆为四层：
+
+```text
+Selective Workspace Memory
+        ↓
+Behavior-Oriented Harness
+        ↓
+Regression-Controlled Evolution
+        ↓
+Canonical Action Governance
+```
+
+---
+
+## 1. Agent Harness 持续优化：如何防止越优化越退化
+
+### 1.1 论文要解决的问题
+
+传统 Agent 优化通常采用一次性流程：
+
+```text
+固定任务集
+→ 收集失败轨迹
+→ 修改 Prompt / Tool / Harness
+→ 在同一批任务上重新测试
+→ 分数上升，宣布优化成功
+```
+
+问题是，生产环境中的任务会持续变化。新失败、新工具、新模型和新业务规则不断进入系统。一次性优化无法回答：
+
+1. 第一次优化获得的能力能否迁移到未见任务？
+2. 第二次优化会不会破坏第一次已经获得的能力？
+3. 优化器是在学通用规律，还是在记住具体测试样本？
+
+论文在 Terminal-Bench 2.0 的困难任务上构造了两阶段持续学习实验，对比 GEPA、Meta Harness 与 RELAI-VCL。三种方法在静态第一阶段都能提高分数，但新增任务后表现明显分化。只有将回归控制内置于搜索过程的方法，同时实现了正迁移与第二阶段继续提升。
+
+论文报告的 lifelong average pass rate 为：
+
+| 方法 | Lifelong Average |
+|---|---:|
+| Baseline | 58.7% |
+| GEPA | 66.0% |
+| Meta Harness | 64.6% |
+| RELAI-VCL | 76.4% |
+
+需要注意：实验只覆盖 22 个 Terminal-Bench 困难任务和两轮优化，不能直接证明该方法适用于所有 Agent 产品。但它提供了一个非常重要的工程证据：
+
+> **静态 Benchmark 上的提升，不等于可持续的系统能力提升。**
+
+### 1.2 最值得学习的理论指导
+
+#### 原则一：把 Agent 优化视为 Continual Learning，而不是 Prompt Tuning
+
+Agent Harness 的修改对象可能包括：
+
+```text
+- System / Developer Prompt
+- Tool descriptions 与 schemas
+- Tool selection rules
+- Context construction
+- State machine
+- Retry / timeout / completion gate
+- Memory retrieval
+- Output validation
+- Human approval policy
+- Runtime code
+```
+
+这些修改不是孤立补丁，而是在不断改变一个长期运行的软件系统。
+
+因此，每次优化都应测量三类指标：
+
+```text
+Static Gain       当前失败集是否改善
+Transfer          对未参与优化的任务是否仍然有效
+Retention         已经解决的旧任务是否发生回归
+```
+
+#### 原则二：Regression Control 必须在搜索环内，而不是上线前补测
+
+常见错误流程：
+
+```text
+候选修改 → 只测新失败 → 选择分数最高者 → 最后跑回归
+```
+
+问题在于，搜索过程会持续偏向新任务的局部最优。即使最后发现回归，也已经浪费大量搜索预算。
+
+正确流程：
+
+```text
+生成候选
+→ 新失败集评测
+→ 历史能力集评测
+→ 通用未见集评测
+→ 违反不可退化条件则立即淘汰
+→ 只有合格候选进入下一轮搜索
+```
+
+即：
+
+```text
+Candidate accepted iff:
+
+new_failure_gain >= threshold
+AND old_capability_regression <= tolerance
+AND safety_contracts == 100% pass
+```
+
+#### 原则三：优先接受机制性修复，而不是样本性经验
+
+论文中一个很有价值的观察是：
+
+- 过拟合修改往往会不断增长 Prompt，并写入任务特定经验。
+- 更具迁移能力的修改通常落在通用机制上，如完成检测、Malformed Tool Call 处理、长输出压缩、Verifier Discovery 和 Runtime Contract 检查。
+
+可以建立修改分类：
+
+| 类型 | 示例 | 默认评价 |
+|---|---|---|
+| 样本规则 | “遇到某类具体任务时执行 X” | 高过拟合风险 |
+| 任务族规则 | “数据库迁移任务先检查 schema” | 需要跨任务验证 |
+| 通用机制 | completion gate、重试、输出压缩 | 优先考虑 |
+| 安全契约 | 敏感动作审批、权限校验 | 必须保持 |
+| 运行时能力 | 新工具、缓存、状态恢复 | 需独立评测 |
+
+### 1.3 可复用方法论：CARE 持续优化框架
+
+将论文结论沉淀为 **CARE**：
+
+#### C — Capture：捕获真实失败
+
+每条失败至少记录：
+
+```yaml
+trace_id:
+task_family:
+user_intent:
+model:
+harness_version:
+toolset_version:
+first_bad_step:
+failure_type:
+expected_behavior:
+actual_behavior:
+severity:
+```
+
+不要只保存最终输出，应记录：
+
+- 规划步骤
+- 工具调用
+- 环境反馈
+- 重试路径
+- 完成判定
+- 人工反馈
+- 最早不可逆错误点
+
+#### A — Abstract：抽象为失败机制
+
+把失败从具体案例提升为机制：
+
+```text
+具体失败：
+Agent 修改了错误的配置文件。
+
+低质量总结：
+“下次注意确认配置文件。”
+
+机制性抽象：
+行为定位不完整；修改前未构建配置加载链；
+Edit Plan 缺少实际 source evidence。
+```
+
+#### R — Regress：构建三层回归集
+
+```text
+Tier 1 — Hard Contracts
+安全、权限、数据边界、Schema、不可逆动作审批
+要求：100% 通过
+
+Tier 2 — Historical Capabilities
+历史上已修复、已稳定的任务
+要求：基本不退化
+
+Tier 3 — Generalization / Shadow Set
+未参与本次优化的同类与异类任务
+目标：验证迁移，不参与搜索调参
+```
+
+#### E — Evolve：带门禁地演进 Harness
+
+每次修改生成标准化 Change Proposal：
+
+```yaml
+change_id:
+failure_mechanism:
+target_components:
+proposed_change:
+expected_gain:
+possible_regressions:
+affected_task_families:
+required_evals:
+rollback_plan:
+```
+
+### 1.4 推荐落地流水线
+
+```text
+Production Traces
+    ↓
+Failure Clustering
+    ↓
+Mechanism Abstraction
+    ↓
+Candidate Harness Changes
+    ↓
+New-Failure Eval
+    ↓
+Historical Regression Gate
+    ↓
+Safety Contract Gate
+    ↓
+Unseen Shadow Eval
+    ↓
+Canary Deployment
+    ↓
+Versioned Release
+```
+
+#### CI 示例
+
+```yaml
+agent_harness_gate:
+  hard_contracts:
+    required_pass_rate: 1.0
+
+  historical_regression:
+    max_absolute_drop: 0.02
+    max_task_family_drop: 0.05
+
+  new_failure_suite:
+    minimum_gain: 0.10
+
+  shadow_suite:
+    minimum_score_vs_baseline: 0.0
+
+  operations:
+    max_cost_increase: 0.15
+    max_p95_latency_increase: 0.20
+```
+
+### 1.5 实践 Checklist
+
+- [ ] 每个 Harness Release 有版本号和变更原因
+- [ ] 新失败转成可重复 Eval
+- [ ] 安全与权限 Eval 为 100% 必过
+- [ ] 新失败集与历史能力集分开
+- [ ] 保留未参与搜索的 Shadow Set
+- [ ] 候选修改进入搜索前声明影响范围
+- [ ] 优先机制性修复，限制 Prompt 无限膨胀
+- [ ] 每次发布记录成本、时延和工具调用变化
+- [ ] 支持一键回滚到上一 Harness 版本
+- [ ] 定期删除被规则化、重复或已经失效的 Prompt 补丁
+
+### 1.6 适用边界
+
+该论文的实验范围有限：
+
+- 只有两阶段，而真实系统可能经历数十轮迭代。
+- 任务之间关联较弱；真实业务任务往往共享数据、工具和策略。
+- Benchmark 可重复运行且有明确 verifier，而生产事故通常只有一条不可复现轨迹。
+- RELAI-VCL 是论文作者自身方法，结论仍需第三方复现。
+
+因此，论文最可信的价值不是“某个优化器一定最好”，而是：
+
+> **持续优化必须同时测量新能力、能力保留和未见任务迁移；回归控制应进入候选选择过程。**
+
+---
+
+## 2. Harness Handbook：从“代码结构”转向“行为结构”
+
+### 2.1 核心问题
+
+Agent Harness 的行为往往横跨：
+
+```text
+Prompt Builder
+→ Context Loader
+→ Planner
+→ Tool Registry
+→ Executor
+→ State Store
+→ Retry Handler
+→ Completion Gate
+→ Output Validator
+```
+
+用户或产品经理提出的需求通常是行为语言：
+
+```text
+“敏感写操作需要审批。”
+“工具失败后最多重试两次。”
+“Agent 不要在信息不足时直接执行。”
+```
+
+代码仓库却按文件、模块、函数组织。于是出现鸿沟：
+
+```text
+Behavior Request ≠ Repository Structure
+```
+
+Harness Handbook 的贡献是建立一层行为导向的中间表示：
+
+```text
+行为
+→ 执行阶段
+→ 依赖状态
+→ 相关函数/文件
+→ 当前源码证据
+```
+
+### 2.2 论文中的关键设计
+
+#### L1–L3 渐进式结构
+
+```text
+L1：系统级总览
+- 架构
+- 执行模型
+- 主要阶段
+- 全局数据流
+
+L2：阶段/组件级总览
+- 职责
+- 输入输出
+- 依赖
+- 本地状态
+
+L3：源码单元
+- 文件
+- 函数或代码区间
+- 行为说明
+- 当前 source locator
+```
+
+同时维护跨阶段的 State Register：
+
+```text
+state:
+  task_context
+  approval_state
+  retry_budget
+  tool_results
+  completion_status
+
+readers:
+writers:
+lifecycle:
+invariants:
+```
+
+#### Behavior-Guided Progressive Disclosure
+
+修改请求进入系统后：
+
+```text
+1. 从 L1/L2 识别相关执行阶段
+2. 沿共享状态关系扩展到耦合阶段
+3. 选择相关 L3 条目
+4. 沿调用图扩展候选点
+5. 回到当前仓库验证 locator
+6. 生成带源码证据的 Edit Plan
+```
+
+关键思想是：
+
+> Handbook 用于导航，当前仓库仍然是事实权威。
+
+如果文档 locator 已失效，就冻结该条目，而不是猜测新的代码位置。
+
+#### 自动 Resynchronization
+
+每次非空 Diff 后：
+
+```text
+- 重新解析变化代码
+- 更新调用图
+- 按函数指纹或文件 Hash 对齐版本
+- 只刷新受影响条目
+- 无法解析的内容标记为 uncovered / frozen
+```
+
+论文实验表明，Handbook 辅助能改善定位质量并减少 Planner Token，尤其适合跨文件、关键词难搜索、低频路径等情况。但实验只覆盖两个开源 Harness 和 60 个修改请求，更多代码库仍需验证。
+
+### 2.3 与第 1 篇论文的共性
+
+两篇论文虽然研究问题不同，但形成了同一套生产方法论。
+
+#### 共性一：Harness 是一等软件资产
+
+不再把 Agent 理解成：
+
+```text
+Agent = Model + Prompt
+```
+
+而是：
+
+```text
+Agent = Model
+      + Context Construction
+      + State
+      + Tools
+      + Control Flow
+      + Validation
+      + Memory
+      + Policy
+      + Observability
+```
+
+#### 共性二：优化必须可定位、可验证、可回滚
+
+第 1 篇解决：
+
+```text
+改完之后，能力是否真的持续提升？
+```
+
+第 2 篇解决：
+
+```text
+改之前，究竟应该改哪里？
+```
+
+完整过程应为：
+
+```text
+失败机制
+→ 行为定位
+→ 代码证据
+→ 修改计划
+→ 执行变更
+→ 回归验证
+→ Handbook 同步
+```
+
+#### 共性三：拒绝无依据猜测
+
+- 优化器不能因局部样本生成过拟合规则。
+- Handbook 无法确认 locator 时不能猜代码位置。
+- Edit Plan 必须附带当前源码证据。
+- 无法覆盖的区域应明确标记，而不是制造“完整理解”的假象。
+
+#### 共性四：确定性基础设施 + LLM 语义组织
+
+适合确定性实现的部分：
+
+```text
+AST / Call Graph
+Source Locator
+Hash / Fingerprint
+Diff
+Version Alignment
+Test / Eval
+Schema Validation
+```
+
+适合 LLM 的部分：
+
+```text
+行为归类
+阶段总结
+失败机制抽象
+修改计划生成
+自然语言说明
+```
+
+### 2.4 可复用方法论：Behavior-to-Code Map
+
+建议为每个 Agent 项目维护如下目录：
+
+```text
+agent-handbook/
+├── 00-system-overview.md
+├── 01-stages/
+│   ├── context-construction.md
+│   ├── planning.md
+│   ├── tool-selection.md
+│   ├── execution.md
+│   ├── approval.md
+│   ├── validation.md
+│   └── completion.md
+├── 02-states/
+│   ├── task-context.yaml
+│   ├── tool-state.yaml
+│   ├── approval-state.yaml
+│   └── retry-budget.yaml
+├── 03-behaviors/
+│   ├── sensitive-action-confirmation.md
+│   ├── tool-failure-retry.md
+│   ├── context-compaction.md
+│   └── completion-detection.md
+└── handbook-manifest.json
+```
+
+行为条目模板：
+
+```yaml
+behavior_id: sensitive-action-confirmation
+summary: 高风险外部写操作执行前必须获得一次性批准
+
+stages:
+  - tool_selection
+  - policy_gate
+  - execution
+
+states_read:
+  - user_identity
+  - action_risk
+  - approval_state
+
+states_written:
+  - approval_receipt
+  - execution_decision
+
+source_locations:
+  - file: src/policy/actionGate.ts
+    symbol: evaluateAction
+    source_digest: sha256:...
+  - file: src/approvals/approvalService.ts
+    symbol: createApproval
+
+invariants:
+  - approval fingerprint 必须与执行参数一致
+  - approval token 单次使用
+  - 未知风险默认进入 ask，不直接 allow
+
+evals:
+  - approval-binding
+  - changed-args-rejected
+  - replay-rejected
+```
+
+### 2.5 工程落地路线
+
+#### 阶段一：人工版 Handbook
+
+先不要立刻做完整自动生成系统。
+
+1. 手工定义 6–10 个核心执行阶段。
+2. 维护 20–30 个关键行为条目。
+3. 每个行为绑定源码和 Eval。
+4. PR 模板要求声明受影响行为。
+5. 合并后更新 Handbook。
+
+#### 阶段二：半自动同步
+
+- AST 提取函数、类、调用关系。
+- Git Diff 检测失效 locator。
+- Source Digest 自动刷新。
+- LLM 只负责行为描述和阶段归类。
+- 无法确认的映射进入人工审核。
+
+#### 阶段三：接入 Coding Agent
+
+让 Coding Agent 在修改前输出：
+
+```yaml
+request:
+affected_behaviors:
+candidate_stages:
+verified_source_locations:
+state_dependencies:
+edit_plan:
+required_evals:
+possible_regressions:
+```
+
+禁止 Agent 在未完成 behavior localization 时直接开始大规模修改。
+
+### 2.6 实践意义
+
+对全栈 AI 工程师而言，这套方法解决三个现实痛点：
+
+1. **Agent Runtime 越来越难维护**  
+   Prompt、工具、状态机和策略散落在不同文件中，传统 README 很快失效。
+
+2. **Coding Agent 修改 Harness 容易漏改**  
+   它可能只找到关键词命中的入口，却漏掉异常处理、审批、状态清理和低频分支。
+
+3. **团队知识不再依赖单个架构师记忆**  
+   行为知识库让新成员、Reviewer 和 Agent 都能从“系统做什么”进入代码。
+
+---
+
+## 3. CAVA：Canonical Action 在工程中到底有什么用
+
+### 3.1 实际问题
+
+同一个高风险动作可能以不同形式出现：
+
+```text
+Shell:
+git push origin main
+
+MCP:
+github.push(branch="main")
+
+SDK:
+githubClient.push(...)
+
+Browser:
+点击 “Publish Release”
+
+CI:
+POST /deployments
+
+Workflow:
+release_pipeline.transition("publish")
+```
+
+如果系统只按字符串、Tool Name 或第一条命令判断风险，会出现：
+
+- wrapper 绕过
+- alias 绕过
+- Tool Indirection
+- 审批内容与执行内容不一致
+- 不同 Runtime 无法统一审计
+- 日志只能说明“发生了什么调用”，不能证明“批准的就是这个动作”
+
+CAVA 的目标不是判断模型是否聪明，而是先建立一个稳定的治理对象：
+
+> **不管动作来自 Shell、MCP、浏览器还是工作流，都先转换成同一种 Canonical Action。**
+
+### 3.2 Canonical Action Schema
+
+建议的工程对象：
+
+```json
+{
+  "schema_version": "cava.v1",
+  "runtime": "mcp",
+  "adapter": "github-mcp-adapter",
+  "actor": {
+    "agent_id": "coding-agent-01",
+    "user_id": "user-123",
+    "workspace_id": "workspace-a"
+  },
+  "executable": "github",
+  "operation": "push",
+  "category": "deployment",
+  "systems_touched": ["github"],
+  "target": {
+    "repository": "org/service",
+    "branch": "main"
+  },
+  "data_scope": {
+    "classification": "internal-code"
+  },
+  "reversible": false,
+  "externality": "external-write",
+  "adapter_confidence": 0.98,
+  "enforcement_depth": "inline-blocking"
+}
+```
+
+然后只对稳定语义字段进行确定性序列化和 Hash：
+
+```text
+canonical_fingerprint =
+SHA256(canonical_json(governance_fields))
+```
+
+审批、策略判断和执行回执都绑定到该 fingerprint。
+
+### 3.3 七阶段工程流水线
+
+论文将流程表达为：
+
+```text
+Capture
+→ Normalize
+→ Interpret
+→ Fingerprint
+→ Bind
+→ Close
+→ Attest
+```
+
+可映射为具体服务：
+
+| 阶段 | 工程组件 | 作用 |
+|---|---|---|
+| Capture | Runtime Adapter | 采集 Shell、MCP、Browser、API 事件 |
+| Normalize | Canonicalizer | 解析 wrapper、alias、Tool Schema |
+| Interpret | Semantic Risk Engine | 识别部署、付款、权限变化、数据外发 |
+| Fingerprint | Canonical Serializer | 生成稳定动作指纹 |
+| Bind | Policy / Approval Service | 把 Allow、Ask、Block 绑定到指纹 |
+| Close | Receipt Service | 记录执行结果、异常、影响范围 |
+| Attest | Signer / Verifier | 签名、验签或外部证明 |
+
+### 3.4 最实用的三个落地点
+
+#### 场景一：敏感动作二次确认
+
+用户看到的不应是：
+
+```text
+是否允许 GitHub MCP？
+```
+
+而应是：
+
+```text
+动作：向 org/service 的 main 分支执行 push
+类型：外部写入 / 发布
+可逆性：否
+包含数据：内部代码
+批准对象指纹：sha256:abc...
+```
+
+执行时重新 Canonicalize：
+
+```text
+executed_fingerprint == approved_fingerprint
+```
+
+如果分支、仓库、参数或动作语义变化，则拒绝。
+
+#### 场景二：跨 Runtime 统一策略
+
+策略不再写成：
+
+```text
+if command startsWith("git push")
+```
+
+而是：
+
+```yaml
+when:
+  category: deployment
+  operation: push
+  target.environment: production
+then:
+  decision: ask
+  approver_role: release_manager
+```
+
+于是 MCP、Shell、Browser 和 API 事件可以共用同一策略。
+
+#### 场景三：审计与事故复盘
+
+传统日志：
+
+```text
+Agent called tool github.execute.
+```
+
+CAVA 回执：
+
+```yaml
+action_fingerprint:
+approved_fingerprint:
+policy_profile:
+decision:
+approver:
+execution_started_at:
+execution_finished_at:
+result:
+systems_touched:
+side_effect_summary:
+adapter_confidence:
+enforcement_depth:
+receipt_hash:
+```
+
+这样才能回答：
+
+- 用户究竟批准了什么？
+- 执行内容是否改变？
+- 哪个系统受影响？
+- 执行是阻断式控制还是仅观察？
+- 回执是否被修改？
+
+### 3.5 推荐最小实现
+
+不要一开始覆盖所有 Runtime。先选三类高价值动作：
+
+```text
+1. Git / PR / Release
+2. Production Deployment
+3. External Data Export
+```
+
+#### TypeScript 接口
+
+```ts
+type RuntimeFamily = "shell" | "mcp" | "browser" | "api";
+
+interface CanonicalAction {
+  schemaVersion: "cava.v1";
+  runtime: RuntimeFamily;
+  adapter: string;
+  actor: {
+    agentId: string;
+    userId?: string;
+    workspaceId: string;
+  };
+  executable: string;
+  operation: string;
+  category: string;
+  systemsTouched: string[];
+  target: Record<string, unknown>;
+  dataScope?: Record<string, unknown>;
+  reversible: boolean | "unknown";
+  externality: "read" | "internal-write" | "external-write";
+  adapterConfidence: number;
+  enforcementDepth: "inline-blocking" | "pre-execution" | "observe-only";
+}
+```
+
+#### Policy Gate
+
+```ts
+interface ActionDecision {
+  actionFingerprint: string;
+  decision: "allow" | "ask" | "block" | "observe";
+  policyVersion: string;
+  reasonCodes: string[];
+  expiresAt?: string;
+}
+```
+
+#### Approval Receipt
+
+```ts
+interface ApprovalReceipt {
+  approvalId: string;
+  actionFingerprint: string;
+  decision: "approved" | "denied";
+  approverId: string;
+  issuedAt: string;
+  expiresAt: string;
+  singleUse: true;
+  receiptHash: string;
+}
+```
+
+### 3.6 必须做的 Eval
+
+```text
+Semantic Equivalence
+- bash -lc "git push ..."
+- env X=1 git push ...
+- MCP github.push(...)
+应映射到等价动作
+
+Semantic Separation
+- git status
+- git push
+不能映射成同一动作
+
+Wrapper Bypass
+- sudo / env / bash -c / alias / helper script
+
+Approval Drift
+- 批准 main，执行 production
+- 批准 repo A，执行 repo B
+
+Receipt Replay
+- 同一批准重复使用
+- 过期批准再次使用
+
+Benign Contamination
+- 搜索文档中的 "kubectl delete"
+不能误判为实际删除
+
+Unknown Parser
+- 无法理解的私有脚本
+默认进入 ask / observe，不能伪装成安全
+```
+
+### 3.7 实用意义与边界
+
+#### 实用意义
+
+- 统一 MCP、Browser Agent、Coding Agent 的执行治理。
+- 解决“用户批准的是什么”这一核心审计问题。
+- 将策略从字符串匹配升级到动作语义。
+- 可作为 Tool Gateway、Approval Center、Agent Security Platform 的底层模型。
+- 非常适合企业 Agent Platform、Codex/Claude Code 管理层和多 API Agent 系统。
+
+#### 边界
+
+CAVA 目前是一篇单作者 working paper，带有明显的 OSuite/open-core 产品化语境。其 384 个变体 Benchmark 是作者构建的代表性语料，论文中的满分结果不能视为真实世界完整覆盖。
+
+真正困难仍在：
+
+- 私有脚本和复杂 Shell 的准确解析
+- Browser Click 到业务语义的映射
+- 跨 API 的副作用识别
+- 动态数据范围与权限变化
+- Adapter Confidence 的可靠校准
+- 多动作事务与部分失败
+- Parser 本身成为新的高权限可信计算基
+
+因此，应采用其**数据模型和审批绑定原则**，而不是直接相信某个 Canonicalizer 已经解决所有运行时治理问题。
+
+---
+
+## 4. Shared Selective Persistent Memory 精读
+
+### 4.1 论文提出的关键判断
+
+Agent 跨会话存在两个极端：
+
+#### 无记忆
+
+每次重新说明：
+
+```text
+- 任务规则
+- 数据结构
+- 工具用法
+- 输出格式
+- 项目约束
+```
+
+#### 保存完整历史
+
+把全部会话、工具调用、失败恢复和中间状态重新塞入上下文。
+
+论文指出第二种方案甚至可能比完全无记忆更差，因为旧轨迹会产生：
+
+```text
+Trace Anchoring
+Stale Assumptions
+Old Tool Patterns
+Lost-in-the-Middle
+Context Pollution
+```
+
+作者提出只保存四类稳定上下文：
+
+1. **Task Specifications**
+2. **Data Schemas**
+3. **Tool Configurations**
+4. **Output Constraints**
+
+明确丢弃：
+
+```text
+- 多轮推理轨迹
+- 旧 Tool Invocation Logs
+- 中间文件状态
+- 一次性错误恢复路径
+```
+
+### 4.2 四类 Memory 的工程解释
+
+#### 1. Task Specifications
+
+保存长期有效的业务规则和偏好：
+
+```yaml
+task_spec:
+  domain_rules:
+    - 金额统一按税后口径
+    - 时间使用 Asia/Shanghai
+  quality_rules:
+    - 所有结论必须附证据
+    - 数值运算处理 NaN
+  presentation:
+    - 首屏显示执行摘要
+```
+
+不应保存：
+
+```text
+“上次 Agent 先打开了 A 文件，然后尝试 B 命令失败。”
+```
+
+#### 2. Data Schemas
+
+保存结构元数据，而不是每次注入原始数据：
+
+```yaml
+data_schema:
+  source_id: weekly_orders
+  schema_version: 7
+  columns:
+    - name: order_id
+      type: string
+      nullable: false
+    - name: revenue
+      type: decimal
+  relationships:
+    - orders.customer_id -> customers.id
+  profile:
+    row_count: 120000
+    freshness: 2026-07-17T08:00:00Z
+```
+
+价值：
+
+- 减少 Token
+- 提升生成代码准确率
+- 允许在不读取全量数据时完成规划
+- 更容易判断新数据是否 Schema Compatible
+
+#### 3. Tool Configurations
+
+保存工具契约与使用方式：
+
+```yaml
+tool_config:
+  tool_id: github.create_pr
+  version: 2.3.0
+  approved_server: github-enterprise-mcp
+  parameter_schema_digest: sha256:...
+  invocation_pattern:
+    required:
+      - repository
+      - branch
+      - title
+  auth_scope:
+    - repo:write
+```
+
+必须注意：
+
+- Tool Config 不是永久可信。
+- MCP Server、Schema、权限或版本变化后必须失效。
+- 配置应绑定版本和来源校验结果。
+
+#### 4. Output Constraints
+
+保存 Artifact 与 Runtime 之间的稳定契约：
+
+```yaml
+output_constraints:
+  artifact_type: dashboard
+  runtime_data_injection: required
+  hardcode_data: forbidden
+  max_bundle_size_kb: 100
+  required_sections:
+    - executive_summary
+    - anomalies
+    - source_notes
+```
+
+这类约束比自然语言偏好更接近 Harness Contract，适合进入 Validator。
+
+### 4.3 Zero-Token Refresh 的真正价值
+
+论文最值得关注的不是“记忆”，而是：
+
+> **将 LLM 生成的程序/模板与运行时数据解耦。**
+
+第一次：
+
+```text
+Schema + Requirements
+→ Agent 生成可复用 Artifact Program
+```
+
+数据变化时：
+
+```text
+新数据
+→ 通过 Runtime Injection 进入已生成程序
+→ 无需重新调用 LLM
+```
+
+适用场景：
+
+```text
+- 周报、日报
+- BI Dashboard
+- 监控面板
+- 固定格式的数据报告
+- 营销内容模板
+- 定期财务分析
+- 周期性岗位与行业信号报告
+```
+
+这实际上是在做：
+
+```text
+Agent-assisted program synthesis
+而不是
+每次都由 Agent 重新生成最终内容
+```
+
+### 4.4 论文实验结果及解读
+
+论文在 24 个企业场景任务中报告：
+
+| 条件 | 完成率 | 用户轮次 | 时间 |
+|---|---:|---:|---:|
+| 无记忆 | 79% | 4.3 | 285 秒 |
+| 完整历史 | 71% | 3.1 | 310 秒 |
+| 选择性记忆 | 96% | 1.4 | 68 秒 |
+
+公开数据复现实验中，Schema Compatible 的刷新任务实现了 12/12 零 Token 刷新。
+
+这些结果很有启发，但应谨慎解释：
+
+- 任务主要是结构化数据驱动 Artifact。
+- 论文作者来自 Apple，但实验平台与数据细节仍有限。
+- 选择性记忆条件中可能同时受益于已有 Artifact，而不仅是 Memory。
+- 完整历史基线的具体压缩、检索和上下文组织方式会显著影响结果。
+- 对复杂软件工程、开放研究和不可预测业务流程，四类 Memory 未必足够。
+
+### 4.5 可复用方案：Workspace Memory Architecture
+
+```text
+Workspace
+├── Memory Store
+│   ├── task_specs
+│   ├── data_schemas
+│   ├── tool_configs
+│   └── output_constraints
+├── Artifact Repository
+├── Runtime Data Bindings
+├── Version History
+├── Access Control
+└── Session Traces（独立存储，不默认注入）
+```
+
+核心原则：
+
+```text
+Persistent Memory ≠ Trace Store
+```
+
+两者应物理或逻辑分开：
+
+| 存储 | 用途 | 是否默认进入 Prompt |
+|---|---|---|
+| Workspace Memory | 跨会话复用 | 是，按需选择 |
+| Trace Store | 调试、评测、事故分析 | 否 |
+| Artifact Store | 代码、报告、模板 | 由任务引用 |
+| Data Store | 实时业务数据 | 运行时读取 |
+
+### 4.6 Memory 写入策略
+
+不要让 Agent 任意把总结写入长期记忆。推荐：
+
+```text
+Candidate Memory
+→ 类型分类
+→ 稳定性判断
+→ 来源与有效期
+→ 冲突检测
+→ 人工或策略批准
+→ Versioned Commit
+```
+
+Memory Entry：
+
+```yaml
+memory_id:
+workspace_id:
+category: task_spec | data_schema | tool_config | output_constraint
+content:
+source:
+created_by:
+created_at:
+valid_from:
+expires_at:
+version:
+confidence:
+status: proposed | active | deprecated
+supersedes:
+validation_rule:
+```
+
+#### 写入判断
+
+适合持久化：
+
+- 多次复用的业务规则
+- 稳定数据 Schema
+- 固定工具契约
+- 输出格式与 Runtime Contract
+
+不适合持久化：
+
+- 某次失败中的具体操作路径
+- 模型内部推理
+- 短期动态数据
+- 未验证猜测
+- 某次临时授权
+- 已过期 Tool Description
+
+### 4.7 Memory 读取策略
+
+不是把四类 Memory 全部塞入 Prompt，而是按任务构建：
+
+```text
+Memory Selector
+→ Scope Filter
+→ Freshness Check
+→ Version Compatibility
+→ Conflict Resolution
+→ Token Budget
+→ Prompt Composer
+```
+
+示例：
+
+```yaml
+memory_query:
+  workspace_id: plansaver
+  task_type: generate_weekly_report
+  required_categories:
+    - task_spec
+    - output_constraint
+  conditional_categories:
+    - data_schema
+    - tool_config
+  max_tokens: 2500
+```
+
+### 4.8 Memory 失效机制
+
+这是论文展开较少、但工程上最重要的部分。
+
+#### Data Schema 失效
+
+```text
+schema_digest changed
+new required column
+type changed
+relationship changed
+```
+
+动作：
+
+```text
+阻止 Zero-Token Refresh
+→ 进入 Agent Regeneration
+→ 更新 Artifact
+→ 跑数据一致性测试
+```
+
+#### Tool Config 失效
+
+```text
+MCP Server Version Changed
+Tool Schema Changed
+Auth Scope Changed
+Manifest Signature Invalid
+```
+
+动作：
+
+```text
+停用旧配置
+→ 重新校验来源
+→ 重新授权
+→ 更新 Tool Eval
+```
+
+#### Task Spec 冲突
+
+```text
+旧规则：日期用 UTC
+新规则：日期用 Asia/Shanghai
+```
+
+动作：
+
+```text
+按 Scope、Priority、Version、UpdatedAt 解析
+无法自动解决则要求人工确认
+```
+
+#### Output Constraint 失效
+
+Artifact Runtime、Schema 或业务模板变化时：
+
+```text
+旧约束进入 deprecated
+新约束触发 Artifact Regression
+```
+
+### 4.9 与 RAG、总结和完整会话记忆的区别
+
+| 方案 | 保存对象 | 主要问题 |
+|---|---|---|
+| 长上下文 | 完整历史 | 成本高、噪声大 |
+| 会话总结 | 自然语言摘要 | 仍可能保留旧推理偏差 |
+| RAG | 文档片段 | 不擅长表达强结构配置 |
+| Reflexion | 失败经验 | 适合任务内纠错，不宜全部跨会话继承 |
+| Selective Memory | 稳定结构化配置 | 需要严格的版本和失效治理 |
+
+最好的系统通常是组合：
+
+```text
+Selective Memory：稳定配置
+RAG：外部知识
+Trace：调试与 Eval
+Artifact：可执行结果
+Runtime Data：实时事实
+```
+
+### 4.10 适用场景
+
+#### AI Agent 技术与岗位周报
+
+可持久化：
+
+```text
+Task Spec：
+- 中文输出
+- 5–8 条技术信号
+- 重点分析全栈 AI 工程价值
+- 同时扫描高阶岗位
+
+Tool Config：
+- arXiv、公司工程博客、GitHub、官方招聘页
+
+Output Constraints：
+- 每条有摘要、重要性和实践方式
+- 区分事实与推断
+```
+
+不持久化：
+
+```text
+- 上一周具体新闻
+- 上一轮搜索路径
+- 旧岗位是否仍在招的假设
+```
+
+每周运行时重新获取动态数据，而不是复用旧数据。
+
+#### Agent 全栈开发项目
+
+可持久化：
+
+```text
+- Repo architecture
+- Coding conventions
+- Test commands
+- MCP tools
+- Deployment contracts
+- PR output format
+```
+
+不持久化：
+
+```text
+- 某次 Debug 的全部 Terminal 输出
+- 临时分支状态
+- 一次性错误恢复轨迹
+```
+
+### 4.11 实践 Checklist
+
+- [ ] Workspace Memory 与 Trace Store 分离
+- [ ] 只允许四类稳定信息进入长期记忆
+- [ ] 每条 Memory 有来源、版本、Scope 和有效期
+- [ ] Tool Config 绑定 Server、Schema Digest 和授权范围
+- [ ] Data Schema 有兼容性检测
+- [ ] Zero-Token Refresh 只用于 Schema Compatible 数据
+- [ ] Memory 写入需要审批或确定性策略
+- [ ] 冲突时不静默覆盖
+- [ ] 旧 Memory 可 deprecated 和回滚
+- [ ] Prompt 只装载当前任务需要的 Memory
+- [ ] 动态事实每次从 API、数据库或 MCP 重新读取
+- [ ] 完整历史仅用于 Trace、Eval 和事故分析
+
+---
+
+## 5. 四篇论文合并后的统一工程方案
+
+### 5.1 总体架构
+
+```text
+┌──────────────────────────────────────┐
+│ Workspace Selective Memory           │
+│ task / schema / tools / constraints  │
+└──────────────────┬───────────────────┘
+                   ↓
+┌──────────────────────────────────────┐
+│ Behavior-Oriented Harness            │
+│ L1-L3 handbook + state register      │
+└──────────────────┬───────────────────┘
+                   ↓
+┌──────────────────────────────────────┐
+│ Agent Runtime                        │
+│ plan / tools / state / validation    │
+└──────────────────┬───────────────────┘
+                   ↓
+┌──────────────────────────────────────┐
+│ Canonical Action Gateway             │
+│ capture / normalize / fingerprint    │
+│ allow / ask / block / receipt        │
+└──────────────────┬───────────────────┘
+                   ↓
+┌──────────────────────────────────────┐
+│ Trace + Eval + Continual Evolution   │
+│ failure → fix → regression → release │
+└──────────────────────────────────────┘
+```
+
+### 5.2 一次完整的变更循环
+
+```text
+1. Production Trace 发现失败
+2. 将失败抽象成 Behavior Defect
+3. Harness Handbook 定位相关阶段、状态与源码
+4. 生成带证据的 Edit Plan
+5. 修改 Prompt / Tool / State / Runtime Code
+6. 新失败集验证
+7. 历史能力与安全契约回归
+8. Shadow Set 验证迁移
+9. 发布新 Harness Version
+10. 自动同步 Handbook
+11. 如产生高风险动作，通过 CAVA 统一治理
+12. 仅把稳定配置写入 Selective Memory
+```
+
+### 5.3 可复用方法论
+
+形成的方法论：
+
+> **Agent 系统能力由行为可定位的 Harness、带持续回归控制的演进流程、跨 Runtime 的 Canonical Action 治理，以及版本化的选择性 Workspace Memory 共同构成。**
+
+这套能力可以映射到市场高阶岗位常见要求：
+
+```text
+Agent Platform
+Coding Agent Harness
+MCP / Tool Governance
+Agent Evals and Observability
+Enterprise Workflow Automation
+Memory and Context Engineering
+AI Security / Approval / Audit
+```
+
+---
+
+## 6. 推荐执行计划
+
+### 第一阶段：1 周内完成基础版
+
+#### Harness 持续优化
+
+- 建立 `evals/hard-contracts`
+- 建立 `evals/historical`
+- 建立 `evals/shadow`
+- 为 Harness 版本加 Changelog
+
+#### Handbook
+
+- 人工定义核心执行阶段
+- 建立 10 个行为条目
+- 每个行为绑定源码与 Eval
+
+#### Selective Memory
+
+- 建立四类 Memory Schema
+- 将 Trace Store 与 Memory Store 分离
+- 先实现人工批准写入
+
+### 第二阶段：2–3 周
+
+#### Canonical Action MVP
+
+覆盖：
+
+- Git push / PR merge
+- Production deploy
+- External data export
+
+实现：
+
+- Runtime Adapter
+- Canonicalizer
+- Fingerprint
+- Policy Gate
+- One-time Approval
+- Receipt Verify
+
+#### Handbook 半自动化
+
+- AST / Call Graph
+- Source Digest
+- Diff-triggered invalidation
+- LLM-assisted behavior classification
+
+### 第三阶段：持续演进
+
+- 失败聚类自动生成 Eval 草稿
+- Coding Agent 根据 Handbook 生成 Edit Plan
+- Harness Candidate 自动跑三层回归
+- Memory 自动失效与冲突检测
+- Canonical Action 扩展到 Browser、MCP 与多 API 工作流
+
+---
+
+## 7. 最终结论
+
+这四篇论文最有价值的部分，不是某个具体分数，而是形成了一套相互补充的工程思想：
+
+1. **Agent 优化不是一次性调参，而是持续学习问题。**
+2. **Harness 修改前，必须先解决行为到源码的定位问题。**
+3. **高风险 Tool Call 必须先转化为稳定、可审批的动作语义。**
+4. **跨会话记忆应该保存稳定配置，而不是保存全部推理历史。**
+5. **确定性程序负责事实、版本、Hash、验证和权限；LLM 负责语义抽象、规划与非结构化理解。**
+
+最值得优先落地的是：
+
+```text
+三层回归集
++ Behavior-to-Code Handbook
++ 四类 Selective Workspace Memory
++ 高风险动作 Canonical Fingerprint
+```
+
+这四项共同构成可演进、可维护、可审计、可复用的生产级 Agent 系统。
+
+---
+
+## 参考资料
+
+1. Wang, W., Kattakinda, P., & Feizi, S. **Do Agent Optimizers Compound? A Continual-Learning Evaluation on Terminal-Bench 2.0.** arXiv:2607.14004, 2026.  
+   https://arxiv.org/abs/2607.14004
+
+2. Wang, R. et al. **Harness Handbook: Making Evolving Agent Harnesses Readable, Navigable, and Editable.** arXiv:2607.13285, 2026.  
+   https://arxiv.org/abs/2607.13285
+
+3. Wang, Z. **CAVA: Canonical Action Verification and Attestation for Runtime Governance of Agentic AI Systems.** arXiv:2607.13716, 2026.  
+   https://arxiv.org/abs/2607.13716
+
+4. Pedada, S., Dhavala, A., & Patil, N. **Shared Selective Persistent Memory for Agentic LLM Systems.** arXiv:2607.09493, 2026.  
+   https://arxiv.org/abs/2607.09493
+
+---
+
+### 研究可信度说明
+
+- 四篇材料截至研究日期均属于预印本，尚不能等同于经过长期同行评议和生产验证的行业定论。
+- 文中“论文结论”尽量按原文事实呈现；“工程方案”和“统一方法论”是结合论文后做出的工程推导。
+- CAVA 是单作者 working paper，并与作者的产品化系统 OSuite 存在关联；其数据模型与治理原则有参考价值，但 Benchmark 结果需要独立复现。
+- Selective Memory 的实验主要围绕结构化数据 Artifact，推广到开放式软件工程、研究 Agent 或高度动态任务时需要重新评测。

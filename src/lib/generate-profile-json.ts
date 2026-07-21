@@ -40,7 +40,8 @@ function summarizeContent(locale: Locale) {
   return {
     cases: content.cases.map(toSummary),
     lab: content.lab.map(toSummary),
-    writing: content.writing.map(toSummary)
+    writing: content.writing.map(toSummary),
+    notes: content.notes.map(toSummary)
   };
 }
 
