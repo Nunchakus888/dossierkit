@@ -45,12 +45,13 @@ Then configure GitHub secrets and variables:
 
 ```bash
 gh secret set CLOUDFLARE_API_TOKEN
+gh secret set CLOUDFLARE_ACCESS_API_TOKEN
 gh secret set CLOUDFLARE_ACCOUNT_ID
 gh secret set NOTES_ACCESS_EMAIL
 gh variable set CLOUDFLARE_PROJECT_NAME --body dossierkit
 ```
 
-The API token needs Cloudflare Pages Write, Access Apps and Policies Write, Access Identity Providers Write, and Access Organizations Write permissions for the account.
+`CLOUDFLARE_API_TOKEN` needs Cloudflare Pages Write permission. `CLOUDFLARE_ACCESS_API_TOKEN` is independently scoped to Access Apps and Policies Write, Access Identity Providers Write, and Access Organizations Write permissions for the account.
 
 After that, every push to `main` will validate, build, and deploy automatically.
 

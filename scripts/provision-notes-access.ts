@@ -24,7 +24,8 @@ type AccessApplication = Record<string, unknown> & {
   type?: string;
 };
 
-const apiToken = required("CLOUDFLARE_API_TOKEN");
+const pagesApiToken = required("CLOUDFLARE_PAGES_API_TOKEN");
+const accessApiToken = required("CLOUDFLARE_ACCESS_API_TOKEN");
 const accountId = required("CLOUDFLARE_ACCOUNT_ID");
 const ownerEmail = required("NOTES_ACCESS_EMAIL").toLowerCase();
 const projectName = process.env.NOTES_MCP_PROJECT_NAME || "dossierkit-notes-mcp";
@@ -43,24 +44,26 @@ await writeOutputs({ access_aud: application.aud, access_issuer: issuer, mcp_url
 console.log(`Cloudflare Access Managed OAuth is ready for ${mcpUrl}.`);
 
 async function ensurePagesProject() {
-  const existing = await request<Record<string, unknown>>(`/pages/projects/${projectName}`, { allowNotFound: true });
+  const existing = await request<Record<string, unknown>>(pagesApiToken, `/pages/projects/${projectName}`, {
+    allowNotFound: true
+  });
   if (existing) return existing;
 
-  return request<Record<string, unknown>>("/pages/projects", {
+  return request<Record<string, unknown>>(pagesApiToken, "/pages/projects", {
     method: "POST",
     body: { name: projectName, production_branch: "main" }
   });
 }
 
 async function ensureZeroTrustOrganization() {
-  const existing = await request<ZeroTrustOrganization | ZeroTrustOrganization[]>("/access/organizations", {
+  const existing = await request<ZeroTrustOrganization | ZeroTrustOrganization[]>(accessApiToken, "/access/organizations", {
     allowNotFound: true
   });
   const organization = Array.isArray(existing) ? existing[0] : existing;
   if (organization?.auth_domain) return organization;
 
   const authDomain = `dossierkit-${accountId.slice(0, 8)}.cloudflareaccess.com`;
-  return request<ZeroTrustOrganization>("/access/organizations", {
+  return request<ZeroTrustOrganization>(accessApiToken, "/access/organizations", {
     method: "POST",
     body: {
       auth_domain: authDomain,
@@ -71,18 +74,18 @@ async function ensureZeroTrustOrganization() {
 }
 
 async function ensureOneTimePin() {
-  const providers = await request<IdentityProvider[]>("/access/identity_providers");
+  const providers = await request<IdentityProvider[]>(accessApiToken, "/access/identity_providers");
   const existing = providers.find((provider) => provider.type === "onetimepin");
   if (existing) return existing;
 
-  return request<IdentityProvider>("/access/identity_providers", {
+  return request<IdentityProvider>(accessApiToken, "/access/identity_providers", {
     method: "POST",
     body: { name: "One-time PIN login", type: "onetimepin", config: {} }
   });
 }
 
 async function ensureAccessApplication(identityProviderId: string) {
-  const applications = await request<AccessApplication[]>("/access/apps");
+  const applications = await request<AccessApplication[]>(accessApiToken, "/access/apps");
   const existing = applications.find((application) =>
     application.name === applicationName || application.domain === domain
   );
@@ -104,15 +107,15 @@ async function ensureAccessApplication(identityProviderId: string) {
   };
 
   if (existing) {
-    const current = await request<AccessApplication>(`/access/apps/${existing.id}`);
+    const current = await request<AccessApplication>(accessApiToken, `/access/apps/${existing.id}`);
     if (managedOAuthMatches(current.oauth_configuration, oauthConfiguration)) return current;
-    return request<AccessApplication>(`/access/apps/${existing.id}`, {
+    return request<AccessApplication>(accessApiToken, `/access/apps/${existing.id}`, {
       method: "PUT",
       body: { ...current, oauth_configuration: oauthConfiguration }
     });
   }
 
-  return request<AccessApplication>("/access/apps", {
+  return request<AccessApplication>(accessApiToken, "/access/apps", {
     method: "POST",
     body: {
       name: applicationName,
@@ -152,14 +155,17 @@ function managedOAuthMatches(current: unknown, expected: unknown): boolean {
 }
 
 function request<T>(
+  apiToken: string,
   path: string,
   options: { method?: string; body?: unknown; allowNotFound: true }
 ): Promise<T | undefined>;
 function request<T>(
+  apiToken: string,
   path: string,
   options?: { method?: string; body?: unknown; allowNotFound?: false }
 ): Promise<T>;
 async function request<T>(
+  apiToken: string,
   path: string,
   options: { method?: string; body?: unknown; allowNotFound?: boolean } = {}
 ): Promise<T | undefined> {

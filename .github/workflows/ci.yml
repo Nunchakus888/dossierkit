@@ -101,7 +101,8 @@ jobs:
         id: notes_access
         if: github.event_name != 'pull_request'
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_PAGES_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCESS_API_TOKEN: ${{ secrets.CLOUDFLARE_ACCESS_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           NOTES_ACCESS_EMAIL: ${{ secrets.NOTES_ACCESS_EMAIL }}
           NOTES_MCP_PROJECT_NAME: dossierkit-notes-mcp
