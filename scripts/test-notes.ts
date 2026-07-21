@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import { collisionSlug, noteSaveInputSchema, prepareNote, renderCanonicalNote } from "../src/lib/note-ingest";
 import { decorateNoteHtml } from "../src/lib/note-render";
+import {
+  AccessAuthenticationError,
+  AccessConfigurationError,
+  verifyCloudflareAccess
+} from "../src/server/access-auth";
 import { saveNoteToGitHub } from "../src/server/github-notes";
 
 const markdown = `# 构建可持续演进的 Agent Harness：持续评测、动作治理与选择性 Memory
@@ -108,5 +113,18 @@ const unchanged = await saveNoteToGitHub(
 
 assert.equal(unchanged.action, "unchanged");
 assert.equal(idempotentWrites, 0, "identical content must not create a commit");
+
+assert.equal(await verifyCloudflareAccess(new Request("https://notes.example.com/api/mcp"), {}), undefined);
+await assert.rejects(
+  () => verifyCloudflareAccess(new Request("https://notes.example.com/api/mcp"), { NOTES_ACCESS_AUD: "audience" }),
+  AccessConfigurationError
+);
+await assert.rejects(
+  () => verifyCloudflareAccess(new Request("https://notes.example.com/api/mcp"), {
+    NOTES_ACCESS_AUD: "audience",
+    NOTES_ACCESS_ISSUER: "https://notes.cloudflareaccess.com"
+  }),
+  AccessAuthenticationError
+);
 
 console.log("Notes slug generation and canonical GitHub write tests passed.");

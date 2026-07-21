@@ -1,16 +1,22 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { noteSaveInputSchema } from "../../src/lib/note-ingest";
+import {
+  AccessAuthenticationError,
+  AccessConfigurationError,
+  verifyCloudflareAccess,
+  type AccessAuthEnvironment
+} from "../../src/server/access-auth";
 import { saveNoteToGitHub, type NotesEnvironment } from "../../src/server/github-notes";
 
-type Environment = NotesEnvironment & {
+type Environment = NotesEnvironment & AccessAuthEnvironment & {
   NOTES_MCP_TOKEN?: string;
 };
 
 export const onRequest = async ({ request, env }: { request: Request; env: Environment }) => {
   if (request.method === "OPTIONS") return corsResponse(new Response(null, { status: 204 }));
 
-  const authError = authorize(request, env);
+  const authError = await authorize(request, env);
   if (authError) return corsResponse(authError);
 
   const requestUrl = new URL(request.url);
@@ -76,7 +82,16 @@ function createServer(env: Environment, requestOrigin: string) {
   return server;
 }
 
-function authorize(request: Request, env: Environment) {
+async function authorize(request: Request, env: Environment) {
+  try {
+    const accessIdentity = await verifyCloudflareAccess(request, env);
+    if (accessIdentity) return undefined;
+  } catch (error) {
+    if (error instanceof AccessConfigurationError) return jsonError(503, error.message);
+    if (error instanceof AccessAuthenticationError) return unauthorized(error.message);
+    return jsonError(503, "Cloudflare Access authentication is unavailable.");
+  }
+
   const configured = env.NOTES_MCP_TOKEN;
   const hostname = new URL(request.url).hostname;
   const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
@@ -89,15 +104,19 @@ function authorize(request: Request, env: Environment) {
 
   const provided = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
   if (!provided || !timingSafeEqual(provided, configured)) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "WWW-Authenticate": "Bearer"
-      }
-    });
+    return unauthorized("Unauthorized");
   }
   return undefined;
+}
+
+function unauthorized(message: string) {
+  return new Response(JSON.stringify({ error: message }), {
+    status: 401,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "WWW-Authenticate": "Bearer"
+    }
+  });
 }
 
 function timingSafeEqual(left: string, right: string) {

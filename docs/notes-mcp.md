@@ -31,6 +31,25 @@ Slug generation follows these rules:
 5. Add a deterministic title fingerprint only when two different notes resolve to the same slug.
 6. Repeated saves with the same title resolve to the same file; identical content creates no commit.
 
+## ChatGPT web connection
+
+The ChatGPT-facing endpoint is isolated from the public website:
+
+```text
+https://dossierkit-notes-mcp.pages.dev/api/mcp
+```
+
+Cloudflare Access provides OAuth discovery, dynamic client registration, PKCE authorization, short-lived access tokens, and refresh tokens. The MCP origin validates the signed `Cf-Access-Jwt-Assertion` before accepting a request. One-time PIN login is restricted to the configured owner email.
+
+In ChatGPT web:
+
+1. Enable Developer mode in **Settings → Security and login**.
+2. Open **Settings → Plugins**, create an app, and enter the endpoint above.
+3. Complete the Cloudflare email authorization once.
+4. Scan the app and enable `save_note`.
+
+ChatGPT requests confirmation before the write action. The OAuth grant lasts up to two weeks and refreshes 15-minute access tokens without routine interaction.
+
 ## Runtime configuration
 
 Set the following Cloudflare Pages production variables:
@@ -44,15 +63,15 @@ NOTES_PROFILE_ID=default
 PUBLIC_SITE_URL=https://sunionpeaks.pages.dev
 ```
 
-Use a fine-grained GitHub token restricted to the selected repository with Contents read/write permission. The MCP bearer token must be a separate high-entropy secret. The public endpoint stays disabled when `NOTES_MCP_TOKEN` is missing.
-
-The deployed MCP endpoint is:
+The isolated MCP project additionally receives:
 
 ```text
-https://sunionpeaks.pages.dev/api/mcp
+NOTES_ACCESS_AUD
+NOTES_ACCESS_ISSUER
+NOTES_ACCESS_EMAIL
 ```
 
-ChatGPT full MCP write actions currently require an eligible Business or Enterprise/Edu workspace and may request user confirmation. Register the remote endpoint as a private custom app, configure its authentication, scan the tools, and enable only `save_note`.
+Use a fine-grained GitHub token restricted to the selected repository with Contents read/write permission. `NOTES_MCP_TOKEN` protects the existing direct endpoint; ChatGPT uses the Access-managed OAuth endpoint. The CI workflow provisions the isolated Pages project, Zero Trust organization, one-time PIN provider, MCP application, owner policy, OAuth settings, runtime secrets, and deployment.
 
 ## Authoring instruction
 
@@ -73,4 +92,4 @@ ACTIVE_PROFILE=default pnpm validate
 ACTIVE_PROFILE=default pnpm build
 ```
 
-Local MCP requests may run without `NOTES_MCP_TOKEN`; non-local requests fail closed when the token is absent.
+Local MCP requests may run without `NOTES_MCP_TOKEN`; non-local requests fail closed when neither Access identity nor the configured bearer token is present.

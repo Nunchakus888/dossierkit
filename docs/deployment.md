@@ -31,7 +31,7 @@ PUBLIC_SITE_URL=https://your-domain.example
 GITHUB_REPOSITORY=owner/dossierkit
 ```
 
-For the canonical Notes MCP, also configure the variables documented in `docs/notes-mcp.md`. The public MCP endpoint fails closed until its bearer token and GitHub write credentials are present.
+For the canonical Notes MCP, also configure the variables documented in `docs/notes-mcp.md`. The ChatGPT-facing deployment uses Cloudflare Access Managed OAuth and validates the signed Access identity at the origin.
 
 ## Cloudflare Pages setup
 
@@ -46,10 +46,11 @@ Then configure GitHub secrets and variables:
 ```bash
 gh secret set CLOUDFLARE_API_TOKEN
 gh secret set CLOUDFLARE_ACCOUNT_ID
+gh secret set NOTES_ACCESS_EMAIL
 gh variable set CLOUDFLARE_PROJECT_NAME --body dossierkit
 ```
 
-The API token needs Cloudflare Pages edit access for the account.
+The API token needs Cloudflare Pages Write, Access Apps and Policies Write, Access Identity Providers Write, and Access Organizations Write permissions for the account.
 
 After that, every push to `main` will validate, build, and deploy automatically.
 
