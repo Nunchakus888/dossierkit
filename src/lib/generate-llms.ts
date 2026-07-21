@@ -33,6 +33,9 @@ function renderLocale(pack: ProfilePack, locale: Locale) {
     "## Writing",
     ...content.writing.map((entry) => `- ${entry.data.title}: ${entry.data.summary} (/${locale}/writing/${entry.slug})`),
     "",
+    "## Notes",
+    ...content.notes.map((entry) => `- ${entry.data.title}: ${entry.data.summary} (/${locale}/notes/${entry.slug})`),
+    "",
     "## Contact",
     `Email: ${pack.profile.links.email}`
   ];

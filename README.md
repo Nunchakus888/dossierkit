@@ -13,6 +13,12 @@ pnpm dev
 
 Open `/zh`, `/en`, and `/admin`.
 
+## Canonical Notes
+
+Research notes live under `profiles/{profileId}/content/{locale}/notes` and publish at `/{locale}/notes`. The remote `save_note` MCP action accepts a finished Markdown note, generates a stable natural slug from its H1 title, and writes the only maintained copy directly to GitHub. URLs, download links, caller-provided slugs, and duplicate source files are rejected.
+
+See `docs/notes-mcp.md` for the tool contract, runtime configuration, and ChatGPT setup boundary.
+
 ## CLI
 
 ```bash
@@ -25,7 +31,7 @@ pnpm dossier export-profile
 
 ## Deployment
 
-CI is configured in `.github/workflows/ci.yml`. Cloudflare Pages deployment is configured as a manual GitHub Actions workflow in `.github/workflows/deploy-cloudflare-pages.yml`.
+CI and Cloudflare Pages deployment are configured in `.github/workflows/ci.yml`.
 
 Configure `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `CLOUDFLARE_PROJECT_NAME`, then run the deploy workflow.
 

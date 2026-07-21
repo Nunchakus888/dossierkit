@@ -331,7 +331,10 @@ export const contentMetricSchema = z
 
 export const contentFrontmatterSchema = z
   .object({
-    slug: z.string().min(1),
+    slug: z
+      .string()
+      .max(72)
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Must be a lowercase, hyphenated URL slug"),
     locale: localeSchema,
     translationKey: z.string().min(1).optional(),
     translationStatus: z
@@ -346,7 +349,12 @@ export const contentFrontmatterSchema = z
     relatedRoles: z.array(z.string()).default([]),
     metrics: z.array(contentMetricSchema).default([]),
     period: z.string().optional(),
-    date: z.string().optional()
+    date: z.string().optional(),
+    updatedAt: z.string().optional(),
+    kind: z.enum(["research", "learning", "engineering"]).optional(),
+    topics: z.array(z.string()).default([]),
+    sourceUrl: z.string().url().optional(),
+    contentHash: z.string().regex(/^sha256:[a-f0-9]{64}$/).optional()
   })
   .passthrough();
 
