@@ -1,7 +1,8 @@
 import {
   collisionSlug,
-  extractExistingNoteIdentity,
+  noteGetInputSchema,
   noteSaveInputSchema,
+  parseCanonicalNote,
   prepareNote,
   renderCanonicalNote,
   type NoteSaveInput,
@@ -19,17 +20,46 @@ export type NotesEnvironment = {
 type GitHubContent = {
   content?: string;
   encoding?: string;
+  name?: string;
+  path?: string;
   sha?: string;
-  html_url?: string;
+  type?: string;
+};
+
+type StoredNote = {
+  key: string;
+  noteRef: string;
+  path: string;
+  sha?: string;
+  parsed: ReturnType<typeof parseCanonicalNote>;
 };
 
 export type SaveNoteResult = {
   action: "created" | "updated" | "unchanged";
-  slug: string;
+  noteRef: string;
   path: string;
   commitUrl?: string;
   publicUrl: string;
   contentHash: string;
+};
+
+export type NoteCandidate = {
+  noteRef: string;
+  title: string;
+  summary: string;
+  publicUrl: string;
+};
+
+export type GetNoteResult = {
+  status: "found" | "ambiguous" | "not_found";
+  note?: NoteCandidate & {
+    locale: "zh" | "en";
+    kind?: "research" | "learning" | "engineering";
+    topics: string[];
+    markdown: string;
+    contentHash: string;
+  };
+  candidates?: NoteCandidate[];
 };
 
 export async function saveNoteToGitHub(
@@ -39,101 +69,227 @@ export async function saveNoteToGitHub(
   requestFetch: typeof fetch = fetch
 ): Promise<SaveNoteResult> {
   const input = noteSaveInputSchema.parse(rawInput);
-  const token = required(env.NOTES_GITHUB_TOKEN, "NOTES_GITHUB_TOKEN");
-  const repository = required(env.NOTES_GITHUB_REPOSITORY, "NOTES_GITHUB_REPOSITORY");
-  const [owner, repo, extra] = repository.split("/");
-  if (!owner || !repo || extra) throw new Error("NOTES_GITHUB_REPOSITORY must use owner/repository format.");
+  const context = repositoryContext(env, requestOrigin);
+  let note = await prepareNote(input);
+  let existing: StoredNote | undefined;
+  let key: string;
 
-  const branch = env.NOTES_GITHUB_BRANCH || "main";
-  const profileId = env.NOTES_PROFILE_ID || "default";
-  const note = await prepareNote(input);
-  let slug = note.baseSlug;
-  let path = notePath(profileId, note, slug);
-  let existing = await getContent(owner, repo, path, branch, token, requestFetch);
-
-  if (existing) {
-    const source = decodeGitHubContent(existing);
-    const identity = extractExistingNoteIdentity(source);
-    if (identity.title && normalizeTitle(identity.title) !== normalizeTitle(note.title)) {
-      slug = collisionSlug(note.baseSlug, note.title);
-      path = notePath(profileId, note, slug);
-      existing = await getContent(owner, repo, path, branch, token, requestFetch);
+  if (input.noteRef) {
+    const identity = splitNoteRef(input.noteRef);
+    existing = await getStoredNote(context, identity.locale, identity.key, requestFetch);
+    if (!existing) throw new Error(`No canonical note exists for noteRef ${input.noteRef}. Call get_note before updating.`);
+    note = await prepareNote(input, new Date(), existing.parsed.metadata);
+    if (note.locale !== identity.locale) {
+      throw new Error("An update cannot change the note locale. Create a separate translated note instead.");
+    }
+    key = identity.key;
+  } else {
+    const notes = await listStoredNotes(context, note.locale, requestFetch);
+    existing = notes.find((item) => normalizeTitle(item.parsed.metadata.title) === normalizeTitle(note.title));
+    if (existing) {
+      note = await prepareNote(input, new Date(), existing.parsed.metadata);
+      key = existing.key;
+    } else {
+      key = input.suggestedSlug as string;
+      existing = notes.find((item) => item.key === key);
+      if (existing) {
+        key = collisionSlug(key, note.title);
+        existing = notes.find((item) => item.key === key);
+        if (existing && normalizeTitle(existing.parsed.metadata.title) !== normalizeTitle(note.title)) {
+          throw new Error("The proposed path and its deterministic fallback are both occupied. Propose a more specific suggestedSlug.");
+        }
+      }
     }
   }
 
-  if (existing) {
-    const identity = extractExistingNoteIdentity(decodeGitHubContent(existing));
-    if (identity.contentHash === note.contentHash) {
-      return result("unchanged", note, slug, path, undefined, env.PUBLIC_SITE_URL || requestOrigin);
-    }
+  const path = notePath(context.profileId, note.locale, key);
+  if (existing && existing.parsed.contentHash === note.contentHash) {
+    return saveResult("unchanged", note, key, path, undefined, context.siteUrl);
   }
 
-  const document = renderCanonicalNote(note, slug);
+  const document = renderCanonicalNote(note);
   const response = await requestFetch(
-    `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePath(path)}`,
+    githubContentUrl(context.owner, context.repo, path),
     {
       method: "PUT",
-      headers: githubHeaders(token),
+      headers: githubHeaders(context.token),
       body: JSON.stringify({
         message: `${existing ? "Update" : "Publish"} note: ${note.title}`,
         content: encodeBase64(document),
-        branch,
+        branch: context.branch,
         ...(existing?.sha ? { sha: existing.sha } : {})
       })
     }
   );
 
-  const payload = await response.json() as {
-    commit?: { html_url?: string };
-    message?: string;
-  };
+  const payload = await response.json() as { commit?: { html_url?: string }; message?: string };
   if (!response.ok) {
     throw new Error(`GitHub write failed (${response.status}): ${payload.message || response.statusText}`);
   }
 
-  return result(existing ? "updated" : "created", note, slug, path, payload.commit?.html_url, env.PUBLIC_SITE_URL || requestOrigin);
+  return saveResult(
+    existing ? "updated" : "created",
+    note,
+    key,
+    path,
+    payload.commit?.html_url,
+    context.siteUrl
+  );
 }
 
-async function getContent(
-  owner: string,
-  repo: string,
-  path: string,
-  branch: string,
-  token: string,
+export async function getNoteFromGitHub(
+  rawInput: unknown,
+  env: NotesEnvironment,
+  requestOrigin: string,
+  requestFetch: typeof fetch = fetch
+): Promise<GetNoteResult> {
+  const input = noteGetInputSchema.parse(rawInput);
+  const context = repositoryContext(env, requestOrigin);
+  const directRef = /^(zh|en)\/([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(input.query);
+  if (directRef) {
+    const stored = await getStoredNote(context, directRef[1] as "zh" | "en", directRef[2], requestFetch);
+    return stored ? foundResult(stored, context.siteUrl) : { status: "not_found" };
+  }
+
+  const locales = input.locale ? [input.locale] : ["zh", "en"] as const;
+  const collections = await Promise.all(locales.map((locale) => listStoredNotes(context, locale, requestFetch)));
+  const notes = collections.flat();
+  const query = normalizeTitle(input.query);
+  const exact = notes.filter((item) =>
+    item.key === input.query || normalizeTitle(item.parsed.metadata.title) === query
+  );
+  if (exact.length === 1) return foundResult(exact[0], context.siteUrl);
+  if (exact.length > 1) return ambiguousResult(exact, context.siteUrl);
+
+  const partial = notes.filter((item) =>
+    item.key.includes(input.query.toLowerCase()) || normalizeTitle(item.parsed.metadata.title).includes(query)
+  );
+  if (partial.length === 1) return foundResult(partial[0], context.siteUrl);
+  if (partial.length > 1) return ambiguousResult(partial, context.siteUrl);
+  return { status: "not_found" };
+}
+
+function repositoryContext(env: NotesEnvironment, requestOrigin = env.PUBLIC_SITE_URL || "") {
+  const token = required(env.NOTES_GITHUB_TOKEN, "NOTES_GITHUB_TOKEN");
+  const repository = required(env.NOTES_GITHUB_REPOSITORY, "NOTES_GITHUB_REPOSITORY");
+  const [owner, repo, extra] = repository.split("/");
+  if (!owner || !repo || extra) throw new Error("NOTES_GITHUB_REPOSITORY must use owner/repository format.");
+  return {
+    token,
+    owner,
+    repo,
+    branch: env.NOTES_GITHUB_BRANCH || "main",
+    profileId: env.NOTES_PROFILE_ID || "default",
+    siteUrl: (env.PUBLIC_SITE_URL || requestOrigin).replace(/\/+$/, "")
+  };
+}
+
+async function listStoredNotes(
+  context: ReturnType<typeof repositoryContext>,
+  locale: "zh" | "en",
   requestFetch: typeof fetch
 ) {
-  const url = new URL(`https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePath(path)}`);
-  url.searchParams.set("ref", branch);
-  const response = await requestFetch(url, { headers: githubHeaders(token) });
-  if (response.status === 404) return undefined;
-  if (!response.ok) {
-    const payload = await response.json() as { message?: string };
-    throw new Error(`GitHub read failed (${response.status}): ${payload.message || response.statusText}`);
-  }
-  return await response.json() as GitHubContent;
+  const directory = `profiles/${context.profileId}/content/${locale}/notes`;
+  const url = new URL(githubContentUrl(context.owner, context.repo, directory));
+  url.searchParams.set("ref", context.branch);
+  const response = await requestFetch(url, { headers: githubHeaders(context.token) });
+  if (response.status === 404) return [];
+  if (!response.ok) throw await githubReadError(response);
+  const entries = await response.json() as GitHubContent[];
+  const files = entries.filter((entry) => entry.type === "file" && entry.name?.match(/\.mdx?$/));
+  return await Promise.all(files.map(async (entry) => {
+    const key = entry.name!.replace(/\.mdx?$/, "");
+    const stored = await getStoredNote(context, locale, key, requestFetch);
+    if (!stored) throw new Error(`GitHub listed ${entry.path}, but the note could not be read.`);
+    return stored;
+  }));
 }
 
-function result(
+async function getStoredNote(
+  context: ReturnType<typeof repositoryContext>,
+  locale: "zh" | "en",
+  key: string,
+  requestFetch: typeof fetch
+): Promise<StoredNote | undefined> {
+  const path = notePath(context.profileId, locale, key);
+  const url = new URL(githubContentUrl(context.owner, context.repo, path));
+  url.searchParams.set("ref", context.branch);
+  const response = await requestFetch(url, { headers: githubHeaders(context.token) });
+  if (response.status === 404) return undefined;
+  if (!response.ok) throw await githubReadError(response);
+  const content = await response.json() as GitHubContent;
+  return {
+    key,
+    noteRef: `${locale}/${key}`,
+    path,
+    sha: content.sha,
+    parsed: parseCanonicalNote(decodeGitHubContent(content))
+  };
+}
+
+function foundResult(stored: StoredNote, siteUrl: string): GetNoteResult {
+  const metadata = stored.parsed.metadata;
+  return {
+    status: "found",
+    note: {
+      noteRef: stored.noteRef,
+      title: metadata.title,
+      summary: metadata.summary,
+      publicUrl: publicUrl(siteUrl, metadata.locale, stored.key),
+      locale: metadata.locale,
+      kind: metadata.kind,
+      topics: metadata.topics,
+      markdown: stored.parsed.markdown,
+      contentHash: stored.parsed.contentHash
+    }
+  };
+}
+
+function ambiguousResult(notes: StoredNote[], siteUrl: string): GetNoteResult {
+  return {
+    status: "ambiguous",
+    candidates: notes.map((stored) => ({
+      noteRef: stored.noteRef,
+      title: stored.parsed.metadata.title,
+      summary: stored.parsed.metadata.summary,
+      publicUrl: publicUrl(siteUrl, stored.parsed.metadata.locale, stored.key)
+    }))
+  };
+}
+
+function saveResult(
   action: SaveNoteResult["action"],
   note: PreparedNote,
-  slug: string,
+  key: string,
   path: string,
   commitUrl: string | undefined,
   siteUrl: string
 ): SaveNoteResult {
-  const base = siteUrl.replace(/\/+$/, "");
   return {
     action,
-    slug,
+    noteRef: `${note.locale}/${key}`,
     path,
     commitUrl,
-    publicUrl: `${base}/${note.locale}/notes/${slug}`,
+    publicUrl: publicUrl(siteUrl, note.locale, key),
     contentHash: note.contentHash
   };
 }
 
-function notePath(profileId: string, note: PreparedNote, slug: string) {
-  return `profiles/${profileId}/content/${note.locale}/notes/${slug}.mdx`;
+function splitNoteRef(noteRef: string) {
+  const [locale, key] = noteRef.split("/") as ["zh" | "en", string];
+  return { locale, key };
+}
+
+function notePath(profileId: string, locale: "zh" | "en", key: string) {
+  return `profiles/${profileId}/content/${locale}/notes/${key}.mdx`;
+}
+
+function publicUrl(siteUrl: string, locale: "zh" | "en", key: string) {
+  return `${siteUrl.replace(/\/+$/, "")}/${locale}/notes/${key}`;
+}
+
+function githubContentUrl(owner: string, repo: string, path: string) {
+  return `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/contents/${encodePath(path)}`;
 }
 
 function githubHeaders(token: string) {
@@ -144,6 +300,11 @@ function githubHeaders(token: string) {
     "User-Agent": "dossierkit-notes-mcp",
     "X-GitHub-Api-Version": "2022-11-28"
   };
+}
+
+async function githubReadError(response: Response) {
+  const payload = await response.json() as { message?: string };
+  return new Error(`GitHub read failed (${response.status}): ${payload.message || response.statusText}`);
 }
 
 function required(value: string | undefined, name: string) {

@@ -1,23 +1,67 @@
-import { pinyin } from "pinyin-pro";
-import { stringify } from "yaml";
+import { parse, stringify } from "yaml";
 import { z } from "zod";
 
-export const noteSaveInputSchema = z.object({
-  markdown: z
-    .string()
-    .min(80, "The finished note must contain at least 80 characters")
-    .max(500_000, "The note is too large for a single canonical document"),
-  topics: z
-    .array(z.string().trim().min(2).max(64))
-    .min(1)
-    .max(8)
-    .optional()
-    .describe("Three to six concise topics extracted from the note for classification and search."),
-  kind: z.enum(["research", "learning", "engineering"]).default("research")
-}).strict();
+const slugSchema = z
+  .string()
+  .max(72)
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase English words separated by hyphens");
+
+export const noteRefSchema = z
+  .string()
+  .regex(/^(?:zh|en)\/[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use a noteRef returned by get_note or save_note");
+
+export const noteSaveInputSchema = z
+  .object({
+    markdown: z
+      .string()
+      .min(80, "The finished note must contain at least 80 characters")
+      .max(500_000, "The note is too large for a single canonical document"),
+    noteRef: noteRefSchema
+      .optional()
+      .describe("Canonical identity returned by get_note or save_note. Required when updating a note."),
+    suggestedSlug: slugSchema
+      .optional()
+      .describe("A concise semantic path proposed by the model. Required only when creating a note."),
+    topics: z
+      .array(z.string().trim().min(2).max(64))
+      .min(1)
+      .max(8)
+      .optional()
+      .describe("Three to six concise topics extracted from the note for classification and search."),
+    kind: z.enum(["research", "learning", "engineering"]).optional()
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (!value.noteRef && !value.suggestedSlug) {
+      context.addIssue({
+        code: "custom",
+        path: ["suggestedSlug"],
+        message: "Provide suggestedSlug for a new note or noteRef for an existing note"
+      });
+    }
+  });
+
+export const noteGetInputSchema = z
+  .object({
+    query: z.string().trim().min(2).max(160).describe("A noteRef, filename, exact title, or distinctive title phrase."),
+    locale: z.enum(["zh", "en"]).optional()
+  })
+  .strict();
 
 export type NoteSaveInput = z.input<typeof noteSaveInputSchema>;
 type ParsedNoteSaveInput = z.output<typeof noteSaveInputSchema>;
+
+export type ExistingNoteMetadata = {
+  locale: "zh" | "en";
+  title: string;
+  summary: string;
+  featured: boolean;
+  date?: string;
+  kind?: "research" | "learning" | "engineering";
+  topics: string[];
+  translationKey?: string;
+  translationStatus?: "draft" | "machine-translated" | "reviewed" | "complete";
+};
 
 export type PreparedNote = {
   title: string;
@@ -25,11 +69,13 @@ export type PreparedNote = {
   body: string;
   locale: "zh" | "en";
   topics: string[];
-  kind: ParsedNoteSaveInput["kind"];
+  kind: NonNullable<ParsedNoteSaveInput["kind"]>;
   date: string;
   updatedAt: string;
   contentHash: string;
-  baseSlug: string;
+  featured: boolean;
+  translationKey?: string;
+  translationStatus: "draft" | "machine-translated" | "reviewed" | "complete";
 };
 
 const ENGLISH_STOP_WORDS = new Set([
@@ -37,12 +83,11 @@ const ENGLISH_STOP_WORDS = new Set([
   "is", "it", "notes", "of", "on", "or", "research", "study", "the", "to", "using", "with"
 ]);
 
-const PINYIN_STOP_WORDS = new Set([
-  "de", "yu", "he", "ji", "yi", "jiu", "jiu", "ru", "he", "cong", "dao", "zai", "dui", "ji",
-  "gou", "jian", "shen", "du", "xue", "xi", "bi", "ji", "yan", "jiu", "ji", "shu"
-]);
-
-export async function prepareNote(input: NoteSaveInput, now = new Date()): Promise<PreparedNote> {
+export async function prepareNote(
+  input: NoteSaveInput,
+  now = new Date(),
+  existing?: ExistingNoteMetadata
+): Promise<PreparedNote> {
   const parsed = noteSaveInputSchema.parse(input);
   const normalized = normalizeMarkdown(parsed.markdown);
   assertSafeMarkdown(normalized);
@@ -60,17 +105,17 @@ export async function prepareNote(input: NoteSaveInput, now = new Date()): Promi
   const title = cleanInlineMarkdown(titleMatch[1]);
   const body = normalized.replace(titleMatch[0], "").trim();
   const locale = detectLocale(`${title}\n${body}`);
-  const topics = normalizeTopics(parsed.topics || deriveTopics(title, body));
+  const topics = normalizeTopics(parsed.topics || existing?.topics || deriveTopics(title, body));
   const summary = deriveSummary(body, title, locale);
-  const date = deriveResearchDate(normalized) || formatDate(now);
+  const date = existing?.date || deriveResearchDate(normalized) || formatDate(now);
   const updatedAt = formatDate(now);
-  const baseSlug = deriveNaturalSlug(title);
+  const kind = parsed.kind || existing?.kind || "research";
   const contentHash = await sha256([
     title,
     summary,
     body,
     locale,
-    parsed.kind,
+    kind,
     topics.join("\n")
   ].join("\n\n"));
 
@@ -80,23 +125,25 @@ export async function prepareNote(input: NoteSaveInput, now = new Date()): Promi
     body,
     locale,
     topics,
-    kind: parsed.kind,
+    kind,
     date,
     updatedAt,
     contentHash: `sha256:${contentHash}`,
-    baseSlug
+    featured: existing?.featured || false,
+    translationKey: existing?.translationKey,
+    translationStatus: existing?.translationStatus || "reviewed"
   };
 }
 
-export function renderCanonicalNote(note: PreparedNote, slug = note.baseSlug) {
+export function renderCanonicalNote(note: PreparedNote) {
   const frontmatter = {
-    slug,
     locale: note.locale,
-    translationStatus: "reviewed",
+    ...(note.translationKey ? { translationKey: note.translationKey } : {}),
+    translationStatus: note.translationStatus,
     lastReviewedAt: note.updatedAt,
     title: note.title,
     summary: note.summary,
-    featured: false,
+    featured: note.featured,
     date: note.date,
     updatedAt: note.updatedAt,
     kind: note.kind,
@@ -113,76 +160,46 @@ export function renderCanonicalNote(note: PreparedNote, slug = note.baseSlug) {
   return `---\n${yaml.trim()}\n---\n\n${note.body.trim()}\n`;
 }
 
-export function deriveNaturalSlug(title: string) {
-  const preferred = extractTitleSlugTokens(title);
-
-  const tokens = [...preferred];
-  if (tokens.length === 0) {
-    const pinyinTokens = pinyin(title, { toneType: "none", type: "array" })
-      .map((token) => token.toLowerCase().replace(/[^a-z0-9]+/g, ""))
-      .filter((token) => token.length > 1 && !PINYIN_STOP_WORDS.has(token));
-    tokens.push(...pinyinTokens);
-  }
-
-  const selected = unique(tokens).slice(0, 6);
-  let slug = selected.join("-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-  while (slug.length > 72 && selected.length > 3) {
-    selected.pop();
-    slug = selected.join("-");
-  }
-
-  slug = slug.slice(0, 72).replace(/-+$/g, "");
-  if (!slug) {
-    slug = `note-${stableShortHash(title)}`;
-  }
-
-  return slug;
-}
-
-const TITLE_CONCEPTS: Array<{ pattern: RegExp; tokens: string[] }> = [
-  { pattern: /智能体/g, tokens: ["agent"] },
-  { pattern: /架构/g, tokens: ["architecture"] },
-  { pattern: /平台/g, tokens: ["platform"] },
-  { pattern: /评测|评估/g, tokens: ["evaluation"] },
-  { pattern: /动作/g, tokens: ["action"] },
-  { pattern: /治理/g, tokens: ["governance"] },
-  { pattern: /记忆/g, tokens: ["memory"] },
-  { pattern: /上下文/g, tokens: ["context"] },
-  { pattern: /检索/g, tokens: ["retrieval"] },
-  { pattern: /工作流/g, tokens: ["workflow"] },
-  { pattern: /可观测/g, tokens: ["observability"] },
-  { pattern: /安全/g, tokens: ["security"] },
-  { pattern: /工具/g, tokens: ["tools"] },
-  { pattern: /模型/g, tokens: ["model"] },
-  { pattern: /数据/g, tokens: ["data"] },
-  { pattern: /笔记/g, tokens: ["notes"] },
-  { pattern: /归档|发布/g, tokens: ["publishing"] }
-];
-
-function extractTitleSlugTokens(title: string) {
-  const matches: Array<{ index: number; tokens: string[] }> = [];
-  for (const match of title.matchAll(/[A-Za-z][A-Za-z0-9+]*/g)) {
-    const token = match[0].toLowerCase();
-    if (!ENGLISH_STOP_WORDS.has(token)) matches.push({ index: match.index, tokens: [token] });
-  }
-  for (const concept of TITLE_CONCEPTS) {
-    for (const match of title.matchAll(concept.pattern)) {
-      matches.push({ index: match.index, tokens: concept.tokens });
-    }
-  }
-  return unique(matches.sort((left, right) => left.index - right.index).flatMap((match) => match.tokens));
-}
-
 export function collisionSlug(baseSlug: string, title: string) {
   const suffix = stableShortHash(title);
   const prefix = baseSlug.slice(0, 72 - suffix.length - 1).replace(/-+$/g, "");
   return `${prefix}-${suffix}`;
 }
 
-export function extractExistingNoteIdentity(source: string) {
-  const title = source.match(/^title:\s*["']?(.+?)["']?\s*$/m)?.[1]?.replace(/["']$/, "") || "";
-  const contentHash = source.match(/^contentHash:\s*["']?(sha256:[a-f0-9]{64})["']?\s*$/m)?.[1] || "";
-  return { title, contentHash };
+export function parseCanonicalNote(source: string) {
+  const match = source.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  if (!match) throw new Error("The canonical note has invalid frontmatter.");
+  const value = parse(match[1]) as Record<string, unknown>;
+  const locale = value.locale === "en" ? "en" : value.locale === "zh" ? "zh" : undefined;
+  if (!locale || typeof value.title !== "string" || typeof value.summary !== "string") {
+    throw new Error("The canonical note is missing locale, title, or summary metadata.");
+  }
+  const kind = value.kind === "learning" || value.kind === "engineering" || value.kind === "research"
+    ? value.kind
+    : undefined;
+  const translationStatus = value.translationStatus === "draft"
+    || value.translationStatus === "machine-translated"
+    || value.translationStatus === "complete"
+    || value.translationStatus === "reviewed"
+    ? value.translationStatus
+    : undefined;
+  const metadata: ExistingNoteMetadata = {
+    locale,
+    title: value.title,
+    summary: value.summary,
+    featured: value.featured === true,
+    ...(typeof value.date === "string" ? { date: value.date } : {}),
+    ...(kind ? { kind } : {}),
+    topics: Array.isArray(value.topics) ? value.topics.filter((item): item is string => typeof item === "string") : [],
+    ...(typeof value.translationKey === "string" ? { translationKey: value.translationKey } : {}),
+    ...(translationStatus ? { translationStatus } : {})
+  };
+  return {
+    metadata,
+    body: match[2].trim(),
+    markdown: `# ${metadata.title}\n\n${match[2].trim()}\n`,
+    contentHash: typeof value.contentHash === "string" ? value.contentHash : ""
+  };
 }
 
 function normalizeMarkdown(value: string) {
