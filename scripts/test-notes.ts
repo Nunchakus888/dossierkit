@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { onRequest as handleMcpRequest } from "../functions/api/mcp";
 import { collisionSlug, noteSaveInputSchema, prepareNote, renderCanonicalNote } from "../src/lib/note-ingest";
 import { decorateNoteHtml } from "../src/lib/note-render";
 import {
@@ -126,5 +127,21 @@ await assert.rejects(
   }),
   AccessAuthenticationError
 );
+
+const toolListResponse = await handleMcpRequest({
+  request: new Request("http://localhost/api/mcp", {
+    method: "POST",
+    headers: {
+      Accept: "application/json, text/event-stream",
+      "Content-Type": "application/json",
+      "MCP-Protocol-Version": "2025-06-18"
+    },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list", params: {} })
+  }),
+  env: {}
+});
+assert.equal(toolListResponse.status, 200, "tool discovery must work when the runtime omits the Host header");
+const toolList = await toolListResponse.json() as { result?: { tools?: Array<{ name?: string }> } };
+assert.equal(toolList.result?.tools?.[0]?.name, "save_note");
 
 console.log("Notes slug generation and canonical GitHub write tests passed.");

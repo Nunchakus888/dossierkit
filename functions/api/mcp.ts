@@ -23,9 +23,7 @@ export const onRequest = async ({ request, env }: { request: Request; env: Envir
   const server = createServer(env, requestUrl.origin);
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
-    enableJsonResponse: true,
-    enableDnsRebindingProtection: true,
-    allowedHosts: [requestUrl.host]
+    enableJsonResponse: true
   });
 
   await server.connect(transport);
