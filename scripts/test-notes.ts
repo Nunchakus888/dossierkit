@@ -58,6 +58,9 @@ assert.equal(parseCanonicalNote(canonical).markdown, markdown);
 const decorated = decorateNoteHtml("<h2>Agent Harness 持续优化</h2><h3>Evaluation Gate</h3>");
 assert.match(decorated.html, /id="agent-harness-chi-xu-you-hua"/);
 assert.equal(decorated.headings.length, 1, "the table of contents should remain compact");
+const mermaid = decorateNoteHtml('<pre><code class="language-mermaid">flowchart LR\nA --&gt; B\n</code></pre>');
+assert.match(mermaid.html, /data-mermaid-diagram/);
+assert.doesNotMatch(mermaid.html, /language-mermaid/);
 
 const createdRepo = createGitHubMock();
 const created = await saveNoteToGitHub(input, environment, "https://notes.example.com", createdRepo.fetch);

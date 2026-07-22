@@ -26,7 +26,12 @@ export function decorateNoteHtml(html: string) {
     return `<h${level} id="${id}"><a class="heading-anchor" href="#${id}" aria-label="Link to ${escapeAttribute(text)}">${inner}</a></h${level}>`;
   });
 
-  return { html: decorated, headings };
+  const withDiagrams = decorated.replace(
+    /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g,
+    '<div class="mermaid" data-mermaid-diagram>$1</div>'
+  );
+
+  return { html: withDiagrams, headings };
 }
 
 function headingSlug(value: string) {
