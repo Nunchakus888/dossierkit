@@ -105,7 +105,12 @@ export function renderCanonicalNote(note: PreparedNote, slug = note.baseSlug) {
     contentHash: note.contentHash
   };
 
-  return `---\n${stringify(frontmatter).trim()}\n---\n\n${note.body.trim()}\n`;
+  const yaml = stringify(frontmatter, {
+    aliasDuplicateObjects: false,
+    defaultKeyType: "PLAIN",
+    defaultStringType: "QUOTE_DOUBLE"
+  });
+  return `---\n${yaml.trim()}\n---\n\n${note.body.trim()}\n`;
 }
 
 export function deriveNaturalSlug(title: string) {
@@ -149,7 +154,9 @@ const TITLE_CONCEPTS: Array<{ pattern: RegExp; tokens: string[] }> = [
   { pattern: /安全/g, tokens: ["security"] },
   { pattern: /工具/g, tokens: ["tools"] },
   { pattern: /模型/g, tokens: ["model"] },
-  { pattern: /数据/g, tokens: ["data"] }
+  { pattern: /数据/g, tokens: ["data"] },
+  { pattern: /笔记/g, tokens: ["notes"] },
+  { pattern: /归档|发布/g, tokens: ["publishing"] }
 ];
 
 function extractTitleSlugTokens(title: string) {
