@@ -31,7 +31,7 @@ PUBLIC_SITE_URL=https://your-domain.example
 GITHUB_REPOSITORY=owner/dossierkit
 ```
 
-For the canonical Notes MCP, also configure the variables documented in `docs/notes-mcp.md`. The ChatGPT-facing deployment uses Cloudflare Access Managed OAuth and validates the signed Access identity at the origin.
+For the canonical Notes MCP, also configure the variables documented in `docs/notes-mcp.md`. ChatGPT and Codex use the same isolated deployment through separate Cloudflare Access OAuth grants. The public website does not receive a GitHub write credential.
 
 ## Cloudflare Pages setup
 
@@ -48,6 +48,7 @@ gh secret set CLOUDFLARE_API_TOKEN
 gh secret set CLOUDFLARE_ACCESS_API_TOKEN
 gh secret set CLOUDFLARE_ACCOUNT_ID
 gh secret set NOTES_ACCESS_EMAIL
+gh secret set NOTES_GITHUB_TOKEN
 gh variable set CLOUDFLARE_PROJECT_NAME --body dossierkit
 ```
 

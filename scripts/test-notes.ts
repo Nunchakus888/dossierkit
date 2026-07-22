@@ -142,6 +142,35 @@ const toolList = await toolListResponse.json() as { result?: { tools?: Array<{ n
 assert.deepEqual(toolList.result?.tools?.map((tool) => tool.name), ["get_note", "save_note"]);
 assert.ok(toolList.result?.tools?.every((tool) => tool.outputSchema), "every tool should publish an output schema");
 
+const publicEndpointResponse = await handleMcpRequest({
+  request: new Request("https://notes.example.com/api/mcp", {
+    method: "POST",
+    headers: {
+      Accept: "application/json, text/event-stream",
+      Authorization: "Bearer legacy-token",
+      "Content-Type": "application/json",
+      "MCP-Protocol-Version": "2025-06-18"
+    },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/list", params: {} })
+  }),
+  env: {}
+});
+assert.equal(publicEndpointResponse.status, 404, "a remote deployment without Access must not expose MCP");
+
+const incompleteAccessResponse = await handleMcpRequest({
+  request: new Request("https://mcp.example.com/api/mcp", {
+    method: "POST",
+    headers: {
+      Accept: "application/json, text/event-stream",
+      "Content-Type": "application/json",
+      "MCP-Protocol-Version": "2025-06-18"
+    },
+    body: JSON.stringify({ jsonrpc: "2.0", id: 3, method: "tools/list", params: {} })
+  }),
+  env: { NOTES_ACCESS_AUD: "audience" }
+});
+assert.equal(incompleteAccessResponse.status, 503, "an incomplete Access configuration must fail closed");
+
 console.log("Notes canonical create, read, edit, and update tests passed.");
 
 function notePath(key: string, locale = "zh") {
