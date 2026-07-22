@@ -78,6 +78,17 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler pages deploy dist --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME }} --branch=${{ github.ref_name }}
 
+      - name: Enforce public site has no Notes write secrets
+        if: github.event_name != 'pull_request'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          PUBLIC_PROJECT_NAME: ${{ vars.CLOUDFLARE_PROJECT_NAME }}
+        run: |
+          for secret_name in NOTES_MCP_TOKEN NOTES_GITHUB_TOKEN NOTES_GITHUB_REPOSITORY NOTES_GITHUB_BRANCH NOTES_PROFILE_ID PUBLIC_SITE_URL; do
+            printf 'y\n' | pnpm exec wrangler pages secret delete "$secret_name" --project-name="$PUBLIC_PROJECT_NAME"
+          done
+
       - name: Provision Notes MCP Managed OAuth
         id: notes_access
         if: github.event_name != 'pull_request'
