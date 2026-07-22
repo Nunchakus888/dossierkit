@@ -15,7 +15,7 @@ Open `/zh`, `/en`, and `/admin`.
 
 ## Canonical Notes
 
-Research notes live under `profiles/{profileId}/content/{locale}/notes` and publish at `/{locale}/notes`. The remote `save_note` MCP action accepts a finished Markdown note, generates a stable natural slug from its H1 title, and writes the only maintained copy directly to GitHub. URLs, download links, caller-provided slugs, and duplicate source files are rejected.
+Research notes live under `profiles/{profileId}/content/{locale}/notes` and publish at `/{locale}/notes`. ChatGPT and Codex use one OAuth-protected Notes MCP. Its `save_note` action accepts finished Markdown plus the model's semantic path suggestion, freezes a stable canonical path, and writes the only maintained copy directly to GitHub. URLs, download links, arbitrary caller paths, and duplicate source files are rejected.
 
 See `docs/notes-mcp.md` for the tool contract, runtime configuration, and ChatGPT setup boundary.
 

@@ -10,9 +10,7 @@ import {
 } from "../../src/server/access-auth";
 import { getNoteFromGitHub, saveNoteToGitHub, type NotesEnvironment } from "../../src/server/github-notes";
 
-type Environment = NotesEnvironment & AccessAuthEnvironment & {
-  NOTES_MCP_TOKEN?: string;
-};
+type Environment = NotesEnvironment & AccessAuthEnvironment;
 
 export const onRequest = async ({ request, env }: { request: Request; env: Environment }) => {
   if (request.method === "OPTIONS") return corsResponse(new Response(null, { status: 204 }));
@@ -142,6 +140,14 @@ function createServer(env: Environment, requestOrigin: string) {
 }
 
 async function authorize(request: Request, env: Environment) {
+  const hostname = new URL(request.url).hostname;
+  const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
+  const hasAccessConfiguration = Boolean(env.NOTES_ACCESS_AUD?.trim() || env.NOTES_ACCESS_ISSUER?.trim());
+
+  if (!hasAccessConfiguration) {
+    return isLocal ? undefined : jsonError(404, "Not found");
+  }
+
   try {
     const accessIdentity = await verifyCloudflareAccess(request, env);
     if (accessIdentity) return undefined;
@@ -150,41 +156,13 @@ async function authorize(request: Request, env: Environment) {
     if (error instanceof AccessAuthenticationError) return unauthorized(error.message);
     return jsonError(503, "Cloudflare Access authentication is unavailable.");
   }
-
-  const configured = env.NOTES_MCP_TOKEN;
-  const hostname = new URL(request.url).hostname;
-  const isLocal = hostname === "localhost" || hostname === "127.0.0.1";
-
-  if (!configured) {
-    return isLocal
-      ? undefined
-      : jsonError(503, "NOTES_MCP_TOKEN must be configured before the public MCP endpoint is enabled.");
-  }
-
-  const provided = request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "");
-  if (!provided || !timingSafeEqual(provided, configured)) {
-    return unauthorized("Unauthorized");
-  }
-  return undefined;
 }
 
 function unauthorized(message: string) {
   return new Response(JSON.stringify({ error: message }), {
     status: 401,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8",
-      "WWW-Authenticate": "Bearer"
-    }
+    headers: { "Content-Type": "application/json; charset=utf-8" }
   });
-}
-
-function timingSafeEqual(left: string, right: string) {
-  if (left.length !== right.length) return false;
-  let result = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    result |= left.charCodeAt(index) ^ right.charCodeAt(index);
-  }
-  return result === 0;
 }
 
 function jsonError(status: number, message: string) {

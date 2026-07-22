@@ -1,6 +1,6 @@
 # Canonical Notes MCP
 
-The Notes MCP connects ChatGPT authoring directly to the canonical website content. It accepts completed Markdown, not download URLs or source copies.
+The Notes MCP connects ChatGPT and Codex authoring directly to the canonical website content. It accepts completed Markdown, not download URLs or source copies.
 
 ## Single source of truth
 
@@ -30,15 +30,17 @@ The service also protects identity in two ways:
 
 The Function does not call a second language model. ChatGPT supplies semantic parameters through the MCP schema; the API handles authentication, validation, identity, persistence, and deterministic retries.
 
-## ChatGPT web connection
+## One production endpoint
 
-The ChatGPT-facing endpoint is isolated from the public website:
+ChatGPT web and Codex CLI use the same endpoint, tool definitions, identity policy, and persistence code:
 
 ```text
 https://dossierkit-notes-mcp.pages.dev/api/mcp
 ```
 
-Cloudflare Access provides OAuth discovery, dynamic client registration, PKCE authorization, short-lived access tokens, and refresh tokens. The MCP origin validates the signed `Cf-Access-Jwt-Assertion` before accepting a request. One-time PIN login is restricted to the configured owner email.
+Cloudflare Access provides OAuth discovery, dynamic client registration, PKCE authorization, short-lived access tokens, and refresh tokens. ChatGPT uses its registered HTTPS callback, while Codex CLI uses a temporary localhost loopback callback protected by PKCE. The MCP origin validates the signed `Cf-Access-Jwt-Assertion` before accepting a request. One-time PIN login is restricted to the configured owner email.
+
+Each client receives its own OAuth grant. ChatGPT and Codex therefore do not share an access token or refresh token, but both grants resolve to the same authorized identity and the same MCP backend. Revoking one client does not invalidate the other.
 
 In ChatGPT web:
 
@@ -49,28 +51,34 @@ In ChatGPT web:
 
 ChatGPT requests confirmation before the write action. The OAuth grant lasts up to two weeks and refreshes 15-minute access tokens without routine interaction.
 
-## Runtime configuration
+For Codex CLI:
 
-Set the following Cloudflare Pages production variables:
-
-```text
-NOTES_MCP_TOKEN
-NOTES_GITHUB_TOKEN
-NOTES_GITHUB_REPOSITORY=Nunchakus888/dossierkit
-NOTES_GITHUB_BRANCH=main
-NOTES_PROFILE_ID=default
-PUBLIC_SITE_URL=https://sunionpeaks.pages.dev
+```bash
+codex mcp remove dossierkit-notes
+codex mcp add dossierkit-notes --url https://dossierkit-notes-mcp.pages.dev/api/mcp
+codex mcp login dossierkit-notes
 ```
 
-The isolated MCP project additionally receives:
+The last command completes the same Cloudflare Access login through a separate OAuth grant. No long-lived bearer token needs to be copied into the shell or launch environment.
+
+## Runtime configuration
+
+Only the isolated OAuth MCP project receives the Notes runtime variables:
 
 ```text
+NOTES_GITHUB_TOKEN
+NOTES_GITHUB_REPOSITORY={owner}/{repository}
+NOTES_GITHUB_BRANCH=main
+NOTES_PROFILE_ID=default
+PUBLIC_SITE_URL=https://{public-site}.pages.dev
 NOTES_ACCESS_AUD
 NOTES_ACCESS_ISSUER
 NOTES_ACCESS_EMAIL
 ```
 
-Use a fine-grained GitHub token restricted to the selected repository with Contents read/write permission. `NOTES_MCP_TOKEN` protects the direct endpoint; ChatGPT uses the Access-managed OAuth endpoint. The CI workflow provisions the isolated Pages project, Zero Trust configuration, runtime secrets, and deployment.
+`NOTES_GITHUB_TOKEN` is the single backend credential shared by both client flows and is never returned to either client. Use a fine-grained GitHub token restricted to the selected repository with Contents read/write permission. The public website project receives no GitHub write credential; its `/api/mcp` route returns `404`. The CI workflow provisions the isolated Pages project, Zero Trust configuration, runtime secrets, and deployment.
+
+Use MCP for a single note create or edit. Use a freshly synchronized local repository for batch migrations, schema changes, or site-level maintenance; those changes still update the same canonical MDX files on `main`.
 
 ## Authoring instruction
 
@@ -91,4 +99,4 @@ ACTIVE_PROFILE=default pnpm validate
 ACTIVE_PROFILE=default pnpm build
 ```
 
-Local MCP requests may run without `NOTES_MCP_TOKEN`; non-local requests fail closed when neither Access identity nor the configured bearer token is present.
+Localhost MCP requests may run without Access for automated verification. Every non-local deployment requires a valid Cloudflare Access identity; a deployment without Access configuration does not expose the route.

@@ -93,8 +93,8 @@ async function ensureAccessApplication(identityProviderId: string) {
     enabled: true,
     dynamic_client_registration: {
       enabled: true,
-      allow_any_on_localhost: false,
-      allow_any_on_loopback: false,
+      allow_any_on_localhost: true,
+      allow_any_on_loopback: true,
       allowed_uris: [
         "https://chatgpt.com/connector/oauth/*",
         "https://chatgpt.com/connector_platform_oauth_redirect"
