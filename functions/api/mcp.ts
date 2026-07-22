@@ -1,13 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { noteSaveInputSchema } from "../../src/lib/note-ingest";
+import { z } from "zod";
+import { noteGetInputSchema, noteSaveInputSchema } from "../../src/lib/note-ingest";
 import {
   AccessAuthenticationError,
   AccessConfigurationError,
   verifyCloudflareAccess,
   type AccessAuthEnvironment
 } from "../../src/server/access-auth";
-import { saveNoteToGitHub, type NotesEnvironment } from "../../src/server/github-notes";
+import { getNoteFromGitHub, saveNoteToGitHub, type NotesEnvironment } from "../../src/server/github-notes";
 
 type Environment = NotesEnvironment & AccessAuthEnvironment & {
   NOTES_MCP_TOKEN?: string;
@@ -32,11 +33,70 @@ export const onRequest = async ({ request, env }: { request: Request; env: Envir
 };
 
 function createServer(env: Environment, requestOrigin: string) {
+  const candidateSchema = z.object({
+    noteRef: z.string(),
+    title: z.string(),
+    summary: z.string(),
+    publicUrl: z.string()
+  });
+  const saveOutputSchema = z.object({
+    action: z.enum(["created", "updated", "unchanged"]),
+    noteRef: z.string(),
+    path: z.string(),
+    commitUrl: z.string().optional(),
+    publicUrl: z.string(),
+    contentHash: z.string()
+  });
+  const getOutputSchema = z.object({
+    status: z.enum(["found", "ambiguous", "not_found"]),
+    note: candidateSchema.extend({
+      locale: z.enum(["zh", "en"]),
+      kind: z.enum(["research", "learning", "engineering"]).optional(),
+      topics: z.array(z.string()),
+      markdown: z.string(),
+      contentHash: z.string()
+    }).optional(),
+    candidates: z.array(candidateSchema).optional()
+  });
   const server = new McpServer(
-    { name: "dossierkit-notes", version: "1.0.0" },
+    { name: "dossierkit-notes", version: "1.1.0" },
     {
       instructions:
-        "Use save_note only after the note is complete. Send one finished Markdown document with exactly one H1 title. Never invent or request a slug: the server derives a stable, readable slug from the title and extracted topics. Reusing the same title updates the same canonical note."
+        "Use save_note only after a note is complete. For a new note, propose a concise semantic suggestedSlug from the full content. To edit an existing note, call get_note first, revise its returned Markdown, then call save_note with the unchanged noteRef. The noteRef freezes the canonical file and public URL even if the title changes."
+    }
+  );
+
+  server.registerTool(
+    "get_note",
+    {
+      title: "Read canonical note",
+      description:
+        "Find and return the current canonical Markdown before editing a note. Search by noteRef, filename, title, or a distinctive title phrase. If more than one note matches, choose one returned noteRef and call get_note again.",
+      inputSchema: noteGetInputSchema,
+      outputSchema: getOutputSchema,
+      annotations: {
+        title: "Read canonical note",
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false
+      }
+    },
+    async (input) => {
+      try {
+        const result = await getNoteFromGitHub(input, env, requestOrigin);
+        const text = result.status === "found"
+          ? `Found ${result.note!.noteRef}. Use this exact noteRef when saving an edit.`
+          : result.status === "ambiguous"
+            ? `Multiple notes matched: ${result.candidates!.map((item) => item.noteRef).join(", ")}.`
+            : "No canonical note matched the query.";
+        return { content: [{ type: "text", text }], structuredContent: result };
+      } catch (error) {
+        return {
+          content: [{ type: "text", text: error instanceof Error ? error.message : String(error) }],
+          isError: true
+        };
+      }
     }
   );
 
@@ -45,14 +105,15 @@ function createServer(env: Environment, requestOrigin: string) {
     {
       title: "Save canonical note",
       description:
-        "Publish or update one canonical research, learning, or engineering note. Provide the finished Markdown and concise topics extracted from it. The server owns title parsing, language detection, summary generation, slug generation, deduplication, file location, and GitHub publication; callers cannot provide a slug or destination path.",
+        "Create or update one canonical research, learning, or engineering note. For creation, provide finished Markdown and a concise semantic suggestedSlug chosen from the whole note. For updates, first call get_note and provide its unchanged noteRef; the existing path is preserved. The server validates identity, deduplicates, and writes GitHub.",
       inputSchema: noteSaveInputSchema,
+      outputSchema: saveOutputSchema,
       annotations: {
         title: "Save canonical note",
         readOnlyHint: false,
         destructiveHint: false,
         idempotentHint: true,
-        openWorldHint: true
+        openWorldHint: false
       }
     },
     async (input) => {
@@ -63,7 +124,7 @@ function createServer(env: Environment, requestOrigin: string) {
           content: [
             {
               type: "text",
-              text: `Note ${verb}. Canonical slug: ${result.slug}. Public URL: ${result.publicUrl}${result.commitUrl ? `. Commit: ${result.commitUrl}` : ""}`
+              text: `Note ${verb}. Canonical noteRef: ${result.noteRef}. Public URL: ${result.publicUrl}${result.commitUrl ? `. Commit: ${result.commitUrl}` : ""}`
             }
           ],
           structuredContent: result

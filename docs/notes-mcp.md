@@ -1,35 +1,34 @@
 # Canonical Notes MCP
 
-The Notes MCP provides one write action from ChatGPT to the canonical website content. It does not accept URLs, download links, source copies, or a caller-controlled slug.
+The Notes MCP connects ChatGPT authoring directly to the canonical website content. It accepts completed Markdown, not download URLs or source copies.
 
 ## Single source of truth
 
 The only maintained note is:
 
 ```text
-profiles/{profileId}/content/{locale}/notes/{generated-slug}.mdx
+profiles/{profileId}/content/{locale}/notes/{canonical-key}.mdx
 ```
 
-ChatGPT is the authoring surface, GitHub `main` stores the canonical MDX, and the website is a generated view. Git history provides versioning and rollback without creating a second maintained document.
+GitHub `main` stores the canonical MDX, the website is a generated view, and Git history provides versioning and rollback. The filename is the canonical path identity; note frontmatter does not duplicate a `slug` field.
 
 ## Tool contract
 
-`save_note` accepts:
+The MCP exposes two tools:
 
-- one finished Markdown document with exactly one level-one title;
-- optional topics extracted from the content;
-- `research`, `learning`, or `engineering` as the note kind.
+- `get_note` reads the current canonical Markdown by `noteRef`, filename, title, or title phrase.
+- `save_note` creates a note or updates the exact file identified by `noteRef`.
 
-The tool rejects unknown fields, including `slug` and destination paths. The server extracts the title and language, generates the summary and natural slug, calculates the content hash, resolves deterministic collisions, and writes the canonical file.
+For creation, `save_note` accepts one finished Markdown document with exactly one H1, optional topics and kind, and `suggestedSlug`. ChatGPT derives `suggestedSlug` semantically from the complete note. The API validates its lowercase hyphenated form, resolves path collisions, and freezes the resulting `noteRef`.
 
-Slug generation follows these rules:
+For updates, the model calls `get_note`, edits the returned Markdown, and sends it to `save_note` with the unchanged `noteRef`. The title may change without moving the file or public URL. Existing date, featured state, kind, and topics are preserved when the update omits them.
 
-1. Treat the canonical H1 title as the stable identity; body edits never change the URL.
-2. Preserve technical terms in title order and map common Chinese engineering concepts to concise English terms.
-3. Use pinyin only when the title contains no stable technical term.
-4. Limit the result to six meaningful tokens and 72 characters.
-5. Add a deterministic title fingerprint only when two different notes resolve to the same slug.
-6. Repeated saves with the same title resolve to the same file; identical content creates no commit.
+The service also protects identity in two ways:
+
+1. A new save with the same normalized title reuses the existing file even if the model proposes a different `suggestedSlug`.
+2. An identical content hash returns `unchanged` and creates no commit.
+
+The Function does not call a second language model. ChatGPT supplies semantic parameters through the MCP schema; the API handles authentication, validation, identity, persistence, and deterministic retries.
 
 ## ChatGPT web connection
 
@@ -46,7 +45,7 @@ In ChatGPT web:
 1. Enable Developer mode in **Settings → Security and login**.
 2. Open **Settings → Plugins**, create an app, and enter the endpoint above.
 3. Complete the Cloudflare email authorization once.
-4. Scan the app and enable `save_note`.
+4. Refresh or scan the app and enable `get_note` and `save_note`.
 
 ChatGPT requests confirmation before the write action. The OAuth grant lasts up to two weeks and refreshes 15-minute access tokens without routine interaction.
 
@@ -71,17 +70,17 @@ NOTES_ACCESS_ISSUER
 NOTES_ACCESS_EMAIL
 ```
 
-Use a fine-grained GitHub token restricted to the selected repository with Contents read/write permission. `NOTES_MCP_TOKEN` protects the existing direct endpoint; ChatGPT uses the Access-managed OAuth endpoint. The CI workflow provisions the isolated Pages project, Zero Trust organization, one-time PIN provider, MCP application, owner policy, OAuth settings, runtime secrets, and deployment.
+Use a fine-grained GitHub token restricted to the selected repository with Contents read/write permission. `NOTES_MCP_TOKEN` protects the direct endpoint; ChatGPT uses the Access-managed OAuth endpoint. The CI workflow provisions the isolated Pages project, Zero Trust configuration, runtime secrets, and deployment.
 
 ## Authoring instruction
 
 Use this durable instruction for ChatGPT research workflows:
 
 ```text
-When the research note is complete, call save_note with one polished Markdown document.
-Use exactly one H1 title and H2-H4 sections. Extract three to six concrete topics from
-the content. Do not propose, send, or mention a slug or repository path. The Notes MCP
-owns identity, file location, deduplication, and publication.
+When creating a finished note, call save_note with one polished Markdown document,
+exactly one H1, three to six concrete topics, and a concise semantic suggestedSlug.
+When editing a note, call get_note first, revise the returned Markdown, and call
+save_note with the unchanged noteRef. Never invent noteRef or a repository path.
 ```
 
 ## Local verification

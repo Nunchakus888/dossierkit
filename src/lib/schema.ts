@@ -334,7 +334,8 @@ export const contentFrontmatterSchema = z
     slug: z
       .string()
       .max(72)
-      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Must be a lowercase, hyphenated URL slug"),
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Must be a lowercase, hyphenated URL slug")
+      .optional(),
     locale: localeSchema,
     translationKey: z.string().min(1).optional(),
     translationStatus: z

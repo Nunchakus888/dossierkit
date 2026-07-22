@@ -131,11 +131,20 @@ export function readContentCollection(
         throw new Error(`${filePath}: frontmatter locale must be "${locale}"`);
       }
 
+      const filenameSlug = path.basename(file, path.extname(file));
+      const slug = kind === "notes" ? filenameSlug : data.data.slug;
+      if (!slug) {
+        throw new Error(`${filePath}: frontmatter slug is required outside the notes collection`);
+      }
+      if (kind === "notes" && data.data.slug && data.data.slug !== filenameSlug) {
+        throw new Error(`${filePath}: legacy frontmatter slug must match the note filename`);
+      }
+
       const html = marked.parse(parsed.content, { async: false }) as string;
 
       return {
         kind,
-        slug: data.data.slug,
+        slug,
         locale,
         filePath,
         body: parsed.content,
