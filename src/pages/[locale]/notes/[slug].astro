@@ -88,6 +88,32 @@ const kindLabel = {
       copyButton.textContent = window.location.href;
     }
   });
+
+  const diagrams = document.querySelectorAll<HTMLElement>("[data-mermaid-diagram]");
+  if (diagrams.length > 0) {
+    renderDiagrams().catch(() => {
+      diagrams.forEach((diagram) => diagram.classList.add("mermaid-failed"));
+    });
+  }
+
+  async function renderDiagrams() {
+    const { default: mermaid } = await import("mermaid");
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      theme: "base",
+      themeVariables: {
+        primaryColor: "#ecfdf5",
+        primaryTextColor: "#13231c",
+        primaryBorderColor: "#5d9b7d",
+        lineColor: "#5d766a",
+        secondaryColor: "#eff6ff",
+        tertiaryColor: "#f8fafc",
+        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif"
+      }
+    });
+    await mermaid.run({ nodes: Array.from(diagrams) });
+  }
 </script>
 
 <style>
@@ -206,6 +232,27 @@ const kindLabel = {
   .note-prose {
     min-width: 0;
     max-width: 800px;
+  }
+
+  :global(.note-prose .mermaid) {
+    margin: 28px 0;
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: 18px;
+    padding: 22px;
+    background: rgba(255, 255, 255, 0.7);
+    text-align: center;
+  }
+
+  :global(.note-prose .mermaid svg) {
+    width: 100%;
+    min-width: 640px;
+    height: auto;
+  }
+
+  :global(.note-prose .mermaid-failed) {
+    white-space: pre-wrap;
+    text-align: left;
   }
 
   @media (max-width: 900px) {
