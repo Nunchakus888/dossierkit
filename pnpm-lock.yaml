@@ -26,6 +26,9 @@ importers:
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3
+      jose:
+        specifier: ^6.2.3
+        version: 6.2.3
       marked:
         specifier: ^16.1.1
         version: 16.1.1
