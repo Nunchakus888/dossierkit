@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import { onRequest as handleMcpRequest } from "../functions/api/mcp";
-import { collisionSlug, noteSaveInputSchema, prepareNote, renderCanonicalNote } from "../src/lib/note-ingest";
+import {
+  collisionSlug,
+  deriveNaturalSlug,
+  noteSaveInputSchema,
+  prepareNote,
+  renderCanonicalNote
+} from "../src/lib/note-ingest";
 import { decorateNoteHtml } from "../src/lib/note-render";
 import {
   AccessAuthenticationError,
@@ -43,8 +49,14 @@ assert.match(decorated.html, /id="agent-harness-chi-xu-you-hua"/);
 assert.equal(decorated.headings.length, 1, "the table of contents should remain compact");
 
 const canonical = renderCanonicalNote(note);
-assert.match(canonical, /slug: agent-harness-evaluation-action-governance-memory/);
+assert.match(canonical, /slug: "agent-harness-evaluation-action-governance-memory"/);
 assert.doesNotMatch(canonical, /^# /m);
+assert.match(canonical, /lastReviewedAt: "2026-07-21"/);
+assert.doesNotMatch(canonical, /&a\d+|\*a\d+/, "frontmatter must not use YAML anchors");
+assert.equal(
+  deriveNaturalSlug("ChatGPT 研究笔记自动归档与发布：单一事实源工作流"),
+  "chatgpt-notes-publishing-workflow"
+);
 
 let writtenPath = "";
 let writtenDocument = "";
