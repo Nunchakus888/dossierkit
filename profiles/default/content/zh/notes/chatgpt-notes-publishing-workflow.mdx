@@ -3,7 +3,7 @@ locale: "zh"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-07-22"
 title: "ChatGPT 研究笔记自动归档与发布：单一事实源工作流"
-summary: "将 ChatGPT 中整理完成的研究内容直接写入 GitHub 权威知识库，再由 GitHub Actions 构建并发布到 Cloudflare Pages；通过稳定身份、幂等更新和自动部署支持长期编辑与批量维护。"
+summary: "以 GitHub 作为唯一笔记事实源，通过受保护的 MCP 完成创建与编辑，再自动发布到 Cloudflare Pages；在免费额度内形成无需手动下载的知识管理闭环。"
 featured: false
 date: "2026-07-22"
 updatedAt: "2026-07-22"
@@ -11,375 +11,184 @@ kind: "engineering"
 topics:
   - "ChatGPT"
   - "MCP"
-  - "GitHub Actions"
+  - "GitHub"
   - "Cloudflare Pages"
   - "Knowledge Management"
 tags:
   - "ChatGPT"
   - "MCP"
-  - "GitHub Actions"
+  - "GitHub"
   - "Cloudflare Pages"
   - "Knowledge Management"
-contentHash: "sha256:d6c5c67da3b8a49da19cf16eb8252d6e12f575beb2fe845e0b0424ce27997afc"
+contentHash: "sha256:7aa7fed139094b57aa6b11daf0187b8e7aed88c960f8a2df23c78f132be10a05"
 ---
 
-将 ChatGPT 中整理完成的研究内容直接写入 GitHub 权威知识库，再由 GitHub Actions 构建并发布到 Cloudflare Pages；通过稳定身份、幂等更新和自动部署支持长期编辑与批量维护。
+这套工作流把 ChatGPT 中完成的研究内容直接保存为可维护的 MDX 文件，并自动发布为可分享的网站页面。全程只有一份权威内容，不经过下载链接、中转平台或重复备份。
 
-## 一、整体架构
+## 一、方案概览
 
-系统分为创作、事实存储、自动化和发布访问四层。ChatGPT 与本地 Codex 都是内容入口，GitHub `main` 是唯一权威事实，Cloudflare 只承载 API 与网站运行结果。
+最短链路如下：
 
 ```mermaid
 flowchart LR
-  subgraph Authoring["创作与维护入口"]
+  subgraph Entry["创作入口"]
     ChatGPT["ChatGPT 网页版"]
     Codex["本地 Codex"]
-    Schedule["定期研究任务"]
+    Research["定期研究任务"]
   end
 
-  subgraph CloudflareAPI["Cloudflare：受保护的 MCP 入口"]
-    Access["Cloudflare Access / OAuth"]
-    MCP["Pages Function /api/mcp"]
+  subgraph Cloudflare["Cloudflare 免费层"]
+    Access["Access / OAuth"]
+    MCP["MCP API"]
+    Site["Pages 笔记网站"]
   end
 
-  subgraph GitHub["GitHub：唯一权威事实"]
-    API["GitHub Contents API"]
-    Main["dossierkit / main"]
-    Actions["GitHub Actions CI"]
+  subgraph GitHub["GitHub：唯一事实源"]
+    Notes["MDX 笔记"]
+    History["Git 版本历史"]
+    Publish["自动验证与发布"]
   end
-
-  subgraph CloudflarePublish["Cloudflare：运行与发布"]
-    Site["sunionpeaks Pages\n公开静态网站"]
-    MCPProject["dossierkit-notes-mcp\n隔离 MCP 项目"]
-  end
-
-  Reader["公开访问者"]
 
   ChatGPT --> Access --> MCP
   Codex --> MCP
-  Schedule --> MCP
-  MCP --> API --> Main
-  Main -->|"push main"| Actions
-  Actions -->|"deploy dist"| Site
-  Actions -->|"deploy dist-mcp + Functions"| MCPProject
-  Reader --> Site
+  Research --> MCP
+  MCP --> Notes
+  Notes --> History
+  Notes --> Publish --> Site
+  Site --> Share["公开链接分享"]
 ```
 
-这张图中最重要的边界是：
+各组件只承担一种核心职责：
 
-- ChatGPT 负责研究、编辑和生成语义参数。
-- MCP Function 负责认证、校验、身份解析和 GitHub 读写。
-- GitHub 保存唯一可维护的 MDX 文件与完整版本历史。
-- GitHub Actions 负责把仓库状态转成可部署产物。
-- Cloudflare Pages 保存当前部署结果，不承担内容主库职责。
+| 组件 | 职责 |
+|---|---|
+| ChatGPT / Codex | 研究、整理、编辑并调用笔记工具 |
+| MCP API | 认证、参数校验、笔记定位和 GitHub 读写 |
+| GitHub | 保存唯一 MDX 文件、版本历史和自动化配置 |
+| Cloudflare Pages | 托管公开网站和 MCP API |
+| Cloudflare Access | 保护写入入口，公开页面保持可分享 |
 
-## 二、代码仓库保存什么
+GitHub 保存“事实”，Cloudflare 提供“运行与访问”。网站可以从任意 Git commit 重新生成，因此无需再维护一份独立的云端文档副本。
 
-远程仓库为 `Nunchakus888/dossierkit`。同一仓库同时保存内容、网站、MCP API 和部署流程，减少跨系统配置漂移。
+## 二、MCP 与笔记身份
+
+MCP 把服务端能力描述为模型可以读取的工具契约：
+
+| 工具 | 用途 | 主要输入 | 返回结果 |
+|---|---|---|---|
+| `get_note` | 获取待编辑的权威版本 | 标题、文件名或 `noteRef` | Markdown、元数据、`noteRef` |
+| `save_note` | 创建或更新笔记 | Markdown，以及 `suggestedSlug` 或 `noteRef` | 保存状态、commit、公开链接 |
+
+模型负责需要语义理解的部分：标题、正文结构、摘要、主题，以及首次保存时自然连贯的 `suggestedSlug`。API 不再调用第二个模型，只执行认证、校验、冲突处理、文件写入和链接生成等确定性逻辑。
+
+权威文件路径为：
 
 ```text
-dossierkit/
-├── profiles/default/content/zh/notes/
-│   └── {canonical-key}.mdx        # 权威笔记
-├── functions/api/mcp.ts           # MCP 工具注册与 HTTP 入口
-├── src/lib/note-ingest.ts         # 内容解析、校验、哈希与渲染
-├── src/server/github-notes.ts     # GitHub 读取、去重与更新
-├── src/pages/[locale]/notes/      # 笔记列表与详情页面
-├── scripts/test-notes.ts          # Notes 契约测试
-├── scripts/build-mcp-static.ts    # MCP 项目静态产物
-├── scripts/provision-notes-access.ts
-│                                  # Cloudflare Access / OAuth 配置
-└── .github/workflows/ci.yml       # 验证、构建和部署编排
+content/{locale}/notes/{canonical-key}.mdx
 ```
 
-笔记文件路径为：
+`canonical-key` 是文件路径和公开 URL 的组成部分，frontmatter 不再重复保存独立 `slug` 字段：
 
-```text
-profiles/{profileId}/content/{locale}/notes/{canonical-key}.mdx
-```
+- 新建时，模型根据完整内容给出 `suggestedSlug`，服务端规范化、校验并冻结为 `canonical-key`。
+- 编辑时，模型先读取笔记，再使用服务端返回的稳定 `noteRef` 保存。
+- 修改标题不会改动文件路径和分享链接。
+- 内容未变化时返回 `unchanged`，不产生空提交。
 
-文件名中的 `canonical-key` 同时决定网站路径。笔记 frontmatter 不重复保存 `slug`，从结构上消除“文件名与 slug 字段不一致”这一类分叉。
+因此，唯一文件路径已经足以标识笔记；`suggestedSlug` 只是首次创建时的语义路径建议，`noteRef` 才是编辑阶段的稳定引用。
 
-## 三、MCP 如何连接模型与代码
+## 三、创建与编辑：同一条保存链路
 
-MCP 是模型可读取的工具契约。它描述工具名称、输入结构、输出结构和读写属性，模型据此选择 `get_note` 或 `save_note`，API 再执行确定性代码。
-
-| 工具 | 用途 | 关键输入 | 关键输出 | 副作用 |
-|---|---|---|---|---|
-| `get_note` | 读取权威笔记 | 标题、文件名或 `noteRef` | Markdown、元数据、`noteRef` | 无 |
-| `save_note` | 创建或更新笔记 | Markdown、`suggestedSlug` 或 `noteRef` | 动作结果、公开链接、commit | 写入 GitHub |
-
-Function 内没有第二次模型调用。语义判断由当前 ChatGPT 会话完成，服务端只处理可验证的工程规则：
-
-```mermaid
-flowchart LR
-  Intent["自然语言意图"] --> LLM["ChatGPT 模型"]
-  LLM -->|"结构化参数"| Contract["MCP Tool Schema"]
-  Contract --> Validate["服务端校验"]
-  Validate --> Identity["身份与冲突处理"]
-  Identity --> Persist["GitHub 持久化"]
-  Persist --> Result["结构化结果与公开链接"]
-```
-
-这种分工避免在 API 内增加额外模型、提示词、计费和不确定性，同时保留模型对标题、内容和语义路径的理解能力。
-
-## 四、新建笔记的触发流程
-
-创建时，ChatGPT 根据完整内容给出 `suggestedSlug`。服务端将它视为路径建议，而不是未经验证的最终身份。
+新建与更新共用 `save_note`，区别只在于保存前是否已经取得 `noteRef`。
 
 ```mermaid
 sequenceDiagram
   autonumber
   actor User as 用户
   participant GPT as ChatGPT
-  participant Access as Cloudflare Access
-  participant MCP as Notes MCP Function
-  participant GH as GitHub Contents API
-  participant CI as GitHub Actions
-  participant Pages as Cloudflare Pages
+  participant MCP as 受保护的 MCP API
+  participant GH as GitHub 权威笔记
+  participant Site as Cloudflare Pages
 
-  User->>GPT: 保存研究笔记并发布
-  GPT->>GPT: 整理 Markdown、topics、kind、suggestedSlug
-  GPT->>Access: OAuth 授权后的 MCP 请求
-  Access->>MCP: 转发已验证身份
-  MCP->>MCP: 校验 H1、Markdown、安全规则和参数
-  MCP->>GH: 查找同标题笔记与候选路径
-  GH-->>MCP: 返回当前目录与已有内容
-  MCP->>MCP: 复用已有身份或冻结新 noteRef
-  MCP->>GH: PUT canonical MDX 到 main
-  GH-->>MCP: 返回 commit
-  MCP-->>GPT: 返回 noteRef、目标公开链接和 commit
-  GH->>CI: push main 触发 CI
-  CI->>CI: 测试、校验、构建
-  CI->>Pages: 部署网站和 MCP 项目
-  Pages-->>User: 公开页面可访问
-```
-
-保存接口会立即返回目标公开链接；页面内容在 GitHub Actions 部署完成后可见。也就是说，GitHub commit 先成为权威事实，Cloudflare 网站随后达到一致状态。
-
-## 五、编辑与更新流程
-
-更新不依赖标题猜测，而是先读取权威文件，再携带稳定 `noteRef` 保存。
-
-```mermaid
-sequenceDiagram
-  autonumber
-  actor User as 用户
-  participant GPT as ChatGPT
-  participant MCP as Notes MCP
-  participant GH as GitHub main
-  participant CI as GitHub Actions
-  participant Site as 公开网站
-
-  User->>GPT: 编辑 chatgpt-notes-publishing-workflow
-  GPT->>MCP: get_note(query)
-  MCP->>GH: 读取当前 MDX
-  GH-->>MCP: 权威文件与 SHA
-  MCP-->>GPT: Markdown + noteRef
-  GPT->>GPT: 基于当前版本修改正文
-  GPT->>MCP: save_note(markdown, noteRef)
-  MCP->>GH: 读取 noteRef 对应文件
-  MCP->>MCP: 继承元数据并计算 contentHash
-  alt 内容未变化
-    MCP-->>GPT: unchanged，不创建 commit
-  else 内容发生变化
-    MCP->>GH: 使用原路径和 SHA 更新文件
-    GH-->>MCP: 新 commit
-    GH->>CI: 触发 main 工作流
-    CI->>Site: 发布新静态页面
-    MCP-->>GPT: updated + 原公开链接
+  User->>GPT: 创建或编辑研究笔记
+  opt 编辑已有笔记
+    GPT->>MCP: get_note(标题或 noteRef)
+    MCP->>GH: 读取当前 MDX
+    GH-->>GPT: Markdown + 稳定 noteRef
   end
+  GPT->>GPT: 整理正文与元数据
+  GPT->>MCP: save_note(markdown, suggestedSlug 或 noteRef)
+  MCP->>MCP: 认证、校验并解析稳定路径
+  MCP->>GH: 创建或更新同一 MDX 文件
+  GH-->>MCP: commit
+  MCP-->>GPT: 保存状态 + 公开链接
+  GH->>Site: 自动验证并发布
+  Site-->>User: 原链接展示最新版本
 ```
 
-更新期间遵循以下身份规则：
+这条链路同时覆盖创建、继续学习后的增量更新、标题优化和批量维护。使用者只表达内容意图，模型选择工具并提供语义参数，服务端保证写入范围和文件身份。
 
-1. `suggestedSlug` 只参与首次创建。
-2. `noteRef` 是服务端返回的稳定文件引用，例如 `zh/chatgpt-notes-publishing-workflow`。
-3. 修改标题不会改变 `noteRef`、文件名或公开链接。
-4. 未传入 `date`、`featured`、`kind` 或 `topics` 时沿用已有元数据。
-5. 内容哈希相同则返回 `unchanged`，避免无效 commit。
-6. 新建请求若命中相同规范化标题，会复用已有文件，阻止语义路径变化造成分叉。
+## 四、纯免费基础设施
 
-## 六、GitHub 与 Cloudflare 的关系
+对个人研究笔记和低频定期更新，这套存储与发布链路可以完全运行在免费层内。
 
-GitHub 和 Cloudflare 不维护两套等价内容，它们分别承担“源”和“运行结果”。
+| 能力 | 免费资源 | 当前用途 |
+|---|---|---|
+| 权威存储与版本管理 | GitHub Free 私有仓库 | 保存 MDX、代码与 Git 历史 |
+| 自动验证与发布 | GitHub Free 每月包含 2,000 分钟私有仓库标准运行时长 | 校验、构建和部署 |
+| 网站托管 | Cloudflare Pages Free 每月 500 次构建 | 提供静态网站与分享链接 |
+| MCP API | Cloudflare Workers Free 每日 100,000 次请求 | 承载读取与保存工具 |
+| 写入认证 | Cloudflare Zero Trust Free，适合 50 人以内 | 限制笔记写入者 |
+| 网站地址 | 免费 `pages.dev` 子域名 | 直接公开访问和分享 |
 
-| 系统 | 保存内容 | 是否权威 | 主要职责 |
-|---|---|---:|---|
-| GitHub `main` | MDX、代码、测试、工作流 | 是 | 版本、审查、回滚、自动化触发 |
-| GitHub Actions | 临时构建环境与日志 | 否 | 测试、构建、密钥同步、部署编排 |
-| Cloudflare Pages 网站项目 | `dist` 静态产物 | 否 | 全球访问、缓存、分享链接 |
-| Cloudflare MCP 项目 | `dist-mcp`、Pages Function | 否 | ChatGPT MCP API 运行环境 |
-| Cloudflare Access | OAuth 应用与访问策略 | 否 | 登录、令牌、所有者访问控制 |
+这里的“纯免费”指笔记存储、自动化、API 和网站托管基础设施为 ¥0；已有 ChatGPT 账号或订阅不计入基础设施成本，自有域名属于可选支出。为避免意外计费，GitHub 应保持付费使用预算为 0，Cloudflare 项目固定使用 Free 计划。
 
-```mermaid
-flowchart TB
-  Commit["GitHub main commit\n权威状态 N"] --> Build["GitHub Actions\n构建状态 N"]
-  Build --> Static["dist\n网站静态产物"]
-  Build --> MCPArtifact["dist-mcp + functions\nMCP 运行产物"]
-  Static --> PublicPages["Cloudflare Pages\n公开网站状态 N"]
-  MCPArtifact --> PrivatePages["Cloudflare Pages\nMCP 服务状态 N"]
-  AccessPolicy["Cloudflare Access\nOAuth 与策略"] --> PrivatePages
+免费额度以平台政策为准，可定期核对 [GitHub Actions 计费说明](https://docs.github.com/en/billing/concepts/product-billing/github-actions)、[Cloudflare Pages 限额](https://developers.cloudflare.com/pages/platform/limits/)、[Cloudflare Workers 限额](https://developers.cloudflare.com/workers/platform/limits/)和 [Cloudflare Zero Trust 定价](https://www.cloudflare.com/plans/zero-trust-services/)。
 
-  Build -. "失败时保持旧部署" .-> Previous["Cloudflare 继续服务状态 N-1"]
-```
+## 五、安全边界
 
-如果构建或部署失败，GitHub commit 仍然保留，Cloudflare 继续提供上一版成功产物。修复 commit 或回滚后，Actions 再次构建即可恢复一致。
+公开网站与写入接口分离：任何人都可以阅读和分享笔记页面，只有通过 Cloudflare Access 身份验证的所有者才能调用 MCP。
 
-## 七、GitHub Actions 工作流机制
+- Access / OAuth 在请求进入 Function 前完成身份验证。
+- GitHub Token 只授予目标仓库所需的 Contents 读写权限。
+- API 固定 profile、语言和笔记目录，不接受任意仓库路径。
+- 输入 schema 约束 Markdown、主题、类型和笔记引用。
+- Git 历史保留每次有效修改，可比较和回滚。
 
-`.github/workflows/ci.yml` 支持三类触发：
+密钥只存在于 GitHub Secrets 和 Cloudflare 运行环境，ChatGPT 对话与公开页面都不会接触 GitHub Token。
 
-| 触发事件 | 验证与构建 | 同步密钥 | 部署 Cloudflare | 用途 |
-|---|---:|---:|---:|---|
-| `pull_request` | 是 | 否 | 否 | 合并前质量门禁 |
-| `push` 到 `main` | 是 | 是 | 是 | 正式发布 |
-| `workflow_dispatch` | 是 | 是 | 是 | 人工重新发布或切换 profile |
+## 六、定期研究与批量维护
 
-```mermaid
-flowchart TD
-  Event{"GitHub 事件"}
-  PR["pull_request"]
-  Main["push main"]
-  Manual["workflow_dispatch"]
+未来的研究任务继续复用同一事实源和工具契约：
 
-  Event --> PR
-  Event --> Main
-  Event --> Manual
+1. 新主题直接调用 `save_note` 创建笔记。
+2. 已有主题先用 `get_note` 读取权威版本，再携带 `noteRef` 更新。
+3. 多篇笔记的格式迁移、链接检查和主题调整在本地同步最新仓库后批量处理。
+4. 所有修改进入同一 Git 历史，并由同一网站自动发布。
 
-  PR --> Checkout["Checkout + Node 22 + pnpm"]
-  Main --> Checkout
-  Manual --> Checkout
+本地仓库适合批量工程维护，ChatGPT 适合内容研究与单篇编辑；两种入口操作的是同一组 MDX 文件，不产生导出件、镜像库或备份分叉。
 
-  Checkout --> Install["冻结 lockfile 安装依赖"]
-  Install --> Admin["生成 CMS 配置"]
-  Admin --> NotesTest["测试 Notes MCP 契约"]
-  NotesTest --> Validate["校验 profile 与 frontmatter"]
-  Validate --> SiteBuild["构建 Astro + Pagefind"]
-  SiteBuild --> MCPBuild["构建隔离 MCP 产物"]
+## 七、使用方式
 
-  MCPBuild --> IsPR{"是否 PR"}
-  IsPR -->|"是"| Gate["验证完成，不部署"]
-  IsPR -->|"否"| Secrets["同步 Pages 运行密钥"]
-  Secrets --> DeploySite["部署公开网站 dist"]
-  DeploySite --> Provision["创建或校准 Access Managed OAuth"]
-  Provision --> OAuthSecrets["同步 MCP OAuth 与 GitHub 密钥"]
-  OAuthSecrets --> DeployMCP["部署 dossierkit-notes-mcp"]
-```
-
-工作流设置了：
+创建笔记：
 
 ```text
-concurrency.group = ci-${github.ref}
-cancel-in-progress = true
+将当前研究整理为工作/学习笔记，保存并发布。
 ```
 
-短时间内连续写入多篇笔记时，旧的同分支构建会被取消，最新一次工作流从当前 `main` 构建完整站点。所有 commit 仍保留，最终部署包含最新主分支的全部内容。
-
-## 八、认证与权限边界
-
-ChatGPT 使用的入口为：
+编辑笔记：
 
 ```text
-https://dossierkit-notes-mcp.pages.dev/api/mcp
+读取并更新笔记 <标题或 noteRef>，保持原链接发布。
 ```
 
-访问路径为：
+模型完成整理后调用 MCP，返回稳定公开链接。页面发布完成后即可通过浏览器访问或直接分享。
 
-```mermaid
-flowchart LR
-  ChatGPT["ChatGPT Connector"]
-  OAuth["Cloudflare Managed OAuth\nPKCE + Dynamic Client Registration"]
-  Policy["Owner Email Policy"]
-  JWT["Cf-Access-Jwt-Assertion"]
-  Function["Pages Function"]
-  GitHub["限定仓库的 GitHub Token"]
+## 八、结论
 
-  ChatGPT --> OAuth --> Policy --> JWT --> Function --> GitHub
-```
-
-- OAuth access token 生命周期为 15 分钟，授权会话最长为两周。
-- Cloudflare Access 只允许配置的所有者邮箱完成登录。
-- Function 校验 Access 签发的身份断言后才执行工具。
-- GitHub Token 只授予目标仓库 Contents 读写权限。
-- 输入 schema 不接受任意仓库路径，服务端固定 profile、语言目录和 Notes 目录。
-- `get_note` 声明为只读工具，`save_note` 声明为有界写入工具。
-
-## 九、一致性与失败处理
-
-| 失败位置 | 是否写入 GitHub | 公开站点状态 | 处理方式 |
-|---|---:|---|---|
-| OAuth 或身份校验失败 | 否 | 不变 | 重新授权或检查 Access 策略 |
-| Markdown/schema 校验失败 | 否 | 不变 | 修正正文结构或参数 |
-| GitHub API 写入失败 | 否 | 不变 | 保留原文件，重试写入 |
-| GitHub 写入成功、CI 校验失败 | 是 | 保持上一版 | 修复或回滚 commit |
-| 网站部署失败 | 是 | 保持上一版 | 重跑 Actions 或修复部署配置 |
-| 重复请求且内容相同 | 否 | 不变 | 返回 `unchanged` |
-
-事实状态按以下顺序推进：
+最终链路保持为：
 
 ```text
-ChatGPT 完成稿
-→ GitHub commit 成为权威事实
-→ GitHub Actions 验证该事实
-→ Cloudflare 发布该事实的静态视图
+ChatGPT → MCP → GitHub → Cloudflare Pages
 ```
 
-因此，GitHub 可独立完成版本恢复，Cloudflare 部署产物可以随时由相同 commit 重新生成。
-
-## 十、定期研究与批量维护
-
-定期研究任务复用同一 MCP 契约，不增加下载中转或第二个内容库。
-
-```mermaid
-flowchart TD
-  Sources["研究来源"] --> Research["ChatGPT / 自动研究任务"]
-  Research --> Polish["整理完整 Markdown"]
-  Polish --> Existing{"是否已有主题"}
-  Existing -->|"是"| Get["get_note 读取权威版本"]
-  Get --> Edit["合并新结论"]
-  Edit --> SaveRef["save_note + noteRef"]
-  Existing -->|"否"| Slug["生成 suggestedSlug"]
-  Slug --> SaveNew["save_note 创建"]
-  SaveRef --> Main["GitHub main"]
-  SaveNew --> Main
-  Main --> Deploy["Actions 批量校验与发布"]
-```
-
-仓库层面的批量操作适合处理：
-
-- schema 升级与 frontmatter 迁移；
-- 链接完整性、内容哈希与命名检查；
-- 全站索引和 Pagefind 搜索重建；
-- 批量主题调整与内容质量扫描；
-- Git 历史审计、差异比较与回滚。
-
-ChatGPT 网页版、本地 Codex 和定期任务共享相同事实源与工具契约。入口可以有多个，可维护的权威内容始终只有 GitHub `main` 中的一份。
-
-## 十一、实际使用
-
-创建：
-
-```text
-“将当前研究整理为工作/学习笔记，保存并发布。”
-```
-
-模型生成完整 Markdown、主题、类型和 `suggestedSlug`，调用 `save_note`，返回稳定链接。
-
-更新：
-
-```text
-“更新笔记 chatgpt-notes-publishing-workflow，补充 GitHub Actions 机制。”
-```
-
-模型先调用 `get_note` 获取 Markdown 与 `noteRef`，完成修改后调用 `save_note(noteRef)`。文件路径和分享链接保持不变。
-
-## 十二、设计结论
-
-该工作流把创作、事实、自动化和发布分开，同时保持最短链路：
-
-```text
-ChatGPT → MCP → GitHub main → GitHub Actions → Cloudflare Pages
-```
-
-GitHub 解决权威内容、版本和触发问题；Cloudflare 解决认证、API 运行和网站分发问题；MCP 解决模型与确定性代码之间的工具契约问题。三者各自承担单一职责，共同形成可编辑、可回滚、可批量维护和可公开分享的研究笔记系统。
+这是一套面向长期工作的免费知识管理基础设施：ChatGPT 负责内容智能，MCP 负责安全写入，GitHub 负责权威事实与版本，Cloudflare 负责网站托管和链接分发。新建与编辑共用一条流程，笔记只有一份权威文件，持续研究和批量维护都在同一体系内完成。
