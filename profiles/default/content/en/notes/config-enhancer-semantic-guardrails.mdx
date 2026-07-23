@@ -23,7 +23,7 @@ tags:
   - "timer semantics"
   - "config cache"
   - "Mongo migrations"
-contentHash: "sha256:12cdfab1c0d87c688245b4e8c21a32878ad0c264defba5a93862e0c37d9faedf"
+contentHash: "sha256:a9bf35ec6d35c6120f58197b9b6b0cd318b16cf1aa826d4abc00e198df0e679f"
 ---
 
 > Date: 2026-07-23
@@ -277,7 +277,14 @@ uv run pytest \
 
 Result: `51 passed in 0.98s`.
 
-`bash scripts/verify.sh` also passed its repository quick verification.
+Repository quick verification also passed with the project Python:
+
+```bash
+PATH="$PWD/.venv/bin:$PATH" bash scripts/verify.sh
+```
+
+The unqualified system `python3` is 3.9.6 and cannot compile the project's
+Python 3.11+ `match` syntax.
 
 Real-provider config enhancement and production deployment were not performed
 as part of this local bugfix.
