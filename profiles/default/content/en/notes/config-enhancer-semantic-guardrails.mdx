@@ -1,0 +1,229 @@
+---
+locale: "en"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-07-23"
+title: "Config Enhancer Semantic Guardrails"
+summary: "Date: 2026-07-23 Scope: services/agent Status: implemented locally;
+  not deployed"
+featured: false
+date: "2026-07-23"
+updatedAt: "2026-07-23"
+kind: "engineering"
+topics:
+  - "ConfigEnhancer"
+  - "prompt grounding"
+  - "skill routing"
+  - "timer semantics"
+  - "config cache"
+tags:
+  - "ConfigEnhancer"
+  - "prompt grounding"
+  - "skill routing"
+  - "timer semantics"
+  - "config cache"
+contentHash: "sha256:1375b872d481cd5b30925763736eb74787775c4f24168545eebf06aae1d146bd"
+---
+
+> Date: 2026-07-23
+> Scope: `services/agent`
+> Status: implemented locally; not deployed
+
+## Incident
+
+Online session `84664120166982656` used chatbot
+`69ff0f7c7eef888daa8369d8` and config hash
+`8b59ff1880c515850498c5e5abb4e0f5`.
+
+The cached enhanced config exposed three independent problems:
+
+1. The generated `instructions` string contained a serialized copy of sibling
+   fields such as `timers`, `constraints`, and `skills`.
+2. The source sequence “after 20 minutes, then after another 10 minutes” became
+   two independent idle timers with delays `1200` and `600`. The timer runtime
+   starts every timer from the same idle baseline, so the closing message would
+   run before the first follow-up.
+3. Skill enhancement rewrote runtime instructions as well as routing
+   descriptions. Several configured conditions were shortened or lost, and a
+   concrete repeated-charge complaint was routed to a generic loan-consultation
+   skill.
+
+The final answer also treated its self-reported `evidence` value as sufficient
+support. A general instruction was used to infer a specific merchant
+relationship and charge cause that were not established by the available
+instructions, skill, Knowledge Base material, or tool result.
+
+## Production Scope
+
+A six-hour online log sample contained:
+
+| Measure | Count |
+|---|---:|
+| Prompt contexts | 812 |
+| Chatbots | 20 |
+| Config hashes | 23 |
+| Sessions | 319 |
+| Embedded sibling-JSON occurrences | 115 |
+
+All 115 occurrences belonged to chatbot
+`69ff0f7c7eef888daa8369d8` and config hash
+`8b59ff1880c515850498c5e5abb4e0f5`. Every observed prompt for that config was
+affected; the other 22 sampled config hashes had no matching occurrence. This
+was therefore deterministic for one persisted enhanced config, not a
+platform-wide prompt-logging behavior.
+
+## Enhanced Config Comparison
+
+The cached config was inspected through:
+
+`https://omni-flux.ycloud.com/api/v1/config/69ff0f7c7eef888daa8369d8`
+
+| Area | Raw configuration | Enhanced configuration | Assessment |
+|---|---|---|---|
+| Main instructions | 2,968 characters | 4,809 characters | The clean 2,868-character prefix equals the raw text after removing the 100-character timeout section; the remaining tail is unrelated sibling JSON |
+| Timeout sequence | Follow up after 20 minutes; close after another 10 minutes | Independent delays `1200` and `600` | Semantic inversion; runtime would close first |
+| Consultation-fee policy | Broad rule that all products include a consultation fee | Preserved unchanged | The risky policy originated in user configuration, not enhancement |
+| Constraints | Present in the SOP | Copied to top-level constraints and retained in the SOP | Matches the current copy-only contract |
+| Skills | Seven raw skills with detailed execution rules | Seven skills with rewritten descriptions and instructions | Membership and tools remained, but several execution details were shortened or changed |
+
+### Skill Semantic Review
+
+| Skill | Enhancement result | Risk |
+|---|---|---|
+| Own bank account / IBAN | Core rule retained; post-thanks continuation and several explicit prohibitions removed | Medium |
+| Amount / borrowing intent | Amount range retained; boundary with generic consultation remained weak and explicit forbidden-output details were reduced | Medium |
+| Website / application entry | Conditional button/card capability became unconditional | High |
+| Loan rejection | Core behavior retained | Low |
+| Proxy application | Core behavior retained | Low |
+| Page/upload failure | “Website or contact information” condition was narrowed to “link” | Medium |
+| Generic loan consultation | Repayment option and useful routing distinctions were removed; selected for a concrete repeated-charge complaint | High |
+
+The agreed platform boundary is not to rewrite these customer-owned business
+rules. Enhancement may improve routing descriptions, but runtime execution
+instructions remain exactly as configured.
+
+## Case Root Cause
+
+The observed answer was produced by a combined failure chain:
+
+1. The user supplied transaction notifications and later reported that the
+   charge had happened three times.
+2. The skill router selected the generic loan-consultation skill with confidence
+   `0.85`, despite the latest message describing a concrete payment complaint.
+3. The customer-authored SOP contained a broad consultation-fee rule.
+4. No trusted source established the specific merchant relationship or charge
+   cause.
+5. The model marked `evidence=instruction`, but the value was self-reported and
+   did not perform claim-level validation.
+6. The first final envelope was invalid. During envelope retry, the model added
+   a new fee explanation instead of limiting the retry to JSON repair.
+
+The embedded sibling JSON was a separate config-integrity defect. It made the
+prompt confusing and oversized, but it was not the direct source of the fee
+claim.
+
+## Agreed Scope
+
+- Keep the existing full-config JSON response contract for `ConfigEnhancer`.
+- Strengthen the parser prompt so `instructions` contains only retained SOP
+  text and never a serialized copy of sibling output fields.
+- Define every timer `delay_seconds` as cumulative elapsed time from the same
+  runtime baseline. Chained relative waits must be added to earlier waits.
+- Enhance only a skill's routing `description`.
+- Preserve raw skill `name`, `instructions`, `tools`, and extra runtime fields.
+- Strengthen answer grounding so an evidence label cannot authorize a claim and
+  a broad policy cannot establish a specific entity, event, transaction, or
+  causal relationship.
+- Preserve supported answer meaning during final-envelope repair; a JSON retry
+  must not introduce new business facts.
+- Bump `CONFIG_CACHE_VERSION` to `config_enhance_v2`, causing old L1/L2 entries
+  to miss and be enhanced again.
+
+## Non-Goals
+
+- No customer-specific SOP or skill rewrite.
+- No incident-specific production matching branch.
+- No extraction-plan/source-span architecture.
+- No Mongo schema migration or targeted cache deletion.
+- No change to timer runtime scheduling.
+
+## Implementation
+
+### Config parser
+
+The parser prompt must state:
+
+- `instructions` is one SOP text field, not a container for the remaining
+  response object.
+- Sibling fields appear exactly once at the top level.
+- The response ends after the single top-level JSON object.
+- Timer delays are absolute elapsed delays from the idle/session baseline.
+- A chained “another N” delay is cumulative.
+
+The skill task uses raw description and instructions only as routing context.
+The model returns `name` plus an enhanced `description`. Runtime merge applies
+only that description and retains all other raw skill fields.
+
+### Main-agent grounding
+
+Before emitting a business fact, the model must check that a trusted source
+entails the complete claim: subject, relationship, condition, scope, and, when
+present, cause. User text and the `evidence` enum do not add authority.
+
+When final JSON parsing requires a retry, the retry instruction requires the
+model to retain already-supported meaning and fix the envelope without adding
+facts.
+
+### Cache invalidation
+
+`CONFIG_CACHE_VERSION = "config_enhance_v2"` invalidates incompatible L1 and L2
+results through the existing version-miss path. Re-enhancement remains lazy and
+coalesced per `(tenant_id, chatbot_id, config_hash)` inside each process.
+
+## Acceptance Criteria
+
+- Config parser prompt explicitly prohibits sibling JSON inside
+  `instructions`.
+- Config parser prompt defines chained timer delays as cumulative.
+- For an enhanced skill, only `description` may differ from the raw skill.
+- Prompt grounding states that `evidence` is a reporting label, not permission.
+- Final-envelope retry cannot add new business claims.
+- Old cache versions miss and successful enhancement persists
+  `config_enhance_v2`.
+- Focused prompt, config service, and workflow-agent tests pass.
+
+## Implemented Changes
+
+| File | Change |
+|---|---|
+| `services/agent/api/services/config/enhancer.py` | Added instructions field-boundary rules, cumulative timer semantics, routing-only skill schema, and raw execution-field preservation |
+| `services/agent/bu_agent_sdk/prompts/templates.py` | Added claim-entailment grounding, made evidence non-authorizing, and prohibited new facts during final-envelope retry |
+| `services/agent/api/services/config/service.py` | Bumped cache version to `config_enhance_v2` |
+| `docs/agent/configs/config-enhance.md` | Updated the authoritative config-enhance contract |
+| Focused test files | Added prompt, schema, merge, grounding, retry, and cache-version regression coverage |
+
+## Verification
+
+Executed:
+
+```bash
+cd services/agent
+PYTHONPATH=. uv run pytest \
+  tests/prompts/test_config_enhancer.py \
+  tests/prompts/test_prompt_builder.py \
+  tests/runtime/test_workflow_agent.py \
+  tests/config/test_config_service.py -q
+```
+
+Result: `294 passed in 1.64s`.
+
+Real-provider config enhancement and production deployment were not performed
+as part of this local bugfix.
+
+## Evidence
+
+- Session log:
+  `services/agent/automation_test/case/online/0723/session-84664120166982656.log`
+- Sampled production logs showed the embedded sibling JSON on every observed
+  prompt for this config hash and not on the other sampled config hashes.
+- Runtime timer registration starts all configured timers independently in
+  `services/agent/api/services/timer/manager.py`.
