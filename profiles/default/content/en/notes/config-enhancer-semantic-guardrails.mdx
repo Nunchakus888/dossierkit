@@ -23,7 +23,7 @@ tags:
   - "timer semantics"
   - "config cache"
   - "Mongo migrations"
-contentHash: "sha256:ef1c2323cc93a5ba3537ee66858ba065b4cdb35a58794a787d5f1fcac4724133"
+contentHash: "sha256:75c1f85e03221a5b24c374798b1d0830d0e1bf0a955cbdd7957db66f520fe9f9"
 ---
 
 > Date: 2026-07-23
@@ -217,8 +217,9 @@ Database migrations use one document in the `versions` collection:
 idempotent migrations above the stored version and advances the value only
 after each migration succeeds. MongoDB owns the document `_id`; migration code
 does not assign or depend on it. Every Mongo-backed Agent instance checks the
-version before service initialization. Migration failure aborts that instance's
-startup, and restart retries from the last completed version.
+version before service initialization. Migration failure is logged without
+advancing the version or blocking service startup; the next restart retries
+from the last completed version.
 
 ## Acceptance Criteria
 
@@ -230,7 +231,8 @@ startup, and restart retries from the last completed version.
 - Runtime config and observability contain no persisted `original_config`;
   performance derives its source-config view from existing fields.
 - Agent startup automatically runs pending migrations in bounded batches.
-- A failed migration does not advance the version and succeeds on retry.
+- A failed migration does not advance the version or block startup, and the
+  next restart retries it.
 - A current database version does not scan the business collection.
 - Old cache versions miss and successful enhancement persists
   `config_enhance_v2`.
@@ -268,7 +270,7 @@ PYTHONPATH=. uv run pytest \
   tests/test_container_database_startup.py -q
 ```
 
-Result: `397 passed in 3.70s`.
+Result: `398 passed in 3.91s`.
 
 omni-base performance contract:
 
@@ -289,6 +291,14 @@ PATH="$PWD/.venv/bin:$PATH" bash scripts/verify.sh
 
 The unqualified system `python3` is 3.9.6 and cannot compile the project's
 Python 3.11+ `match` syntax.
+
+Local startup verification:
+
+- First startup applied migration v1, removed five local legacy fields, wrote
+  database version 1, and returned HTTP 200 from `/api/v1/health`.
+- Second startup read database version 1 without applying the migration and
+  returned HTTP 200 from `/api/v1/health`.
+- Both locally started Agent processes shut down cleanly after verification.
 
 Real-provider config enhancement and production deployment were not performed
 as part of this local bugfix.
