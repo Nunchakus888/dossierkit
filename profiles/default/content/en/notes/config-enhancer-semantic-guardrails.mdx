@@ -21,7 +21,7 @@ tags:
   - "skill routing"
   - "timer semantics"
   - "config cache"
-contentHash: "sha256:1375b872d481cd5b30925763736eb74787775c4f24168545eebf06aae1d146bd"
+contentHash: "sha256:1c3d9ecb5f071d2a2b4218b74d4ed77bb2006155cdd66a4bb2571c69c1515726"
 ---
 
 > Date: 2026-07-23
@@ -124,8 +124,8 @@ claim.
 ## Agreed Scope
 
 - Keep the existing full-config JSON response contract for `ConfigEnhancer`.
-- Strengthen the parser prompt so `instructions` contains only retained SOP
-  text and never a serialized copy of sibling output fields.
+- Assign retained SOP text to `instructions` and keep every sibling output in
+  its declared top-level field.
 - Define every timer `delay_seconds` as cumulative elapsed time from the same
   runtime baseline. Chained relative waits must be added to earlier waits.
 - Enhance only a skill's routing `description`.
@@ -146,14 +146,28 @@ claim.
 - No Mongo schema migration or targeted cache deletion.
 - No change to timer runtime scheduling.
 
+## Prompt Design
+
+Production wording uses four general semantic invariants:
+
+1. Field ownership: each generated value belongs to its declared schema field.
+2. Time baseline: independently scheduled timers use cumulative elapsed delays.
+3. Routing boundary: skill descriptions express direct-match scope and
+   neighboring intent boundaries from the source configuration.
+4. Claim grounding: trusted support entails the complete business claim.
+
+The production prompts contain no chatbot, merchant, fee, language, or
+incident-specific examples. Positive statements define the target result;
+negative wording remains limited to existing security and transport boundaries
+where omission would weaken the contract.
+
 ## Implementation
 
 ### Config parser
 
 The parser prompt must state:
 
-- `instructions` is one SOP text field, not a container for the remaining
-  response object.
+- `instructions` contains the retained SOP text.
 - Sibling fields appear exactly once at the top level.
 - The response ends after the single top-level JSON object.
 - Timer delays are absolute elapsed delays from the idle/session baseline.
@@ -181,8 +195,7 @@ coalesced per `(tenant_id, chatbot_id, config_hash)` inside each process.
 
 ## Acceptance Criteria
 
-- Config parser prompt explicitly prohibits sibling JSON inside
-  `instructions`.
+- Config parser prompt assigns every output to its declared field.
 - Config parser prompt defines chained timer delays as cumulative.
 - For an enhanced skill, only `description` may differ from the raw skill.
 - Prompt grounding states that `evidence` is a reporting label, not permission.
@@ -214,7 +227,7 @@ PYTHONPATH=. uv run pytest \
   tests/config/test_config_service.py -q
 ```
 
-Result: `294 passed in 1.64s`.
+Result after prompt simplification: `294 passed in 1.80s`.
 
 Real-provider config enhancement and production deployment were not performed
 as part of this local bugfix.
