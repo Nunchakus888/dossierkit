@@ -23,7 +23,7 @@ tags:
   - "timer semantics"
   - "config cache"
   - "Mongo migrations"
-contentHash: "sha256:a9bf35ec6d35c6120f58197b9b6b0cd318b16cf1aa826d4abc00e198df0e679f"
+contentHash: "sha256:ef1c2323cc93a5ba3537ee66858ba065b4cdb35a58794a787d5f1fcac4724133"
 ---
 
 > Date: 2026-07-23
@@ -207,16 +207,18 @@ those existing fields so evaluation context remains complete without duplicate
 Mongo storage.
 
 Existing Mongo documents remain readable because cache deserialization selects
-declared fields. After all old Agent pods exit, a restartable batched migration
-removes the legacy field with `$unset`; it does not write empty or null values.
-This storage-only cleanup does not bump the cache version or trigger
-re-enhancement.
+declared fields. Agent database initialization automatically applies a batched,
+restartable migration that removes the legacy field with `$unset`; it does not
+write empty or null values. This storage-only cleanup does not bump the cache
+version or trigger re-enhancement.
 
 Database migrations use one document in the `versions` collection:
 `{"version": N}`. A missing document means version `0`. Code runs ordered,
 idempotent migrations above the stored version and advances the value only
 after each migration succeeds. MongoDB owns the document `_id`; migration code
-does not assign or depend on it.
+does not assign or depend on it. Every Mongo-backed Agent instance checks the
+version before service initialization. Migration failure aborts that instance's
+startup, and restart retries from the last completed version.
 
 ## Acceptance Criteria
 
@@ -227,8 +229,9 @@ does not assign or depend on it.
 - Final-envelope retry cannot add new business claims.
 - Runtime config and observability contain no persisted `original_config`;
   performance derives its source-config view from existing fields.
-- The cleanup migration is dry-run by default, bounded by batch size, and safe
-  to rerun.
+- Agent startup automatically runs pending migrations in bounded batches.
+- A failed migration does not advance the version and succeeds on retry.
+- A current database version does not scan the business collection.
 - Old cache versions miss and successful enhancement persists
   `config_enhance_v2`.
 - Focused prompt, config service, and workflow-agent tests pass.
@@ -242,7 +245,7 @@ does not assign or depend on it.
 | `services/agent/api/services/config/service.py` | Bumped cache version to `config_enhance_v2` |
 | Agent config model, repository, and query services | Removed redundant original-config persistence and response fields |
 | Agent/omni-base performance contract | Derives source instruction and skills without persisted duplication |
-| `services/agent/scripts/migrate_database.py` | Added ordered, versioned, restartable batched Mongo migrations |
+| Agent database infrastructure | Added startup-driven, ordered, versioned, restartable batched Mongo migrations |
 | `docs/agent/configs/config-enhance.md` | Updated the authoritative config-enhance contract |
 | Focused test files | Added prompt, schema, passthrough, grounding, retry, and cache-version regression coverage |
 
@@ -261,10 +264,11 @@ PYTHONPATH=. uv run pytest \
   tests/api/internal/test_performance_api.py \
   tests/api/v1/test_session_api.py \
   tests/session/test_session_management.py \
-  tests/scripts/test_migrate_database.py -q
+  tests/services/database/test_migrations.py \
+  tests/test_container_database_startup.py -q
 ```
 
-Result: `388 passed in 4.02s`.
+Result: `397 passed in 3.70s`.
 
 omni-base performance contract:
 
@@ -275,7 +279,7 @@ uv run pytest \
   tests/unit/test_ai_agent_performance_signals.py -q
 ```
 
-Result: `51 passed in 0.98s`.
+Result: `51 passed in 0.45s`.
 
 Repository quick verification also passed with the project Python:
 
