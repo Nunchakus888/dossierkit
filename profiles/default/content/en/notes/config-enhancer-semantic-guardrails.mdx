@@ -12,16 +12,16 @@ kind: "engineering"
 topics:
   - "ConfigEnhancer"
   - "prompt grounding"
-  - "skill routing"
+  - "skill passthrough"
   - "timer semantics"
   - "config cache"
 tags:
   - "ConfigEnhancer"
   - "prompt grounding"
-  - "skill routing"
+  - "skill passthrough"
   - "timer semantics"
   - "config cache"
-contentHash: "sha256:1c3d9ecb5f071d2a2b4218b74d4ed77bb2006155cdd66a4bb2571c69c1515726"
+contentHash: "sha256:f3a02a878b55643ec95fff5cfefe73466d79adaca0a84fe1d8619d9a7374b6bb"
 ---
 
 > Date: 2026-07-23
@@ -39,9 +39,9 @@ The cached enhanced config exposed three independent problems:
 1. The generated `instructions` string contained a serialized copy of sibling
    fields such as `timers`, `constraints`, and `skills`.
 2. The source sequence “after 20 minutes, then after another 10 minutes” became
-   two independent idle timers with delays `1200` and `600`. The timer runtime
-   starts every timer from the same idle baseline, so the closing message would
-   run before the first follow-up.
+   two independent idle timers with delays `1200` and `600`. Idle timers share
+   the latest-user-activity baseline, so the closing message would run before
+   the first follow-up.
 3. Skill enhancement rewrote runtime instructions as well as routing
    descriptions. Several configured conditions were shortened or lost, and a
    concrete repeated-charge complaint was routed to a generic loan-consultation
@@ -98,8 +98,7 @@ The cached config was inspected through:
 | Generic loan consultation | Repayment option and useful routing distinctions were removed; selected for a concrete repeated-charge complaint | High |
 
 The agreed platform boundary is not to rewrite these customer-owned business
-rules. Enhancement may improve routing descriptions, but runtime execution
-instructions remain exactly as configured.
+rules. Skills are outside enhancement and pass through exactly as configured.
 
 ## Case Root Cause
 
@@ -126,10 +125,10 @@ claim.
 - Keep the existing full-config JSON response contract for `ConfigEnhancer`.
 - Assign retained SOP text to `instructions` and keep every sibling output in
   its declared top-level field.
-- Define every timer `delay_seconds` as cumulative elapsed time from the same
-  runtime baseline. Chained relative waits must be added to earlier waits.
-- Enhance only a skill's routing `description`.
-- Preserve raw skill `name`, `instructions`, `tools`, and extra runtime fields.
+- Model `idle` and `fixed` timer baselines explicitly. Chained relative waits
+  sharing a mode and baseline are cumulative; independent actions keep their
+  source delays.
+- Exclude skills from enhancement input and output; preserve raw skills exactly.
 - Strengthen answer grounding so an evidence label cannot authorize a claim and
   a broad policy cannot establish a specific entity, event, transaction, or
   causal relationship.
@@ -148,13 +147,12 @@ claim.
 
 ## Prompt Design
 
-Production wording uses four general semantic invariants:
+Production wording uses three general semantic invariants:
 
 1. Field ownership: each generated value belongs to its declared schema field.
-2. Time baseline: independently scheduled timers use cumulative elapsed delays.
-3. Routing boundary: skill descriptions express direct-match scope and
-   neighboring intent boundaries from the source configuration.
-4. Claim grounding: trusted support entails the complete business claim.
+2. Time semantics: timer mode determines the baseline, and chained relative
+   waits on the same baseline are cumulative.
+3. Claim grounding: trusted support entails the complete business claim.
 
 The production prompts contain no chatbot, merchant, fee, language, or
 incident-specific examples. Positive statements define the target result;
@@ -170,12 +168,14 @@ The parser prompt must state:
 - `instructions` contains the retained SOP text.
 - Sibling fields appear exactly once at the top level.
 - The response ends after the single top-level JSON object.
-- Timer delays are absolute elapsed delays from the idle/session baseline.
-- A chained “another N” delay is cumulative.
+- `idle` counts from the latest user activity and resets on new activity.
+- `fixed` counts from initial session timer registration and retains its schedule
+  across user activity.
+- A chained “another N” delay is cumulative only when actions share the same
+  mode and baseline.
 
-The skill task uses raw description and instructions only as routing context.
-The model returns `name` plus an enhanced `description`. Runtime merge applies
-only that description and retains all other raw skill fields.
+Skills are omitted from parser input and response schema. Runtime assembly keeps
+the raw skill array without LLM rewriting or parser post-processing.
 
 ### Main-agent grounding
 
@@ -196,8 +196,8 @@ coalesced per `(tenant_id, chatbot_id, config_hash)` inside each process.
 ## Acceptance Criteria
 
 - Config parser prompt assigns every output to its declared field.
-- Config parser prompt defines chained timer delays as cumulative.
-- For an enhanced skill, only `description` may differ from the raw skill.
+- Config parser prompt defines both timer modes and same-baseline cumulative delays.
+- Skills are absent from parser input/output and remain identical to raw config.
 - Prompt grounding states that `evidence` is a reporting label, not permission.
 - Final-envelope retry cannot add new business claims.
 - Old cache versions miss and successful enhancement persists
@@ -208,11 +208,11 @@ coalesced per `(tenant_id, chatbot_id, config_hash)` inside each process.
 
 | File | Change |
 |---|---|
-| `services/agent/api/services/config/enhancer.py` | Added instructions field-boundary rules, cumulative timer semantics, routing-only skill schema, and raw execution-field preservation |
+| `services/agent/api/services/config/enhancer.py` | Added instructions field boundaries, mode-aware cumulative timer semantics, and raw skill passthrough |
 | `services/agent/bu_agent_sdk/prompts/templates.py` | Added claim-entailment grounding, made evidence non-authorizing, and prohibited new facts during final-envelope retry |
 | `services/agent/api/services/config/service.py` | Bumped cache version to `config_enhance_v2` |
 | `docs/agent/configs/config-enhance.md` | Updated the authoritative config-enhance contract |
-| Focused test files | Added prompt, schema, merge, grounding, retry, and cache-version regression coverage |
+| Focused test files | Added prompt, schema, passthrough, grounding, retry, and cache-version regression coverage |
 
 ## Verification
 
@@ -227,7 +227,18 @@ PYTHONPATH=. uv run pytest \
   tests/config/test_config_service.py -q
 ```
 
-Result after prompt simplification: `294 passed in 1.80s`.
+Result after prompt simplification and skill passthrough: `289 passed in 1.54s`.
+
+Timer mode regression:
+
+```bash
+cd services/agent
+PYTHONPATH=. uv run pytest \
+  tests/session/test_timer_manager.py \
+  tests/session/test_timer_safety_gate_e2e.py -q
+```
+
+Result: `41 passed in 11.64s`.
 
 Real-provider config enhancement and production deployment were not performed
 as part of this local bugfix.
@@ -238,5 +249,6 @@ as part of this local bugfix.
   `services/agent/automation_test/case/online/0723/session-84664120166982656.log`
 - Sampled production logs showed the embedded sibling JSON on every observed
   prompt for this config hash and not on the other sampled config hashes.
-- Runtime timer registration starts all configured timers independently in
-  `services/agent/api/services/timer/manager.py`.
+- Runtime timer registration starts all configured timers independently;
+  `reset_idle()` restarts only `idle` timers and leaves `fixed` timers on their
+  original plan in `services/agent/api/services/timer/manager.py`.
