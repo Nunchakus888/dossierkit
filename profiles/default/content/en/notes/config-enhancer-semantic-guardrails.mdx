@@ -15,15 +15,15 @@ topics:
   - "skill passthrough"
   - "timer semantics"
   - "config cache"
-  - "Mongo cleanup"
+  - "Mongo migrations"
 tags:
   - "ConfigEnhancer"
   - "prompt grounding"
   - "skill passthrough"
   - "timer semantics"
   - "config cache"
-  - "Mongo cleanup"
-contentHash: "sha256:22720861be0b312fd7567993dd1103a8fb78c2e1b0d82db4c872d874ac8399c5"
+  - "Mongo migrations"
+contentHash: "sha256:12cdfab1c0d87c688245b4e8c21a32878ad0c264defba5a93862e0c37d9faedf"
 ---
 
 > Date: 2026-07-23
@@ -212,6 +212,12 @@ removes the legacy field with `$unset`; it does not write empty or null values.
 This storage-only cleanup does not bump the cache version or trigger
 re-enhancement.
 
+Database migrations use one document in the `versions` collection:
+`{"version": N}`. A missing document means version `0`. Code runs ordered,
+idempotent migrations above the stored version and advances the value only
+after each migration succeeds. MongoDB owns the document `_id`; migration code
+does not assign or depend on it.
+
 ## Acceptance Criteria
 
 - Config parser prompt assigns every output to its declared field.
@@ -236,7 +242,7 @@ re-enhancement.
 | `services/agent/api/services/config/service.py` | Bumped cache version to `config_enhance_v2` |
 | Agent config model, repository, and query services | Removed redundant original-config persistence and response fields |
 | Agent/omni-base performance contract | Derives source instruction and skills without persisted duplication |
-| `services/agent/scripts/remove_original_config.py` | Added restartable batched Mongo cleanup |
+| `services/agent/scripts/migrate_database.py` | Added ordered, versioned, restartable batched Mongo migrations |
 | `docs/agent/configs/config-enhance.md` | Updated the authoritative config-enhance contract |
 | Focused test files | Added prompt, schema, passthrough, grounding, retry, and cache-version regression coverage |
 
@@ -255,10 +261,10 @@ PYTHONPATH=. uv run pytest \
   tests/api/internal/test_performance_api.py \
   tests/api/v1/test_session_api.py \
   tests/session/test_session_management.py \
-  tests/scripts/test_remove_original_config.py -q
+  tests/scripts/test_migrate_database.py -q
 ```
 
-Result: `385 passed in 4.23s`.
+Result: `388 passed in 4.02s`.
 
 omni-base performance contract:
 
@@ -269,7 +275,7 @@ uv run pytest \
   tests/unit/test_ai_agent_performance_signals.py -q
 ```
 
-Result: `51 passed in 0.43s`.
+Result: `51 passed in 0.98s`.
 
 `bash scripts/verify.sh` also passed its repository quick verification.
 
