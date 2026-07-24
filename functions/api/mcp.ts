@@ -1,14 +1,19 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { z } from "zod";
-import { noteGetInputSchema, noteSaveInputSchema } from "../../src/lib/note-ingest";
+import { noteDeleteInputSchema, noteGetInputSchema, noteSaveInputSchema } from "../../src/lib/note-ingest";
 import {
   AccessAuthenticationError,
   AccessConfigurationError,
   verifyCloudflareAccess,
   type AccessAuthEnvironment
 } from "../../src/server/access-auth";
-import { getNoteFromGitHub, saveNoteToGitHub, type NotesEnvironment } from "../../src/server/github-notes";
+import {
+  deleteNoteFromGitHub,
+  getNoteFromGitHub,
+  saveNoteToGitHub,
+  type NotesEnvironment
+} from "../../src/server/github-notes";
 
 type Environment = NotesEnvironment & AccessAuthEnvironment;
 
@@ -35,7 +40,8 @@ function createServer(env: Environment, requestOrigin: string) {
     noteRef: z.string(),
     title: z.string(),
     summary: z.string(),
-    publicUrl: z.string()
+    publicUrl: z.string(),
+    format: z.enum(["markdown", "html"])
   });
   const saveOutputSchema = z.object({
     action: z.enum(["created", "updated", "unchanged"]),
@@ -51,16 +57,28 @@ function createServer(env: Environment, requestOrigin: string) {
       locale: z.enum(["zh", "en"]),
       kind: z.enum(["research", "learning", "engineering"]).optional(),
       topics: z.array(z.string()),
-      markdown: z.string(),
+      format: z.enum(["markdown", "html"]),
+      markdown: z.string().optional(),
+      html: z.string().optional(),
       contentHash: z.string()
     }).optional(),
     candidates: z.array(candidateSchema).optional()
   });
+  const deleteOutputSchema = z.object({
+    action: z.literal("deleted"),
+    noteRef: z.string(),
+    title: z.string(),
+    format: z.enum(["markdown", "html"]),
+    path: z.string(),
+    publicUrl: z.string(),
+    contentHash: z.string(),
+    commitUrl: z.string().optional()
+  });
   const server = new McpServer(
-    { name: "dossierkit-notes", version: "1.2.0" },
+    { name: "dossierkit-notes", version: "1.3.0" },
     {
       instructions:
-        "Use save_note only after a note is complete. For a new note, provide the finished Markdown and concise topics extracted from it; the server derives and freezes the canonical path from the title and topics. To edit an existing note, call get_note first, revise its returned Markdown, then call save_note with the unchanged noteRef."
+        "Use save_note only after a note is complete. Provide exactly one finished Markdown or sanitized semantic HTML document plus concise topics; the server derives and freezes the canonical path. To edit or delete an existing note, call get_note first. Preserve noteRef for edits. For deletion, pass the exact noteRef and current contentHash to delete_note; never infer either value."
     }
   );
 
@@ -69,7 +87,7 @@ function createServer(env: Environment, requestOrigin: string) {
     {
       title: "Read canonical note",
       description:
-        "Find and return the current canonical Markdown before editing a note. Search by noteRef, filename, title, or a distinctive title phrase. If more than one note matches, choose one returned noteRef and call get_note again.",
+        "Find and return the current canonical Markdown or HTML before editing or deleting a note. Search by noteRef, filename, title, or a distinctive title phrase. If more than one note matches, choose one returned noteRef and call get_note again.",
       inputSchema: noteGetInputSchema,
       outputSchema: getOutputSchema,
       annotations: {
@@ -103,7 +121,7 @@ function createServer(env: Environment, requestOrigin: string) {
     {
       title: "Save canonical note",
       description:
-        "Create or update one canonical research, learning, or engineering note. For creation, provide finished Markdown and concise topics; the server derives the stable canonical path from the title and topics. For updates, first call get_note and provide its unchanged noteRef; the existing path is preserved. The server validates identity, deduplicates, and writes GitHub.",
+        "Create or update one canonical research, learning, or engineering note. Provide exactly one of markdown or html. HTML may be a semantic fragment or full document with exactly one H1; active content, forms, inline styles, unsafe URLs, and arbitrary paths are rejected. For updates, first call get_note and preserve its noteRef and format.",
       inputSchema: noteSaveInputSchema,
       outputSchema: saveOutputSchema,
       annotations: {
@@ -123,6 +141,43 @@ function createServer(env: Environment, requestOrigin: string) {
             {
               type: "text",
               text: `Note ${verb}. Canonical noteRef: ${result.noteRef}. Public URL: ${result.publicUrl}${result.commitUrl ? `. Commit: ${result.commitUrl}` : ""}`
+            }
+          ],
+          structuredContent: result
+        };
+      } catch (error) {
+        return {
+          content: [{ type: "text", text: error instanceof Error ? error.message : String(error) }],
+          isError: true
+        };
+      }
+    }
+  );
+
+  server.registerTool(
+    "delete_note",
+    {
+      title: "Delete canonical note",
+      description:
+        "Permanently remove one canonical note from GitHub. First call get_note, then pass its exact noteRef and current contentHash. The deletion fails if the note changed after it was read. The website page disappears after deployment, while Git history remains recoverable.",
+      inputSchema: noteDeleteInputSchema,
+      outputSchema: deleteOutputSchema,
+      annotations: {
+        title: "Delete canonical note",
+        readOnlyHint: false,
+        destructiveHint: true,
+        idempotentHint: false,
+        openWorldHint: true
+      }
+    },
+    async (input) => {
+      try {
+        const result = await deleteNoteFromGitHub(input, env, requestOrigin);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Note deleted: ${result.noteRef}. The public page will be removed by the deployment triggered from ${result.commitUrl || "the GitHub commit"}.`
             }
           ],
           structuredContent: result

@@ -1,6 +1,8 @@
 import {
   collisionSlug,
+  computeCanonicalContentHash,
   deriveCanonicalNoteKey,
+  noteDeleteInputSchema,
   noteGetInputSchema,
   noteSaveInputSchema,
   parseCanonicalNote,
@@ -49,6 +51,7 @@ export type NoteCandidate = {
   title: string;
   summary: string;
   publicUrl: string;
+  format: "markdown" | "html";
 };
 
 export type GetNoteResult = {
@@ -57,10 +60,23 @@ export type GetNoteResult = {
     locale: "zh" | "en";
     kind?: "research" | "learning" | "engineering";
     topics: string[];
-    markdown: string;
+    format: "markdown" | "html";
+    markdown?: string;
+    html?: string;
     contentHash: string;
   };
   candidates?: NoteCandidate[];
+};
+
+export type DeleteNoteResult = {
+  action: "deleted";
+  noteRef: string;
+  title: string;
+  format: "markdown" | "html";
+  path: string;
+  publicUrl: string;
+  contentHash: string;
+  commitUrl?: string;
 };
 
 export async function saveNoteToGitHub(
@@ -79,6 +95,9 @@ export async function saveNoteToGitHub(
     const identity = splitNoteRef(input.noteRef);
     existing = await getStoredNote(context, identity.locale, identity.key, requestFetch);
     if (!existing) throw new Error(`No canonical note exists for noteRef ${input.noteRef}. Call get_note before updating.`);
+    if (existing.parsed.format !== note.format) {
+      throw new Error("An update cannot change the note format. Use local Git maintenance for format migrations.");
+    }
     note = await prepareNote(input, new Date(), existing.parsed.metadata);
     if (note.locale !== identity.locale) {
       throw new Error("An update cannot change the note locale. Create a separate translated note instead.");
@@ -88,6 +107,9 @@ export async function saveNoteToGitHub(
     const notes = await listStoredNotes(context, note.locale, requestFetch);
     existing = notes.find((item) => normalizeTitle(item.parsed.metadata.title) === normalizeTitle(note.title));
     if (existing) {
+      if (existing.parsed.format !== note.format) {
+        throw new Error("A note with the same title already exists in another format.");
+      }
       note = await prepareNote(input, new Date(), existing.parsed.metadata);
       key = existing.key;
     } else {
@@ -103,7 +125,7 @@ export async function saveNoteToGitHub(
     }
   }
 
-  const path = notePath(context.profileId, note.locale, key);
+  const path = existing?.path || notePath(context.profileId, note.locale, key, note.format);
   if (existing && existing.parsed.contentHash === note.contentHash) {
     return saveResult("unchanged", note, key, path, undefined, context.siteUrl);
   }
@@ -136,6 +158,62 @@ export async function saveNoteToGitHub(
     payload.commit?.html_url,
     context.siteUrl
   );
+}
+
+export async function deleteNoteFromGitHub(
+  rawInput: unknown,
+  env: NotesEnvironment,
+  requestOrigin: string,
+  requestFetch: typeof fetch = fetch
+): Promise<DeleteNoteResult> {
+  const input = noteDeleteInputSchema.parse(rawInput);
+  const context = repositoryContext(env, requestOrigin);
+  const identity = splitNoteRef(input.noteRef);
+  const stored = await getStoredNote(context, identity.locale, identity.key, requestFetch);
+  if (!stored) throw new Error(`No canonical note exists for noteRef ${input.noteRef}.`);
+  if (!stored.sha) throw new Error("The canonical note is missing its GitHub version identity.");
+  const currentContentHash = await computeCanonicalContentHash({
+    title: stored.parsed.metadata.title,
+    summary: stored.parsed.metadata.summary,
+    body: stored.parsed.body,
+    locale: stored.parsed.metadata.locale,
+    kind: stored.parsed.metadata.kind || "research",
+    topics: stored.parsed.metadata.topics
+  });
+  if (stored.parsed.contentHash !== currentContentHash) {
+    throw new Error("The canonical note contentHash is stale. Repair the note metadata before deleting.");
+  }
+  if (currentContentHash !== input.contentHash) {
+    throw new Error("The note changed after it was read. Call get_note again before deleting.");
+  }
+
+  const response = await requestFetch(
+    githubContentUrl(context.owner, context.repo, stored.path),
+    {
+      method: "DELETE",
+      headers: githubHeaders(context.token),
+      body: JSON.stringify({
+        message: `Delete note: ${stored.parsed.metadata.title}`,
+        sha: stored.sha,
+        branch: context.branch
+      })
+    }
+  );
+  const payload = await response.json() as { commit?: { html_url?: string }; message?: string };
+  if (!response.ok) {
+    throw new Error(`GitHub delete failed (${response.status}): ${payload.message || response.statusText}`);
+  }
+
+  return {
+    action: "deleted",
+    noteRef: stored.noteRef,
+    title: stored.parsed.metadata.title,
+    format: stored.parsed.format,
+    path: stored.path,
+    publicUrl: publicUrl(context.siteUrl, identity.locale, identity.key),
+    contentHash: stored.parsed.contentHash,
+    commitUrl: payload.commit?.html_url
+  };
 }
 
 export async function getNoteFromGitHub(
@@ -197,11 +275,16 @@ async function listStoredNotes(
   if (response.status === 404) return [];
   if (!response.ok) throw await githubReadError(response);
   const entries = await response.json() as GitHubContent[];
-  const files = entries.filter((entry) => entry.type === "file" && entry.name?.match(/\.mdx?$/));
-  return await Promise.all(files.map(async (entry) => {
-    const key = entry.name!.replace(/\.mdx?$/, "");
+  const files = entries.filter((entry) => entry.type === "file" && entry.name?.match(/\.(?:mdx?|html)$/));
+  const keys = new Set<string>();
+  for (const entry of files) {
+    const key = entry.name!.replace(/\.(?:mdx?|html)$/, "");
+    if (keys.has(key)) throw new Error(`Multiple canonical note files use the key ${key}.`);
+    keys.add(key);
+  }
+  return await Promise.all([...keys].map(async (key) => {
     const stored = await getStoredNote(context, locale, key, requestFetch);
-    if (!stored) throw new Error(`GitHub listed ${entry.path}, but the note could not be read.`);
+    if (!stored) throw new Error(`GitHub listed ${key}, but the note could not be read.`);
     return stored;
   }));
 }
@@ -212,20 +295,23 @@ async function getStoredNote(
   key: string,
   requestFetch: typeof fetch
 ): Promise<StoredNote | undefined> {
-  const path = notePath(context.profileId, locale, key);
-  const url = new URL(githubContentUrl(context.owner, context.repo, path));
-  url.searchParams.set("ref", context.branch);
-  const response = await requestFetch(url, { headers: githubHeaders(context.token) });
-  if (response.status === 404) return undefined;
-  if (!response.ok) throw await githubReadError(response);
-  const content = await response.json() as GitHubContent;
-  return {
-    key,
-    noteRef: `${locale}/${key}`,
-    path,
-    sha: content.sha,
-    parsed: parseCanonicalNote(decodeGitHubContent(content))
-  };
+  for (const extension of ["mdx", "md", "html"]) {
+    const path = `profiles/${context.profileId}/content/${locale}/notes/${key}.${extension}`;
+    const url = new URL(githubContentUrl(context.owner, context.repo, path));
+    url.searchParams.set("ref", context.branch);
+    const response = await requestFetch(url, { headers: githubHeaders(context.token) });
+    if (response.status === 404) continue;
+    if (!response.ok) throw await githubReadError(response);
+    const content = await response.json() as GitHubContent;
+    return {
+      key,
+      noteRef: `${locale}/${key}`,
+      path,
+      sha: content.sha,
+      parsed: parseCanonicalNote(decodeGitHubContent(content))
+    };
+  }
+  return undefined;
 }
 
 function foundResult(stored: StoredNote, siteUrl: string): GetNoteResult {
@@ -240,7 +326,10 @@ function foundResult(stored: StoredNote, siteUrl: string): GetNoteResult {
       locale: metadata.locale,
       kind: metadata.kind,
       topics: metadata.topics,
-      markdown: stored.parsed.markdown,
+      format: stored.parsed.format,
+      ...(stored.parsed.format === "html"
+        ? { html: stored.parsed.html }
+        : { markdown: stored.parsed.markdown }),
       contentHash: stored.parsed.contentHash
     }
   };
@@ -253,7 +342,8 @@ function ambiguousResult(notes: StoredNote[], siteUrl: string): GetNoteResult {
       noteRef: stored.noteRef,
       title: stored.parsed.metadata.title,
       summary: stored.parsed.metadata.summary,
-      publicUrl: publicUrl(siteUrl, stored.parsed.metadata.locale, stored.key)
+      publicUrl: publicUrl(siteUrl, stored.parsed.metadata.locale, stored.key),
+      format: stored.parsed.format
     }))
   };
 }
@@ -281,8 +371,13 @@ function splitNoteRef(noteRef: string) {
   return { locale, key };
 }
 
-function notePath(profileId: string, locale: "zh" | "en", key: string) {
-  return `profiles/${profileId}/content/${locale}/notes/${key}.mdx`;
+function notePath(
+  profileId: string,
+  locale: "zh" | "en",
+  key: string,
+  format: "markdown" | "html"
+) {
+  return `profiles/${profileId}/content/${locale}/notes/${key}.${format === "html" ? "html" : "mdx"}`;
 }
 
 function publicUrl(siteUrl: string, locale: "zh" | "en", key: string) {

@@ -353,6 +353,7 @@ export const contentFrontmatterSchema = z
     date: z.string().optional(),
     updatedAt: z.string().optional(),
     kind: z.enum(["research", "learning", "engineering"]).optional(),
+    format: z.enum(["markdown", "html"]).optional(),
     topics: z.array(z.string()).default([]),
     sourceUrl: z.string().url().optional(),
     contentHash: z.string().regex(/^sha256:[a-f0-9]{64}$/).optional()

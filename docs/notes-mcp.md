@@ -1,34 +1,44 @@
 # Canonical Notes MCP
 
-The Notes MCP connects ChatGPT and Codex authoring directly to the canonical website content. It accepts completed Markdown, not download URLs or source copies.
+The Notes MCP connects ChatGPT and Codex authoring directly to the canonical website content. It accepts completed Markdown or safe semantic HTML, not download URLs or source copies.
 
 ## Single source of truth
 
 The only maintained note is:
 
 ```text
-profiles/{profileId}/content/{locale}/notes/{canonical-key}.mdx
+profiles/{profileId}/content/{locale}/notes/{canonical-key}.{mdx|html}
 ```
 
-GitHub `main` stores the canonical MDX, the website is a generated view, and Git history provides versioning and rollback. The filename is the canonical path identity; note frontmatter does not duplicate a `slug` field.
+GitHub `main` stores the canonical note file, the website is a generated view, and Git history provides versioning and rollback. The filename is the canonical path identity; note metadata does not duplicate a `slug` field.
 
 ## Tool contract
 
 The MCP exposes two tools:
 
-- `get_note` reads the current canonical Markdown by `noteRef`, filename, title, or title phrase.
+- `get_note` reads the current canonical Markdown or HTML by `noteRef`, filename, title, or title phrase.
 - `save_note` creates a note or updates the exact file identified by `noteRef`.
+- `delete_note` removes the exact version identified by `noteRef` and `contentHash`.
 
-For creation, `save_note` accepts one finished Markdown document with exactly one H1, plus optional topics and kind. The API derives a lowercase canonical key from the H1 and semantic topics, resolves path collisions deterministically, and freezes the resulting `noteRef`. Callers cannot provide a slug or repository path.
+For creation, `save_note` accepts exactly one of:
 
-For updates, the model calls `get_note`, edits the returned Markdown, and sends it to `save_note` with the unchanged `noteRef`. The title may change without moving the file or public URL. Existing date, featured state, kind, and topics are preserved when the update omits them.
+- one finished Markdown document with exactly one H1;
+- one semantic HTML fragment or full HTML document with exactly one H1.
+
+The API derives a lowercase canonical key from the H1 and semantic topics, resolves path collisions deterministically, and freezes the resulting `noteRef`. Callers cannot provide a slug or repository path.
+
+HTML is stored as a valid standalone `.html` document. The canonical file embeds DossierKit metadata and a sanitized `<article>` body. Scripts, styles supplied by the caller, forms, event handlers, unsafe URL schemes, iframes, and executable embeds are rejected. The website extracts the safe article and renders it inside the same Notes layout used by Markdown.
+
+For updates, the model calls `get_note`, edits the returned `markdown` or `html`, and sends it to `save_note` with the unchanged `noteRef`. The title may change without moving the file or public URL. Existing date, featured state, kind, and topics are preserved when the update omits them. MCP edits preserve the original format; batch format migrations remain local repository work.
+
+For deletion, the model calls `get_note`, presents the exact title and public URL for confirmation, then passes the returned `noteRef` and `contentHash` to `delete_note`. A stale hash fails closed, so a note changed after review cannot be deleted accidentally. Git history keeps the deletion recoverable.
 
 The service also protects identity in two ways:
 
 1. A new save with the same normalized title reuses the existing file instead of deriving a second path.
 2. An identical content hash returns `unchanged` and creates no commit.
 
-The Function does not call a second language model. ChatGPT supplies the polished title, body, and topics through the MCP schema; the API handles authentication, validation, deterministic path generation, identity, persistence, and retries.
+The Function does not call a second language model. ChatGPT supplies the polished title, body, format, and topics through the MCP schema; the API handles authentication, HTML sanitization, validation, deterministic path generation, identity, persistence, deletion, and retries.
 
 ## One production endpoint
 
@@ -78,17 +88,36 @@ NOTES_ACCESS_EMAIL
 
 `NOTES_GITHUB_TOKEN` is the single backend credential shared by both client flows and is never returned to either client. Use a fine-grained GitHub token restricted to the selected repository with Contents read/write permission. The public website project receives no GitHub write credential; its `/api/mcp` route returns `404`. The CI workflow provisions the isolated Pages project, Zero Trust configuration, runtime secrets, and deployment.
 
-Use MCP for a single note create or edit. Use a freshly synchronized local repository for batch migrations, schema changes, or site-level maintenance; those changes still update the same canonical MDX files on `main`.
+Use MCP for a single note create, edit, or deletion. Use a freshly synchronized local repository for batch migrations, schema changes, or site-level maintenance; those changes still update the same canonical files on `main`.
+
+Without MCP, delete a note through the repository:
+
+```bash
+git switch main
+git pull --ff-only
+git switch -c codex/delete-note
+# Choose the extension used by the canonical file:
+git rm profiles/default/content/{locale}/notes/{canonical-key}.mdx
+# or: git rm profiles/default/content/{locale}/notes/{canonical-key}.html
+ACTIVE_PROFILE=default pnpm validate
+ACTIVE_PROFILE=default pnpm build
+git commit -m "Delete note: {title}"
+git push -u origin codex/delete-note
+```
+
+Open and merge the pull request. The main deployment removes the public page. The same operation is possible from GitHub's file view with **Delete file**, but the local flow provides validation before publication.
 
 ## Authoring instruction
 
 Use this durable instruction for ChatGPT research workflows:
 
 ```text
-When creating a finished note, call save_note with one polished Markdown document,
-exactly one H1, and three to six concrete topics. The server owns the canonical path.
-When editing a note, call get_note first, revise the returned Markdown, and call
-save_note with the unchanged noteRef. Never invent noteRef or a repository path.
+When creating a finished note, call save_note with exactly one polished Markdown
+or semantic HTML document, exactly one H1, and three to six concrete topics.
+The server owns the canonical path. When editing, call get_note first, revise the
+returned content, preserve its format, and save with the unchanged noteRef.
+When deleting, call get_note first and pass its exact noteRef and contentHash to
+delete_note after explicit confirmation. Never invent noteRef or a repository path.
 ```
 
 ## Local verification
