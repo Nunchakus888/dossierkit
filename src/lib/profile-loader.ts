@@ -5,6 +5,7 @@ import { marked } from "marked";
 import { parse as parseYaml } from "yaml";
 import type { z } from "zod";
 import { activeProfile, type Locale, profileRoot } from "./config";
+import { parseCanonicalNote } from "./note-ingest";
 import {
   contentFrontmatterSchema,
   designSchema,
@@ -116,12 +117,18 @@ export function readContentCollection(
 
   return fs
     .readdirSync(dir)
-    .filter((file) => file.endsWith(".mdx") || file.endsWith(".md"))
+    .filter((file) =>
+      file.endsWith(".mdx")
+      || file.endsWith(".md")
+      || (kind === "notes" && file.endsWith(".html"))
+    )
     .map((file) => {
       const filePath = path.join(dir, file);
       const source = fs.readFileSync(filePath, "utf8");
-      const parsed = matter(source);
-      const data = contentFrontmatterSchema.safeParse(parsed.data);
+      const isHtmlNote = kind === "notes" && file.endsWith(".html");
+      const canonicalHtml = isHtmlNote ? parseCanonicalNote(source) : undefined;
+      const parsed = isHtmlNote ? undefined : matter(source);
+      const data = contentFrontmatterSchema.safeParse(canonicalHtml?.data || parsed?.data);
 
       if (!data.success) {
         throw new Error(formatZodError(data.error, filePath));
@@ -140,14 +147,15 @@ export function readContentCollection(
         throw new Error(`${filePath}: legacy frontmatter slug must match the note filename`);
       }
 
-      const html = marked.parse(parsed.content, { async: false }) as string;
+      const body = canonicalHtml?.text || parsed!.content;
+      const html = canonicalHtml?.body || marked.parse(parsed!.content, { async: false }) as string;
 
       return {
         kind,
         slug,
         locale,
         filePath,
-        body: parsed.content,
+        body,
         html,
         data: data.data
       };

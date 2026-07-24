@@ -6,12 +6,43 @@ export type NoteHeading = {
   text: string;
 };
 
+export function removeDuplicateNoteLead(html: string, summary: string) {
+  const sectionLead = html.match(
+    /^\s*<h2(?:\s[^>]*)?>([\s\S]*?)<\/h2>\s*<p(?:\s[^>]*)?>([\s\S]*?)<\/p>\s*/i
+  );
+  if (sectionLead) {
+    const headingText = normalizeComparisonText(decodeEntities(sectionLead[1].replace(/<[^>]+>/g, "")));
+    const paragraphText = normalizeComparisonText(decodeEntities(sectionLead[2].replace(/<[^>]+>/g, "")));
+    if (
+      isSummaryEquivalent(`${headingText} ${paragraphText}`, summary)
+      || isSummaryEquivalent(paragraphText, summary)
+    ) {
+      return html.slice(sectionLead[0].length);
+    }
+  }
+
+  const lead = html.match(/^\s*<p(?:\s[^>]*)?>([\s\S]*?)<\/p>\s*/i);
+  if (!lead) return html;
+
+  const leadText = normalizeComparisonText(decodeEntities(lead[1].replace(/<[^>]+>/g, "")));
+  return isSummaryEquivalent(leadText, summary) ? html.slice(lead[0].length) : html;
+}
+
+function isSummaryEquivalent(content: string, summary: string) {
+  const contentText = normalizeComparisonText(content);
+  const summaryText = normalizeComparisonText(summary);
+  const summaryStem = summaryText.replace(/[.…]+$/g, "");
+  return contentText === summaryText
+    || (summaryStem.length >= 24 && contentText.startsWith(summaryStem))
+    || (contentText.length >= 24 && summaryText.startsWith(contentText));
+}
+
 export function decorateNoteHtml(html: string) {
   const headings: NoteHeading[] = [];
   const seen = new Map<string, number>();
   let headingIndex = 0;
 
-  const decorated = html.replace(/<h([2-4])>([\s\S]*?)<\/h\1>/g, (_match, level, inner) => {
+  const decorated = html.replace(/<h([2-4])(?:\s[^>]*)?>([\s\S]*?)<\/h\1>/gi, (_match, level, inner) => {
     const text = decodeEntities(inner.replace(/<[^>]+>/g, "").trim());
     if (!text) return _match;
 
@@ -32,6 +63,13 @@ export function decorateNoteHtml(html: string) {
   );
 
   return { html: withDiagrams, headings };
+}
+
+function normalizeComparisonText(value: string) {
+  return value
+    .normalize("NFKC")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function headingSlug(value: string) {
