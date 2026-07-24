@@ -1,21 +1,10 @@
 import path from "node:path";
 import { activeProfile, locales, type Locale } from "../src/lib/config";
+import { findPublicContentViolation } from "../src/lib/content-policy";
 import { loadProfilePack, readContentCollection, type ContentKind } from "../src/lib/profile-loader";
 
 const kinds: ContentKind[] = ["cases", "lab", "writing", "notes"];
 const bilingualKinds: ContentKind[] = ["cases", "lab", "writing"];
-const internalWording = [
-  /\bdemos?\b/i,
-  /\bexamples?\b/i,
-  /\bnot a demo\b/i,
-  /\bto be filled\b/i,
-  /待补/,
-  /后续/,
-  /短板/,
-  /面试官/,
-  /不需要/,
-  /不作为/
-];
 
 export async function main() {
   const warnings: string[] = [];
@@ -39,10 +28,12 @@ export async function main() {
           if (/^#\s+/m.test(entry.body)) {
             errors.push(`${entry.filePath}: body must start at H2; the page layout owns the H1 title`);
           }
-          for (const pattern of internalWording) {
-            if (pattern.test(`${entry.data.title}\n${entry.data.summary}\n${entry.body}`)) {
-              errors.push(`${entry.filePath}: public content contains internal wording matching ${pattern}`);
-            }
+          const wordingViolation = findPublicContentViolation(
+            kind,
+            `${entry.data.title}\n${entry.data.summary}\n${entry.body}`
+          );
+          if (wordingViolation) {
+            errors.push(`${entry.filePath}: public content contains internal wording matching ${wordingViolation}`);
           }
           if (entry.data.translationStatus === "draft") {
             warnings.push(`${entry.filePath}: translationStatus is draft`);

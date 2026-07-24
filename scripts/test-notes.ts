@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { onRequest as handleMcpRequest } from "../functions/api/mcp";
+import { findPublicContentViolation } from "../src/lib/content-policy";
 import {
   collisionSlug,
   noteSaveInputSchema,
@@ -46,6 +47,16 @@ assert.throws(() => noteSaveInputSchema.parse({ ...input, slug: "manual-slug" })
 assert.throws(() => noteSaveInputSchema.parse({ ...input, sourceUrl: "https://invalid.example/download" }));
 assert.doesNotThrow(() => noteSaveInputSchema.parse({ markdown, noteRef: "zh/existing-note" }));
 await assert.rejects(() => prepareNote({ ...input, markdown: `${markdown}\n<script>alert(1)</script>` }));
+await assert.doesNotReject(() => prepareNote({
+  ...input,
+  markdown: `${markdown}\n\n## Technical examples and demos\n\nThese examples document reusable implementation boundaries.`
+}));
+await assert.rejects(
+  () => prepareNote({ ...input, markdown: `${markdown}\n\n## 待补\n\n这部分内容尚未完成。` }),
+  /unfinished public wording/
+);
+assert.equal(findPublicContentViolation("notes", "Technical examples and demos"), undefined);
+assert.match(String(findPublicContentViolation("writing", "Technical examples")), /examples/);
 assert.ok(collisionSlug("a".repeat(72), note.title).length <= 72);
 
 const canonical = renderCanonicalNote(note);
@@ -68,6 +79,18 @@ assert.equal(created.action, "created");
 assert.equal(created.noteRef, "zh/agent-harness-evaluation-action-governance-memory");
 assert.equal(created.publicUrl, "https://notes.example.com/zh/notes/agent-harness-evaluation-action-governance-memory");
 assert.ok(createdRepo.documents.has(notePath("agent-harness-evaluation-action-governance-memory")));
+
+const rejectedRepo = createGitHubMock();
+await assert.rejects(
+  () => saveNoteToGitHub(
+    { ...input, markdown: `${markdown}\n\n## 待补\n\n这部分内容尚未完成。` },
+    environment,
+    "https://notes.example.com",
+    rejectedRepo.fetch
+  ),
+  /unfinished public wording/
+);
+assert.equal(rejectedRepo.writes, 0, "invalid public wording must be rejected before the GitHub write");
 
 const sameTitleRepo = createGitHubMock(createdRepo.documents);
 const sameTitle = await saveNoteToGitHub(
