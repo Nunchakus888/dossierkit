@@ -57,10 +57,10 @@ function createServer(env: Environment, requestOrigin: string) {
     candidates: z.array(candidateSchema).optional()
   });
   const server = new McpServer(
-    { name: "dossierkit-notes", version: "1.1.0" },
+    { name: "dossierkit-notes", version: "1.2.0" },
     {
       instructions:
-        "Use save_note only after a note is complete. For a new note, propose a concise semantic suggestedSlug from the full content. To edit an existing note, call get_note first, revise its returned Markdown, then call save_note with the unchanged noteRef. The noteRef freezes the canonical file and public URL even if the title changes."
+        "Use save_note only after a note is complete. For a new note, provide the finished Markdown and concise topics extracted from it; the server derives and freezes the canonical path from the title and topics. To edit an existing note, call get_note first, revise its returned Markdown, then call save_note with the unchanged noteRef."
     }
   );
 
@@ -103,7 +103,7 @@ function createServer(env: Environment, requestOrigin: string) {
     {
       title: "Save canonical note",
       description:
-        "Create or update one canonical research, learning, or engineering note. For creation, provide finished Markdown and a concise semantic suggestedSlug chosen from the whole note. For updates, first call get_note and provide its unchanged noteRef; the existing path is preserved. The server validates identity, deduplicates, and writes GitHub.",
+        "Create or update one canonical research, learning, or engineering note. For creation, provide finished Markdown and concise topics; the server derives the stable canonical path from the title and topics. For updates, first call get_note and provide its unchanged noteRef; the existing path is preserved. The server validates identity, deduplicates, and writes GitHub.",
       inputSchema: noteSaveInputSchema,
       outputSchema: saveOutputSchema,
       annotations: {

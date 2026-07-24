@@ -1,12 +1,12 @@
 ---
 locale: "zh"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-07-22"
+lastReviewedAt: "2026-07-24"
 title: "ChatGPT 研究笔记自动归档与发布：单一事实源工作流"
 summary: "以 GitHub 作为唯一笔记事实源，通过受保护的 MCP 完成创建与编辑，再自动发布到 Cloudflare Pages；在免费额度内形成无需手动下载的知识管理闭环。"
 featured: false
 date: "2026-07-22"
-updatedAt: "2026-07-22"
+updatedAt: "2026-07-24"
 kind: "engineering"
 topics:
   - "ChatGPT"
@@ -20,7 +20,7 @@ tags:
   - "GitHub"
   - "Cloudflare Pages"
   - "Knowledge Management"
-contentHash: "sha256:2fbd4a3cb20a64e14f76b1dd63e0a0c083be22b7f43ca1403eb3a9a565ed0238"
+contentHash: "sha256:ad9d0fcfc7b081bdea3abad5e644554e293ee031734d91a8091d1e1998a9c0fd"
 ---
 
 这套工作流把 ChatGPT 中完成的研究内容直接保存为可维护的 MDX 文件，并自动发布为可分享的网站页面。全程只有一份权威内容，不经过下载链接、中转平台或重复备份。
@@ -80,9 +80,9 @@ MCP 把服务端能力描述为模型可以读取的工具契约：
 | 工具 | 用途 | 主要输入 | 返回结果 |
 |---|---|---|---|
 | `get_note` | 获取待编辑的权威版本 | 标题、文件名或 `noteRef` | Markdown、元数据、`noteRef` |
-| `save_note` | 创建或更新笔记 | Markdown，以及 `suggestedSlug` 或 `noteRef` | 保存状态、commit、公开链接 |
+| `save_note` | 创建或更新笔记 | Markdown、topics；编辑时附带 `noteRef` | 保存状态、commit、公开链接 |
 
-模型负责需要语义理解的部分：标题、正文结构、摘要、主题，以及首次保存时自然连贯的 `suggestedSlug`。API 不再调用第二个模型，只执行认证、校验、冲突处理、文件写入和链接生成等确定性逻辑。
+模型负责需要语义理解的部分：标题、正文结构、摘要和主题。API 不再要求模型填写 slug，也不调用第二个模型；它根据标题与主题生成稳定路径，并执行认证、校验、冲突处理、文件写入和链接生成等确定性逻辑。
 
 权威文件路径为：
 
@@ -92,12 +92,13 @@ content/{locale}/notes/{canonical-key}.mdx
 
 `canonical-key` 是文件路径和公开 URL 的组成部分，frontmatter 不再重复保存独立 `slug` 字段：
 
-- 新建时，模型根据完整内容给出 `suggestedSlug`，服务端规范化、校验并冻结为 `canonical-key`。
+- 新建时，服务端优先根据 H1 标题生成 `canonical-key`；中文标题结合模型提取的英文技术主题生成自然路径，缺少英文主题时使用标题拼音。
+- 路径冲突时，服务端追加基于标题生成的稳定短哈希，不依赖随机值或重复模型调用。
 - 编辑时，模型先读取笔记，再使用服务端返回的稳定 `noteRef` 保存。
 - 修改标题不会改动文件路径和分享链接。
 - 内容未变化时返回 `unchanged`，不产生空提交。
 
-因此，唯一文件路径已经足以标识笔记；`suggestedSlug` 只是首次创建时的语义路径建议，`noteRef` 才是编辑阶段的稳定引用。
+因此，唯一文件路径已经足以标识笔记；slug 不是调用参数或独立元数据，`noteRef` 是编辑阶段的稳定引用。
 
 ## 三、创建与编辑：同一条保存链路
 
@@ -119,8 +120,8 @@ sequenceDiagram
     GH-->>GPT: Markdown + 稳定 noteRef
   end
   GPT->>GPT: 整理正文与元数据
-  GPT->>MCP: save_note(markdown, suggestedSlug 或 noteRef)
-  MCP->>MCP: 认证、校验并解析稳定路径
+  GPT->>MCP: save_note(markdown, topics；编辑时附 noteRef)
+  MCP->>MCP: 认证、校验并生成或复用稳定路径
   MCP->>GH: 创建或更新同一 MDX 文件
   GH-->>MCP: commit
   MCP-->>GPT: 保存状态 + 公开链接

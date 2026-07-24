@@ -3,6 +3,7 @@ import { onRequest as handleMcpRequest } from "../functions/api/mcp";
 import { findPublicContentViolation } from "../src/lib/content-policy";
 import {
   collisionSlug,
+  deriveCanonicalNoteKey,
   noteSaveInputSchema,
   parseCanonicalNote,
   prepareNote,
@@ -27,7 +28,6 @@ const markdown = `# 构建可持续演进的 Agent Harness：持续评测、动�
 
 const input = {
   markdown,
-  suggestedSlug: "agent-harness-evaluation-action-governance-memory",
   topics: ["Agent Harness", "Evaluation", "Action Governance", "Selective Memory"],
   kind: "research" as const
 };
@@ -40,9 +40,12 @@ const environment = {
 };
 
 const note = await prepareNote(input, new Date("2026-07-21T00:00:00Z"));
+const generatedKey = "agent-harness-evaluation-action-governance-selective-memory";
 assert.equal(note.locale, "zh");
 assert.match(note.contentHash, /^sha256:[a-f0-9]{64}$/);
-assert.throws(() => noteSaveInputSchema.parse({ markdown, topics: input.topics }));
+assert.equal(deriveCanonicalNoteKey(note), generatedKey);
+assert.doesNotThrow(() => noteSaveInputSchema.parse({ markdown, topics: input.topics }));
+assert.throws(() => noteSaveInputSchema.parse({ ...input, suggestedSlug: "caller-owned-slug" }));
 assert.throws(() => noteSaveInputSchema.parse({ ...input, slug: "manual-slug" }));
 assert.throws(() => noteSaveInputSchema.parse({ ...input, sourceUrl: "https://invalid.example/download" }));
 assert.doesNotThrow(() => noteSaveInputSchema.parse({ markdown, noteRef: "zh/existing-note" }));
@@ -76,9 +79,9 @@ assert.doesNotMatch(mermaid.html, /language-mermaid/);
 const createdRepo = createGitHubMock();
 const created = await saveNoteToGitHub(input, environment, "https://notes.example.com", createdRepo.fetch);
 assert.equal(created.action, "created");
-assert.equal(created.noteRef, "zh/agent-harness-evaluation-action-governance-memory");
-assert.equal(created.publicUrl, "https://notes.example.com/zh/notes/agent-harness-evaluation-action-governance-memory");
-assert.ok(createdRepo.documents.has(notePath("agent-harness-evaluation-action-governance-memory")));
+assert.equal(created.noteRef, `zh/${generatedKey}`);
+assert.equal(created.publicUrl, `https://notes.example.com/zh/notes/${generatedKey}`);
+assert.ok(createdRepo.documents.has(notePath(generatedKey)));
 
 const rejectedRepo = createGitHubMock();
 await assert.rejects(
@@ -94,7 +97,7 @@ assert.equal(rejectedRepo.writes, 0, "invalid public wording must be rejected be
 
 const sameTitleRepo = createGitHubMock(createdRepo.documents);
 const sameTitle = await saveNoteToGitHub(
-  { ...input, suggestedSlug: "a-different-model-proposal" },
+  input,
   environment,
   "https://notes.example.com",
   sameTitleRepo.fetch
@@ -103,10 +106,10 @@ assert.equal(sameTitle.action, "unchanged");
 assert.equal(sameTitle.noteRef, created.noteRef, "an exact title match must reuse the canonical file");
 assert.equal(sameTitleRepo.writes, 0);
 
-const existingSource = createdRepo.documents.get(notePath("agent-harness-evaluation-action-governance-memory"))!;
+const existingSource = createdRepo.documents.get(notePath(generatedKey))!;
 const parsedExisting = parseCanonicalNote(existingSource);
 const featuredSource = existingSource.replace("featured: false", "featured: true");
-const updateRepo = createGitHubMock(new Map([[notePath("agent-harness-evaluation-action-governance-memory"), featuredSource]]));
+const updateRepo = createGitHubMock(new Map([[notePath(generatedKey), featuredSource]]));
 const editedMarkdown = parsedExisting.markdown
   .replace("# 构建可持续演进的 Agent Harness：持续评测、动作治理与选择性 Memory", "# Agent Harness 工程治理与长期演进")
   .replace("每次优化同时验证新能力、历史能力和未见任务迁移。", "每次优化同时验证新能力、历史能力、未见任务迁移与长期回归边界。");
@@ -118,7 +121,7 @@ const updated = await saveNoteToGitHub(
 );
 assert.equal(updated.action, "updated");
 assert.equal(updated.noteRef, created.noteRef, "title edits must not move the canonical path");
-const updatedNote = parseCanonicalNote(updateRepo.documents.get(notePath("agent-harness-evaluation-action-governance-memory"))!);
+const updatedNote = parseCanonicalNote(updateRepo.documents.get(notePath(generatedKey))!);
 assert.equal(updatedNote.metadata.title, "Agent Harness 工程治理与长期演进");
 assert.equal(updatedNote.metadata.featured, true);
 assert.equal(updatedNote.metadata.date, parsedExisting.metadata.date);
@@ -161,9 +164,62 @@ const toolListResponse = await handleMcpRequest({
   env: {}
 });
 assert.equal(toolListResponse.status, 200, "tool discovery must work when the runtime omits the Host header");
-const toolList = await toolListResponse.json() as { result?: { tools?: Array<{ name?: string; outputSchema?: unknown }> } };
+const toolList = await toolListResponse.json() as {
+  result?: {
+    tools?: Array<{
+      name?: string;
+      inputSchema?: { properties?: Record<string, unknown> };
+      outputSchema?: unknown;
+    }>;
+  };
+};
 assert.deepEqual(toolList.result?.tools?.map((tool) => tool.name), ["get_note", "save_note"]);
 assert.ok(toolList.result?.tools?.every((tool) => tool.outputSchema), "every tool should publish an output schema");
+
+const saveTool = toolList.result?.tools?.find((tool) => tool.name === "save_note");
+assert.ok(saveTool?.inputSchema?.properties?.markdown, "save_note must accept finished Markdown");
+assert.equal(saveTool?.inputSchema?.properties?.suggestedSlug, undefined, "callers must not own canonical paths");
+
+const chatGptRegressionCases = [
+  {
+    title: "Scalable LLM Agent Tool Access in the Cloud",
+    topics: ["MCP Gateway", "Tool Registry", "Dynamic Tool Discovery"],
+    expectedKey: "scalable-llm-agent-tool-access-in-the-cloud"
+  },
+  {
+    title: "ResearchArena: Independent Validation for Autonomous Research Agents",
+    topics: ["Agent Safety", "Independent Validation", "ResearchArena"],
+    expectedKey: "researcharena-independent-validation-for-autonomous-research-agents"
+  },
+  {
+    title: "AREX: Constraint-Driven Recursive Research Agents",
+    topics: ["AREX", "Constraint Verification", "Recursive Research"],
+    expectedKey: "arex-constraint-driven-recursive-research-agents"
+  }
+];
+const chatGptRegressionRepo = createGitHubMock();
+for (const testCase of chatGptRegressionCases) {
+  const result = await saveNoteToGitHub(
+    {
+      markdown: `# ${testCase.title}
+
+This structured learning note extracts the core architecture, evidence boundaries, reusable engineering method, and practical implementation guidance.
+
+## Engineering application
+
+The method is translated into an implementation contract, validation strategy, operational safeguards, and repeatable evaluation criteria.
+`,
+      topics: testCase.topics,
+      kind: "learning"
+    },
+    environment,
+    "https://notes.example.com",
+    chatGptRegressionRepo.fetch
+  );
+  assert.equal(result.action, "created");
+  assert.equal(result.noteRef, `en/${testCase.expectedKey}`);
+}
+assert.equal(chatGptRegressionRepo.writes, 3, "all three ChatGPT-shaped create calls must publish");
 
 const publicEndpointResponse = await handleMcpRequest({
   request: new Request("https://notes.example.com/api/mcp", {

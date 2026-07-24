@@ -53,6 +53,6 @@ targetRoles:
   - "agent-platform"
 ```
 
-Notes add `date`, `updatedAt`, `kind`, `topics`, and `contentHash`. A note filename is its canonical path identity, so notes omit the duplicate frontmatter `slug`. New notes enter through `save_note` with a model-proposed `suggestedSlug`; edits first use `get_note`, then save to the returned `noteRef`. The full contract is documented in `docs/notes-mcp.md`.
+Notes add `date`, `updatedAt`, `kind`, `topics`, and `contentHash`. A note filename is its canonical path identity, so notes omit the duplicate frontmatter `slug`. New notes enter through `save_note`; the server derives the canonical filename from the title and topics. Edits first use `get_note`, then save to the returned `noteRef`. The full contract is documented in `docs/notes-mcp.md`.
 
 Run `pnpm validate` after editing. Missing required fields fail the build with file paths and field names.
