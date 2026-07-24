@@ -21,7 +21,7 @@ tags:
   - "Evidence Management"
   - "Context Engineering"
   - "Agent Evaluation"
-contentHash: "sha256:f67cf5b449783fc46c8e492833ee8c9a089796eb9aa14f38e280c12b66e759c6"
+contentHash: "sha256:2743894e0aea105996beffcd4620fd5ab1187f1bac8485ec17b621fd3195618c"
 ---
 
 AREX 的核心不是让 Agent 无限搜索或自动改写自己，而是把每轮研究变成一次可验证的状态更新：保留已经成立的证据，显式记录仍未满足的约束，再把剩余不确定性转成下一轮的定向任务。
@@ -88,7 +88,7 @@ AREX 的关键变化是：验证不再是最后一步，而是下一轮研究的
 → 输出暂定答案
 ```
 
-第一轮目标来自原始问题；后续目标由外层根据未解决约束生成。
+第一轮目标来自原始问题；之后各轮目标由外层根据未解决约束生成。
 
 ### Outer Self-improvement Loop：决定下一轮做什么
 
@@ -113,7 +113,7 @@ Refine 不是把原问题再问一遍。它必须保留：
 
 长研究轨迹会积累网页全文、搜索结果、冲突来源、失败查询和过期计划。普通 Context Compaction 往往等到 Token 接近上限才生成摘要，把上下文管理误解为容量问题。
 
-AREX 引入模型主动调用的 `update_context` Tool。它不是压缩整段聊天，而是在研究转折点提交后续决策所需的状态：
+AREX 引入模型主动调用的 `update_context` Tool。它聚焦在研究转折点提交下一步决策所需的状态：
 
 ```yaml
 verified_findings:
@@ -298,7 +298,7 @@ JD 明确涉及 Agent Runtime、MCP 或 AI Coding
 | Source Authority | 一手和权威来源占比 |
 | Rejected Candidate Recurrence | 已否定候选再次出现的频率 |
 | Duplicate Search Rate | 重复查询和重复访问比例 |
-| Targeted Follow-up Ratio | 后续搜索是否围绕未解决约束 |
+| Targeted Refinement Ratio | 增量搜索是否围绕未解决约束 |
 | Unsupported Claim Rate | 无证据结论比例 |
 | Cost per Verified Constraint | 每项已验证约束的平均成本 |
 
@@ -331,7 +331,7 @@ AREX 最值得复用的是四项机制：
 
 1. 把任务拆成可验证的约束，而不是只维护一个模糊目标；
 2. 把已验证证据、未解决约束和已否定候选保存为 Research State；
-3. 让后续研究由剩余不确定性驱动，而不是无方向延长搜索；
+3. 让下一轮研究由剩余不确定性驱动，避免无方向延长搜索；
 4. 区分 Refine 与 Restart：有效轨迹增量修复，被污染的轨迹彻底重启。
 
 高质量 Research Agent 的核心不是搜索得更多，而是每轮结束后更准确地知道哪些已经成立、哪些仍未成立，以及下一步只应验证什么。
