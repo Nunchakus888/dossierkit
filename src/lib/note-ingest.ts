@@ -1,5 +1,6 @@
 import { parse, stringify } from "yaml";
 import { z } from "zod";
+import { findPublicContentViolation } from "./content-policy";
 
 const slugSchema = z
   .string()
@@ -107,6 +108,10 @@ export async function prepareNote(
   const locale = detectLocale(`${title}\n${body}`);
   const topics = normalizeTopics(parsed.topics || existing?.topics || deriveTopics(title, body));
   const summary = deriveSummary(body, title, locale);
+  const wordingViolation = findPublicContentViolation("notes", `${title}\n${summary}\n${body}`);
+  if (wordingViolation) {
+    throw new Error(`The note contains unfinished public wording matching ${wordingViolation}.`);
+  }
   const date = existing?.date || deriveResearchDate(normalized) || formatDate(now);
   const updatedAt = formatDate(now);
   const kind = parsed.kind || existing?.kind || "research";
