@@ -19,16 +19,16 @@ The MCP exposes two tools:
 - `get_note` reads the current canonical Markdown by `noteRef`, filename, title, or title phrase.
 - `save_note` creates a note or updates the exact file identified by `noteRef`.
 
-For creation, `save_note` accepts one finished Markdown document with exactly one H1, optional topics and kind, and `suggestedSlug`. ChatGPT derives `suggestedSlug` semantically from the complete note. The API validates its lowercase hyphenated form, resolves path collisions, and freezes the resulting `noteRef`.
+For creation, `save_note` accepts one finished Markdown document with exactly one H1, plus optional topics and kind. The API derives a lowercase canonical key from the H1 and semantic topics, resolves path collisions deterministically, and freezes the resulting `noteRef`. Callers cannot provide a slug or repository path.
 
 For updates, the model calls `get_note`, edits the returned Markdown, and sends it to `save_note` with the unchanged `noteRef`. The title may change without moving the file or public URL. Existing date, featured state, kind, and topics are preserved when the update omits them.
 
 The service also protects identity in two ways:
 
-1. A new save with the same normalized title reuses the existing file even if the model proposes a different `suggestedSlug`.
+1. A new save with the same normalized title reuses the existing file instead of deriving a second path.
 2. An identical content hash returns `unchanged` and creates no commit.
 
-The Function does not call a second language model. ChatGPT supplies semantic parameters through the MCP schema; the API handles authentication, validation, identity, persistence, and deterministic retries.
+The Function does not call a second language model. ChatGPT supplies the polished title, body, and topics through the MCP schema; the API handles authentication, validation, deterministic path generation, identity, persistence, and retries.
 
 ## One production endpoint
 
@@ -86,7 +86,7 @@ Use this durable instruction for ChatGPT research workflows:
 
 ```text
 When creating a finished note, call save_note with one polished Markdown document,
-exactly one H1, three to six concrete topics, and a concise semantic suggestedSlug.
+exactly one H1, and three to six concrete topics. The server owns the canonical path.
 When editing a note, call get_note first, revise the returned Markdown, and call
 save_note with the unchanged noteRef. Never invent noteRef or a repository path.
 ```

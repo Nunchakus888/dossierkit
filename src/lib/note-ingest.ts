@@ -1,11 +1,7 @@
+import { pinyin } from "pinyin-pro";
 import { parse, stringify } from "yaml";
 import { z } from "zod";
 import { findPublicContentViolation } from "./content-policy";
-
-const slugSchema = z
-  .string()
-  .max(72)
-  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase English words separated by hyphens");
 
 export const noteRefSchema = z
   .string()
@@ -20,9 +16,6 @@ export const noteSaveInputSchema = z
     noteRef: noteRefSchema
       .optional()
       .describe("Canonical identity returned by get_note or save_note. Required when updating a note."),
-    suggestedSlug: slugSchema
-      .optional()
-      .describe("A concise semantic path proposed by the model. Required only when creating a note."),
     topics: z
       .array(z.string().trim().min(2).max(64))
       .min(1)
@@ -31,16 +24,7 @@ export const noteSaveInputSchema = z
       .describe("Three to six concise topics extracted from the note for classification and search."),
     kind: z.enum(["research", "learning", "engineering"]).optional()
   })
-  .strict()
-  .superRefine((value, context) => {
-    if (!value.noteRef && !value.suggestedSlug) {
-      context.addIssue({
-        code: "custom",
-        path: ["suggestedSlug"],
-        message: "Provide suggestedSlug for a new note or noteRef for an existing note"
-      });
-    }
-  });
+  .strict();
 
 export const noteGetInputSchema = z
   .object({
@@ -171,6 +155,18 @@ export function collisionSlug(baseSlug: string, title: string) {
   return `${prefix}-${suffix}`;
 }
 
+export function deriveCanonicalNoteKey(note: Pick<PreparedNote, "title" | "topics">) {
+  const hasHanTitle = /[\u3400-\u9fff]/.test(note.title);
+  const semanticTopics = note.topics
+    .filter((topic) => /[A-Za-z]/.test(topic))
+    .map(asciiSlug)
+    .filter(Boolean);
+  const candidate = hasHanTitle && semanticTopics.length > 0
+    ? semanticTopics.join("-")
+    : transliteratedSlug(note.title);
+  return trimSlug(candidate) || `note-${stableShortHash(note.title)}`;
+}
+
 export function parseCanonicalNote(source: string) {
   const match = source.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!match) throw new Error("The canonical note has invalid frontmatter.");
@@ -245,6 +241,27 @@ function extractEnglishTokens(value: string) {
   return (value.match(/[A-Za-z][A-Za-z0-9+]*/g) || [])
     .map((token) => token.toLowerCase())
     .filter((token) => token.length >= 2);
+}
+
+function transliteratedSlug(value: string) {
+  const transliterated = value.replace(/[\u3400-\u9fff]+/g, (segment) =>
+    pinyin(segment, { toneType: "none", type: "array" }).join(" ")
+  );
+  return asciiSlug(transliterated);
+}
+
+function asciiSlug(value: string) {
+  return value
+    .normalize("NFKD")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function trimSlug(value: string) {
+  return value
+    .slice(0, 72)
+    .replace(/-+$/g, "");
 }
 
 function deriveSummary(body: string, title: string, locale: "zh" | "en") {

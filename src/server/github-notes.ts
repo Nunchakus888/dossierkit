@@ -1,5 +1,6 @@
 import {
   collisionSlug,
+  deriveCanonicalNoteKey,
   noteGetInputSchema,
   noteSaveInputSchema,
   parseCanonicalNote,
@@ -90,13 +91,13 @@ export async function saveNoteToGitHub(
       note = await prepareNote(input, new Date(), existing.parsed.metadata);
       key = existing.key;
     } else {
-      key = input.suggestedSlug as string;
+      key = deriveCanonicalNoteKey(note);
       existing = notes.find((item) => item.key === key);
       if (existing) {
         key = collisionSlug(key, note.title);
         existing = notes.find((item) => item.key === key);
         if (existing && normalizeTitle(existing.parsed.metadata.title) !== normalizeTitle(note.title)) {
-          throw new Error("The proposed path and its deterministic fallback are both occupied. Propose a more specific suggestedSlug.");
+          throw new Error("The generated canonical path and its deterministic fallback are both occupied.");
         }
       }
     }
