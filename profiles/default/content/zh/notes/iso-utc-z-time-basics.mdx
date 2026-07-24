@@ -1,0 +1,72 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-07-24"
+title: "哪些渐行渐远的基础知识，AI可以严丝合缝，写对一切"
+summary: "但我拾起来的是文化，早晚有一天我会完全用不到它们甚至忘记，但在当时，它们触动过我的心～毕竟那是我，弱小，有限，绝望却充满期冀、永不服输的求知欲啊～"
+featured: false
+date: "2026-07-24"
+updatedAt: "2026-07-24"
+kind: "learning"
+topics:
+  - "ISO 8601"
+  - "UTC"
+  - "Zulu time"
+  - "时区"
+  - "时间规范"
+tags:
+  - "ISO 8601"
+  - "UTC"
+  - "Zulu time"
+  - "时区"
+  - "时间规范"
+contentHash: "sha256:8d5a699eae62aabfe360dc09c6aafa9ba2e42e6bb9d8f4c3424930e675f9a886"
+---
+
+> 但我拾起来的是文化，早晚有一天我会完全用不到它们甚至忘记，但在当时，它们触动过我的心～毕竟那是我，弱小，有限，绝望却充满期冀、永不服输的求知欲啊～
+
+## ISO、UTC 与 Z：尺、钟与零点
+
+> **ISO 管怎么写，UTC 管几点，Z 表示零偏移。**
+
+- **ISO 8601 是尺**：规定日期时间的书写格式。ISO 全称是 *International Organization for Standardization*；ISO 并非英文首字母缩写，而取自希腊语 *isos*，意为“相等、统一”。
+- **UTC 是钟**：全球协调时间基准，全称 *Coordinated Universal Time*。英文原本会缩写为 CUT，法文会是 TUC；为了不偏向任何语言，统一折中为 UTC。
+- **Z 是零点**：表示相对 UTC 的偏移为零，即 `Z = +00:00`。Z 在无线电字母表中读作 *Zulu*，因此 UTC 也常称 Zulu time。
+
+```text
+2026-07-24T12:00:00Z
+└──── ISO 8601 格式 ────┘
+                    └─ UTC 零偏移
+```
+
+下面两个写法表示同一时刻：
+
+```text
+2026-07-24T12:00:00Z
+2026-07-24T20:00:00+08:00
+```
+
+前者直接写 UTC，后者写北京时间；它们都符合 ISO 8601。
+
+## 工程里的落点
+
+```text
+数据库：存 UTC 时间点
+接口：传带 Z 或时区偏移的 ISO 8601 字符串
+界面：转换为用户本地时间
+```
+
+不要把三者揉成一个概念：
+
+- ISO 是**外形**；
+- UTC 是**基准**；
+- Z 是**零偏移标记**。
+
+最后只记一句：
+
+> **ISO 是尺，UTC 是钟，Z 是钟上的零点。**
+
+## 参考
+
+- [ISO：What does ISO mean?](https://www.iso.org/about)
+- [NIST：UTC、缩写来源与 Zulu Time](https://www.nist.gov/pml/time-and-frequency-division/how-utcnist-related-coordinated-universal-time-utc-international)
