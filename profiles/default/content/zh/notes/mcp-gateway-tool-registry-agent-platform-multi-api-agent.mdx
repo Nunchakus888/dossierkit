@@ -1,0 +1,108 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-07-24"
+title: "Scalable LLM Agent Tool Access in the Cloud 深度笔记"
+summary: "核心问题 生产级 Agent 面临工具规模爆炸问题：几十、几百甚至几千个 API、MCP Tool 不可能全部暴露给模型。传统 Tool
+  Dump 模式会导致上下文膨胀、工具选择错误、成本增加和权限治理困难。"
+featured: false
+date: "2026-07-24"
+updatedAt: "2026-07-24"
+kind: "engineering"
+topics:
+  - "MCP Gateway"
+  - "Tool Registry"
+  - "Agent Platform"
+  - "Multi API Agent"
+tags:
+  - "MCP Gateway"
+  - "Tool Registry"
+  - "Agent Platform"
+  - "Multi API Agent"
+contentHash: "sha256:ad365b9f23afddce2ab939a1589fbebc830df17cae92f0cb7104036c09f8f632"
+---
+
+## 核心问题
+生产级 Agent 面临工具规模爆炸问题：几十、几百甚至几千个 API、MCP Tool 不可能全部暴露给模型。传统 Tool Dump 模式会导致上下文膨胀、工具选择错误、成本增加和权限治理困难。
+
+## 核心思想
+从“加载全部工具”转向“动态发现工具”。
+
+推荐架构：
+
+```text
+Agent Runtime
+    ↓
+Tool Discovery Layer
+    ↓
+Permission Filter
+    ↓
+Top-K Tool Exposure
+    ↓
+MCP Gateway
+    ↓
+MCP Server / REST API / Internal Service
+```
+
+## 工程方法论
+
+### 1. Tool Registry
+统一维护：
+
+- tool_id
+- description
+- schema digest
+- owner
+- permission scope
+- risk level
+- version
+- usage statistics
+
+### 2. MCP Gateway
+承担：
+
+- Authentication
+- Authorization
+- Rate Limit
+- Audit
+- Version Control
+- Observability
+- Multi-protocol adapter
+
+### 3. Tool Retrieval Pipeline
+
+```text
+User Intent
+    ↓
+Semantic Search + Keyword Search
+    ↓
+Permission Filtering
+    ↓
+Risk Filtering
+    ↓
+Top-K Tool Injection
+    ↓
+Agent Planning
+```
+
+## 实践落地方案
+
+MVP：
+
+1. 建立 MCP Gateway
+2. 接入内部 API
+3. 建 Tool Registry
+4. 支持动态 Tool Search
+5. 增加 Trace
+6. 建立 Tool Selection Eval
+
+## 对 Agent 工程师的意义
+
+未来 Agent Platform Engineer 的核心能力不是连接一个 MCP Server，而是管理 Agent 可以安全访问的大规模工具生态。
+
+对应能力：
+
+- MCP Architecture
+- Tool Governance
+- Agent Runtime
+- Enterprise AI Platform
