@@ -2,233 +2,226 @@
 locale: "zh"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-07-24"
-title: "Scalable LLM Agent Tool Access in the Cloud"
-summary: "论文：Scalable LLM Agent Tool Access in the Cloud arXiv:
-  2607.15593，2026-07-17 原文：https://arxiv.org/abs/2607.1559…"
+title: "Agent 工具规模化之后，为什么需要 MCP Gateway"
+summary: "当 Agent 可访问的工具从十几个增长到数千个时，问题不再是如何连接 MCP
+  Server，而是如何让模型只看到当前任务需要且有权使用的工具。MCP Gateway 的价值，是把协议适配、工具发现、访问控制和后端路由从…"
 featured: false
 date: "2026-07-24"
 updatedAt: "2026-07-24"
 kind: "engineering"
 topics:
   - "MCP Gateway"
-  - "Tool Registry"
-  - "Agent Platform"
-  - "Multi API Agent"
   - "Tool Discovery"
+  - "Agent Platform"
+  - "Access Control"
+  - "Cloud Infrastructure"
 tags:
   - "MCP Gateway"
-  - "Tool Registry"
-  - "Agent Platform"
-  - "Multi API Agent"
   - "Tool Discovery"
-contentHash: "sha256:e297348ac038ecd6b21cc853ebb780aeb4dabbc5211fc000ff69ef3460af275a"
+  - "Agent Platform"
+  - "Access Control"
+  - "Cloud Infrastructure"
+contentHash: "sha256:59b36020b8c0ffe3427e54defcbfc0c4fc76b1de49cb7890b1041e6091455ac6"
 ---
 
-> 论文：*Scalable LLM Agent Tool Access in the Cloud*  
-> arXiv: 2607.15593，2026-07-17  
-> 原文：https://arxiv.org/abs/2607.15593
+当 Agent 可访问的工具从十几个增长到数千个时，问题不再是如何连接 MCP Server，而是如何让模型只看到当前任务需要且有权使用的工具。MCP Gateway 的价值，是把协议适配、工具发现、访问控制和后端路由从各个 Agent Host 收敛为共享基础设施。
 
-## 核心判断
+> 原始论文：*Scalable LLM Agent Tool Access in the Cloud*，arXiv:2607.15593，2026-07-17。  
+> 论文背景：Alibaba Cloud 等团队基于生产部署总结的云端 MCP Gateway 设计。
 
-这篇论文解决的不是“如何再封装一个 MCP Server”，而是一个更接近云平台的问题：**当一个 Agent 平台需要连接成百上千个工具、兼容多种协议版本、服务多租户，并把请求路由到多副本后端时，MCP 的客户端直连模型会迅速失效。**
+## 直接连接模型为什么会失效
 
-作者给出的答案是把 MCP Gateway 放到 Agent 与工具服务之间，形成统一数据面：
+MCP 解决了接口标准化，但没有自动解决规模化治理。典型 Host 会连接多个 Server，调用 `tools/list`，再把全部工具描述和 Schema 注入模型上下文。这个模式隐含了一个前提：工具集合足够小，而且 Host 能独立处理每个后端的协议、身份和会话状态。
 
-```text
-Agent / MCP Host
-        ↓
-MCP Gateway
-├─ 协议与传输适配
-├─ 身份认证与工具级授权
-├─ 意图驱动的工具发现
-└─ Session-aware 路由
-        ↓
-MCP Server / OpenAPI / 内部服务
-```
+当工具规模扩大后，四个问题会同时出现：
 
-论文的真正贡献不是单个检索算法，而是证明了：**MCP 在生产环境中会自然演化成类似 API Gateway 的共享基础设施。**
+| 问题 | 表面现象 | 系统后果 |
+|---|---|---|
+| 上下文竞争 | 大量 Tool Schema 占用 Token | 业务资料和推理空间被挤压 |
+| 选择退化 | 相似名称与重叠能力增多 | 误选、错误参数和放弃调用增加 |
+| 权限分散 | 每个 Server 各自鉴权 | 无法统一租户、角色和审计规则 |
+| 路由复杂 | Host 直连多副本后端 | 健康检查、粘性会话和故障转移进入客户端 |
 
-## 为什么直接暴露全部工具不可扩展
+论文观察到，挂载工具数增加时，Agent 的 no-call rate 从 8% 上升到 19%。这说明全量暴露不只是成本问题：无关工具本身会降低执行能力。
 
-常见实现会在会话开始时调用 `tools/list`，再把所有 Tool Schema 注入模型上下文。工具数量少时可用，规模扩大后同时出现四类问题：
+因此，真正需要解决的问题是：
 
-1. **上下文容量耗尽**：Tool Schema 与对话、推理、业务资料争夺 Token。
-2. **推理成本和时延上升**：模型每一轮都要重新阅读大量无关工具。
-3. **工具选择质量下降**：相似工具增多后，误选、参数错误和放弃调用都会增加。
-4. **权限边界失控**：一个用户“能连接某个 Server”，不等于可以看到和调用该 Server 的全部工具。
+> 如何在完整工具目录不断增长的情况下，为每次任务构造一个小而准确、经过授权的临时工具面？
 
-论文实验中，即使是大上下文模型，可容纳的工具数量也远低于大型云平台真实拥有的 API 操作数。作者还观察到，随着工具集扩大，模型的 no-call rate 从 8% 上升到 19%。这说明问题不只是成本，过多工具本身会损害 Agent 的执行能力。
+## 架构转折：从 Tool Exposure 变成 Tool Discovery
 
-## Gateway 的四项职责
-
-### 1. 协议适配：把存量 API 变成 Agent 工具
-
-企业已有能力主要存在于 OpenAPI、SDK 和内部 RPC 中，不可能为了接入 Agent 全部重写成 MCP Server。
-
-论文在 Gateway 内把一个 OpenAPI operation 编译成一个 MCP Tool，并将数据层转换与传输层适配分离：
-
-- 数据层负责 Tool、参数和响应的规范化；
-- 传输层负责 HTTP+SSE、Streamable HTTP 等协议差异；
-- 新协议变化只影响传输适配器，不侵入业务工具定义。
-
-这一点比“为每个 API 手写 MCP Wrapper”更有长期价值，因为它把协议演进成本集中在平台层。
-
-### 2. 权限收敛：身份先决定工具可见性
-
-Gateway 在入口认证用户身份，在出口映射后端凭证，并按用户、租户和角色控制工具可见性与调用权限。
-
-合理顺序应该是：
+旧模式把完整目录交给模型：
 
 ```text
-用户意图
-→ 身份与租户过滤
-→ 得到允许访问的 Tool Catalog
-→ 在允许集合中做工具检索
-→ 调用前再次授权
+Agent Host
+  ├─ MCP Client → Server A
+  ├─ MCP Client → Server B
+  └─ MCP Client → Server C
+
+启动时加载全部 Tool Schema
 ```
 
-不能先从全局工具库召回，再在最后一步检查权限。否则未授权工具的名称、描述和 Schema 已经进入模型上下文，形成信息泄露和诱导风险。
+Gateway 模式把完整目录留在平台侧：
 
-### 3. 工具发现：用小候选集替代全量注入
+```mermaid
+flowchart LR
+  User["用户意图"] --> Host["Agent Host"]
+  Host --> Gateway["MCP Gateway"]
+  Gateway --> Auth["身份与权限过滤"]
+  Auth --> Search["Tool Discovery"]
+  Search --> TopK["Top-K Tool Schema"]
+  TopK --> Host
+  Host --> Gateway
+  Gateway --> Backends["MCP / OpenAPI / 内部服务"]
+```
 
-作者没有把工具选择完全交给另一个 LLM，而是采用词法匹配与语义检索结合的 Hybrid Retrieval：
-
-- 工具名称往往直接包含业务动作，适合词法检索；
-- 描述与用户表达存在语义差异，适合向量检索；
-- 对专业领域查询，增加基于领域知识的 Query Rewrite；
-- 每轮只把 Top-K Tool Schema 暴露给执行模型。
-
-论文在 3,000 多个工具的实验中保持 98% 的 Top-15 Recall，并报告工具选择时间降低 8.9 倍、Token 使用量降低 23.8 倍。这里是“倍数下降”，不是百分比下降。
-
-不过，Top-15 Recall 只说明目标工具进入候选集，**并不等于 Agent 最终一定选对工具、参数一定正确、任务一定完成**。生产系统还必须单独评测 invocation accuracy 和 task success rate。
-
-### 4. 有状态路由：把 Session Affinity 从客户端移走
-
-对于保留会话状态的 MCP 后端，同一逻辑会话必须持续路由到持有状态的副本。若让每个 Agent Host 自己管理副本、健康检查和粘性路由，客户端会越来越重。
-
-论文将 `session → backend replica` 映射放到 Gateway，并通过集中存储与 Pub/Sub 在多个 Gateway 实例之间同步。其生产经验还显示，复用 Gateway 与后端之间的长连接，能明显降低平均与尾部时延。
-
-需要注意：随着无状态 MCP 规范推进，Session Affinity 的重要性会下降。但大量存量 Server、长连接任务和有状态工作流不会立即消失，因此 Gateway 仍需要兼容两种运行模式。
-
-## 可复用的工程架构
-
-### 控制面
-
-负责低频、强一致的配置管理：
+关键变化不是多了一层代理，而是工具可见性的决定顺序改变了：
 
 ```text
-Tool Registry
-├─ tool_id / version
-├─ owner / source
-├─ schema_digest
-├─ description / examples
-├─ required_scopes
-├─ risk_level
-├─ backend binding
-└─ lifecycle status
-
-Policy Registry
-├─ tenant policy
-├─ role-to-tool mapping
-├─ egress policy
-└─ approval rules
+先确定身份和租户
+→ 在授权目录中检索候选工具
+→ 只向模型暴露 Top-K Schema
+→ 对最终调用再次校验
+→ 代理执行并记录结果
 ```
 
-### 数据面
+模型不再长期“知道所有工具”，而是在每个任务中发现一个临时工具集合。
 
-负责高频请求处理：
+## Gateway 应承担的四项职责
+
+### 协议适配：保护存量服务投资
+
+企业能力主要存在于 OpenAPI、SDK 和内部 RPC 中。若要求每个团队重写 MCP Server，接入成本会转移到业务侧，协议升级也会形成重复维护。
+
+论文将数据转换与传输适配分离：
+
+- 数据层把 OpenAPI operation 编译为统一 Tool 定义；
+- 传输层处理 HTTP+SSE、Streamable HTTP 等差异；
+- 协议变化集中在 Gateway Adapter，不侵入业务服务。
+
+这使 MCP 成为入口协议，而不是要求所有后端采用同一种实现。
+
+### 访问控制：可见性也是权限
+
+“能够连接 Server”不等于“能够看到全部工具”。工具名称、描述和参数 Schema 本身也可能泄露内部能力。
+
+因此权限过滤必须发生在检索之前：
+
+```text
+错误：全局召回 → Schema 进入上下文 → 最后检查调用权限
+正确：身份过滤 → 授权目录召回 → 调用前参数级复核
+```
+
+Gateway 同时负责入口用户身份、租户映射和出口后端凭证。模型只产生调用提议，不持有长期生产凭证。
+
+### 工具发现：检索负责缩小候选，不负责完成任务
+
+论文采用词法与语义结合的 Hybrid Retrieval：
+
+- Tool Name 通常直接编码动作，适合词法匹配；
+- Tool Description 与用户表达存在差异，适合向量检索；
+- 专业领域查询通过领域知识进行 Query Rewrite；
+- 只把 Top-K 候选交给执行模型做最终选择。
+
+在 3,000 多个工具的实验中，论文报告：
+
+- Top-15 Recall 为 98%；
+- 工具选择耗时降低 8.9 倍；
+- Token 使用量降低 23.8 倍；
+- 领域规则改写将一项推荐准确率从 80.8% 提升到 99.7%。
+
+这些数字需要正确解释。Recall@15 只说明目标工具进入候选集，不代表模型最终选对，也不代表参数正确或任务成功。生产评测必须继续覆盖 Tool Selection、Argument Generation 和 End-to-end Success。
+
+### Session-aware Routing：兼容有状态后端
+
+有状态 MCP Server 的同一逻辑会话必须持续命中保存状态的副本。论文将 `session → backend replica` 映射放到 Gateway，并用集中存储和 Pub/Sub 协调多个 Gateway 实例。
+
+无状态 MCP 会减少这类需求，但存量 SSE Server、长连接任务和有状态工作流不会立即消失。合理的 Gateway 应同时支持：
+
+- 无状态请求的普通负载均衡；
+- 有状态请求的 Session Affinity；
+- 后端故障后的可观察降级或重建。
+
+## 可复用的工程模型
+
+### 控制面：定义“平台拥有什么能力”
+
+```yaml
+tool:
+  id: cloud.network.create_vpc
+  version: 3
+  owner: network-platform
+  source: openapi://network-service
+  schema_digest: sha256:...
+  required_scopes: [network.write]
+  risk_level: high
+  backend_binding: network-prod
+  lifecycle: active
+```
+
+控制面维护 Tool Registry、版本、所有者、依赖关系、权限、风险和后端绑定。它是工具事实源，不参与每个 Token 的推理。
+
+### 数据面：决定“这次请求可以看到和执行什么”
 
 ```text
 Authenticate
 → Resolve Tenant
-→ Permission Filter
-→ Retrieve Top-K Tools
-→ Expose Schemas to Agent
-→ Validate Tool Call
-→ Route to Backend
+→ Build Authorized Catalog
+→ Retrieve Top-K
+→ Expose Schemas
+→ Validate Proposed Call
+→ Route and Execute
 → Normalize Result
 → Trace and Audit
 ```
 
-控制面与数据面分离后，工具新增、协议升级、权限调整和后端扩缩容都不需要修改 Agent 业务逻辑。
+控制面与数据面分开后，工具新增、权限调整、后端扩缩容和协议升级都不需要修改 Agent 业务逻辑。
 
-## 最小落地方案
+## 最小可行实现
 
-适合从 4 个阶段推进，而不是一次做成完整云网关。
+第一版不需要复刻论文的完整云平台。一个能够证明架构价值的实现只需包含：
 
-### 阶段一：统一入口
+1. 一个统一 MCP Endpoint，代理两个 MCP Server 和一个 OpenAPI 服务；
+2. 一个版本化 Tool Registry，记录 Tool ID、Schema Digest、Owner、Scope 和 Risk；
+3. 权限过滤后的 BM25 + Embedding Top-K 检索；
+4. 调用前 Schema 与 Scope 校验；
+5. 统一错误、超时、重试和 `trace_id`；
+6. 一组覆盖相似工具、无权限工具和 no-tool 查询的 Golden Eval。
 
-- 一个 MCP Endpoint；
-- 接入 2–3 个现有 MCP Server；
-- 接入一个 OpenAPI 服务；
-- 统一 Tool Schema 与错误格式；
-- 为每次调用生成 `trace_id`。
+稳定后再增加多租户、一次性审批、Session Routing、语义缓存和水平扩容。顺序很重要：如果 Registry、权限模型和评测尚未稳定，先做复杂智能路由只会放大不可解释性。
 
-### 阶段二：Tool Registry 与动态发现
+## 应该如何评测
 
-- Tool 定义进入版本化 Registry；
-- 建立 BM25/关键词与向量混合索引；
-- 默认只向模型暴露 `tool_search`；
-- 根据任务动态加载 Top-K 工具；
-- 保存召回候选、最终选择和调用结果。
-
-### 阶段三：多租户权限
-
-- 用户身份映射到 Workspace/Tenant；
-- Tool Discovery 前完成权限过滤；
-- 调用时校验参数级 Scope；
-- 高风险操作接入一次性审批；
-- 后端凭证由 Gateway 托管，不交给模型。
-
-### 阶段四：规模化与可靠性
-
-- Gateway 无状态水平扩容；
-- 对存量有状态后端维护 Session Routing；
-- 增加熔断、重试、限流和健康检查；
-- 对高频查询做语义缓存；
-- 记录 SLO、成本、错误率和安全拒绝原因。
-
-## 必须建立的评测
-
-仅看检索 Recall 不够。至少需要以下指标：
-
-| 层级 | 指标 |
+| 层级 | 核心指标 |
 |---|---|
-| 工具召回 | Recall@K、MRR、权限过滤准确率 |
-| 工具选择 | 正确 Tool Rate、No-call Rate、误调用率 |
-| 参数生成 | Schema Valid Rate、参数语义正确率 |
-| 任务结果 | End-to-end Success Rate、重试次数 |
+| 召回 | Recall@K、MRR、无权限工具泄露率 |
+| 选择 | Correct Tool Rate、No-call Rate、误调用率 |
+| 参数 | Schema Valid Rate、参数语义正确率 |
+| 任务 | End-to-end Success、平均重试次数 |
 | 性能 | Tool Schema Tokens、P50/P95 延迟、单任务成本 |
-| 安全 | 越权暴露、越权调用、敏感参数外发 |
+| 安全 | 越权可见、越权调用、敏感参数外发 |
 | 路由 | Session 命中率、Failover 成功率、尾延迟 |
 
-Golden Set 应覆盖：同名工具、相似工具、跨域表达、无权限工具、需组合调用的工具链以及不应调用任何工具的查询。
+Golden Set 至少应包含同名工具、近义工具、跨域表达、无权限工具、组合调用和不应调用工具的请求。
 
-## 什么时候值得做
+## 什么时候不需要 Gateway
 
-适合：
+少量稳定工具、单租户、无统一治理需求时，直接连接更简单。工具数量只有十几到二三十个时，优先改进 Schema、权限和 Eval，通常比增加 Gateway 更有效。
 
-- 工具数量超过几十并持续增长；
-- 多团队共享 Agent Platform；
-- 同时存在 MCP、OpenAPI 和内部服务；
-- 有多租户、审计、权限和成本治理需求；
-- Tool Schema 已明显挤压上下文。
+Gateway 值得建设的信号是：
 
-不适合：
+- Tool Schema 已明显挤压上下文；
+- 多个团队重复维护鉴权、适配和路由；
+- 工具数量持续增长并存在大量相似操作；
+- 平台需要统一租户隔离、审计和成本治理；
+- 同时存在 MCP、OpenAPI 和内部服务。
 
-- 单一 Agent、少量稳定工具；
-- 没有多租户和统一治理需求；
-- 团队还没有可靠的 Tool Eval；
-- 只是为了“技术先进”增加一层代理。
-
-少于约 20–30 个稳定工具时，先做好 Schema、权限和 Eval，通常比立即建设 Gateway 更划算。
-
-## 我的结论
+## 工程结论
 
 这篇论文最值得复用的不是某个检索参数，而是三条架构原则：
 
-1. **Agent 不直接连接工具生态，而是连接受治理的工具入口。**
-2. **工具可见性先由身份和策略决定，再由检索决定。**
-3. **模型上下文只装载当前任务需要的工具，完整 Catalog 留在平台侧。**
+1. Agent 应连接受治理的工具入口，而不是直接连接完整工具生态。
+2. 工具可见性先由身份和策略决定，再由检索决定。
+3. 完整 Catalog 留在平台侧，模型上下文只装载当前任务需要的工具。
 
-它对应的高阶工程能力不是“会写 MCP Server”，而是能够设计 Agent Tool Plane：协议适配、注册发现、权限、路由、可观测性和评测一起成立。
+MCP Gateway 的本质，是 Agent 时代的 Tool Plane：它把协议、目录、权限、路由、可观测性和评测收敛为一个长期可维护的系统边界。
