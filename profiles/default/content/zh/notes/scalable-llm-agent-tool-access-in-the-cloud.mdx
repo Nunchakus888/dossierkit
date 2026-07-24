@@ -21,7 +21,7 @@ tags:
   - "Agent Platform"
   - "Access Control"
   - "Cloud Infrastructure"
-contentHash: "sha256:59b36020b8c0ffe3427e54defcbfc0c4fc76b1de49cb7890b1041e6091455ac6"
+contentHash: "sha256:db3640af29c1c46605bbdc38d33029d386ccbdaba3ba9c154bb6776ab40c89cd"
 ---
 
 当 Agent 可访问的工具从十几个增长到数千个时，问题不再是如何连接 MCP Server，而是如何让模型只看到当前任务需要且有权使用的工具。MCP Gateway 的价值，是把协议适配、工具发现、访问控制和后端路由从各个 Agent Host 收敛为共享基础设施。
@@ -175,11 +175,11 @@ Authenticate
 → Trace and Audit
 ```
 
-控制面与数据面分开后，工具新增、权限调整、后端扩缩容和协议升级都不需要修改 Agent 业务逻辑。
+控制面与数据面分开后，工具新增、权限调整、后端扩缩容和协议升级均可独立于 Agent 业务逻辑演进。
 
 ## 最小可行实现
 
-第一版不需要复刻论文的完整云平台。一个能够证明架构价值的实现只需包含：
+首版可以聚焦于验证核心架构价值，范围包括：
 
 1. 一个统一 MCP Endpoint，代理两个 MCP Server 和一个 OpenAPI 服务；
 2. 一个版本化 Tool Registry，记录 Tool ID、Schema Digest、Owner、Scope 和 Risk；
@@ -204,7 +204,7 @@ Authenticate
 
 Golden Set 至少应包含同名工具、近义工具、跨域表达、无权限工具、组合调用和不应调用工具的请求。
 
-## 什么时候不需要 Gateway
+## Gateway 的适用边界
 
 少量稳定工具、单租户、无统一治理需求时，直接连接更简单。工具数量只有十几到二三十个时，优先改进 Schema、权限和 Eval，通常比增加 Gateway 更有效。
 
