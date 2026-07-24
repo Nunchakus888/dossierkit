@@ -2,164 +2,148 @@
 locale: "zh"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-07-24"
-title: "AREX"
-summary: "论文：AREX: Towards a Recursively Self-Improving Agent for Deep Research
-  arXiv: 2607.21461，2026-07-23 原文：https://…"
+title: "研究 Agent 如何围绕未解决约束持续收敛"
+summary: "AREX 的核心不是让 Agent
+  无限搜索或自动改写自己，而是把每轮研究变成一次可验证的状态更新：保留已经成立的证据，显式记录仍未满足的约束，再把剩余不确定性转成下一轮的定向任务。"
 featured: false
 date: "2026-07-24"
 updatedAt: "2026-07-24"
 kind: "engineering"
 topics:
   - "Research Agent"
-  - "Evidence Graph"
-  - "Agent Planning"
+  - "Constraint Verification"
+  - "Evidence Management"
   - "Context Engineering"
   - "Agent Evaluation"
 tags:
   - "Research Agent"
-  - "Evidence Graph"
-  - "Agent Planning"
+  - "Constraint Verification"
+  - "Evidence Management"
   - "Context Engineering"
   - "Agent Evaluation"
-contentHash: "sha256:acf55e0191ed8ab083492345082bc2e52c1a8a1088b0e1f7532843b3d155eb3c"
+contentHash: "sha256:f67cf5b449783fc46c8e492833ee8c9a089796eb9aa14f38e280c12b66e759c6"
 ---
 
-> 论文：*AREX: Towards a Recursively Self-Improving Agent for Deep Research*  
-> arXiv: 2607.21461，2026-07-23  
-> 原文：https://arxiv.org/abs/2607.21461  
-> 模型：https://huggingface.co/collections/BAAI/arex
+AREX 的核心不是让 Agent 无限搜索或自动改写自己，而是把每轮研究变成一次可验证的状态更新：保留已经成立的证据，显式记录仍未满足的约束，再把剩余不确定性转成下一轮的定向任务。
+
+> 原始论文：*AREX: Towards a Recursively Self-Improving Agent for Deep Research*，arXiv:2607.21461，2026-07-23。  
+> 模型与权重：https://huggingface.co/collections/BAAI/arex
 
 ## 先澄清“递归自我改进”
 
-AREX 所说的 Recursive Self-Improvement，不是 Agent 自动修改自己的模型、代码或 Harness，也不是无限开放式自我进化。
+AREX 所说的 Recursive Self-Improvement，不是 Agent 修改自己的模型、代码或 Harness，也不是开放式的无限自我进化。
 
-它实现的是一个**有轮次上限的推理时研究循环**：
+它实现的是有限轮次的研究循环：
 
 ```text
-搜索并生成暂定答案
+搜索并形成暂定答案
 → 按约束逐项验证
 → 保留已证实部分
-→ 找出未解决部分
-→ 将未解决部分改写成下一轮研究目标
+→ 标记未解决或冲突部分
+→ 生成下一轮定向研究目标
 → Refine、Restart 或结束
 ```
 
-因此，更准确的工程理解是：
+因此，更准确的工程定义是：
 
-> **AREX 是一个“验证驱动的研究状态迭代器”，不是通用意义上的自主自我进化系统。**
+> AREX 是验证驱动的 Research State 迭代器。
 
-这一点很重要，因为它决定了我们可以在不训练新模型的情况下，先把它的大部分思想落到 Agent Harness 中。
+这个定义比“多想几轮”更具体，也意味着即使不训练专用模型，仍可以先在 Agent Harness 中复用它的主要机制。
 
-## 核心洞察：发现难，验证相对容易
+## 为什么发现与验证不对称
 
-深度研究任务通常要求答案同时满足多个条件。例如寻找一个产品，可能同时要求：
+深度研究通常不是寻找一个相关答案，而是寻找一个同时满足多项条件的答案。例如筛选一个技术方案，可能要求：
 
-- 某时间后发布；
-- 支持某项协议；
-- 可私有部署；
+- 支持指定协议；
+- 能私有部署；
 - 有官方定价；
-- 来源必须是一手资料。
+- 最近仍在维护；
+- 证据必须来自一手来源。
 
-直接搜索一个同时满足所有条件的答案，搜索空间很大。但当一个候选已经出现后，逐项验证它是否满足条件通常更容易。
+从开放搜索空间中直接找到联合满足全部条件的候选很难；当候选已经出现后，逐项判断它是否满足某条条件通常更容易。
 
-AREX 把这种现象称为 **discovery–verification asymmetry**：
-
-```text
-发现联合满足所有约束的候选：困难
-验证一个候选是否满足某条约束：相对容易
-```
-
-普通 Research Agent 往往只是延长同一条搜索轨迹。早期错误会被不断继承，已经否定的方向可能被重复探索，部分满足条件的候选也可能被过早接受。
-
-AREX 的关键变化是：**验证不再只是最终过滤器，而成为研究轮次之间的状态转换器。**
-
-## 双循环结构
-
-### 内层：Research Loop
-
-内层负责完成当前研究目标：
+论文将其概括为 Discovery–Verification Asymmetry：
 
 ```text
-分析当前目标
-→ search / visit
-→ 获取和比较证据
-→ 更新候选与判断
-→ 必要时调用 update_context
-→ finish 输出暂定答案、证据和置信度
+发现联合满足所有约束的候选：高成本
+验证候选是否满足单项约束：可分解、相对低成本
 ```
 
-第一轮的研究目标来自原始问题；后续轮次的目标由外层生成，例如：
+普通 Research Agent 往往沿着一条不断增长的搜索轨迹前进。早期错误会被继续继承，被否定的候选可能再次出现，已验证的结论也可能在重写时被破坏。
 
-- 验证某条未支持的条件；
-- 解决来源之间的冲突；
-- 检查时间有效性；
-- 当前候选失效后寻找替代项。
+AREX 的关键变化是：验证不再是最后一步，而是下一轮研究的控制信号。
 
-### 外层：Self-Improvement Loop
+## 双循环如何工作
 
-外层收到结构化结果后做三路判断：
+### Inner Research Loop：产生暂定答案
+
+内层负责当前目标下的搜索与证据组织：
 
 ```text
-Accept  ：证据充分，结束
-Refine  ：当前轨迹有有效进展，只补未解决部分
-Restart ：当前轨迹噪声过大或方向错误，从原问题重启
+读取当前 Research State
+→ 选择优先约束
+→ 搜索或访问来源
+→ 更新候选与证据
+→ 在语义转折点提交 Context Update
+→ 输出暂定答案
 ```
 
-Refine 和普通“再搜一次”的区别在于：
+第一轮目标来自原始问题；后续目标由外层根据未解决约束生成。
 
-- 保留已验证证据；
-- 保留已否定候选；
-- 明确剩余约束；
-- 下一轮只围绕剩余不确定性展开。
+### Outer Self-improvement Loop：决定下一轮做什么
 
-如果轨迹已经被错误前提污染，则 Restart，不把旧状态继续带入新一轮。
-
-## 最关键的设计：Research State，而不是聊天摘要
-
-长程研究会不断累积：
-
-- 搜索结果；
-- 暂定结论；
-- 已否定候选；
-- 冲突来源；
-- 重复观察；
-- 已过期计划。
-
-常见 Context Compaction 只在达到 Token 阈值时做摘要。这种做法把上下文管理当成容量问题，容易丢失真正影响下一步决策的信息。
-
-AREX 提供显式的 `update_context` Tool，由模型在研究转折点主动调用。它保留：
+外层对暂定答案做约束级审计，再执行三路决策：
 
 ```text
-已验证发现及来源标识
-当前候选
-未解决约束
-有效性和时间风险
-已否定候选及原因
-下一步研究计划
+Accept  ：必要约束均有充分证据，结束
+Refine  ：已有有效进展，只补剩余缺口
+Restart ：轨迹被错误前提污染，从原问题重启
 ```
 
-它删除：
+Refine 不是把原问题再问一遍。它必须保留：
 
-```text
-重复观察
-已被替代的结论
-失效计划
-不再影响决策的原始 Tool Output
+- 已验证事实与来源；
+- 已否定候选与原因；
+- 仍未解决的约束；
+- 下一轮的具体检索目标。
+
+只有当旧轨迹缺乏可复用证据或方向根本错误时，才选择 Restart。
+
+## 真正关键的是 Research State
+
+长研究轨迹会积累网页全文、搜索结果、冲突来源、失败查询和过期计划。普通 Context Compaction 往往等到 Token 接近上限才生成摘要，把上下文管理误解为容量问题。
+
+AREX 引入模型主动调用的 `update_context` Tool。它不是压缩整段聊天，而是在研究转折点提交后续决策所需的状态：
+
+```yaml
+verified_findings:
+  - claim:
+    evidence_ids: []
+
+current_candidates: []
+
+rejected_candidates:
+  - candidate:
+    reason:
+
+unresolved_constraints: []
+conflicts: []
+next_plan: []
 ```
 
-因此，`update_context` 不是普通 Summary，而是一次**研究状态提交**。
+原始网页和 Tool Output 留在 Document Store 或 Trace 中，通过 ID 回查；Active Context 只保存当前判断需要的内容。
 
-## Context Update 的实验证据
+## Context Update 的证据
 
-论文在 BrowseComp 上分析了 Autonomous Context Updating（ACU）：
+论文在 BrowseComp 上分析 Autonomous Context Updating：
 
 - 80.3% 的任务调用过 `update_context`；
-- 调用时平均上下文约 25,721 Tokens，中位数约 25,386；
+- 调用时平均上下文约 25,721 Tokens；
 - 只有 0.01% 的更新发生在 128K 上限附近。
 
-这说明模型通常不是因为上下文“装满了”才压缩，而是在语义转折点主动更新。
+这说明更新主要由语义变化触发，而不是等待上下文耗尽。
 
-最常见触发原因：
+最常见触发原因是：
 
 | 触发原因 | 占比 |
 |---|---:|
@@ -169,137 +153,47 @@ AREX 提供显式的 `update_context` Tool，由模型在研究转折点主动�
 | 汇总进展 | 6.4% |
 | 验证证据或答案 | 5.3% |
 
-更新后的状态最常保留：
+更新后最常保留的是下一步计划、未解决约束、已否定候选和已验证发现。可见高价值状态不是“发生过什么”的完整摘要，而是：
 
-| 状态内容 | 出现占比 |
-|---|---:|
-| 下一步计划 | 96.4% |
-| 未解决约束 | 95.5% |
-| 已否定候选 | 81.5% |
-| 已验证发现 | 72.1% |
+> 哪些已经成立，哪些已被排除，哪些仍未成立，下一步只该验证什么。
 
-最有价值的信号是：**AREX 优先保存“下一步该做什么”和“哪些条件还没满足”，而不是保存一份面面俱到的会话摘要。**
+## 两个组件为什么缺一不可
 
-## 双循环到底贡献了多少
-
-在 BrowseComp 的内部消融实验中：
+论文在 BrowseComp 的内部消融结果为：
 
 | 配置 | Accuracy |
 |---|---:|
-| 无 ACU、无外层循环 | 59.6 |
-| 无 ACU、有外层循环 | 69.8 |
-| 有 ACU、无外层循环 | 71.4 |
+| 无 Context Update、无外层循环 | 59.6 |
+| 无 Context Update、有外层循环 | 69.8 |
+| 有 Context Update、无外层循环 | 71.4 |
 | 完整 AREX | 82.5 |
 
-由此可见：
+这个结果支持两个相互独立的判断：
 
-- 单独加入 ACU：59.6 → 71.4，提升 11.8 个点；
-- 在有 ACU 时加入外层循环：71.4 → 82.5，提升 11.1 个点；
-- 完整系统相对两者都没有：提升 22.9 个点。
+1. 结构化 Research State 能减少长轨迹中的信息退化；
+2. 外层验证能把剩余不确定性转成新的定向研究。
 
-这是论文内部的受控实验，不是第三方复现，但至少说明两个组件不是单纯装饰：
+它仍是论文作者体系内的实验，不等于第三方复现，但说明完整系统的收益并非单纯来自更长的搜索预算。
 
-1. 用结构化状态替代完整轨迹；
-2. 对低置信结果进行定向新一轮研究。
+## 可复用的 Harness 设计
 
-## Structured Finish：把研究结果变成可验证对象
+### Constraint Ledger：先定义完成条件
 
-内层不能只输出自然语言答案，而应通过 `finish` 返回：
-
-```yaml
-answer:
-evidence:
-  - claim_id:
-    source_id:
-    excerpt_or_fact:
-confidence:
-unresolved_constraints:
-```
-
-AREX 的外层依赖答案级 Confidence 来决定 Accept、Refine 或 Restart。
-
-工程上不能直接照搬模型自报置信度。更可靠的方法是将 Confidence 拆成可计算指标：
-
-```text
-Constraint Coverage
-× Evidence Support
-× Source Authority
-× Temporal Validity
-× Cross-source Consistency
-```
-
-模型可以给出语义判断，但最终决策应由 Harness 聚合确定性和模型指标。
-
-## 训练方法中最值得学习的部分
-
-AREX 不只改了推理 Harness，还专门训练模型掌握长程研究行为。
-
-### 1. 可验证的约束型任务合成
-
-每个训练问题包含一个答案和一组可验证约束。有效任务必须满足：
-
-- 答案不能从问题表面直接猜出；
-- 每条约束可以从外部证据验证；
-- 多条约束联合后能唯一确定答案；
-- 证据真实存在且任务难度足够。
-
-这比随意生成“请研究某主题”更适合训练和评测，因为每个结果都能拆成 Constraint-level Reward。
-
-### 2. Teacher Trajectory 质量控制
-
-作者过滤掉：
-
-- 直接猜答案的轨迹；
-- 忽略 Tool Observation 的轨迹；
-- 无效 Tool Call；
-- 无证据结论；
-- 不会根据新证据修正假设的轨迹；
-- 最终答案无法从收集证据重建的轨迹。
-
-这说明高质量 Agent 数据的核心不是轨迹长，而是**每次关键转向能被外部证据解释**。
-
-### 3. Key-step Focused Supervision
-
-长轨迹中，大多数步骤只是普通搜索和过渡。真正决定成败的是少数关键步骤：
-
-- 多轮探索后第一次获取决定性证据；
-- 明确否定错误候选并改变搜索方向；
-- 调用 `update_context` 保存有效进展和下一步计划。
-
-作者保留这些步骤的完整前缀作为条件，但只对关键步骤本身计算训练 Loss，避免普通步骤稀释信号。
-
-消融实验中，把关键步骤回放替换成等预算的随机步骤，BrowseComp 从 82.5 降到 74.1，是训练组件中最大的下降。
-
-### 4. Step-aware Reinforcement Learning
-
-普通 GRPO 将最终奖励近似均匀传播到整条长轨迹。AREX 对验证成功轨迹中的关键步骤增加有限的辅助奖励，同时仍把最终答案正确性作为主奖励。
-
-用标准 GRPO 替换 Step-aware RL 后，BrowseComp 从 82.5 降到 79.4。
-
-这不代表所有中间步骤都应该人工打分，而是说明：**长程 Agent 的信用分配不能只看整条轨迹最终是否成功。**
-
-## 不训练模型也能复用的 Harness 方案
-
-### 1. Constraint Ledger
-
-先把用户需求转成显式约束，而不是直接搜索：
+研究开始前，将自然语言需求拆成显式约束：
 
 ```yaml
 constraints:
   - id: c1
-    statement: 必须来自官方来源
+    statement: 必须来自官方一手来源
+    required: true
     status: unresolved
-    evidence: []
+    evidence_ids: []
 
   - id: c2
-    statement: 最近 7 天发布
+    statement: 最近七天发布
+    required: true
     status: unresolved
-    evidence: []
-
-  - id: c3
-    statement: 与 Agent Runtime 直接相关
-    status: unresolved
-    evidence: []
+    evidence_ids: []
 ```
 
 状态至少包括：
@@ -312,173 +206,132 @@ not_verifiable
 stale
 ```
 
-### 2. Evidence Store
+如果完成条件不显式，外层循环就无法判断应该 Accept、Refine 还是 Restart。
 
-证据与答案分开存储：
+### Evidence Store：证据与答案分离
 
 ```yaml
-evidence_id:
-source_url:
-source_type:
-published_at:
-retrieved_at:
-claim_supported:
-source_authority:
-temporal_validity:
-conflicts_with:
+evidence:
+  id: e17
+  source_url:
+  source_type: official
+  published_at:
+  retrieved_at:
+  supports: [c1, c2]
+  source_authority: high
+  temporal_validity: current
+  conflicts_with: []
 ```
 
-同一证据可以支持多条约束；同一约束也可以引用多个来源。
+同一证据可以支持多个约束，同一约束也可以由多个独立来源支持。答案只是 Evidence Store 和 Constraint Ledger 的当前视图，不是唯一事实源。
 
-### 3. Research State
+### Structured Finish：让暂定答案可以被审计
 
-每次状态提交只保存后续决策需要的内容：
+内层不能只返回自然语言结论，应输出结构化结果：
 
 ```yaml
-verified_findings:
-current_candidates:
-rejected_candidates:
-  - candidate:
-    reason:
+answer:
+claim_evidence_map:
+constraint_status:
 unresolved_constraints:
-conflicts:
-next_plan:
-search_budget_remaining:
+confidence_components:
 ```
 
-不要把原始网页全文和所有搜索结果永久放在 Active Context 中。原始材料留在 Trace/Document Store，通过 ID 回查。
-
-### 4. Inner Loop
+Confidence 不应只依赖模型自报分数。更可靠的组合包括：
 
 ```text
-选出优先级最高的未解决约束
-→ 生成针对性查询
-→ 获取证据
-→ 更新候选与约束状态
-→ 到达语义转折点时提交 Research State
-→ 生成暂定答案
+Constraint Coverage
+× Evidence Support
+× Source Authority
+× Temporal Validity
+× Cross-source Consistency
 ```
 
-语义转折点包括：
-
-- 候选被否定；
-- 证据冲突被解决；
-- 搜索方向改变；
-- 完成一个重要子问题；
-- 上下文接近硬上限。
-
-### 5. Outer Loop
+### Targeted Refine：只处理剩余缺口
 
 ```python
 if all_required_constraints_supported():
     return ACCEPT
 
-if trajectory_has_reusable_evidence():
-    objective = build_targeted_objective(unresolved_constraints)
-    return REFINE(objective)
+if reusable_evidence_exists():
+    return REFINE(build_objective(unresolved_constraints))
 
 return RESTART(original_query)
 ```
 
-Refine 的输入应是剩余问题，而不是原始问题全文加一句“请继续改进”。
+下一轮输入应是剩余约束和必要证据，而不是完整历史加一句“继续改进”。
 
-## 对每周技术与岗位报告的直接应用
+## 如何用于技术周报和岗位雷达
 
-当前周报任务非常适合使用 AREX 思路。
+这类任务天然包含可验证约束。
 
-### 原问题拆成约束
+### 技术信号
 
 ```text
-技术信号：
-- 最近 7 天
-- 一手来源
-- 对 Agent 工程有实际价值
-- 最多 7 条
-
-岗位信号：
-- 当前可申请
-- 高阶 Agent 相关
-- 原始 JD 可核验
-- 不重复岗位簇
+最近七天
+一手来源
+与 Agent 工程直接相关
+包含可复用的工程意义
+不与前几期重复
 ```
 
-### 第一轮
+### 岗位信号
 
-广泛搜索并得到候选清单。
+```text
+当前仍可申请
+Senior / Staff / Principal 等高阶级别
+JD 明确涉及 Agent Runtime、MCP 或 AI Coding
+使用官方招聘页
+地点和工作模式可核验
+```
 
-### 外层验证
+第一轮负责广泛发现候选；外层逐项验证日期、来源、开放状态和技术相关性；第二轮只补缺少官方来源、时间不清楚或技术含义不足的条目。
 
-逐条检查：
+这样可以避免每轮重新全网搜索，也能防止已经排除的低质量候选反复进入报告。
 
-- 日期是否符合；
-- 来源是否一手；
-- 是否只是营销新闻；
-- 岗位是否仍开放；
-- JD 是否真的涉及 Agent Runtime/MCP，而不是泛 AI；
-- 是否有足够事实支持个人判断。
+## 应该如何评测
 
-### 第二轮
-
-只补：
-
-- 没有官方来源的条目；
-- 日期不清楚的岗位；
-- 技术含义仍不明确的论文；
-- 证据冲突或质量不足的候选。
-
-这比每轮重新全网搜索更稳定，也能显著减少重复信息。
-
-## 推荐评测指标
-
-| 指标 | 含义 |
+| 指标 | 说明 |
 |---|---|
-| Constraint Coverage | 必要约束被证据支持的比例 |
-| Evidence Precision | 引用证据是否真正支持对应结论 |
+| Constraint Coverage | 必要约束获得证据支持的比例 |
+| Evidence Precision | 引用是否真正支持对应结论 |
 | Source Authority | 一手和权威来源占比 |
-| Rejected Candidate Recurrence | 被否定候选再次出现的频率 |
+| Rejected Candidate Recurrence | 已否定候选再次出现的频率 |
 | Duplicate Search Rate | 重复查询和重复访问比例 |
-| Targeted Follow-up Ratio | 后续搜索是否针对未解决约束 |
+| Targeted Follow-up Ratio | 后续搜索是否围绕未解决约束 |
 | Unsupported Claim Rate | 无证据结论比例 |
-| Cost per Verified Constraint | 每个被验证约束的成本 |
+| Cost per Verified Constraint | 每项已验证约束的平均成本 |
 
-这些指标比“报告长度”和“搜索次数”更接近研究 Agent 的真实质量。
+这些指标比报告长度、搜索次数或 Agent 自报信心更接近真实研究质量。
+
+## 训练部分提供的额外启示
+
+AREX 还使用 Agentic Mid-training 和长程 RL 训练模型。最值得借鉴的是 Key-step Supervision：长轨迹中真正决定成败的是少数步骤，例如获得决定性证据、否定错误候选、改变搜索方向或提交 Context Update。
+
+论文用等预算随机步骤替换关键步骤回放后，BrowseComp 从 82.5 降到 74.1；用标准 GRPO 替换 Step-aware RL 后降到 79.4。
+
+工程含义不是所有团队都应该训练模型，而是：Agent Eval 和经验沉淀应优先标记 First Decisive Evidence、First Bad Step 与 Strategy Change，而不是只保存整个长轨迹的最终成败。
 
 ## 适用边界
 
-### 论文层面
+AREX 适合多约束且证据可验证的任务，例如文献研究、技术选型、供应商比较、岗位筛选和尽职调查。
 
-- 当前是预印本，尚无独立复现；
-- Benchmark 和对比结果依赖统一 Agent Interface、搜索环境与评测设置；
-- 每个 Episode 最多允许 300 个内层 Turn 和 5 次外层循环，成本并不低；
-- 训练数据包含合成任务和强 Teacher 轨迹，数据质量控制本身投入很大；
-- Confidence 是模型生成的，虽然论文展示了区分趋势，但生产中仍需外部校准。
+不适合直接套用的情况包括：
 
-### 工程层面
-
-AREX 更适合：
-
-- 多约束信息检索；
-- 尽职调查；
-- 技术选型；
-- 文献研究；
-- 供应商、岗位和产品比较。
-
-不适合直接套用：
-
-- 约束无法明确定义的开放创作；
-- 证据本身不可获取或不可验证的任务；
-- 低价值、低复杂度的简单问答；
+- 完成条件无法明确的开放创作；
+- 外部证据不可获取或不可验证；
+- 简单事实问答；
 - 对时延极度敏感的实时交互。
 
-## 我的结论
+论文仍是预印本，最多 300 个内层 Turn 和 5 次外层循环的设置成本不低；训练还依赖合成任务和强 Teacher Trajectory。生产实现应先设置研究预算、停止条件和外部置信度校准。
 
-AREX 最值得复用的不是“让 Agent 多想几轮”，而是以下四项机制：
+## 工程结论
 
-1. **把任务拆成可验证的约束，而不是只维护一个模糊目标。**
-2. **把已验证证据、未解决约束和已否定候选保存为 Research State。**
-3. **后续研究由剩余不确定性驱动，而不是无方向延长搜索。**
-4. **区分 Refine 与 Restart：有价值的轨迹增量修复，被污染的轨迹彻底重启。**
+AREX 最值得复用的是四项机制：
 
-一句话概括：
+1. 把任务拆成可验证的约束，而不是只维护一个模糊目标；
+2. 把已验证证据、未解决约束和已否定候选保存为 Research State；
+3. 让后续研究由剩余不确定性驱动，而不是无方向延长搜索；
+4. 区分 Refine 与 Restart：有效轨迹增量修复，被污染的轨迹彻底重启。
 
-> **高质量 Research Agent 的核心不是搜索得更多，而是每轮结束后更清楚地知道哪些已经成立、哪些仍未成立，以及下一步只该验证什么。**
+高质量 Research Agent 的核心不是搜索得更多，而是每轮结束后更准确地知道哪些已经成立、哪些仍未成立，以及下一步只应验证什么。
