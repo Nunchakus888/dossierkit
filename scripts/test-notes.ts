@@ -90,6 +90,7 @@ const canonical = renderCanonicalNote(note);
 assert.doesNotMatch(canonical, /^slug:/m, "the filename is the only canonical path identity");
 assert.doesNotMatch(canonical, /^# /m);
 assert.match(canonical, /lastReviewedAt: "2026-07-21"/);
+assert.match(canonical, /updatedAt: "2026-07-21T00:00:00\.000Z"/);
 assert.doesNotMatch(canonical, /&a\d+|\*a\d+/, "frontmatter must not use YAML anchors");
 const parsedCanonical = parseCanonicalNote(canonical);
 assert.equal(parsedCanonical.format, "markdown");

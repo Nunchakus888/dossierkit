@@ -3,8 +3,8 @@ brand:
   labelMode: "name"
 footer:
   tagline:
-    zh: "让 AI Agent 进入真实业务，稳定运行，持续进化。"
-    en: "Engineering AI Agents that operate reliably and improve continuously."
+    zh: "The Emergence of Everything"
+    en: "The Emergence of Everything"
 items:
   - id: "home"
     label:

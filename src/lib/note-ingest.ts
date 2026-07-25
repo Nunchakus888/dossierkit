@@ -124,7 +124,7 @@ export async function prepareNote(
     throw new Error(`The note contains unfinished public wording matching ${wordingViolation}.`);
   }
   const date = existing?.date || deriveResearchDate(content.text) || formatDate(now);
-  const updatedAt = formatDate(now);
+  const updatedAt = now.toISOString();
   const kind = parsed.kind || existing?.kind || "research";
   const contentHash = await computeCanonicalContentHash({
     title: content.title,
@@ -189,7 +189,7 @@ function canonicalMetadata(note: PreparedNote) {
     locale: note.locale,
     ...(note.translationKey ? { translationKey: note.translationKey } : {}),
     translationStatus: note.translationStatus,
-    lastReviewedAt: note.updatedAt,
+    lastReviewedAt: note.updatedAt.slice(0, 10),
     title: note.title,
     summary: note.summary,
     featured: note.featured,

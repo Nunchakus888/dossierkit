@@ -16,17 +16,17 @@ const l = labels[locale];
 
 <BaseLayout locale={locale} title={l.latestNotes} description={locale === "zh" ? "围绕企业 Agent 平台架构沉淀的研究、学习与工程笔记。" : "Research, learning, and engineering notes on enterprise Agent platform architecture."}>
   <section class="page-shell notes-page">
-    <header>
-      <p>{l.notes}</p>
-      <h1>{l.latestNotes}</h1>
-      <div class="intro">{locale === "zh" ? "将持续研究整理为可检索、可复核、可长期引用的知识。" : "Continuous research organized as searchable, reviewable, and durable knowledge."}</div>
-    </header>
-
     {entries.length > 0 && (
-      <label class="note-search no-print">
-        <span>{locale === "zh" ? "搜索笔记" : "Search notes"}</span>
-        <input type="search" placeholder={locale === "zh" ? "标题、摘要或主题" : "Title, summary, or topic"} data-note-search />
-      </label>
+      <div class="note-search no-print" role="search">
+        <input
+          type="search"
+          aria-label={locale === "zh" ? "搜索笔记" : "Search notes"}
+          aria-keyshortcuts="Meta+K Control+K"
+          placeholder={locale === "zh" ? "搜索标题、摘要或主题" : "Search title, summary, or topic"}
+          data-note-search
+        />
+        <kbd aria-hidden="true">⌘K</kbd>
+      </div>
     )}
 
     <div class="note-list" data-note-list>
@@ -56,55 +56,50 @@ const l = labels[locale];
     }
     if (empty) empty.hidden = visible > 0;
   });
+
+  document.addEventListener("keydown", (event) => {
+    if (!input || event.key.toLowerCase() !== "k" || (!event.metaKey && !event.ctrlKey)) return;
+    event.preventDefault();
+    input.focus();
+    input.select();
+  });
 </script>
 
 <style>
   .notes-page {
-    padding: 46px 0 76px;
-  }
-
-  header {
-    max-width: 780px;
-    margin-bottom: 30px;
-  }
-
-  header p {
-    margin: 0 0 8px;
-    color: var(--color-accent);
-    font-weight: 750;
-  }
-
-  h1 {
-    margin: 0;
-    font-size: clamp(2.2rem, 5vw, 4.4rem);
-    line-height: 1;
-  }
-
-  .intro {
-    margin-top: 16px;
-    color: var(--color-muted);
-    font-size: 1.08rem;
+    padding: 30px 0 76px;
   }
 
   .note-search {
-    display: grid;
-    max-width: 560px;
-    gap: 8px;
-    margin-bottom: 24px;
-    color: var(--color-muted);
-    font-size: 0.86rem;
-    font-weight: 700;
+    position: relative;
+    width: 100%;
+    margin-bottom: 20px;
   }
 
   .note-search input {
+    width: 100%;
     min-height: 48px;
     border: 1px solid var(--color-border);
     border-radius: 14px;
-    padding: 10px 14px;
+    padding: 10px 66px 10px 14px;
     background: rgba(255, 255, 255, 0.82);
     color: var(--color-foreground);
     font: inherit;
     font-weight: 500;
+  }
+
+  .note-search kbd {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    padding: 3px 8px;
+    background: color-mix(in srgb, var(--color-surface), transparent 10%);
+    color: var(--color-muted);
+    font: 650 0.78rem/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
+    pointer-events: none;
+    transform: translateY(-50%);
   }
 
   .note-search input:focus {

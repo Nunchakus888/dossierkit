@@ -17,13 +17,33 @@ const kindLabel = {
   learning: locale === "zh" ? "学习" : "Learning",
   engineering: locale === "zh" ? "工程" : "Engineering"
 }[entry.data.kind || "research"];
+const timestamp = entry.data.updatedAt || entry.data.lastReviewedAt || entry.data.date;
+const timestampLabel = timestamp ? formatTimestamp(timestamp) : "";
+
+function formatTimestamp(value: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  }).formatToParts(date);
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value || "";
+  return `${part("year")}-${part("month")}-${part("day")} ${part("hour")}:${part("minute")}:${part("second")}`;
+}
 ---
 
 <article class="note-card card" data-note-card data-search={`${entry.data.title} ${entry.data.summary} ${topics.join(" ")}`.toLowerCase()}>
   <div class="note-card-content">
     <div class="note-meta">
       <span>{kindLabel}</span>
-      {entry.data.date && <time datetime={entry.data.date}>{entry.data.date}</time>}
+      {timestamp && <time datetime={timestamp}>{timestampLabel}</time>}
     </div>
     <h2><a href={localePath(locale, `notes/${entry.slug}`)}>{entry.data.title}</a></h2>
     <p>{entry.data.summary}</p>
