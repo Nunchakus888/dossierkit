@@ -1,106 +1,23 @@
 ---
-import BentoDashboard from "../../components/dossier/BentoDashboard.astro";
-import CaseCard from "../../components/dossier/CaseCard.astro";
-import ContactPanel from "../../components/dossier/ContactPanel.astro";
-import ExperienceTimeline from "../../components/dossier/ExperienceTimeline.astro";
-import Hero from "../../components/dossier/Hero.astro";
-import LabCard from "../../components/dossier/LabCard.astro";
-import ProofWall from "../../components/dossier/ProofWall.astro";
-import QuickLinks from "../../components/dossier/QuickLinks.astro";
-import RoleFitPanel from "../../components/dossier/RoleFitPanel.astro";
-import WritingCard from "../../components/dossier/WritingCard.astro";
+import NotesFeed from "../../components/dossier/NotesFeed.astro";
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import { locales, type Locale } from "../../lib/config";
-import { getFeatured } from "../../lib/content-query";
+import { getCollection } from "../../lib/content-query";
 import { labels } from "../../lib/i18n";
-import { loadProfilePack } from "../../lib/profile-loader";
 
 export function getStaticPaths() {
   return locales.map((locale) => ({ params: { locale } }));
 }
 
 const locale = Astro.params.locale as Locale;
-const pack = loadProfilePack();
+const entries = getCollection(locale, "notes");
 const l = labels[locale];
 ---
 
-<BaseLayout locale={locale}>
-  {pack.home.sections.map((section) => {
-    if (section.type === "hero") return <Hero locale={locale} pack={pack} />;
-    if (section.type === "bento") return <BentoDashboard locale={locale} pack={pack} />;
-    if (section.type === "quickLinks") return <QuickLinks locale={locale} pack={pack} />;
-    if (section.type === "targetRoles") return <RoleFitPanel locale={locale} pack={pack} />;
-    if (section.type === "proofWall") return <ProofWall locale={locale} pack={pack} />;
-    if (section.type === "contact") return <ContactPanel locale={locale} pack={pack} />;
-    if (section.type === "featuredCases") {
-      const entries = getFeatured(locale, "cases", section.limit || 3);
-      return (
-        <section class="section-band">
-          <div class="page-shell">
-            <div class="section-heading">
-              <div>
-                <h2>{l.featuredCases}</h2>
-                <p>{locale === "zh" ? "覆盖架构决策、平台交付、质量运营与复盘。" : "Architecture decisions, platform delivery, quality operations, and lessons."}</p>
-              </div>
-            </div>
-            <div class="card-grid">
-              {entries.map((entry) => <CaseCard locale={locale} entry={entry} />)}
-            </div>
-          </div>
-        </section>
-      );
-    }
-    if (section.type === "labNotes") {
-      const entries = getFeatured(locale, "lab", section.limit || 3);
-      return (
-        <section class="section-band">
-          <div class="page-shell">
-            <div class="section-heading">
-              <div>
-                <h2>{l.featuredLab}</h2>
-                <p>{locale === "zh" ? "覆盖回放评测、数据反馈与策略优化。" : "Replay evaluation, data feedback, and policy optimization."}</p>
-              </div>
-            </div>
-            <div class="card-grid">
-              {entries.map((entry) => <LabCard locale={locale} entry={entry} />)}
-            </div>
-          </div>
-        </section>
-      );
-    }
-    if (section.type === "writing") {
-      const entries = getFeatured(locale, "writing", section.limit || 3);
-      return (
-        <section class="section-band">
-          <div class="page-shell">
-            <div class="section-heading">
-              <div>
-                <h2>{l.writing}</h2>
-                <p>{locale === "zh" ? "记录 AI Agent 平台评测、数据反馈和工程治理实践。" : "Notes on AI Agent evaluation, data feedback, and engineering governance."}</p>
-              </div>
-            </div>
-            <div>
-              {entries.map((entry) => <WritingCard locale={locale} entry={entry} />)}
-            </div>
-          </div>
-        </section>
-      );
-    }
-    if (section.type === "experience") return <ExperienceTimeline locale={locale} pack={pack} />;
-    return null;
-  })}
+<BaseLayout
+  locale={locale}
+  title={l.latestNotes}
+  description={locale === "zh" ? "企业 Agent 平台架构、工程实践与持续研究笔记。" : "Notes on enterprise Agent platform architecture, engineering practice, and ongoing research."}
+>
+  <NotesFeed locale={locale} entries={entries} />
 </BaseLayout>
-
-<style>
-  .card-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  @media (max-width: 900px) {
-    .card-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-</style>

@@ -13,43 +13,34 @@ const { locale, pack } = Astro.props;
 const l = labels[locale];
 const altLocale = otherLocale(locale);
 const altHref = switchLocalePath(Astro.url.pathname, altLocale);
-const items = pack.navigation.items;
-const primaryItems = items.filter((item) => item.placement === "primary").slice(0, 4);
-const allMenuItems = items;
 const configuredBrand = pack.navigation.brand.mark || "DossierKit";
+const normalizedPath = Astro.url.pathname.replace(/\/$/, "") || "/";
+const showNoteSearch = normalizedPath === localePath(locale) || normalizedPath === localePath(locale, "notes");
 const brandLabel =
   pack.navigation.brand.labelMode === "headline"
     ? localize(pack.profile.headline, locale)
     : pack.navigation.brand.labelMode === "none"
       ? ""
       : configuredBrand;
-
-function navHref(path: string, external?: boolean) {
-  if (external || /^https?:\/\//.test(path)) return path;
-  return localePath(locale, path);
-}
-
-function isActive(path: string, external?: boolean) {
-  if (external) return false;
-  const href = navHref(path);
-  if (href === localePath(locale)) return Astro.url.pathname === href || Astro.url.pathname === `${href}/`;
-  return Astro.url.pathname === href || Astro.url.pathname.startsWith(`${href}/`);
-}
 ---
 
 <header class="site-header no-print" data-site-header data-visibility="shown">
-  <div class="page-shell nav-card">
+  <div class:list={["page-shell", "nav-card", { "has-note-search": showNoteSearch }]}>
     <a class="brand" href={localePath(locale)} aria-label={localize(pack.profile.name, locale)}>
       {brandLabel && <span class="brand-word">{brandLabel}</span>}
     </a>
 
-    <nav class="desktop-nav" aria-label="Primary navigation">
-      {primaryItems.map((item) => (
-        <a class:list={{ active: isActive(item.path, item.external) }} href={navHref(item.path, item.external)}>
-          {localize(item.label, locale)}
-        </a>
-      ))}
-    </nav>
+    {showNoteSearch && (
+      <div class="header-search" role="search">
+        <input
+          type="search"
+          aria-label={locale === "zh" ? "搜索笔记" : "Search notes"}
+          aria-keyshortcuts="Meta+K Control+K"
+          placeholder="command + k"
+          data-note-search
+        />
+      </div>
+    )}
 
     <div class="header-actions">
       <a class="language-pill" href={altHref} aria-label={l.switchLanguage} title={l.switchLanguage}>
@@ -59,23 +50,6 @@ function isActive(path: string, external?: boolean) {
           <path d="m6 9 6 6 6-6" />
         </svg>
       </a>
-      <details class="mobile-menu">
-        <summary aria-label="Menu" title="Menu">
-          <Icon name="menu" size={20} />
-        </summary>
-        <div class="mobile-menu-panel">
-          {allMenuItems.map((item) => (
-            <a href={navHref(item.path, item.external)}>
-              {item.icon && <Icon name={item.icon} size={17} />}
-              <span>{localize(item.label, locale)}</span>
-            </a>
-          ))}
-          <a href={altHref}>
-            <Icon name="globe" size={17} />
-            <span>{l.switchLanguage}</span>
-          </a>
-        </div>
-      </details>
     </div>
   </div>
 </header>
@@ -97,8 +71,6 @@ function isActive(path: string, external?: boolean) {
       const currentScrollY = Math.max(0, window.scrollY);
       const delta = currentScrollY - lastScrollY;
       const nextDirection = delta > 0 ? "down" : delta < 0 ? "up" : direction;
-      const menuOpen = Boolean(header.querySelector("details[open]"));
-
       if (nextDirection !== direction) {
         direction = nextDirection;
         directionDistance = 0;
@@ -106,7 +78,7 @@ function isActive(path: string, external?: boolean) {
 
       directionDistance += Math.abs(delta);
 
-      if (currentScrollY <= 72 || header.matches(":focus-within") || menuOpen) {
+      if (currentScrollY <= 72 || header.matches(":focus-within")) {
         showHeader();
       } else if (direction === "down" && directionDistance >= 24) {
         header.dataset.visibility = "hidden";
@@ -132,7 +104,6 @@ function isActive(path: string, external?: boolean) {
     );
 
     header.addEventListener("focusin", showHeader);
-    header.querySelector("details")?.addEventListener("toggle", showHeader);
   }
 </script>
 
@@ -162,13 +133,13 @@ function isActive(path: string, external?: boolean) {
   .nav-card {
     isolation: isolate;
     display: grid;
-    min-height: 92px;
-    grid-template-columns: minmax(190px, 1fr) auto minmax(190px, 1fr);
+    min-height: 78px;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 20px;
+    gap: 24px;
     border: 1px solid transparent;
-    border-radius: 30px;
-    padding: 0 28px;
+    border-radius: 26px;
+    padding: 0 20px 0 28px;
     background:
       linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(246, 255, 252, 0.72)) padding-box,
       linear-gradient(120deg, rgba(85, 190, 162, 0.44), rgba(120, 205, 225, 0.32), rgba(255, 255, 255, 0.74)) border-box;
@@ -176,11 +147,45 @@ function isActive(path: string, external?: boolean) {
     backdrop-filter: blur(18px) saturate(1.25);
   }
 
+  .nav-card.has-note-search {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
   .brand,
-  .desktop-nav,
   .header-actions {
     position: relative;
     z-index: 1;
+  }
+
+  .header-search {
+    width: 180px;
+  }
+
+  .header-search input {
+    width: 100%;
+    min-height: 34px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.28);
+    color: var(--color-foreground);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    opacity: 0.58;
+    transition: background 180ms ease, border-color 180ms ease, opacity 180ms ease;
+  }
+
+  .header-search input:hover {
+    background: rgba(255, 255, 255, 0.44);
+    opacity: 0.78;
+  }
+
+  .header-search input:focus {
+    border-color: color-mix(in srgb, var(--color-accent), transparent 52%);
+    outline: 2px solid color-mix(in srgb, var(--color-accent), transparent 88%);
+    background: rgba(255, 255, 255, 0.72);
+    opacity: 1;
   }
 
   .brand {
@@ -202,48 +207,6 @@ function isActive(path: string, external?: boolean) {
     letter-spacing: 0;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-  }
-
-  .desktop-nav {
-    display: flex;
-    align-items: center;
-    justify-self: center;
-    gap: clamp(24px, 5vw, 70px);
-    color: var(--color-foreground);
-    font-size: 1.08rem;
-    font-weight: 780;
-  }
-
-  .desktop-nav a {
-    position: relative;
-    padding: 9px 0;
-    transition: color 180ms ease, transform 180ms ease;
-  }
-
-  .desktop-nav a::after {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    height: 3px;
-    border-radius: 999px;
-    content: "";
-    background: var(--gradient-primary);
-    opacity: 0;
-    transform: scaleX(0.35);
-    transition: opacity 180ms ease, transform 180ms ease;
-  }
-
-  .desktop-nav a:hover,
-  .desktop-nav a.active {
-    color: #207f72;
-    transform: translateY(-1px);
-  }
-
-  .desktop-nav a:hover::after,
-  .desktop-nav a.active::after {
-    opacity: 1;
-    transform: scaleX(1);
   }
 
   .header-actions {
@@ -276,62 +239,6 @@ function isActive(path: string, external?: boolean) {
     box-shadow: 0 12px 26px rgba(85, 190, 162, 0.18);
   }
 
-  .mobile-menu {
-    position: relative;
-    display: none;
-  }
-
-  .mobile-menu summary {
-    display: inline-grid;
-    width: 48px;
-    height: 48px;
-    place-items: center;
-    border: 1px solid transparent;
-    border-radius: 999px;
-    background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(246, 255, 252, 0.66)) padding-box,
-      linear-gradient(120deg, rgba(85, 190, 162, 0.34), rgba(120, 205, 225, 0.26)) border-box;
-    color: #5a6375;
-    cursor: pointer;
-    list-style: none;
-  }
-
-  .mobile-menu summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .mobile-menu-panel {
-    position: absolute;
-    right: 0;
-    top: calc(100% + 12px);
-    display: grid;
-    min-width: 220px;
-    gap: 6px;
-    border: 1px solid transparent;
-    border-radius: 22px;
-    padding: 10px;
-    background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(246, 255, 252, 0.9)) padding-box,
-      linear-gradient(120deg, rgba(85, 190, 162, 0.36), rgba(120, 205, 225, 0.28)) border-box;
-    box-shadow: 0 24px 54px rgba(45, 58, 69, 0.16);
-    backdrop-filter: blur(18px) saturate(1.2);
-  }
-
-  .mobile-menu-panel a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-radius: 14px;
-    padding: 12px;
-    color: #5a6375;
-    font-weight: 760;
-  }
-
-  .mobile-menu-panel a:hover {
-    background: linear-gradient(100deg, rgba(234, 249, 244, 0.82), rgba(235, 250, 255, 0.72));
-    color: #207f72;
-  }
-
   @media (max-width: 960px) {
     .nav-card {
       grid-template-columns: 1fr auto;
@@ -341,8 +248,13 @@ function isActive(path: string, external?: boolean) {
       backdrop-filter: none;
     }
 
-    .desktop-nav {
-      display: none;
+    .nav-card.has-note-search {
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 8px;
+    }
+
+    .header-search {
+      width: 140px;
     }
 
     .language-pill span,
@@ -356,10 +268,6 @@ function isActive(path: string, external?: boolean) {
       justify-content: center;
       padding: 0;
     }
-
-    .mobile-menu {
-      display: block;
-    }
   }
 
   @media (max-width: 520px) {
@@ -369,7 +277,27 @@ function isActive(path: string, external?: boolean) {
     }
 
     .brand-word {
-      font-size: 1.42rem;
+      font-size: 1.18rem;
+    }
+
+    .nav-card.has-note-search {
+      gap: 6px;
+      padding: 0 10px;
+    }
+
+    .header-search {
+      width: 92px;
+    }
+
+    .header-search input {
+      min-height: 32px;
+      padding-inline: 8px;
+      font-size: 0.72rem;
+    }
+
+    .language-pill {
+      width: 40px;
+      min-height: 40px;
     }
   }
 
