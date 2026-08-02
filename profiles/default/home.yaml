@@ -1,11 +1,2 @@
 sections:
-  - type: "hero"
-    variant: "playful"
-  - type: "quickLinks"
-  - type: "targetRoles"
-  - type: "featuredCases"
-    limit: 3
-  - type: "labNotes"
-    limit: 3
-  - type: "proofWall"
-  - type: "contact"
+  - type: "notes"

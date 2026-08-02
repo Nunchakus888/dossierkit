@@ -1,0 +1,118 @@
+---
+import type { Locale } from "../../lib/config";
+import type { ContentEntry } from "../../lib/profile-loader";
+import NoteCard from "./NoteCard.astro";
+
+type Props = {
+  locale: Locale;
+  entries: ContentEntry[];
+};
+
+const { locale, entries } = Astro.props;
+---
+
+<section class="page-shell notes-page">
+  {entries.length > 0 && (
+    <div class="note-search no-print" role="search">
+      <input
+        type="search"
+        aria-label={locale === "zh" ? "搜索笔记" : "Search notes"}
+        aria-keyshortcuts="Meta+K Control+K"
+        placeholder="command + k"
+        data-note-search
+      />
+    </div>
+  )}
+
+  <div class="note-list" data-note-list>
+    {entries.map((entry) => <NoteCard locale={locale} entry={entry} />)}
+  </div>
+
+  <p class="empty-state" data-empty-state hidden={entries.length > 0}>
+    {entries.length === 0
+      ? locale === "zh" ? "该语言暂未发布笔记。" : "No notes have been published in this language yet."
+      : locale === "zh" ? "没有匹配的笔记。" : "No matching notes."}
+  </p>
+</section>
+
+<script>
+  const input = document.querySelector<HTMLInputElement>("[data-note-search]");
+  const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-note-card]"));
+  const empty = document.querySelector<HTMLElement>("[data-empty-state]");
+
+  input?.addEventListener("input", () => {
+    const query = input.value.trim().toLowerCase();
+    let visible = 0;
+    for (const card of cards) {
+      const matches = !query || (card.dataset.search || "").includes(query);
+      card.hidden = !matches;
+      if (matches) visible += 1;
+    }
+    if (empty) empty.hidden = visible > 0;
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (!input || event.key.toLowerCase() !== "k" || (!event.metaKey && !event.ctrlKey)) return;
+    event.preventDefault();
+    input.focus();
+    input.select();
+  });
+</script>
+
+<style>
+  .notes-page {
+    padding: 30px 0 76px;
+  }
+
+  .note-search {
+    position: relative;
+    width: min(100%, 180px);
+    margin: 0 0 12px auto;
+  }
+
+  .note-search input {
+    width: 100%;
+    min-height: 34px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.28);
+    color: var(--color-foreground);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    opacity: 0.58;
+    transition: background 180ms ease, border-color 180ms ease, opacity 180ms ease;
+  }
+
+  .note-search input:hover {
+    background: rgba(255, 255, 255, 0.44);
+    opacity: 0.78;
+  }
+
+  .note-search input:focus {
+    border-color: color-mix(in srgb, var(--color-accent), transparent 52%);
+    outline: 2px solid color-mix(in srgb, var(--color-accent), transparent 88%);
+    background: rgba(255, 255, 255, 0.72);
+    opacity: 1;
+  }
+
+  .note-list {
+    display: grid;
+    gap: 14px;
+  }
+
+  .empty-state {
+    border: 1px dashed var(--color-border);
+    border-radius: var(--card-radius);
+    padding: 28px;
+    color: var(--color-muted);
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .notes-page {
+      padding-top: 22px;
+    }
+  }
+</style>
