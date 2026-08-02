@@ -26,7 +26,7 @@ const brandLabel =
 
 <header class="site-header no-print" data-site-header data-visibility="shown">
   <div class:list={["page-shell", "nav-card", { "has-note-search": showNoteSearch }]}>
-    <a class="brand" href={localePath(locale)} aria-label={localize(pack.profile.name, locale)}>
+    <a class="brand" href={localePath(locale)} aria-label={brandLabel || localize(pack.profile.name, locale)}>
       {brandLabel && <span class="brand-word">{brandLabel}</span>}
     </a>
 
@@ -200,11 +200,12 @@ const brandLabel =
     background: linear-gradient(100deg, #207f72 0%, #2fb98f 44%, #55bea2 72%, #2b9f98 100%);
     background-clip: text;
     color: transparent;
-    font-family: "Pacifico", "Brush Script MT", cursive;
-    font-size: clamp(1.65rem, 2vw, 2.08rem);
-    font-weight: 400;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.08rem, 1.8vw, 1.34rem);
+    font-style: italic;
+    font-weight: 620;
     line-height: 1.15;
-    letter-spacing: 0;
+    letter-spacing: -0.025em;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -277,7 +278,8 @@ const brandLabel =
     }
 
     .brand-word {
-      font-size: 1.18rem;
+      font-size: 0.74rem;
+      letter-spacing: -0.035em;
     }
 
     .nav-card.has-note-search {
@@ -286,7 +288,7 @@ const brandLabel =
     }
 
     .header-search {
-      width: 92px;
+      width: 72px;
     }
 
     .header-search input {
