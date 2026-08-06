@@ -1,0 +1,648 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-08-06"
+title: "Cloudflare Computer 深度调研文档"
+summary: "调研日期:2026-08-06 | 调研对象:https://github.com/cloudflare/computer(main
+  分支,76d9e75) 调研方式:克隆源码精读(packages + docs + e…"
+featured: false
+date: "2026-08-06"
+updatedAt: "2026-08-06T15:05:52.794Z"
+kind: "research"
+topics:
+  - "Cloudflare Computer"
+  - "Agent Runtime"
+  - "Durable Objects"
+  - "Virtual Filesystem"
+  - "Execution Backends"
+  - "Cloudflare Workers"
+tags:
+  - "Cloudflare Computer"
+  - "Agent Runtime"
+  - "Durable Objects"
+  - "Virtual Filesystem"
+  - "Execution Backends"
+  - "Cloudflare Workers"
+contentHash: "sha256:42d1b263b405e0374d49fcdacef786cd1c77659716db784d510ac4ee28e2e928"
+---
+
+> 调研日期:2026-08-06 | 调研对象:https://github.com/cloudflare/computer(main 分支,`76d9e75`)
+> 调研方式:克隆源码精读(packages + docs + examples)+ 官方博客/changelog + 社区文章 + GitHub issues/npm 状态核对
+> 重要原则:该仓库 `docs/` 是 **forward-looking 设计说明**("read it for intent, not as description of the code today"),本文**以源码为准**,设计目标与现状会明确区分标注。
+
+---
+
+## 目录
+
+1. [项目概述](#1-项目概述)
+2. [应用场景](#2-应用场景)
+3. [整体架构](#3-整体架构)
+4. [工作原理详解](#4-工作原理详解)
+5. [公开接口面](#5-公开接口面)
+6. [examples 逐个拆解](#6-examples-逐个拆解)
+7. [示例速查表](#7-示例速查表)
+8. [当前状态、已知问题与限制](#8-当前状态已知问题与限制)
+9. [与同类项目对比](#9-与同类项目对比)
+10. [参考来源](#10-参考来源)
+
+---
+
+## 1. 项目概述
+
+### 1.1 一句话定位
+
+**Cloudflare Computer("给你的 Agent 一台电脑")** 是 Cloudflare 于 **2026-08-03(Agents Week 2026 核心发布物)** 开源的 agent 运行时预览版。核心是一句口号:
+
+> **你的 agent 需要一台电脑,而不是一个容器。**
+> Your agent needs a computer, not a container.
+
+技术上,它是**一个住在 Durable Object 里的虚拟文件系统**:权威状态存在 DO 的原生 SQLite(`ctx.storage`)中,对外暴露**一个可插拔的执行入口** `workspace.runtime.exec(source, { backend })`。状态持久、算力可抛弃。
+
+### 1.2 数据快照
+
+| 维度 | 数值 |
+|---|---|
+| 仓库创建 | 2026-06-05(公开宣传 2026-08-03) |
+| Stars / Forks | ~3.4k / 156(调研日) |
+| npm | `@cloudflare/computer` 已发布到 `0.1.1`(latest;`0.1.0-alpha.1` 为 alpha 通道) |
+| 开源协议 | MIT |
+| 成熟度 | **PREVIEW ONLY**,API 不稳定,**明确不适合生产** |
+
+### 1.3 核心论点(官方博客)
+
+Cloudflare 的论点是:全世界的算力"远远不够"给每一个用户的 agent 开一个独立容器(billion-scale 并发 agent 的远景)。而 agent 的绝大多数工作 —— 文件操作、数据处理、git 操作、文档生成 —— **根本不需要完整 Linux 内核**。
+
+因此 Cloudflare 的目标是:**把容器使用率压到 agent 工作的 10% 以下**。模型自己决定什么时候升级到容器(如跑 `npm`、原生二进制)。这是对行业默认方案(E2B / Modal / Vercel Sandbox,它们用 Firecracker microVM / gVisor)**"给每个 agent 一个内核"** 路线的正面挑战。
+
+> 注意:这个"10%"是**目标,不是已测得的数字**,Cloudflare 没有发布任何基准数据。
+
+---
+
+## 2. 应用场景
+
+### 2.1 设计动机与典型场景
+
+从 README、docs、8 个示例和官方博客归纳,这个项目解决的是**在 Cloudflare Workers 生态里给 agent 一个"工作目录 + 可执行环境"**的问题:
+
+1. **AI agent 的持久工作目录**:agent(如 `@cloudflare/think` 聊天 agent)把 workspace 当自己的"电脑桌面" —— 读写文件、跑命令、git 操作,全部持久化,DO 重启不丢。
+2. **"大脑/手"分离**:agent 的推理循环(brain)跑在轻量 isolate(DO 里),按需把"手"交给三种执行后端 —— 需要真 Linux 才动用容器。
+3. **容器里的真二进制**:`pandoc`/`typst` 转 PDF、`npm install && npm test`、编译、跑 node/python 脚本等 —— 这些只能容器做,但只占少数。
+4. **Agent 交付物发布**:在 workspace 里生成一个 Worker 工程 → git commit → 发布到 Cloudflare Artifacts(可 clone 的仓库)、把生成图片/PDF share 到 R2 拿预签名链接。
+5. **Agent 工具面**:`@cloudflare/computer/tools` 提供 AI SDK 兼容的 `read/write/edit/ls/exec` 工具,模型靠工具描述自行选择跑命令的后端。
+
+### 2.2 适合 / 不适合
+
+| ✅ 适合 | ❌ 不适合 |
+|---|---|
+| 实验、探索、原型(官方明示) | 生产环境(官方明示 PREVIEW ONLY) |
+| Agent 规模的工作区(几十 MB ~ 数 GB) | 完整 monorepo / 超大仓库(容器端文件系统在内存) |
+| 元数据密集的开发任务(git status、模块解析、增量构建) | 大顺序 IO(`dd` 式写入比真盘慢 30-40x)、大 `node_modules` 安装 |
+| 需要持久化 + 可插拔执行的 DO 应用 | 需要强内核级隔离运行不受信代码(见第 9 节安全对比) |
+
+### 2.3 关键限制(文档明示)
+
+- **~10GB 上限**(与 DO 共享存储)。
+- 容器侧文件系统**在内存里**,容器重启即清空(靠同步协议从 DO 拉回)。
+- 容器访问走 **FUSE**,重 IO 负载有可测量的性能损失。
+
+---
+
+## 3. 整体架构
+
+### 3.1 Monorepo 结构
+
+```
+packages/
+  dofs/          @cloudflare/dofs         VFS 核心:SQLite schema、fs 原语、同步构建块、@platformatic/vfs 适配器
+  rpc/           @cloudflare/computer-rpc capnweb wire 契约(SyncRPC/ShellRPC/WorkspaceRPC)+ 同步驱动
+  computerd/     @cloudflare/computerd    容器内守护进程:FUSE 挂载、exec Runner、capnweb server
+  computer/      @cloudflare/computer     顶层门面 Workspace、三种执行后端、proxy、R2 mount、AI tools
+  computer-computerd-linux-x64/           预编译 Node SEA 二进制(容器镜像的发布产物)
+examples/        8 个可运行消费者(见第 6 节)
+docs/            19 篇设计文档(forward-looking)
+script/          computerd 运维/压测脚本
+```
+
+### 3.2 核心概念
+
+- **Workspace**:一个虚拟文件系统对象,构造在任意 DO 上:`new Workspace({ storage: this.ctx.storage })`。可配 0~N 个后端。
+- **权威状态(authoritative state)**:VFS 实体存在 **DO 自己的 `ctx.storage.sql`** 里(不是 D1、不是独立 SQLite 文件),跨 DO 重启/逐出/冻结存活。容器侧只是一个**进程级内存镜像**。
+- **三种执行后端**(同一个文件系统,不同执行能力):
+  1. **Container** — 完整 Linux + 真二进制。容器内 `computerd` 做 FUSE 挂载,与 DO 经 capnweb WebSocket 双向同步。
+  2. **Isolate shell** — just-bash(bash→JS 翻译)跑在 Dynamic Worker,无容器、无第二存储,经 Workers RPC 直连 DO。
+  3. **Isolate JavaScript** — ECMAScript module 跑在全新 Dynamic Worker,带结构化 input/value、durable 相对导入、回连的 `node:fs/promises`、可信 `ws:git`/`ws:artifacts`。
+- **"换手不搬家"**:三个后端共享同一份文件系统,切换后端执行是"换手"不是"搬家"(同步是最终状态式的)。
+
+### 3.3 数据流总览
+
+```
+  客户端 agent(同 isolate 或经 Workers RPC WorkspaceStub)
+        │  fs 调用
+        ▼
+┌──────────────────────── Durable Object ────────────────────────┐
+│  ctx.storage.sql ─► dofs Database ─► Workspace.fs               │
+│        ▲ [权威 VFS]                  │  fs 写会 bump rev          │
+│        │                             ▼                          │
+│  WorkspaceRuntime ◄──────── push()/pull()/exec 括号(FIFO 串行)   │
+│        │                             │                          │
+│        └──── 后端惰性连接 #handleFor(id) → backend.connect()      │
+└───────────────┬──────────────────────┴──────────────────────────┘
+                │ capnweb(文本 JSON over 反转拨号 WebSocket)
+                ▼
+┌──────────────── Cloudflare Container ──────────────────────────┐
+│  computerd(Node SEA)                                            │
+│   node:sqlite 内存镜像 ◄─ sync loop(250ms tick,双向增量)          │
+│   Node Virtual FS ──► FUSE 挂载 /workspace(或 userspace shim)    │
+│   exec: /bin/sh -c "cd <cwd> && <cmd>" → stdout/stderr/exit 流    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 4. 工作原理详解
+
+> 本节是本文最重的一部分。**代码优先**,文件路径均相对仓库根。
+
+### 4.1 VFS 与 SQLite 存储层(`packages/dofs`)
+
+**表结构**(`packages/dofs/src/schema/core.ts`,`SCHEMA_VERSION = 5`,`ROOT_INODE = 1`):
+
+- `vfs_meta(k, v)` — 存 `schema_version` 与单例 `rev`(全局修订号,任何变更都 bump)。
+- `vfs_nodes(inode PK, type file|dir|symlink, mode, mtime, rev, mount_root, stub_size, manifest_hash, link_target, size)`
+- `vfs_dirents(parent_inode, name, child_inode)` — 目录项。
+- `vfs_blobs(hash 32B sha256 PK, size)` + `vfs_blob_bytes(hash PK, bytes)` — 内容寻址字节。
+- `vfs_chunks(inode, idx, hash, size)` — 文件 = chunk 哈希列表。
+- `vfs_manifests(hash PK, encoded)` — 文件清单(JSON `{"version":1,"chunks":[...]}`,与 casync 同构)。
+- `vfs_changes(id, rev, path, op='delete')` — 删除墓碑。
+- `_vfs_watermark` / `_vfs_fetch_cursor` / `_vfs_mounts` — 同步水印与 mount 索引。
+
+**核心设计**:
+
+- **文件 = inode + 内容寻址 chunk 列表**:固定块 `CHUNK_SIZE = 512 KiB`。写入每 512KiB 窗口算 `sha256` 入 `vfs_blobs`(全局去重),inode/dirent/chunks/manifest 在**一个事务**里提交。这既是去重机制,也是"只同步变更 chunk"的同步基础,也是大顺序 IO 慢的根源(见 4.6)。
+- **路径解析**:从 ROOT_INODE 沿 dirents 逐段走,快路径用递归 CTE;symlink 跟随上限 **40 层**(对齐 Linux `SYMLOOP_MAX`),超限抛 `ELOOP`。
+- **文件两种形态**:lazy stub(有 `stub_size` 无 chunk,来自 mount 的 `list()`)与 committed(有 chunks + manifest)。
+- **忽略规则**:默认忽略 `["node_modules"]`;被忽略路径对 fs 不可见、不上同步线。
+- **Durability**:所有变更走 `transactionSync`;DO 重启后 `ctx.storage` 存活,VFS 完整保留。容器端只是镜像。
+- **VFS 根永远是 `/`**,`/workspace` 只是容器默认挂载点(容器把整棵挂载树翻译到 VFS 的 `/workspace/...` 前缀);`/tmp` 是容器专属、不在 VFS 里、重启即清空。
+
+### 4.2 同步协议(`docs/02` + `packages/rpc/src/sync-driver.ts`)
+
+两份树(DO 权威 + 容器镜像)做**增量双向同步**:
+
+- **发送方**按 `(rev, path)` 游标取变更,接收方幂等去重。
+- **内容寻址**:change entry 只带 chunk 哈希,字节永不 inline,按 sha256 全局去重。
+- **水印表**(每后端独立):`pushRev`(本地已推到哪)、`fetchCursor`(拉取续点)、`currentRev`、`appliedPushCursor`(对端回显)。
+- **exec 往返六步**:`push`(合并变更、只发 chunk 哈希)→ 容器 hydrate → exec → `fetch` → diff → apply。
+- **批量**:`PULL_BATCH_SIZE = 256`,`applyChanges` 默认 64 MiB / 1024 paths 每批。
+- **合并规则**:每个路径只留最高 rev(**最新状态获胜**),活 inode 优先于墓碑;冲突 **last-write-wins**,无 CRDT、无合并。
+- **重命名 = 本地 inode 移动**,线上无 rename opcode。
+- `tick` = **先 pull 再 push**(让回环抑制吸收远端写)。
+- **故障恢复**:exec 事件带 per-id 单调 `seq`,`getExec({after})` 续传;连接后 `reconcileWatermarks` 从 rev-0 重基线拉回(处理容器进程重启);应用中途崩溃靠"每批一个事务、失败整批回滚"。
+
+**为什么这个设计聪明**:DO 只同步"变更的 chunk 哈希 + 缺失的字节",不是整个文件树 —— 所以容器 FUSE 上写的任何东西最终都会回流 DO,且网络代价被内容寻址压到最小。
+
+### 4.3 computerd 与 FUSE(`packages/computerd`)
+
+**computerd** 是一个编译为 **Node SEA(单可执行文件)** 的守护进程,跑在容器里,默认端口 45678(CF 容器环境钉 8080)。HTTP/WS 面:
+
+| 路由 | 用途 |
+|---|---|
+| `/health` | liveness(HEAD 轮询就绪) |
+| `/api` | capnweb HTTP-batch 传输 |
+| `/ws` | capnweb WebSocket |
+| `/connect` | 接收 `{url}`,让 computerd **向外拨号**并在出站 WS 上提供会话 |
+| `__computerd/info|stubs|stats` | 诊断 |
+
+**FUSE 挂载**(`fuse/driver.ts`):
+- 内核路径相对挂载根,VFS 内加 `/workspace` 前缀。
+- **写缓冲模型**:每打开文件维护内存 Buffer(起始 64KiB,上限 256 MiB),`write` 只进 buffer,`flush/release/fsync` 时整文件或按脏区间落 VFS —— 避免逐 syscall 重分块重哈希。
+- `FUSE_MOUNT` 环境变量:`auto|fuse|macfuse|shim|none`。`auto` 探测 `/dev/fuse`(Linux)或 macFUSE,失败回落 **userspace shim**。
+- **userspace shim**(`shim/shim.ts`,本地开发/无特权容器用):不做真 FUSE,而是维护 shadow 快照,VFS→disk 走 rev 轮询 `watchAsync`,disk→VFS 走周期 reconcile;`flush()`/`reconcileNow()` 挂到同步协议的 `afterApply`/`beforeFetch` 钩子上。这正是"同一镜像本地(wrangler dev)/云端(真 FUSE)两用"的机制。
+
+**exec Runner**(`exec/runner.ts`):`spawn("/bin/sh", ["-c", "cd <quoted cwd> && <cmd>"])`(shell 做 chdir 规避 libuv 死锁);事件日志持久在 SQLite `computerd_exec_log`,`disposeExec` 或退出后 5 分钟 TTL 或单 exec 16 MiB 上限(谁先到)。
+
+### 4.4 三个执行后端
+
+#### 后端 A:Container shell(`CloudflareContainerBackend`)
+
+**启动序列(反转拨号,重点)**:
+
+1. `container.start({ enableInternet, env })` —— Cloudflare Containers API;`PORT=8080`、`MOUNT_POINT=/workspace`。
+2. `container.interceptOutboundHttp(egressHost, workspaceRef)` —— 拦截容器出站 HTTP,环回 DO 控制的 `WorkspaceProxy`。
+3. **健康探测**:`fetchPort().fetch("/health")` 循环到 200(预算 30s,指数退避 250ms→2s)。
+4. **反转 WebSocket**:DO 先 arm upgrade,再 `POST /connect {url: egressHost}`;computerd 读到后**向外拨号** `ws://computer.internal/ws`,因 egress 被拦截,该拨号环回 DO 的 `handleFetch()` → 完成 101 升级 → 建 capnweb 会话。**DO 是 WS 服务端、容器是拨出方** —— 这是为 egress 拦截和未来 hibernation 做的架构决定。
+5. **心跳**:每 20s `sync.watermarks()`,失败关 socket;无透明重连,容器退出后 DO 丢弃缓存 handle,下个操作重建。
+
+同步模式:`sync: "remote"`(两个存储,需同步)。exec 结果里的 `pushed/pulled` 反映实际同步条目数。
+
+#### 后端 B:Worker shell(`WorkerShellBackend`,just-bash)
+
+- **单份权威存储**:`sync: "none"` —— 没有第二存储,所有 fs 操作经 loopback(Workers RPC)实时回 DO,无同步往返。
+- **loaderId 默认 `workspace-shell:${workspace.id}`**:每个 workspace 缓存一个 isolate,防止失控 Bash 把别人 OOM。
+- **`globalOutbound: null`**:shell isolate 不能自己上网。
+- 每个 exec 用**全新的 `Bash` 实例**(just-bash),无跨调用状态。
+- **内建自定义命令**(just-bash `CustomCommand`):`git ...`(转发宿主 `workspace.git.cli`,所以 isolate 无网也能 clone/status,网络动作在宿主)、`assets publish`、`artifacts create/share` —— 这是"轻量 shell 具备 git/artifacts 能力"的核心设计。
+- 局限:单块式 stdout/stderr(just-bash 结束才一次性给)、`getExec` 恒抛 `ENOENT`(无跨请求重挂)、无硬链接/utimes。
+
+#### 后端 C:Worker JavaScript(`WorkerJavaScriptBackend`)
+
+- 一次 exec = 一个**全新 Dynamic Worker**(ESM module),`callable=true`:接受结构化 `input`,返回 `result`。
+- **module graph**(`module-graph.ts`):入口改写为 `__workspace_entry__.js`,注入 runner/capabilities 胶水;`node:*` 用精确 module-map 键,`node:fs`/`node:fs/promises` **回环到宿主 fs**(Workspace 直通);`ws:git`/`ws:artifacts` 是可信 proxy 模块(各自门控宿主侧网络)。
+- **durable 相对导入**:从 cwd 静态解析 `.` 开头 import,拒绝绝对路径与 symlink 越界;动态 import 必须是字符串字面量。
+- **configured libraries**:裸说明符 import 按目录别名注入。
+- 资源上限可配置:`maxSourceBytes/maxInputBytes/maxResultBytes/maxStdioBytes`(默认各 1 MiB)、`maxConcurrentExecutions`(24,超限 `EEXEC_BUSY`)、retention 60 分钟等。
+- **持久化执行记录**:宿主 SQLite 表 `workspace_runtime_executions` + `workspace_runtime_events`,中断/重启后孤儿 `running` 行被标记 failed。
+- 事件帧:isolate 内输出以换行分隔 JSON 帧实时推给宿主(stdout/stderr 运行中即可见),超过 `maxStdioBytes` 截断。
+
+#### 统一路由与惰性连接
+
+- `Workspace.#handleFor(id)`:首次访问才 `backend.connect()`,共享 in-flight promise,连接后(非 `sync:"none"` 后端)`reconcileWatermarks`;监听 `handle.closed` 丢弃缓存。
+- 每个后端一个 FIFO `#serialize`,push/pull/exec 括号不交错。
+- `runtime.exec` 事件流:`{id, seq, name: "stdout"|"stderr"|"exit", value}`;`result()` 与流式消费互斥,可 pipe 成 SSE。取消 exit code:129/130/137/143。
+
+### 4.5 生命周期
+
+- **DO 重启/逐出/冻结**:`ctx.storage`(含 VFS SQLite)全部存活;内存态(capnweb session、容器句柄、exec record 缓存)丢失。
+- **1:1 DO+容器配对**是 load-bearing 假设;DO 是 WS 服务端(反转拨号)。
+- **Hibernation 是目标架构,尚未落地**:今天用 capnweb 主动 accept,未来切 `ctx.acceptWebSocket` + `serializeAttachment`(2KB 上限,存 exec seq 以便冻结期间恢复续传)。
+- **stub 泄漏是已知坑**:`getWorkspace()` 结果和 exec handle 必须 `using` 或手动 dispose(`CAPNWEB_TRACK_STUBS=1` + `stubSnapshot()` 排查)。
+
+### 4.6 性能数据(`docs/19_performance.md`,实测于 Containers **standard-2**:1 vCPU / 6 GiB)
+
+对比基线:内存 tmpfs 与容器 ext4 根盘。**ratio < 1 表示 computerd 更快**。
+
+| 场景 | computerd | tmpfs 倍数 | ext4 倍数 |
+|---|---:|---:|---:|
+| create 1000 文件 | 560 ms | 6.7x 慢 | 1.85x 慢 |
+| stat 1000 文件 | 1.97 s | 1.49x 慢 | **0.91x 快** |
+| rm 1000 文件 | 828 ms | 2.56x 慢 | **0.66x 快** |
+| mkdir 树 | 1.60 s | 1.01x | **0.74x 快** |
+| find 树 | 1.81 s | 1.00x | **0.72x 快** |
+| git init+commit 100 文件 | 459 ms | 9.56x 慢 | **0.72x 快** |
+| git clone(shallow ~1MB) | 549 ms | 1.30x 慢 | **0.84x 快** |
+| write 64 MiB | 231 ms | 4.87x 慢 | 16.9x 慢 |
+| copy 64 MiB | 1.04 s | 27.75x 慢 | 40.5x 慢 |
+| read 64 MiB | 438 ms | 19.3x 慢 | 39.7x 慢 |
+| pure copy 64 MiB | 853 ms | 39.3x 慢 | 41.5x 慢 |
+| overwrite 64 MiB | 273 ms | 32.9x 慢 | 43.4x 慢 |
+| npm init + tiny install | 598 ms | **0.95x 快** | **0.95x 快** |
+
+**全量 `cloudflare/sandbox-sdk` npm install(854 包 / 36,675 文件)**:tmpfs 34.3s,computerd FUSE 124.7s(**≈3.6x**),ext4 63.9s。
+
+**结论**:
+- **元数据密集操作比真盘快**(内存 inode store 胜出)—— 覆盖 git status、模块解析、增量构建这些 agent 日常工作的大头。
+- **大顺序 IO 是短板**:写路径每次 release 都要对 512KiB chunk 做 sha256 内容寻址 + blob store,`dd` 式吞吐掉 30-40x;但真实开发负载很少纯 `dd`(npm install 反而只差 2x)。
+
+### 4.7 capnweb 协议(跨运行时边界)
+
+- **capnweb ≠ capnproto 二进制**,是**文本 JSON RPC framing 跑在单个 WebSocket 上**;`ReadableStream` 是一等公民(流式返回 + 端到端背压)。另有 HTTP-batch 替代(`/api`)。
+- 连接两端各挂 `RpcTarget` 树,本仓库就是 `WorkspaceRPC = { sync: SyncRPC; shell: ShellRPC }`。
+- `SyncRPC`:`push / fetchChanges / readEntry / watermarks / hasObjects / fetchObjects / pushObjects`。
+- `ShellRPC`:`exec / getExec / killExec / disposeExec`,exec 事件带单调 `seq`。
+- **与 Workers RPC 是两条独立边界**:Workers RPC 用于 DO↔调用方、DO↔容器宿主 DO、Dynamic Worker↔宿主(`DurableObjectNamespace` 过不了 structured clone,所以传 `{binding, id}` 字符串,调用时再解析);capnweb 用于 DO↔computerd 的 Node↔Workers 跨运行时边界。
+
+---
+
+## 5. 公开接口面
+
+> 权威性说明:docs 里 04/07/08/09/12/13/15/18 与代码同步;**06(Mount)/14(Assets)标注 "intended design",与实现有分歧**(实际上 Assets 已完整实现,Mount 只有 R2 eager 实现)。
+
+### 5.1 Workspace 构造
+
+```ts
+new Workspace({
+  storage: this.ctx.storage,          // DO storage → VFS 的权威 SQLite
+  backends?: WorkspaceRegisteredBackend[], // 第一个为默认;省略 = filesystem-only
+  sessionId?: string,
+  mounts?: Record<string, MountValue>,     // 如 { "/workspace/r2": R2Bucket(env.Bucket) }
+  observer?: WorkspaceObserver,            // 每操作一个 span
+  git?: WorkspaceGitFactory,               // 配置后启用 workspace.git
+  artifacts?: { binding: Artifacts; sessionId?: string },
+  assets?: AssetsClient | ((ws) => AssetsClient),
+  useThink?: boolean,                      // 追加 Think 兼容字符串方法
+})
+```
+
+顶层成员:`fs` / `runtime` / `git`(未配置 getter 直接 throw)/ `artifacts` / `assets` / `ready()`(懒连接,`{all:true}` 预热)/ `push()` / `pull()` / `stub()`(跨 Workers RPC 的 `WorkspaceStub`)/ `close()`。
+
+### 5.2 fs API(`Workspace.fs`)
+
+| 方法 | 签名要点 |
+|---|---|
+| `readFile(path, encoding?)` | 默认返回 `ReadableStream<Uint8Array>`;`"utf8"` 才返回 string |
+| `writeFile(path, content, {mode?})` | content 可为 string / Uint8Array / 流;512KiB 分块哈希入 blob |
+| `rm(path, {recursive, force})` | 合并 unlink/rmdir |
+| `mkdir(path, {recursive, mode})` | |
+| `readdir(path)` | 恒返回 dirent 形状 |
+| `stat` / `lstat` / `readlink` / `statOrNull` / `lstatOrNull` | 跟随/不跟随 symlink |
+| `find(dir, pattern?)` | glob,仅支持 `*` `**` `**/` |
+| `ls(prefix)` | segment-aware 前缀扁平列表 |
+| `grep(pattern, path, {ignoreCase?})` | **literal 子串**,非 regex |
+| `exists(path)` / `chmod(path, mode)` / `symlink(target, path)` | stub 层新增 |
+
+错误为 POSIX 形状(`ENOENT/ENOTEMPTY/ENOTDIR/EISDIR/EEXIST/EINVAL/ELOOP/EPERM/EIO`)。与 `node:fs/promises` 的差异:无 `appendFile/truncate/cp/rename/realpath/watch/open/FileHandle` 等。
+
+### 5.3 runtime API(`Workspace.runtime`)
+
+```ts
+exec(source: string, options?: { id?, backend?, cwd?, encoding?, input?, env?, stdin?, timeoutMs? })
+  → Promise<WorkspaceRuntimeExecHandle>   // 同时是 ReadableStream<WorkspaceRuntimeEvent>
+getExec(id) / killExec(id, signal?) / disposeExec(id) / isCallable(id)
+```
+
+- `WorkspaceRuntimeExecHandle`: `{ id, backend, result(), kill(signal?), [Symbol.dispose]() }`,事件 `{id, seq, name:"stdout"|"stderr"|"exit", value}`。
+- `result()` 返回 `{ status: completed|failed|cancelled, exitCode, stdout, stderr, value?, pushed, pulled, skipped, sync }`。
+- 默认后端 id:`container-shell` / `worker-shell` / `worker-javascript`;`input` 只接受 callable 后端(worker-javascript)。
+- **示例的 run-and-collect 是一般用法;真正的流式(SSE)用法在 package README**:把 run 当 `ReadableStream` pipe 成 `text/event-stream`。
+
+### 5.4 Mount 接口(现状 vs 设计目标)
+
+- **现状**:只有 `EagerMount` + **R2 eager provider**(`R2Bucket(binding, {prefix, mode})`),只读,`list()` 分页(默认 1000)流式灌入;仅索引一次。read-only 下写抛 `EROFS`。
+- **设计目标(未实现)**:GitHubRepo / Artifacts / lazy mount / write-back debounce(500ms)/ `refreshMount` / `onMountConflict` / `prefetch`。注意 stub 无法被推给容器(stub 无 blob),容器 FUSE 读 stub 路径得 ENOENT,需 `prefetch()` 预解析 —— **当前这是未落地项**。
+
+### 5.5 Agent tools(`@cloudflare/computer/tools`)
+
+`createAITools({ workspace, readonly?, assets?, ... })`(Vercel AI SDK + zod):
+
+| 工具 | 说明 |
+|---|---|
+| `read` | 流式 `readChunks`,截断返回 `nextOffset` 续读 |
+| `ls` | readdir |
+| `write` | 覆盖保留 mode,超限抛结构化错误 |
+| `edit` | 对**原始文件**匹配 oldText,拒绝重叠 edit,返回 unified patch |
+| `exec` | **opt-in**,`{command, cwd, backend, env, input}` → `runtime.exec`,支持 kill |
+| `publish` | `workspace.assets.share` → presigned URL |
+
+### 5.6 git / artifacts / assets
+
+- **git**(`@cloudflare/computer/git`):在宿主 SQLite VFS 上跑 **isomorphic-git**,无需后端;方法面 `clone/diff/status/add/commit/log/...` + `cli({argv})`。无 SSH(仅 https/http/file),无 `git gc/repack/blame` 等。**注意**:docs 承诺 `formatPorcelain*` 可从子路径导入,实际未 re-export。
+- **artifacts**(`@cloudflare/computer/artifacts`):`createArtifact(binding, sessionId)` —— session 作用域门面(repo 名 `sessionId__<name>` 前缀);`create/get/list/import/delete/createToken/cli`。
+- **assets**(`@cloudflare/computer/assets`):`createAssets({ws, bucket, s3}).share(path, {expiresAfter, prefix})` → VFS 文件上传 R2 → **SigV4 预签名 GET URL**。key 含每次 share 唯一的随机 id(路径隐私)。
+
+### 5.7 subpath exports 地图
+
+| 入口 | 用途 |
+|---|---|
+| `@cloudflare/computer` | Workspace facade、stub、R2Bucket、`getWorkspace`、runtime 类型 |
+| `.../backends/container` | `CloudflareContainerBackend`、`withWorkspaceContainer` |
+| `.../backends/worker-shell` | `WorkerShellBackend`、内建命令定义 |
+| `.../backends/worker-javascript` | `WorkerJavaScriptBackend` |
+| `.../git` | isomorphic-git 胶水(lazy 打包,`pako` 换成 Workers `node:zlib`) |
+| `.../artifacts` | `createArtifact` + argv CLI |
+| `.../assets` | `createAssets` |
+| `.../tools` | AI SDK tools |
+| `.../observe/cloudflare` | 可观测性 adapter |
+
+**关键点**:主入口刻意轻量(无 git、无 worker payload),各后端子路径按需引入以 tree-shake 大 payload。
+
+---
+
+## 6. examples 逐个拆解
+
+> 所有示例都是 npm workspace 里的独立 Worker 工程,引用本仓库 `@cloudflare/computer`。共享心智模型:`withWorkspace` mixin 给 DO 挂 Workspace,`getWorkspace(stub)` 拿 RPC 客户端,唯一执行入口是 `workspace.runtime.exec`。
+
+### 6.1 `examples/container` —— 把容器接进 Workspace
+
+**做什么**:把跑 `computerd` 的 Cloudflare Container 接进 Workspace,对外暴露极简 `write/read/exec` HTTP 面(模仿 sandbox-sdk bridge)。完整展示 **Container 后端**生命周期:容器启动、egress 拦截、端口就绪轮询、`/connect`、`/ws` 升级、capnweb 会话。
+
+**怎么跑**:
+```sh
+npm install   # 仓库根
+npm run dev --workspace @example/computer-container   # 需 Docker;首次自动从 GHCR 拉 computerd 镜像
+npm run seed:r2:local --workspace @example/computer-container   # 可选:本地灌 R2 bucket
+```
+
+**跑起来后怎么用**(`<name>` 选 DO 实例,每实例一个独立容器):
+```sh
+curl http://127.0.0.1:8787/
+echo 'hello' | curl -X PUT --data-binary @- \
+  http://127.0.0.1:8787/c/demo/file/workspace/hello.txt
+curl http://127.0.0.1:8787/c/demo/file/workspace/hello.txt
+curl -X POST http://127.0.0.1:8787/c/demo/exec \
+  -H 'content-type: application/json' \
+  -d '{"command":"cat /workspace/hello.txt && uname -a","encoding":"utf8"}'
+```
+验证双向落盘:API 写的文件 exec 能读,exec 写的文件 API 能读回;`/c/demo/file/workspace/r2/hello.txt` 验证 R2 只读挂载(seed 是 `hello world`)。
+
+**底层机制**:连接握手 = 反转拨号全链路;同步模式 `sync: "remote"`。注意 exec 是 run-and-collect 一次性 JSON(不流式);egress 无鉴权。
+
+### 6.2 `examples/worker-shell` —— 无容器的 just-bash shell
+
+**做什么**:与 container 示例**完全相同的 HTTP 面**,但 shell 跑在 Dynamic Worker 的 just-bash 里,**不需要 Docker**。演示 `WorkerShellBackend`:单份权威存储,fs 操作实时回 DO,无同步。
+
+**怎么跑**:`npm run dev --workspace @example/computer-worker-shell`(+ 可选 `seed:r2:local`)。
+
+**跑起来后怎么用**:端点同 container,但 exec 的 `cwd` **默认 `/workspace`**,命令用相对路径:
+```sh
+curl -X POST http://127.0.0.1:8787/c/demo/exec \
+  -H 'content-type: application/json' \
+  -d '{"command":"cat hello.txt && wc -l hello.txt","encoding":"utf8"}'
+```
+shell 有文本工具(cat/grep/awk/sed/jq/sort),**无完整 userland、不能上网**(`globalOutbound: null`);但内建 `git`(走宿主 isomorphic-git)、`assets`、`artifacts` 命令可用。
+
+### 6.3 `examples/worker-javascript` —— 跑 ECMAScript 模块
+
+**做什么**:`exec` 在 Dynamic Worker 里求值 **ESM 模块**而非 shell 命令。演示 `WorkerJavaScriptBackend` 的结构化 `input`/`value`、`env`、`stdin`、`node:fs/promises` 直通 Workspace。
+
+**怎么跑**:`npm run dev --workspace @example/computer-worker-javascript`。
+
+**跑起来后怎么用**(`value` = 模块 default export 返回值):
+```sh
+  # 1) node:fs/promises 读回文件
+curl -X POST http://127.0.0.1:8787/c/demo/exec -H 'content-type: application/json' \
+  -d '{"source":"import { readFile } from \"node:fs/promises\";\nexport default async () => (await readFile(\"/workspace/hello.txt\", \"utf8\")).trim();"}'
+  # 2) 结构化 input
+curl -X POST http://127.0.0.1:8787/c/demo/exec -H 'content-type: application/json' \
+  -d '{"source":"export default (input) => input.n * 2;","input":{"n":21}}'
+  # 3) env + stdin
+curl -X POST http://127.0.0.1:8787/c/demo/exec -H 'content-type: application/json' \
+  -d '{"source":"export default async () => { let s=\"\"; for await (const c of process.stdin) s += new TextDecoder().decode(c); return process.env.WHO + \":\" + s; };","env":{"WHO":"demo"},"stdin":"piped"}'
+```
+
+### 6.4 `examples/think` —— 终端聊天 agent
+
+**做什么**:最小 `@cloudflare/think` 聊天 agent,以 Workspace 为工作目录,终端 AI SDK v7 TUI 聊天。**同时注册 worker-shell(默认,快)和 container(完整 userland)** 双后端,exec 工具按命令需求路由。
+
+**怎么跑**:
+```sh
+  # 终端1
+cd examples/think && npm run dev          # wrangler dev(需 Docker 构建容器)
+  # 终端2
+npm run chat                              # AI SDK v7 TUI
+  # 连部署版
+npm run chat -- --worker https://<your-worker-url>
+```
+
+**跑起来后怎么用**:终端直接打字对话;agent 用 `read/ls/write/edit` 操作文件、`exec` 跑命令。`npm install && npm test` 这类自动路由到 container;`grep/sed/awk` 走 shell。每个 `--name` 一个独立实例(独立 workspace + 聊天历史)。无 HTTP 端点(`/agents/assistant/<name>` WebSocket)。
+
+> ⚠️ 已知问题(issue #63):远程 Workers AI binding 在 `wrangler dev` 下从 DO 里调用失败,本地 chat 回合可能无法完成,需部署后测试。
+
+### 6.5 `examples/think-compare-runtimes` —— 运行时对比仪表盘
+
+**做什么**(仓库最大示例,**无 README**,基于源码重建):React + Vite + Partyserver + Tailwind 的 Web UI,让**同一个 Think agent 任务**在两条运行时上并排跑并实时展示:Workspace(`@cloudflare/computer` 的 worker-shell + container)vs Sandbox(`@cloudflare/sandbox`)。包含 **warm container pool**、基于命令的自动后端路由、事件流实时推送、前端时序可视化。
+
+**怎么跑**:
+```sh
+npm install
+cd examples/think-compare-runtimes
+cp .dev.vars.example .dev.vars   # FUSE_MOUNT=shim(本地容器无 /dev/fuse)
+npm run dev                      # vite dev(默认 5173)
+  # 测试 npm test;部署 npm run deploy
+```
+
+**跑起来后怎么用**:页面点 `START RUN`,两侧面板实时滚动:状态徽章、Summary 条(File ops / Dynamic worker / Container commands)、三车道时间线(Container 段含 warm-pool 租约与 sleep-after 段)、Agent work 流(thinking/read/write/edit/exec 终端样式)。结束后 `RUN AGAIN`;`STOP RUN` 取消两边 agent。API:`POST /api/runs` → `{runId, socketPath, events}`,WebSocket 连 `/parties/compare-run/<id>`。
+
+**底层机制亮点**:CompareRun DO 是唯一事件源(SQLite 持久化 + broadcast,前端纯重放);两条运行时共享同一套 Think 工具适配层(read/write/edit/exec 行为可比);warm pool 通过"container 工厂每次 connect 从池取已 warm 的 DO"实现容器不冷启;模型 `@cf/moonshotai/kimi-k2.6`;reasoning delta 攒批(80 字符)发事件防刷屏。
+
+### 6.6 `examples/tutorial` —— 官方教程(推荐先跑)
+
+**做什么**:端到端教程:一个端点 `POST /prompt`,agent 上 openstove.org 找菜谱 → 宿主侧写 markdown → **容器里 `pandoc` 转 PDF** → 返回 R2 预签名链接。演示"**一个文件系统两种执行**":`write` 在 DO 侧写 SQLite,VFS 经 FUSE 挂到容器 `pandoc` 读;容器产出的 PDF 在 bash 结束时同步回 DO,再 share。
+
+**怎么跑**(README 是从空目录逐步构建此文件):
+```sh
+npm install
+npm run build --workspace @cloudflare/computer
+wrangler r2 bucket create recipe-cards          # 建 bucket
+cp examples/tutorial/.env.example examples/tutorial/.env   # 填 R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / CLOUDFLARE_ACCOUNT_ID
+npm run build:types --workspace @example/computer-tutorial
+npm run dev --workspace @example/computer-tutorial
+```
+
+**跑起来后怎么用**:
+```sh
+curl -X POST http://localhost:8787/prompt -H 'content-type: application/json' \
+  -d '{"prompt":"spagetti boglonese"}'
+  # => {"summary":"...","url":"https://<account>.r2.cloudflarestorage.com/recipe-cards/cards/...?X-Amz-Signature=..."}
+```
+首次请求慢(容器冷启动);URL 指向 R2(不是 worker),24 小时后失效(bucket 里对象仍在)。
+
+> ⚠️ 已知问题(issue #52):`pandoc --pdf-engine=typst` 在**真实部署的 Cloudflare Containers** 上因 temp 文件锁报 `resource busy (file is locked)` —— 教程的 PDF 流程**当前在云端不可用**(`wrangler dev` 本地 Docker 反而正常)。另见 issue #62:示例 Dockerfile 钉的 computerd 镜像早于 `command→source` 字段改名,可能导致 container 后端 exec 跑字面量 `undefined`。
+
+### 6.7 `examples/artifacts` —— 生成并发布 Worker 工程
+
+**做什么**:在 Workspace 里生成一个 Worker 工程(git clone 官方 repo → 拷贝 worker-shell 示例 → sed 改名 → git init/commit),发布到 **Cloudflare Artifacts** 作为可 clone 仓库,返回 clone-ready URL。演示 `git` + `artifacts` 能力。
+
+**怎么跑**:`npm run dev --workspace @example/computer-artifacts`(或 `npx wrangler deploy --config examples/artifacts/wrangler.jsonc`)。
+
+**跑起来后怎么用**:
+```sh
+curl -X POST http://localhost:8787/create -H 'content-type: application/json' \
+  -d '{"name":"my-generated-worker"}'
+  # => {"name":"my-generated-worker","artifactRepo":"...","remote":"...","branch":"main",
+  #     "projectDir":"/workspace/my-generated-worker","shareLink":"https://x:<token>@...",
+  #     "cloneCommand":"git clone 'https://x:<token>@...' my-generated-worker"}
+```
+拿 `cloneCommand` 本地执行即可 clone 出完整工程。shareLink/cloneCommand 内嵌 read token,24h 过期,视为机密。
+
+**底层机制**:DO 用 `sessionId` 作会话前缀隔离;worker-shell 的 `git`/`artifacts` 是 just-bash 自定义命令转发宿主(网络在宿主);**`sh` 模板标签自动 shell-quote 防注入**(`packages/computer/src/sh.ts`)。
+
+### 6.8 `examples/assets` —— 文生图 + 分享
+
+**做什么**:提示词经 Workers AI **FLUX.2 [klein] 9B** 文生图 → PNG 写进 Workspace → `createAssets().share` 上传 R2 返回预签名链接。演示 **assets 能力 + 无后端 Workspace**(只用 fs,不配 shell)。**production-only**:presigner 需要 R2 S3 凭据,`wrangler dev` 拿不到可用链接。
+
+**怎么跑**:
+```sh
+wrangler r2 bucket create computer-assets-example
+wrangler secret put R2_ACCESS_KEY_ID; wrangler secret put R2_SECRET_ACCESS_KEY; wrangler secret put CLOUDFLARE_ACCOUNT_ID
+npm run deploy --workspace @example/computer-assets
+```
+
+**跑起来后怎么用**:
+```sh
+curl -X POST https://computer-assets-example.<subdomain>.workers.dev/prompt \
+  -H 'content-type: application/json' -d '{"prompt":"a sunset over the alps, oil painting"}'
+  # => {"path":"/workspace/<uuid>.png","url":"https://..."}  打开 url 看图,1 小时失效
+```
+
+---
+
+## 7. 示例速查表
+
+| 示例 | 后端(s) | 需 Docker | 主要入口 | 对外形态 |
+|---|---|---|---|---|
+| container | Container | ✅ | `PUT/GET /c/<name>/file/...`、`POST /c/<name>/exec` | HTTP JSON |
+| worker-shell | WorkerShell(just-bash) | ❌ | 同上(cwd=/workspace) | HTTP JSON |
+| worker-javascript | WorkerJavaScript | ❌ | 同上(exec body 为 module source+input) | HTTP JSON |
+| think | WorkerShell + Container | ✅ | `/agents/assistant/<name>` WebSocket | 终端 TUI(`npm run chat`) |
+| think-compare-runtimes | Workspace 双后端 vs Sandbox SDK | ✅ | Web UI + `POST /api/runs` | React 仪表盘 + WS 事件流 |
+| tutorial | Container(单) | ✅ | `POST /prompt` | 返回 `{summary, url}` |
+| artifacts | WorkerShell(git+artifacts 命令) | ❌ | `POST /create` | 返回 clone URL |
+| assets | 无(纯 fs) | ❌(但 production-only) | `POST /prompt` | 返回 `{path, url}` |
+
+**学习路径建议**:先 `tutorial`(理解"一份文件系统两种执行"的闭环),再 `think`(真实 agent),再 `container` vs `worker-shell` 对比(理解后端差异),然后 `artifacts`/`assets`(交付物),最后 `think-compare-runtimes`(架构最重,看 warm pool 与事件驱动)。
+
+---
+
+## 8. 当前状态、已知问题与限制
+
+### 8.1 明示限制
+
+- **PREVIEW ONLY**:API 不稳定,不适合生产。
+- ~10GB 上限(与 DO 共享存储);容器侧 FS 在内存;FUSE 重 IO 性能损失(见 4.6)。
+- 容器无鉴权(靠容器网络隔离);`exec` 任意命令;**backend 路由不是授权**,公开网关需自建 allowlist;mount 默认 read-only;运行身份 root(开放问题)。
+- 安全对比:V8 isolate 是**语言级边界**,不是 Firecracker/gVisor 那样的硬件级边界 —— 跑不受信模型生成代码时需斟酌。
+
+### 8.2 调研时确认的已知问题(GitHub issues,2026-08-06)
+
+| # | 问题 | 影响 |
+|---|---|---|
+| 52 | `pandoc --pdf-engine` 在真实部署容器报 `resource busy (file is locked)` | tutorial 的 PDF 流程**云端不可用** |
+| 62 | 示例 Dockerfile 钉的 computerd 早于 `command→source` 改名 | container 后端 exec 可能跑字面量 `undefined` |
+| 63 | `examples/think` 远程 AI binding 在 `wrangler dev` 下失败 | 本地 chat 回合无法完成 |
+| 65/55/54 | dofs symlink 相关 bug(中间路径 ENOTDIR、写入 symlink inode 数据丢失、相对 target EINVAL) | symlink 边界行为不稳 |
+| 64 | `.dev.vars` 未 gitignore | 本地凭证有被 commit 风险 |
+| 59 | docs/08 与线上 wire 契约不符(exit 用 `code` 非 `value`) | 文档误导 |
+| 51 | `edit` 工具 oldText 不精确匹配时整文件重写 | 工具行为粗糙 |
+| 41 | WorkerShellBackend 命令不是 opt-in | 增大 bundle |
+| 28 | 缺 MCP server 示例 | 生态缺口 |
+
+### 8.3 "设计目标 vs 现状"对照(最容易踩坑的地方)
+
+- **Mount**:lazy / GitHubRepo / write-back / refresh 均为设计目标,现状只有 R2 eager 只读。
+- **Hibernation**:目标架构,未落地。
+- **Assets**:docs 标 intended,代码**已完整实现**。
+- **git `formatPorcelain*`**:docs 承诺子路径导出,实际未 re-export。
+- **`workspace.git` getter**:未配置直接 throw,不是 undefined。
+
+---
+
+## 9. 与同类项目对比
+
+| 维度 | @cloudflare/computer | E2B / Modal / Vercel Sandbox |
+|---|---|---|
+| 隔离原语 | V8 isolate(语言级)+ 按需容器 | Firecracker microVM / gVisor(硬件级) |
+| 状态 | DO SQLite 权威,VFS 持久 | 通常 VM 快照 / 远端盘 |
+| 默认形态 | agent 日常走 isolate,<10% 才容器 | 默认每 agent 一个沙箱 |
+| 启动速度 | isolate 毫秒级;容器 warm pool | VM 秒级(靠 pool 缓解) |
+| 强隔离 | 弱(语言边界) | 强(内核边界) |
+| 生态绑定 | 深绑 Cloudflare(DO/Workers/R2/Containers/Agents) | 云中立 / AWS/自建 |
+| 成熟度 | 预览,API 不稳定 | 生产级(各自生态) |
+| 核心论点 | "agent 需要电脑不是容器",算力不够分容器 | 容器是安全默认 |
+
+**一句话**:Cloudflare 赌的是 —— agent 大多数工作不需要自己的内核,isolate + 持久 VFS 就够了;容器是"重型工具",需要时才调。这是路线之争,不是功能优劣之分。
+
+---
+
+## 10. 参考来源
+
+**官方**
+- GitHub 仓库:https://github.com/cloudflare/computer
+- 官方博客(核心论点):*Your agent needs a computer, not a container* — https://blog.cloudflare.com/cloudflare-computer/
+- 官方 changelog:https://developers.cloudflare.com/changelog/post/2026-08-03-cloudflare-computer/
+- 关联仓库(前身/姊妹):https://github.com/cloudflare/workspace ;设计文档 https://github.com/cloudflare/agents/blob/2142b23156e5e94c6e63ff7b44d07b60e05c3455/design/workspace.md
+
+**社区/第三方**
+- GitHub Trending 报道:https://topaiproduct.com/2026/08/05/cloudflare-computer-cloudflare-computer-hits-1-on-github-trending-every-ai-agent-gets-its-own-machine/
+- gigazine:https://gigazine.net/news/20260804-cloudflare-computer/
+- mwpro 评测:https://mwpro.co.uk/blog/2026/08/04/agents-workers-preview-cloudflare-computer-agent-runtime/
+
+**本调研直接引用**
+- 仓库 `docs/01`~`docs/19`(设计说明,forward-looking)
+- `packages/{dofs,rpc,computerd,computer}` 源码(main @ 76d9e75)
+- `examples/*` 全部 8 个示例的 README 与源码
+- GitHub issues(截至 2026-08-06 的 20 个 open issues)
+- npm registry 状态(`@cloudflare/computer@0.1.1`)
+
+---
+
+*调研方法说明:本文由 3 个并行研究子代理精读源码/文档 + 主循环核实生态背景(博客、changelog、GitHub 元数据、issues、npm)后综合而成。所有"现状"结论均以 main 分支代码为准,`docs/` 仅作意图参考。*
