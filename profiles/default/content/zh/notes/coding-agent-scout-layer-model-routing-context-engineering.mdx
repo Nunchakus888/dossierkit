@@ -1,0 +1,49 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-08-07"
+title: "SuperScout：为什么 Coding Agent 需要先理解问题"
+summary: "核心判断 Coding Agent 的效率瓶颈不是只有模型能力，而是模型是否获得了高质量的问题上下文。"
+featured: false
+date: "2026-08-07"
+updatedAt: "2026-08-07T16:42:34.990Z"
+kind: "engineering"
+topics:
+  - "Coding Agent"
+  - "Scout Layer"
+  - "Model Routing"
+  - "Context Engineering"
+tags:
+  - "Coding Agent"
+  - "Scout Layer"
+  - "Model Routing"
+  - "Context Engineering"
+contentHash: "sha256:944b4d0140c9324a467eb2497128b33f9f3b77ac9319fde7cd51e3a7170cee02"
+---
+
+## 核心判断
+Coding Agent 的效率瓶颈不是只有模型能力，而是模型是否获得了高质量的问题上下文。
+
+## 背景
+直接使用强模型处理整个 Repository，会浪费大量推理成本在搜索、阅读和无关信息过滤上。
+
+## 核心思想
+引入 Scout Layer：先探索 Repository，生成结构化 Handoff，再交给高能力 Agent 执行修改。
+
+## 工程抽象
+Scout 负责：
+- 文件定位
+- 调用关系分析
+- 证据收集
+- 问题假设
+
+Fixer 负责：
+- 方案设计
+- 修改代码
+- 验证结果
+
+## 实践方案
+Handoff 不应该只是摘要，而应包含：相关文件、符号、调用链、证据、假设和不确定性。
+
+## 关键认知
+未来模型路由的核心不是根据输入选择模型，而是根据任务阶段分配智能资源。
