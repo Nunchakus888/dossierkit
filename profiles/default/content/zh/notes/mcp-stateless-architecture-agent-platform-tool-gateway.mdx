@@ -1,0 +1,95 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-08-07"
+title: "MCP Stateless 化：从协议连接到平台基础设施"
+summary: "MCP 长期价值不是连接几个工具，而是成为 Agent 与企业能力之间的标准接口层。"
+featured: false
+date: "2026-08-07"
+updatedAt: "2026-08-07T15:09:25.738Z"
+kind: "engineering"
+topics:
+  - "MCP"
+  - "Stateless Architecture"
+  - "Agent Platform"
+  - "Tool Gateway"
+tags:
+  - "MCP"
+  - "Stateless Architecture"
+  - "Agent Platform"
+  - "Tool Gateway"
+contentHash: "sha256:b9953cb4833a686fca4dbd4bfb6f7b31b76630a9f8a47e874da75800beb521d0"
+---
+
+## 核心判断
+
+MCP 长期价值不是连接几个工具，而是成为 Agent 与企业能力之间的标准接口层。
+
+## 背景
+
+早期 MCP 偏向 Session 模型：
+
+Client
+-> Session
+-> Server
+
+问题：
+
+- 扩容困难
+- 状态管理复杂
+- 不适合云服务
+
+## 核心变化
+
+Stateless Core：
+
+请求携带必要上下文。
+
+Server 不依赖隐藏 Session。
+
+## 工程架构
+
+Agent
+-> MCP Gateway
+-> Tool Registry
+-> Policy
+-> MCP Server/API
+
+状态应该放在：
+
+- Database
+- Workflow Engine
+- Artifact Store
+
+而不是协议连接。
+
+## 实践方案
+
+MCP Server 应具备：
+
+- Tool Schema Version
+- Auth Scope
+- Trace ID
+- Idempotency
+- Error Contract
+
+Gateway 负责：
+
+- Discovery
+- Permission
+- Routing
+- Audit
+
+## 对 Agent 工程意义
+
+这是从 Demo MCP 到 Enterprise MCP 的关键一步。
+
+对应岗位：
+
+- MCP Engineer
+- Agent Platform Engineer
+- AI Infrastructure Engineer
+
+## 局限
+
+无状态并不意味着业务无状态，复杂流程仍需要外部状态管理。
