@@ -1,0 +1,92 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-08-07"
+title: "Scout Layer 将成为 Coding Agent 标配"
+summary: "复杂 Coding Agent 不应该让最高成本模型从零理解整个仓库。"
+featured: false
+date: "2026-08-07"
+updatedAt: "2026-08-07T15:09:15.330Z"
+kind: "engineering"
+topics:
+  - "Coding Agent"
+  - "Repository Intelligence"
+  - "Model Routing"
+  - "Cost Optimization"
+tags:
+  - "Coding Agent"
+  - "Repository Intelligence"
+  - "Model Routing"
+  - "Cost Optimization"
+contentHash: "sha256:257390ceb3c3ca74d62684a1d251bdc3c27452cc1e6aaf089c0a35598c3149e1"
+---
+
+## 核心判断
+
+复杂 Coding Agent 不应该让最高成本模型从零理解整个仓库。
+
+## 核心思想
+
+拆成两个角色：
+
+Scout
+- 阅读代码
+- 定位文件
+- 构建上下文
+- 复现问题
+
+Worker
+- 修改代码
+- 执行测试
+- 生成 Patch
+
+## 为什么有效
+
+模型能力不是唯一瓶颈。
+
+大量 Token 消耗来自：
+
+- Repo Exploration
+- Context Construction
+- 文件筛选
+
+## 工程方案
+
+流程：
+
+Issue
+-> Scout
+-> Repository Handoff
+-> Model Selection
+-> Fixer
+-> Verification
+
+Handoff 应包含：
+
+- Relevant Files
+- Dependency Graph
+- Reproduction Steps
+- Risk Areas
+
+## 实践意义
+
+可以降低：
+
+- Token 成本
+- 上下文长度
+- 高级模型调用次数
+
+同时提升可解释性。
+
+## 对 Agent Platform 的启发
+
+未来模型路由不是按 Prompt，而是按任务阶段：
+
+Scout Model
+Planner Model
+Executor Model
+Reviewer Model
+
+## 局限
+
+Scout 本身质量决定后续上限。
