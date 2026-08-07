@@ -1,0 +1,88 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-08-07"
+title: "Agent 对抗进入自动化攻击阶段"
+summary: "未来 Agent 安全不能依靠固定 Prompt Injection 测试，而需要持续性的攻击 Agent。"
+featured: false
+date: "2026-08-07"
+updatedAt: "2026-08-07T15:08:51.731Z"
+kind: "engineering"
+topics:
+  - "Agent Security"
+  - "Prompt Injection"
+  - "Red Team"
+  - "Governance"
+tags:
+  - "Agent Security"
+  - "Prompt Injection"
+  - "Red Team"
+  - "Governance"
+contentHash: "sha256:987252a8dd4918c5081ae02b3040607c031dc58700ea0f6a90d3ae8a87210d11"
+---
+
+## 核心判断
+
+未来 Agent 安全不能依靠固定 Prompt Injection 测试，而需要持续性的攻击 Agent。
+
+## 背景
+
+传统安全测试：
+
+固定攻击样本
+-> Agent
+-> 判断是否成功
+
+问题：攻击策略容易过时。
+
+## 核心思想
+
+攻击 Agent 可以：
+
+- 生成攻击策略
+- 保存有效模式
+- 迁移到未知模型
+- 自动搜索突破路径
+
+## 工程方案
+
+建立 Agent Security Loop：
+
+Attack Agent
+-> Target Agent
+-> Tool/Data Boundary
+-> Result Analysis
+-> New Attack Strategy
+
+## 防御方向
+
+不要只增强 Prompt：
+
+需要：
+
+- Tool Permission
+- Data Flow Control
+- Sandbox
+- Human Approval
+- Audit Trace
+
+## 实践意义
+
+适用于：
+- MCP Server
+- Coding Agent
+- Browser Agent
+- 企业 Agent Platform
+
+## 评测指标
+
+关注：
+
+- Adaptive Attack Success Rate
+- Data Leakage Rate
+- Privilege Escalation Rate
+- Recovery Time
+
+## 局限
+
+安全评测结果高度依赖攻击空间设计。
