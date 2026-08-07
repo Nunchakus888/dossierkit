@@ -75,7 +75,7 @@ function createServer(env: Environment, requestOrigin: string) {
     commitUrl: z.string().optional()
   });
   const server = new McpServer(
-    { name: "dossierkit-notes", version: "1.3.0" },
+    { name: "dossierkit-notes", version: "1.4.0" },
     {
       instructions:
         "Use save_note only after a note is complete. Provide exactly one finished Markdown or sanitized semantic HTML document plus concise topics; the server derives and freezes the canonical path. To edit or delete an existing note, call get_note first. Preserve noteRef for edits. For deletion, pass the exact noteRef and current contentHash to delete_note; never infer either value."

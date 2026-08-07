@@ -338,9 +338,13 @@ assert.ok(toolList.result?.tools?.every((tool) => tool.outputSchema), "every too
 const saveTool = toolList.result?.tools?.find((tool) => tool.name === "save_note");
 assert.ok(saveTool?.inputSchema?.properties?.markdown, "save_note must accept finished Markdown");
 assert.ok(saveTool?.inputSchema?.properties?.html, "save_note must accept finished HTML");
+assert.ok(saveTool?.inputSchema?.properties?.noteRef, "save_note must accept noteRef for exact-file edits");
 assert.equal(saveTool?.inputSchema?.properties?.suggestedSlug, undefined, "callers must not own canonical paths");
+const getTool = toolList.result?.tools?.find((tool) => tool.name === "get_note");
+assert.ok(getTool?.inputSchema?.properties?.query, "get_note must support canonical note lookup before edits or deletion");
 const deleteTool = toolList.result?.tools?.find((tool) => tool.name === "delete_note");
 assert.equal(deleteTool?.annotations?.destructiveHint, true, "delete_note must be declared destructive");
+assert.ok(deleteTool?.inputSchema?.properties?.noteRef, "delete_note must target an exact canonical noteRef");
 assert.ok(deleteTool?.inputSchema?.properties?.contentHash, "delete_note must bind deletion to a read version");
 
 const chatGptRegressionCases = [
