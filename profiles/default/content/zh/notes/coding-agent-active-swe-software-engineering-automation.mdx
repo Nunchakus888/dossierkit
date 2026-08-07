@@ -1,0 +1,85 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-08-07"
+title: "Coding Agent 下一阶段：主动发现问题"
+summary: "真正的软件工程 Agent 不应该永远等待 Issue，而应该主动发现潜在问题。"
+featured: false
+date: "2026-08-07"
+updatedAt: "2026-08-07T15:09:04.488Z"
+kind: "engineering"
+topics:
+  - "Coding Agent"
+  - "Active SWE"
+  - "Software Engineering"
+  - "Automation"
+tags:
+  - "Coding Agent"
+  - "Active SWE"
+  - "Software Engineering"
+  - "Automation"
+contentHash: "sha256:7cdbd2769eb0f348fe1bda2c034ab1f5f844be44a50e803639059f9145b35faa"
+---
+
+## 核心判断
+
+真正的软件工程 Agent 不应该永远等待 Issue，而应该主动发现潜在问题。
+
+## 背景
+
+SWE-bench 类任务通常已经提供：
+
+- Bug 描述
+- 修改目标
+- 用户需求
+
+真实工程环境并没有这么干净。
+
+## 核心流程
+
+主动 Coding Agent：
+
+Repository
+-> Analysis
+-> Suspicious Area
+-> Reproduction
+-> Fix
+-> Verification
+
+## 工程方案
+
+增加 Scout Agent：
+
+负责：
+
+- Static Analysis
+- Test Failure Mining
+- Log Analysis
+- Dependency Risk
+
+Worker Agent：
+
+负责修改。
+
+Verifier：
+
+负责证明修复有效。
+
+## 实践意义
+
+适合：
+
+- CI 自动修复
+- Legacy Migration
+- Code Quality Agent
+- DevOps Agent
+
+## 对项目启发
+
+比展示“自动写代码”更有价值的是展示：
+
+发现问题 -> 修复 -> 验证 -> PR。
+
+## 局限
+
+主动发现成本高，需要控制扫描范围和资源消耗。
