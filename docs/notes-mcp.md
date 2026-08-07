@@ -14,7 +14,7 @@ GitHub `main` stores the canonical note file, the website is a generated view, a
 
 ## Tool contract
 
-The MCP exposes two tools:
+The MCP exposes three tools:
 
 - `get_note` reads the current canonical Markdown or HTML by `noteRef`, filename, title, or title phrase.
 - `save_note` creates a note or updates the exact file identified by `noteRef`.
@@ -57,7 +57,7 @@ In ChatGPT web:
 1. Enable Developer mode in **Settings → Security and login**.
 2. Open **Settings → Plugins**, create an app, and enter the endpoint above.
 3. Complete the Cloudflare email authorization once.
-4. Refresh or scan the app and enable `get_note` and `save_note`.
+4. Refresh or scan the app and enable `get_note`, `save_note`, and `delete_note`.
 
 ChatGPT requests confirmation before the write action. The OAuth grant lasts up to two weeks and refreshes 15-minute access tokens without routine interaction.
 
