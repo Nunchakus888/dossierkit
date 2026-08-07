@@ -1,0 +1,90 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-08-07"
+title: "Agent Runtime 为什么不同于普通 LLM Serving"
+summary: "Agent 系统的瓶颈正在从模型推理转向编排、工具调用、状态管理和执行环境。"
+featured: false
+date: "2026-08-07"
+updatedAt: "2026-08-07T15:08:41.691Z"
+kind: "engineering"
+topics:
+  - "Agent Runtime"
+  - "Infrastructure"
+  - "Orchestration"
+  - "LLM Systems"
+tags:
+  - "Agent Runtime"
+  - "Infrastructure"
+  - "Orchestration"
+  - "LLM Systems"
+contentHash: "sha256:8b63c5b18d821350320c244d20dd95593f8ffef1de835bcaf40fcd0ff42515b8"
+---
+
+## 核心判断
+
+Agent 系统的瓶颈正在从模型推理转向编排、工具调用、状态管理和执行环境。
+
+## 背景
+
+传统 LLM 服务主要优化：
+
+- GPU 利用率
+- Batch
+- Token Throughput
+
+但 Agent Workflow：
+
+LLM
+-> Tool
+-> API
+-> Sandbox
+-> Memory
+-> LLM
+
+存在大量非 GPU 阶段。
+
+## 核心思想
+
+Agent Runtime 是一个分布式执行系统。
+
+关键组件：
+
+- Task Scheduler
+- State Manager
+- Tool Executor
+- Queue
+- Sandbox
+- Trace System
+
+## 工程方案
+
+Trace 必须拆分：
+
+LLM Latency
+Tool Latency
+Network Latency
+Sandbox Latency
+Queue Time
+
+否则无法优化真实瓶颈。
+
+## 实践意义
+
+适用于：
+- Coding Agent
+- Browser Agent
+- 企业自动化 Agent
+- Multi-Agent System
+
+## 架构建议
+
+不要把 Agent 写成单函数 Loop。
+
+应设计：
+
+Task -> State Machine -> Executor -> Artifact -> Verification。
+
+## 局限
+
+基础设施优化需要结合真实 workload，不能简单照搬模型服务优化方法。
