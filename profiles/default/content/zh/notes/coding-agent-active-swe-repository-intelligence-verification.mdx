@@ -1,0 +1,46 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-08-07"
+title: "Active-SWE：Coding Agent 从修复问题到发现问题"
+summary: "核心判断 下一代 Coding Agent 不应只等待 Issue，而应主动理解软件系统、发现异常并提出修复方案。"
+featured: false
+date: "2026-08-07"
+updatedAt: "2026-08-07T16:42:26.668Z"
+kind: "engineering"
+topics:
+  - "Coding Agent"
+  - "Active SWE"
+  - "Repository Intelligence"
+  - "Verification"
+tags:
+  - "Coding Agent"
+  - "Active SWE"
+  - "Repository Intelligence"
+  - "Verification"
+contentHash: "sha256:ff1ec6c94ecc87885fbdc254a6d1afdfe0317d1aee80a5a7d724841a8c4de21a"
+---
+
+## 核心判断
+下一代 Coding Agent 不应只等待 Issue，而应主动理解软件系统、发现异常并提出修复方案。
+
+## 背景
+SWE-bench 等任务通常已经提供明确问题描述，但真实软件工程的大量成本来自发现问题、定位原因和验证影响。
+
+## 核心思想
+Coding Agent 流程从：
+Issue → Patch
+转向：
+Observation → Hypothesis → Verification → Change。
+
+## 工程抽象
+主动 Coding Agent 需要：
+- Repository Intelligence：理解代码结构和依赖
+- Problem Discovery：发现潜在问题
+- Verification Loop：独立验证修改结果
+
+## 实践方案
+推荐拆分 Explorer、Fixer、Verifier 三类职责。发现阶段可以高自主，修改阶段必须基于证据和验证。
+
+## 关键认知
+软件自动化的下一阶段不是自动写代码，而是自动发现和解决软件系统中的未知问题。
