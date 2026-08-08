@@ -1,0 +1,65 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-08-08"
+title: "SuperScout：为什么 Coding Agent 需要先理解问题"
+summary: "核心论点：在仓库级修复中，低成本 Scout 生成的可验证 Handoff
+  往往比复杂路由器更能改善性价比；路由决策应发生在理解代码之后，而非只看 Issue 文本。"
+featured: false
+date: "2026-08-08"
+updatedAt: "2026-08-08T05:06:41.552Z"
+kind: "engineering"
+topics:
+  - "Coding Agent"
+  - "Scout Layer"
+  - "Model Routing"
+  - "Context Engineering"
+tags:
+  - "Coding Agent"
+  - "Scout Layer"
+  - "Model Routing"
+  - "Context Engineering"
+contentHash: "sha256:00d6db29815a3537e1a5d09d0280a6c85e3f80b77f75bef9f3ee42488e11df4b"
+---
+
+**核心论点：在仓库级修复中，低成本 Scout 生成的可验证 Handoff 往往比复杂路由器更能改善性价比；路由决策应发生在理解代码之后，而非只看 Issue 文本。**
+
+## 为什么 Issue 文本不足以路由
+
+同样一句“修复登录失败”，可能是单文件条件错误，也可能跨越鉴权中间件、缓存、数据库迁移和前端状态。只根据 Issue 长度、关键词或初始 Embedding 选择模型，会把尚未发现的仓库复杂度排除在决策之外。
+
+SuperScout 的流程先由 7B 搜索模型探索仓库，生成结构化 Handoff，并在沙箱中验证复现声明、剔除错误主张；随后把任务文本和搜索器隐藏状态交给 Router，在四个前沿 Fixer 中选择执行者。新增 Fixer 不要求重新训练整个搜索器。
+
+## 证据中最重要的不是排行榜
+
+在 SWE-bench Pro 的 266 个 Python 任务上，论文报告 SuperScout 解决 159 个任务，最佳单模型解决 158 个，而每个成功任务的总成本约为后者的五分之一。这个结果说明“便宜搜索 + 分级执行”可能在保持解题率的同时显著降低成本。
+
+但更值得注意的是消融实验：始终使用最便宜 Fixer、同时保留 Handoff 的版本，在该基准上与路由系统打平。也就是说，主要收益可能来自 Scout 提供了更好的问题表示，而非 Router 准确识别了最佳模型。论文还报告，在 N=99 的配对校准研究中，各 Fixer 效应主要是方向性证据，不能夸大为稳定普遍规律。
+
+## 高质量 Handoff 的数据契约
+
+Handoff 不应是自然语言摘要，而应是可检查的中间制品：
+
+- 复现命令、环境与观察结果；
+- 相关文件、符号、调用链和版本；
+- 根因假设及支持/反对证据；
+- 已排除路径与剩余不确定性；
+- 预期测试、风险区域和预算消耗。
+
+任何“已复现”声明都要附运行回执；无法验证时明确标成假设。Fixer 可以否定 Handoff，但必须用新证据替代，避免压缩错误沿流水线放大。
+
+## 工程落地与路由顺序
+
+先实现只读 Scout 和固定 Handoff Schema，再测量不同 Fixer 在相同 Handoff 下的成功率与成本。只有当便宜 Fixer、强 Fixer之间存在稳定差异时，才增加 Router。路由特征可以包含搜索深度、跨模块数量、测试可用性、语言、依赖复杂度和 Scout 的不确定性；同时保留 fallback，当低成本 Fixer 验证失败时升级。
+
+## 反例、局限与适用边界
+
+Scout 也会消耗时间，并可能漏掉真正根因；对于路径明确的小修复，预搜索可能得不偿失。搜索器隐藏状态难以审计，跨模型或跨语言迁移需要重新校准。单一 Python 基准上的成本比不能直接代表私有大型仓库、低质量测试或强合规环境。
+
+## 在七篇中的位置
+
+SuperScout 为 Active-SWE 的发现与修复之间提供证据接口；Agent Runtime 负责分阶段调度和升级；Self-Evolving 可优化 Handoff Schema，但 GDPevo 要求收益迁移；PIMiner 约束 Scout 读取到的恶意仓库文本；MCP Stateless 让搜索、测试和代码浏览以无状态工具形式提供。
+
+## 一手来源
+
+- [Scrouting: Cost-Aware Routing of Coding Agents by Scouting the Repository First](https://arxiv.org/abs/2608.04804)
