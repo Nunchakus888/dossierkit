@@ -1,0 +1,68 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-08-08"
+title: "Agent Runtime：为什么 Agent 需要独立执行系统"
+summary: "核心论点：当任务包含多轮模型调用、工具执行与人工审批时，端到端可靠性主要取决于 Runtime
+  能否持久化状态、调度异构资源并从中断处恢复；单纯优化模型推理吞吐无法解决这些问题。"
+featured: false
+date: "2026-08-08"
+updatedAt: "2026-08-08T05:06:11.567Z"
+kind: "engineering"
+topics:
+  - "Agent Runtime"
+  - "Execution System"
+  - "Task State"
+  - "Orchestration"
+tags:
+  - "Agent Runtime"
+  - "Execution System"
+  - "Task State"
+  - "Orchestration"
+contentHash: "sha256:c89795a5c2708d319583bb17be24352f886fe5f5deb8ab80d8da14653b54cc1c"
+---
+
+**核心论点：当任务包含多轮模型调用、工具执行与人工审批时，端到端可靠性主要取决于 Runtime 能否持久化状态、调度异构资源并从中断处恢复；单纯优化模型推理吞吐无法解决这些问题。**
+
+## 为什么 LLM Serving 不够
+
+传统模型服务面对的是相对整齐的请求：输入到达，GPU 推理，结果返回。Agent 负载则由语义驱动，下一步可能是模型调用、CPU 上的仓库扫描、远程 API、浏览器操作或数分钟的人工确认。任务长度、分支数量与资源需求在运行前并不确定。
+
+因此，Agent 的关键指标不应只看 tokens/s，还要看任务完成时间、恢复成功率、工具等待时间、尾延迟、单位成功成本与副作用失败率。一个模型调用快 20% 的系统，若在工具超时后从头重跑，端到端体验仍然更差。
+
+## Runtime 的最小语义
+
+生产 Runtime 至少需要五个一等对象：
+
+- **Task Envelope**：目标、预算、截止时间、权限与验收条件。
+- **Durable State**：可持久化的步骤状态、制品引用和审批结果。
+- **Execution Event**：模型、工具、人工与系统事件的统一日志。
+- **Scheduler**：根据依赖、优先级、资源与 SLO 决定下一步。
+- **Recovery Policy**：区分可重试、需补偿、需降级与需人工接管。
+
+其因果链是：状态不持久就无法恢复；事件不统一就无法归因；资源不可见就无法调度；动作没有幂等性与补偿语义就无法安全重试。
+
+## 系统研究给出的证据
+
+MARS 将 Agent 负载描述为从单轮推理向“LLM—工具”循环的时间迁移，以及从 GPU-only 向 GPU/CPU 协同的空间迁移。它通过统一信息流协调推理与工具执行，报告端到端延迟最高降低 5.94 倍；接入 OpenHands 后，任务完成时间最高加速 1.87 倍。结果说明瓶颈经常位于跨资源的关键路径，而非某一次推理。
+
+Google AX 的开源设计从另一侧印证了抽象：单控制器、事件日志、隔离执行者、自动恢复与审计，使长任务能够在进程或机器故障后继续。两者共同指向同一个结论：Agent Runtime 是执行与治理层，而非模型 SDK 的包装。
+
+## 工程落地顺序
+
+先建立 append-only 事件日志和显式状态机；所有外部写操作携带幂等键，并记录请求、结果与制品哈希。再引入超时、重试预算、补偿动作和断点恢复。资源调度应使用实际观测的 CPU、GPU、网络与工具队列，而非静态地把所有 AI 工具送往 GPU。
+
+当系统扩展到多租户后，再增加 admission control、优先级、配额、策略检查与人机交接。模型路由属于 Scheduler 的一个决策，不应掌握任务状态或绕过权限策略。
+
+## 反例、局限与适用边界
+
+短、只读、单工具任务未必值得引入完整 durable execution；过度抽象会增加延迟与运维成本。事件重放也不能自动保证外部世界回滚，支付、邮件和部署等动作必须提供幂等或补偿契约。MARS 的性能数字来自特定负载与基础设施，不能直接外推到所有 Agent 系统。
+
+## 在七篇中的位置
+
+Self-Evolving 与 GDPevo 产生并评估可发布变更，Runtime 负责承载版本、状态和回滚；PIMiner 的安全策略在动作边界执行；Active-SWE 和 SuperScout 作为不同阶段的任务角色运行；MCP Stateless 将工具能力暴露给 Runtime，同时避免把任务状态锁进协议会话。
+
+## 一手来源
+
+- [MARS: Efficient, Adaptive Co-Scheduling for Heterogeneous Agentic Systems](https://arxiv.org/abs/2604.26963)
+- [Google AX：Distributed Agent Runtime](https://github.com/google/ax)
