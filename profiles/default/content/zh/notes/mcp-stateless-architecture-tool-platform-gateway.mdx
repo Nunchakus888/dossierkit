@@ -3,12 +3,12 @@ locale: "zh"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-08-08"
 title: "MCP Stateless：从协议连接到 Agent 能力平台"
-summary: "核心论点：Stateless MCP
-  的价值是把协议会话状态移出工具服务，使每次请求可独立鉴权、路由和扩缩容；任务状态、记忆、审批与恢复仍必须由 Agent Runtime
-  或外部状态层显式管理。"
+summary: "MCP
+  最初解决的是互操作：让模型应用用统一协议发现并调用工具。协议一旦从本地进程走向云端、多租户和数千工具，问题就不再只是“能否连接”，而是如何扩缩容、鉴权、路\
+  由、限流、观测和故障恢复。2026-07-28 版本把 M…"
 featured: false
 date: "2026-08-08"
-updatedAt: "2026-08-08T05:06:50.649Z"
+updatedAt: "2026-08-08T05:35:50.750Z"
 kind: "engineering"
 topics:
   - "MCP"
@@ -20,61 +20,68 @@ tags:
   - "Stateless Architecture"
   - "Tool Platform"
   - "Gateway"
-contentHash: "sha256:a16f486f8b78afb1e32d65dd820b20248da38d4fdfc4650d2f5210aa47086faa"
+contentHash: "sha256:5004251d9c0e61e7334bb912412faeefefb5823c0e7c6f3079351227c55cbaea"
 ---
 
-**核心论点：Stateless MCP 的价值是把协议会话状态移出工具服务，使每次请求可独立鉴权、路由和扩缩容；任务状态、记忆、审批与恢复仍必须由 Agent Runtime 或外部状态层显式管理。**
+MCP 最初解决的是互操作：让模型应用用统一协议发现并调用工具。协议一旦从本地进程走向云端、多租户和数千工具，问题就不再只是“能否连接”，而是如何扩缩容、鉴权、路由、限流、观测和故障恢复。2026-07-28 版本把 MCP 核心改为无状态，正是在承认一个成熟的网络协议边界：协议请求应尽量自包含，长期业务状态应由显式对象承载，而不是藏在某台服务实例的会话内存里。
 
-## 2026-07-28 版本改变了什么
+无状态并不意味着 Agent 没有记忆、任务不能持续、工具不能处理有状态业务。它只改变状态的表达方式：从隐含的连接与 Session，转成请求元数据、显式状态引用、任务资源和领域系统记录。这个差别决定了系统能否使用普通 HTTP 基础设施，也决定了故障后能否知道究竟丢了什么。
 
-新版 Streamable HTTP 移除了协议级 Session 与独立 GET 流。客户端把每个 JSON-RPC 请求作为新的 HTTP POST 发送到单一 MCP Endpoint；协议版本、客户端信息与能力等元数据随请求携带。服务端可以返回单个 JSON 对象，或只服务于该请求的 SSE 流。
+## 2026-07-28 版本究竟移除了什么
 
-这使负载均衡器无需 Session Affinity，失败实例也不会带走隐藏在内存中的协议状态。不同区域和不同版本的工具服务更容易水平扩展，Gateway 也能通过标准请求元数据完成路由与观测。
+旧版 Streamable HTTP 要求 `initialize/initialized` 握手。服务端返回 `Mcp-Session-Id`，客户端在后来请求中持续携带；多副本部署要么使用粘性路由，把同一会话固定在实例上，要么建立共享 Session Store。实例故障时，客户端还要重新握手、恢复能力协商和流状态。协议生命周期因此与部署拓扑紧密耦合。
 
-## 状态应当放在哪里
+2026-07-28 删除了握手和 `Mcp-Session-Id`。每个 JSON-RPC 请求单独通过 HTTP POST 发送，协议版本、客户端身份与客户端能力进入每请求 `_meta`；客户端可选择调用 `server/discover` 获取服务端版本与能力，也可以直接调用具体方法，遇到不支持版本再依据标准错误协商。任意请求可以落到任意健康实例，普通 round-robin 负载均衡即可工作。
 
-无状态指服务端无需记住前一个协议请求，并不禁止有状态业务：
+Streamable HTTP 还要求把 `method` 与工具或资源名称镜像到 `Mcp-Method`、`Mcp-Name` 请求头。Gateway、WAF、限流器和观测系统由此可以在解析 JSON Body 前完成路由和策略匹配。服务端必须校验 Header 与 Body 一致，否则应拒绝请求，避免网关依据一个值放行、后端却执行另一个值的分歧攻击。
 
-```text
-Agent Runtime
-  ├─ Task / Memory / Approval / Budget / Recovery
-  └─ Tool Call + State Reference
-                 ↓
-MCP Gateway
-  ├─ Identity / Policy / Discovery / Routing / Trace
-  └─ Stateless MCP Server
-                 ↓
-       Domain System of Record
-```
+过去需要服务端主动请求客户端输入的流程，改由 Multi Round-Trip Requests 表达。工具若需要用户确认或模型采样，可返回 `input_required`、待回答请求与 `requestState`；客户端收集结果后重新提交原调用。状态被显式装入响应和重试请求，另一个实例也能接手。长任务则由 Tasks 扩展提供可轮询的耐久句柄，而不是依赖一条长连接维持存在感。
 
-订单、文件或部署状态仍保存在权威业务系统；Runtime 保存任务进度与审批；请求只携带完成本次工具调用所需的参数和状态引用。边界清楚后，MCP Server 不再同时扮演工作流引擎、记忆库和权限中心。
+代价同样明确：版本、能力和客户端信息需要随请求重复传输；应用要设计显式状态引用；旧客户端与旧服务仍需双栈或降级；如果开发者把完整业务状态都塞进不透明 Handle，又缺少过期、授权和审计，无状态只会把隐藏状态从内存移到另一个黑盒。
 
-## Gateway 为什么成为能力平台
+## 状态应该重新落到哪些层
 
-当工具数量从几十增长到数千，客户端直连每个 Server 会带来协议版本、身份、网络和可见性碎片。云端工具访问研究提出在数据面引入 Gateway，集中处理旧服务适配、MCP 变体、访问控制、工具推荐与路由。
+协议层负责请求如何表达和交换，不应承担任务事实。Agent Runtime 保存目标、计划、预算、审批、制品、重试和恢复点；MCP Gateway 保存身份到策略的映射、路由配置、工具目录和可观测数据；工具服务执行业务操作；数据库、工单或云控制面仍是领域事实源。
 
-生产 Gateway 至少需要：工具发现与版本、租户身份、参数级授权、风险与副作用标签、限流、成本计量、审计回执和渐进发布。工具描述也不能只有 name 与 schema；Runtime 还需要知道该调用是否写数据、是否可重试、是否需要批准以及可靠性 SLO。
+跨调用状态最好以显式引用传递。例如导入任务返回 `job_id`，下一次查询携带该 ID；数据库事务返回有权限绑定和过期时间的事务句柄；需要人工确认的删除操作返回不可变动作摘要，确认后携带摘要哈希继续。引用必须绑定主体、租户、作用域、版本和 TTL，并防止被另一个用户或另一个工具重放。
 
-## Stateless 带来的代价
+这也让恢复语义更清楚。协议请求超时不等于业务动作未发生；客户端要通过幂等键或任务状态查询确认结果，而不是盲目重试。对纯读取可以自动重试，对幂等写入复用同一键，对可补偿动作记录补偿步骤，对不可逆操作要求执行前确认。无状态协议消除了连接级歧义，却不会自动解决分布式系统的 exactly-once 难题。
 
-无协议 Session 意味着服务端不能依赖长期连接任意向客户端发起请求。新版通过请求内的多轮往返机制处理 sampling、elicitation 等交互，长生命周期变更通知则使用显式订阅流。旧客户端与新服务端之间还存在版本协商与兼容成本。
+记忆也不应放进 MCP Session。长期偏好与历史知识属于 Agent 记忆系统，必须可检索、可删除、可审计；短期工具状态由明确句柄表示；服务端缓存属于性能优化，丢失后应能从事实源重建。把这三类状态混在一个 Session 里，扩容、权限撤销和故障恢复都会变得含糊。
 
-因此，迁移不能只是删除 Session ID。原先藏在 Session 中的身份、能力协商、订阅、取消和恢复信息必须有新的明确归属；否则系统只是把隐式状态变成丢失状态。
+## Gateway 为什么从可选代理变成能力控制面
 
-## 工程落地顺序
+云端 MCP 的另一个规模问题是工具目录。论文《MCP Gateway》测量了“把全部 Tool Schema 内联给模型”的上限：单个云服务类别就可能有 921 个工具；120 个 VPC 工具可消耗超过 166k Token，Qwen3-MAX 在 120 个工具时端到端延迟超过 100 秒、180 个时超过 200 秒；工具增加还使拒绝调用比例从 8% 升到 19%。模型上下文即使达到百万 Token，也要同时容纳用户问题、历史与推理，不能把目录当成免费空间。
 
-先清点 Session 中实际保存的字段，区分任务状态、协议元数据和业务状态。将任务状态迁到 Runtime，将业务状态迁到 System of Record，将每次授权所需身份放入可验证请求。随后实现幂等键、超时、重试、版本协商和统一追踪，再通过 Gateway 做灰度流量与旧协议适配。
+该 Gateway 把 OpenAPI 3.0/3.1 操作在挂载时编译成 MCP 工具，以独立适配层处理 OpenAPI↔MCP 数据映射和不同 MCP Transport；在线链路保持确定性，缺失语义的规范只在离线阶段由模型补充。实现运行于阿里云 L7 基础设施，协议与路由部分约 8K 行 Go，转换模块约 6K 行 WebAssembly，已在五个区域运行八个月，覆盖 315 个云产品、约一万级 OpenAPI 操作。
 
-## 反例、局限与适用边界
+工具发现不让另一个 LLM 再读一遍全目录，而由 Gateway 暴露标准 `Tool Search` 工具。离线为工具名称与描述建立 Dense 向量索引和 BM25 Sparse 索引；在线分别检索、Outer Join，再用 Reciprocal Rank Fusion 合并 Top-K。Dense 擅长意图改写，BM25 保留资源 ID、参数名和云产品缩写等精确词法信号，两者互补。
 
-本地 stdio、强双向交互或高频服务端通知可能更适合有状态连接。无状态请求会重复携带元数据，也可能增加延迟。Gateway 集中治理同时形成关键依赖，需要多区域容错和策略版本控制。协议升级解决连接语义，不会自动解决工具质量、业务幂等或 Agent 授权。
+在 3,616 个生产工具上，Hybrid 的 Recall@15 为 98.2%，高于 Dense-only RAG-MCP 的 83.1%、在 ToolBench 微调的 ToolLLM 的 78.6% 和 BM25 的 67.7%；最终工具选择准确率为 81.6%，对应对比为 72.1% 与 70.6%。从 372 个工具全部暴露改为 Top-15，平均工具选择时间由 55.7 秒降到 6.2 秒，缩短 8.9 倍；Token 从 505.86k 降到 21.22k，减少 23.8 倍；P95 从 60.0 秒降到 12.4 秒。检索本身在百级到万级工具规模内保持约 202–243 毫秒。
 
-## 在七篇中的位置
+这些结果证明 Gateway 可以承担确定性检索与治理，却也揭示边界。ToolLLM 在训练过的 ToolBench 上接近满召回，迁到云目录后显著下降，说明目录语义持续变化时固定微调难以维护；ID-only 查询缺少语义，向量检索容易失败，需要领域规则、依赖图或缓存补足；Top-15 有约 2% 目标遗漏，一旦真实工具不在候选集，最强模型也无法选择正确。
 
-MCP Stateless 是七篇的能力边界：Self-Evolving 与 GDPevo 管改进和评测，Agent Runtime 管任务状态，PIMiner 定义每次调用的安全门，Active-SWE 与 SuperScout 通过工具完成搜索和验证；MCP 只负责把这些能力以可治理协议暴露出来。
+## 旧的有状态部署经验仍然有迁移价值
 
-## 一手来源
+《MCP Gateway》研究的是旧版会话模型，因此设计了中心 Session Metadata Store，把前端 Session、后端 Session 与 Routing Hash 映射起来；长连接跨 Gateway 实例时再用 Pub/Sub 把请求或响应送回持有 SSE 通道的实例。这一整套复杂性正好构成 2026-07-28 无状态改造的反证：连接级状态会迫使基础设施知道会话归属。
 
-- [MCP 2026-07-28 Streamable HTTP 规范](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/docs/specification/2026-07-28/basic/transports/streamable-http.mdx)
-- [SEP-2575: Stateless MCP](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/seps/2575-stateless-mcp.md)
-- [Scalable LLM Agent Tool Access in the Cloud](https://arxiv.org/abs/2607.15593)
+新协议下，这部分可以显著简化，但论文的其他经验仍然成立。Gateway 仍要做旧协议桥接、身份建立、后端凭证映射、工具级访问控制、OpenAPI 转换、目录检索和流量观测。无状态解决的是副本亲和与隐藏握手状态，并没有消除治理需求。
+
+生产测量也能帮助判断控制面预算。典型少于 20 字段的 API 转换 P50 低于 35 微秒，100 字段时 P50 为 143 微秒；生成 1,334 个工具的 16.7MB 规范离线耗时 2.75 秒。旧有状态模式里 Session 管理占 Gateway 主要每请求成本，而无状态路径更轻。系统在扩容时响应时间约 7 毫秒保持稳定，说明把策略与转换放进数据面并不必然带来高延迟，但实现必须避免在在线路径调用不确定的 LLM。
+
+## 从“连上工具”到“运营能力平台”
+
+无状态 MCP 的生产落地可以用一次请求的责任链检查：Runtime 生成带身份与追踪上下文的动作；Gateway 根据 `Mcp-Method`、`Mcp-Name`、主体和租户完成鉴权、限流与路由；Tool Search 只返回允许发现且与意图相关的工具；工具调用携带幂等键和显式状态引用；领域系统写入事实；结果与副作用回到任务事件日志。
+
+目录、执行与权限应分离。用户“能发现某工具”不等于“能调用”，能调用也不等于能访问任意资源；敏感参数仍需资源级策略。工具 Schema 更新要有版本和缓存 TTL，旧客户端通过版本协商或兼容层降级；追踪要贯穿 Host、Gateway、MCP Server 与下游系统，才能把一次 Agent 失败定位到选错工具、参数错误、权限拒绝还是后端故障。
+
+还要为双栈迁移做现实规划。新客户端可以先 `server/discover`，不支持 2026-07-28 时回退到 2025 系列握手；服务端可同时保留旧 Session 路径和新无状态路径，按协议版本隔离。迁移完成前，应分别观测会话粘连失败率、版本降级率、Header/Body 不一致拒绝、Tool Search 漏召回和显式状态句柄错误。
+
+MCP Stateless 的核心不是删掉一个 Session Header，而是把隐含系统行为变成显式契约。连接可以无状态，任务必须耐久；服务可以任意扩容，权限必须逐请求成立；工具可以成千上万，模型每次只应看到相关且获准的子集。做到这三点，MCP 才从“模型调用工具的适配协议”成长为可运营的 Agent 能力平台。
+
+## 参考资料
+
+- [MCP 2026-07-28 版本说明](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
+- [SEP-2575：Make MCP Stateless](https://modelcontextprotocol.io/seps/2575-stateless-mcp)
+- [SEP-2243：HTTP Header Standardization](https://modelcontextprotocol.io/seps/2243-http-standardization)
+- [MCP Gateway: A Production System for Cloud-Scale Tool Access](https://arxiv.org/abs/2607.15593)
