@@ -1,0 +1,234 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-08-17"
+title: "MCP 无状态化：Agent 基础设施的状态边界重构"
+summary: "MCP 最初解决的是模型如何以统一方式连接工具与数据。随着协议进入大规模部署，新的核心问题变成：怎样让成千上万个 MCP Server
+  像成熟 Web 服务一样扩缩容、路由、授权、缓存和恢复。"
+featured: false
+date: "2026-08-17"
+updatedAt: "2026-08-17T00:03:21.270Z"
+kind: "engineering"
+topics:
+  - "MCP"
+  - "Agent Infrastructure"
+  - "Stateless Architecture"
+  - "MCP Gateway"
+  - "Agent Runtime"
+tags:
+  - "MCP"
+  - "Agent Infrastructure"
+  - "Stateless Architecture"
+  - "MCP Gateway"
+  - "Agent Runtime"
+contentHash: "sha256:da6374f2f176694046f73b2bad0e50ac94d2044f0eecb7e05de7a2b66e18c910"
+---
+
+MCP 最初解决的是模型如何以统一方式连接工具与数据。随着协议进入大规模部署，新的核心问题变成：怎样让成千上万个 MCP Server 像成熟 Web 服务一样扩缩容、路由、授权、缓存和恢复。
+
+MCP 2026-07-28 规范将协议核心从双向、有会话连接转向无状态请求/响应。这不仅是一次传输层升级，也重新划分了 Agent Runtime、Gateway 与能力服务之间的责任边界。
+
+> 原始资料：Model Context Protocol，[*The 2026-07-28 Specification*](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/blog/content/posts/2026-07-28-spec-ga/index.md)，2026-07-28。  
+> 正式规范：[MCP Specification 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)。
+
+## 从连接协议走向生产基础设施
+
+在有会话的协议中，客户端先与特定服务实例握手，服务端保存连接状态，并通过持续连接发起请求。这个模式易于表达交互，但规模化部署需要处理：
+
+- 会话与服务副本的粘性路由；
+- 实例故障后的状态恢复；
+- 多副本之间的共享存储；
+- 长连接生命周期与网络中断；
+- 网关对请求方法和工具名称的解析；
+- 客户端与服务端双向调用带来的实现复杂度。
+
+这些成本会随 MCP Server 数量、租户数量和请求规模增长。新版规范选择采用成熟 HTTP 基础设施熟悉的模型：每个请求自描述，任意实例都可以独立处理。
+
+官方发布数据提供了变化背景：Tier 1 SDK 每月下载量接近 5 亿，TypeScript 和 Python SDK 的累计下载量均超过 10 亿。MCP 已经从早期连接标准进入基础设施规模化阶段。[官方发布说明](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/blog/content/posts/2026-07-28-spec-ga/index.md)
+
+## 无状态核心改变了什么
+
+新版规范移除了 initialize/initialized 握手和 Mcp-Session-Id。每个请求携带协议版本、客户端身份和能力信息，客户端也可以通过可选的 server/discover 了解服务能力。
+
+~~~text
+旧模式
+Client ── initialize ──> Server Instance A
+Client <== persistent session ==> Server Instance A
+
+新模式
+Self-contained Request ──> Any Healthy Instance
+Self-contained Request ──> Any Healthy Instance
+~~~
+
+任意请求可以通过普通 Round-robin 负载均衡落到不同实例，服务端无需为协议会话维护共享存储。
+
+无状态限定的是协议传输层。业务流程仍然可以维护状态，但需要使用显式对象：工具创建一个 Domain Handle，模型或 Runtime 在下一次调用时把 Handle 作为参数传回。
+
+~~~json
+{
+  "name": "analysis/create",
+  "arguments": {
+    "dataset": "sales-2026-q2"
+  }
+}
+
+{
+  "analysis_handle": "anl_7f92"
+}
+~~~
+
+下一次调用显式引用 anl_7f92。状态从传输层隐藏会话转移为业务层可见对象，能够被记录、授权、过期和审计。
+
+## MRTR：在无状态协议中保留交互
+
+工具执行经常需要中途获得用户确认或补充参数。过去的 elicitation/create、sampling/createMessage 和 roots/list 依赖服务端通过持续连接反向请求客户端。
+
+Multi Round-Trip Requests 将它改写为普通请求/响应流程：
+
+~~~mermaid
+sequenceDiagram
+  participant R as Agent Runtime
+  participant S as MCP Server
+  actor U as User
+
+  R->>S: tools/call
+  S-->>R: input_required + questions
+  R->>U: 展示影响、费用或缺失参数
+  U-->>R: 批准或补充信息
+  R->>S: 重试原请求 + inputResponses
+  S-->>R: 最终结果
+~~~
+
+这一模式对高风险 UX 尤其重要。创建付费资源、执行删除和对外发送前，Server 可以返回结构化确认请求，由 Runtime 决定怎样展示、由谁批准以及批准结果怎样进入审计链。
+
+工程实现必须明确幂等语义。MRTR 会重试原始调用，如果 Server 在首次返回 input_required 前已经产生部分副作用，就可能造成重复执行。合理实现应在确认前保持无副作用，或通过 Idempotency Key 和状态机保证重试安全。
+
+## Header-based Routing：让治理进入网关
+
+新版 Streamable HTTP 请求必须携带：
+
+~~~http
+MCP-Protocol-Version: 2026-07-28
+Mcp-Method: tools/call
+Mcp-Name: search
+~~~
+
+Gateway、Rate Limiter 和 WAF 可以直接根据 Header 完成：
+
+- 按 Method 和 Tool 路由；
+- 按租户、工具和风险等级限流；
+- 执行 Allow、Ask、Block 策略；
+- 记录使用量、延迟和错误；
+- 在解析 JSON Body 前阻断不合规请求。
+
+这使 MCP 请求更接近标准企业 API 流量，也为统一治理大量 Server 提供了稳定入口。
+
+需要同时防止 Header 与 Body 不一致。Gateway 或 Server 应验证 Mcp-Method、Mcp-Name 与 JSON-RPC Payload 的实际内容一致，避免路由和审计对象与执行对象分离。
+
+## 缓存与确定性排序为何重要
+
+tools/list、prompts/list、resources/list 和 resources/read 现在可以返回 ttlMs 与 cacheScope，列表结果还要求确定性排序。
+
+这项变化同时改善两个层面：
+
+1. 客户端可以避免重复拉取稳定目录，降低服务压力和启动延迟；
+2. 工具顺序保持稳定，减少上游 Prompt Cache 因目录排列变化而失效。
+
+在大型 Agent 平台中，完整工具目录通常由 Gateway 检索和过滤，再向模型暴露一个经过授权的 Top-K 集合。协议级缓存提示可以与 Registry 版本、租户权限版本和工具 Schema Digest 共同构成缓存键。
+
+缓存安全需要把身份与作用域纳入设计。包含租户权限或用户特定数据的结果不能被错误地跨主体复用，cacheScope 必须与 Gateway 的授权上下文保持一致。
+
+## Authorization：从能连接走向可信身份
+
+新版规范增加多项 OAuth 加固：
+
+- Authorization Server 返回 RFC 9207 iss，客户端在兑换授权码前验证 Issuer；
+- Client Credential 与签发它的 Issuer 绑定；
+- 桌面和 CLI 客户端通过 application_type 正确处理本地重定向；
+- Dynamic Client Registration 进入弃用周期，标准方向转向 Client ID Metadata Documents。
+
+这些变化反映了 MCP 生产接入中的真实成本：协议连接容易，跨客户端、服务端和授权服务器建立稳定身份关系更困难。
+
+企业 Agent Runtime 应进一步把用户身份、Agent 身份、MCP Client 身份和后端服务身份连接为一条委托链：
+
+~~~text
+User
+→ Agent Session
+→ Runtime Policy Decision
+→ MCP Client Credential
+→ Backend Subject / Scope
+~~~
+
+审计记录需要说明最终调用代表谁、使用了什么权限、由哪条策略授权，以及凭证能否在其他 Issuer 或环境复用。
+
+## Tasks 与 Extensions：保持核心克制
+
+Tasks 从实验性核心移入 io.modelcontextprotocol/tasks 扩展，使用轮询式 tasks/get、新的 tasks/update 以及按需订阅流。MCP Apps、Enterprise Managed Authorization 等能力也进入正式扩展框架。
+
+与此同时，Roots、Sampling、Logging 和旧 HTTP+SSE 进入至少 12 个月的弃用周期。
+
+这体现了成熟协议的重要原则：核心保持小而稳定，不同生命周期和采用速度的能力通过扩展演进。Agent 平台可以根据业务需求选择 Tasks、Apps 或企业授权能力，而基础 Tool 与 Resource 调用保持较低复杂度。
+
+## 状态所有权重新划分
+
+新版 MCP 最重要的架构启示，是明确三个平面的责任。
+
+~~~mermaid
+flowchart TB
+  Runtime["Agent Runtime / Control Plane<br/>任务状态、Skill、策略、审批、证据"]
+  Gateway["MCP Gateway<br/>身份、发现、路由、限流、审计"]
+  Server["MCP Capability Servers<br/>无状态请求处理、显式 Domain Handle"]
+  Backend["Business Systems<br/>数据库、SaaS、内部服务"]
+
+  Runtime --> Gateway
+  Gateway --> Server
+  Server --> Backend
+  Backend --> Server
+  Server --> Gateway
+  Gateway --> Runtime
+~~~
+
+### Agent Runtime
+
+负责用户意图、任务计划、长期状态、Skill 流程、权限判断、人工审批、重试策略、执行轨迹和完成证据。
+
+### MCP Gateway
+
+负责身份映射、授权目录、Tool Discovery、Header 路由、流量治理、协议适配、可观察性和 Server 生命周期。
+
+### MCP Server
+
+负责清晰、原子的领域能力，以无状态方式处理请求；需要跨调用状态时创建显式 Handle，并定义 Handle 的权限、生命周期和并发规则。
+
+这种分层使能力服务可以独立扩缩容，也避免每个 Server 重复实现完整 Agent 编排逻辑。
+
+## 对用户体验的影响
+
+协议升级最终应转化为更稳定的用户体验：
+
+- 实例扩缩容和重连不再轻易丢失协议会话；
+- 工具确认可以在统一客户端界面展示；
+- 长任务拥有明确状态和进度；
+- Tool Catalog 缓存降低等待时间；
+- 权限错误能够定位到身份、Issuer 和 Scope；
+- 显式 Handle 让用户理解当前操作针对哪个业务对象。
+
+Runtime 还需要处理用户看不到的复杂性：断线重试、重复请求、Handle 过期、部分成功和版本不兼容。这些状态应转换为清晰的恢复动作，而不是直接暴露协议错误。
+
+## 从专用协议回归 Web 工程经验
+
+MCP 2026-07-28 的深层信号是“去特殊化”。Agent 连接工具仍有独特语义，但基础设施开始采用成熟 Web 系统已经验证的原则：无状态、可路由、可缓存、显式身份、有限核心和扩展机制。
+
+这也是一种经验主义选择。协议没有追求用持久双向会话表达所有交互，而是依据大规模部署反馈，把复杂状态上移到更适合管理它的 Runtime 和业务层。
+
+能力与治理由此分离：
+
+- MCP 负责让能力可发现、可调用；
+- Gateway 负责让能力可规模化运营；
+- Runtime 负责决定为何调用、何时调用、由谁批准，以及结果是否可以被接受。
+
+## 结语
+
+MCP 的无状态化并没有消除状态，而是让状态所有权更加清晰。传输状态退出协议核心，业务状态通过 Handle 显式表达，任务与治理状态集中到 Agent Runtime。
+
+这次变化说明，Agent 基础设施的下一阶段将由可靠性、扩展性、身份和治理能力主导。真正成熟的平台不会把 MCP Server 当作完整 Agent，而是把它建设为可水平扩展的能力层，再由 Runtime 组织任务、约束行动并验证交付。
