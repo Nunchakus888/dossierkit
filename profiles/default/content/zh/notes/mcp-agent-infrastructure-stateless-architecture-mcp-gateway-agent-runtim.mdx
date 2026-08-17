@@ -2,67 +2,110 @@
 locale: "zh"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-08-17"
-title: "MCP 无状态化：Agent 基础设施的状态边界重构"
-summary: "MCP 最初解决的是模型如何以统一方式连接工具与数据。随着协议进入大规模部署，新的核心问题变成：怎样让成千上万个 MCP Server
-  像成熟 Web 服务一样扩缩容、路由、授权、缓存和恢复。"
+title: "MCP 取消 Session 之后，状态去了哪里"
+summary: "MCP 2026-07-28 移除了协议级 Session，但没有让 Agent
+  应用变成“没有状态”的系统。它真正做的是拆开过去混在长连接里的状态，并把它们交给更明确的所有者："
 featured: false
 date: "2026-08-17"
-updatedAt: "2026-08-17T00:03:21.270Z"
+updatedAt: "2026-08-17T00:32:21.507Z"
 kind: "engineering"
 topics:
   - "MCP"
-  - "Agent Infrastructure"
-  - "Stateless Architecture"
-  - "MCP Gateway"
+  - "Stateless Protocol"
+  - "Domain Handle"
+  - "MRTR"
   - "Agent Runtime"
+  - "Task State"
 tags:
   - "MCP"
-  - "Agent Infrastructure"
-  - "Stateless Architecture"
-  - "MCP Gateway"
+  - "Stateless Protocol"
+  - "Domain Handle"
+  - "MRTR"
   - "Agent Runtime"
-contentHash: "sha256:da6374f2f176694046f73b2bad0e50ac94d2044f0eecb7e05de7a2b66e18c910"
+  - "Task State"
+contentHash: "sha256:ceafe84b123fcbd68707180a3dde5282797225548dbfaa2c6bcd859234b9624d"
 ---
 
-MCP 最初解决的是模型如何以统一方式连接工具与数据。随着协议进入大规模部署，新的核心问题变成：怎样让成千上万个 MCP Server 像成熟 Web 服务一样扩缩容、路由、授权、缓存和恢复。
+MCP 2026-07-28 移除了协议级 Session，但没有让 Agent 应用变成“没有状态”的系统。它真正做的是拆开过去混在长连接里的状态，并把它们交给更明确的所有者：
 
-MCP 2026-07-28 规范将协议核心从双向、有会话连接转向无状态请求/响应。这不仅是一次传输层升级，也重新划分了 Agent Runtime、Gateway 与能力服务之间的责任边界。
+- 单次调用所需的上下文，随每个请求传递；
+- 跨调用的业务状态，通过显式 Domain Handle 引用；
+- 中途确认和补充输入，由 MRTR 组织；
+- 长任务状态，由 Tasks Extension 承载；
+- 身份、审批、轨迹和任务编排，继续由 Agent Runtime 管理。
+
+这次变更的核心不是“删除状态”，而是**让每一种状态都能被看见、命名、授权、恢复和审计**。
 
 > 原始资料：Model Context Protocol，[*The 2026-07-28 Specification*](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/blog/content/posts/2026-07-28-spec-ga/index.md)，2026-07-28。  
 > 正式规范：[MCP Specification 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)。
 
-## 从连接协议走向生产基础设施
+## MCP 究竟取消了什么
 
-在有会话的协议中，客户端先与特定服务实例握手，服务端保存连接状态，并通过持续连接发起请求。这个模式易于表达交互，但规模化部署需要处理：
+旧版 MCP 使用 initialize/initialized 完成能力协商，并通过 Mcp-Session-Id 把之后的请求绑定到同一个协议会话。Server 还可以借助保持打开的连接向 Client 发起 Sampling、Elicitation 或 Roots 请求。
 
-- 会话与服务副本的粘性路由；
-- 实例故障后的状态恢复；
-- 多副本之间的共享存储；
-- 长连接生命周期与网络中断；
-- 网关对请求方法和工具名称的解析；
-- 客户端与服务端双向调用带来的实现复杂度。
+这意味着协议状态与应用状态容易混在一起：
 
-这些成本会随 MCP Server 数量、租户数量和请求规模增长。新版规范选择采用成熟 HTTP 基础设施熟悉的模型：每个请求自描述，任意实例都可以独立处理。
+~~~text
+连接属于哪个 Client
+Client 支持什么能力
+前一次调用创建了什么对象
+当前流程等待什么输入
+任务执行到哪里
+~~~
 
-官方发布数据提供了变化背景：Tier 1 SDK 每月下载量接近 5 亿，TypeScript 和 Python SDK 的累计下载量均超过 10 亿。MCP 已经从早期连接标准进入基础设施规模化阶段。[官方发布说明](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/blog/content/posts/2026-07-28-spec-ga/index.md)
+这些信息可能都依赖同一条连接或同一个 Session ID。Server 扩容时，要么保持 Session Affinity，要么把会话状态放入共享存储；实例失效时，客户端还要判断连接与业务状态分别丢失了什么。
 
-## 无状态核心改变了什么
-
-新版规范移除了 initialize/initialized 握手和 Mcp-Session-Id。每个请求携带协议版本、客户端身份和能力信息，客户端也可以通过可选的 server/discover 了解服务能力。
+2026-07-28 规范取消 initialize/initialized 和 Mcp-Session-Id。每个请求携带协议版本，并通过 _meta 提供客户端身份和能力信息。需要提前了解 Server 能力的客户端可以调用可选的 server/discover。
 
 ~~~text
 旧模式
-Client ── initialize ──> Server Instance A
-Client <== persistent session ==> Server Instance A
+Client ── initialize ──> Server A
+Client <== protocol session ==> Server A
 
 新模式
-Self-contained Request ──> Any Healthy Instance
-Self-contained Request ──> Any Healthy Instance
+Self-contained Request ──> Server A
+Self-contained Request ──> Server B
 ~~~
 
-任意请求可以通过普通 Round-robin 负载均衡落到不同实例，服务端无需为协议会话维护共享存储。
+任意请求可以落到任意健康实例。无状态首先是一项协议属性：Server 不再依赖前一条连接，才能理解当前 MCP 请求。
 
-无状态限定的是协议传输层。业务流程仍然可以维护状态，但需要使用显式对象：工具创建一个 Domain Handle，模型或 Runtime 在下一次调用时把 Handle 作为参数传回。
+## 状态没有消失，而是重新分配
+
+新版协议可以用一张状态所有权表概括：
+
+| 状态类型 | 过去常见位置 | 2026-07-28 的主要归属 |
+|---|---|---|
+| 请求上下文 | initialize 结果与 Session | 每个自描述请求 |
+| 业务对象状态 | Server 隐式 Session | 显式 Domain Handle |
+| 交互状态 | 保持打开的双向流 | MRTR 与 Agent Runtime |
+| 长任务状态 | 长连接或实验性任务机制 | Tasks Extension 与任务存储 |
+| 治理状态 | 分散在 Client、Gateway、Server | Runtime / Gateway 的身份、策略与轨迹 |
+
+这张表也给出了迁移时最重要的判断方法：任何原来放在 Session 中的字段，都应该先判断它属于哪一种状态，再选择新的承载方式。
+
+## 请求上下文：让每次调用独立成立
+
+无状态请求必须携带完成当前调用所需的协议信息。规范将协议版本放在 MCP-Protocol-Version Header 中，并把 Client Info 与 Client Capabilities 放入请求 _meta。
+
+它解决的是“这个请求该怎样解释”，而不是“整个任务进行到哪里”。
+
+适合放入请求上下文的内容包括：
+
+- 协议版本；
+- 客户端产品与版本；
+- 当前请求需要声明的能力；
+- Trace、Idempotency 或 Correlation 标识；
+- 与本次调用直接相关的 Locale、格式或 Feature Flag。
+
+不适合放入请求上下文的内容包括大型工作区状态、完整任务历史、长期凭证和可变业务对象。把所有状态复制到每个请求会形成另一种耦合：Payload 持续膨胀，敏感信息反复传播，状态并发更新也更难控制。
+
+自描述请求的原则是：**携带解释当前调用所需的最小上下文，把可变状态留在拥有它的系统中。**
+
+## 业务状态：用显式 Domain Handle 取代隐藏 Session
+
+官方说明明确指出，取消协议 Session 不要求应用保持无状态。Server 需要跨调用保存业务状态时，可以由 Tool 创建一个显式 Handle，再让模型或 Runtime 在下一次调用中把它作为参数传回。
+
+例如，一次分析任务先创建工作对象：
 
 ~~~json
 {
@@ -71,19 +114,62 @@ Self-contained Request ──> Any Healthy Instance
     "dataset": "sales-2026-q2"
   }
 }
+~~~
 
+Server 返回：
+
+~~~json
 {
-  "analysis_handle": "anl_7f92"
+  "analysis_handle": "anl_7f92",
+  "expires_at": "2026-08-17T18:00:00Z"
 }
 ~~~
 
-下一次调用显式引用 anl_7f92。状态从传输层隐藏会话转移为业务层可见对象，能够被记录、授权、过期和审计。
+下一次 Tool Call 显式引用该对象：
 
-## MRTR：在无状态协议中保留交互
+~~~json
+{
+  "name": "analysis/run",
+  "arguments": {
+    "analysis_handle": "anl_7f92",
+    "metric": "retention"
+  }
+}
+~~~
 
-工具执行经常需要中途获得用户确认或补充参数。过去的 elicitation/create、sampling/createMessage 和 roots/list 依赖服务端通过持续连接反向请求客户端。
+关键变化在于：过去由传输层暗中关联的状态，现在成为 Tool Schema 中可见的领域对象。
 
-Multi Round-Trip Requests 将它改写为普通请求/响应流程：
+### 一个合格的 Handle 需要哪些约束
+
+Handle 不能只是一段能够猜测或无限复用的字符串。生产实现至少需要定义：
+
+| 约束 | 需要回答的问题 |
+|---|---|
+| 类型与签发方 | Handle 指向什么对象，由哪个 Server 签发 |
+| Subject Binding | 它属于哪个用户、租户、Agent 或授权主体 |
+| Scope | 允许读取、修改、执行还是结束对象 |
+| 生命周期 | 何时过期，能否续期、撤销和回收 |
+| Revision | 并发调用时基于哪个对象版本执行 |
+| 可转移性 | 能否跨 Session、设备、Agent 或 Client 使用 |
+| 审计关系 | 哪次 Tool Call 创建、读取或修改了它 |
+
+Handle 最适合作为不透明引用。模型负责在调用间传递它，Server 负责解释和验证它。Handle 本身不应自动等同于完整授权；Server 仍需校验当前身份、租户和操作 Scope，防止获得 Handle 的其他主体直接继承权限。
+
+### 并发和重试不能依赖运气
+
+无状态请求可以同时落到多个实例，因此 Domain Handle 指向的对象必须具备明确的一致性语义：
+
+- 只读调用可以并发；
+- 写调用使用 Revision、ETag 或 Expected Version 检测冲突；
+- 重复请求通过 Idempotency Key 返回同一结果；
+- 已过期或撤销的 Handle 返回可区分错误；
+- Server 故障不能让 Handle 指向无法恢复的单实例内存。
+
+无状态协议降低了连接层复杂度，却会把隐藏的一致性问题暴露出来。这是架构收益：状态越显式，越容易定义恢复和冲突规则。
+
+## 交互状态：MRTR 把反向调用改成可重试流程
+
+旧版 Elicitation、Sampling 和 Roots 可以通过保持打开的流，由 Server 向 Client 发起请求。新版 Multi Round-Trip Requests 将它改成普通请求/响应序列：
 
 ~~~mermaid
 sequenceDiagram
@@ -91,144 +177,154 @@ sequenceDiagram
   participant S as MCP Server
   actor U as User
 
-  R->>S: tools/call
-  S-->>R: input_required + questions
-  R->>U: 展示影响、费用或缺失参数
-  U-->>R: 批准或补充信息
-  R->>S: 重试原请求 + inputResponses
-  S-->>R: 最终结果
+  R->>S: tools/call + operation_id
+  S-->>R: input_required + requests
+  R->>U: 展示目标、影响和待确认内容
+  U-->>R: 批准、拒绝或补充输入
+  R->>S: 重试原调用 + inputResponses
+  S-->>R: result
 ~~~
 
-这一模式对高风险 UX 尤其重要。创建付费资源、执行删除和对外发送前，Server 可以返回结构化确认请求，由 Runtime 决定怎样展示、由谁批准以及批准结果怎样进入审计链。
+Server 返回 resultType: input_required 以及所需输入；Client 收集答案后，把 inputResponses 附加到原调用并重新请求。协议不再要求 Server 为等待用户保持一条双向连接。
 
-工程实现必须明确幂等语义。MRTR 会重试原始调用，如果 Server 在首次返回 input_required 前已经产生部分副作用，就可能造成重复执行。合理实现应在确认前保持无副作用，或通过 Idempotency Key 和状态机保证重试安全。
+### MRTR 的关键不是多一次请求，而是重试语义
 
-## Header-based Routing：让治理进入网关
+实现 MRTR 时需要明确四件事：
 
-新版 Streamable HTTP 请求必须携带：
+1. **输入返回前是否允许产生副作用。**  
+   最安全的设计是在 input_required 前只完成检查和报价，不创建资源、不发送消息、不删除数据。
 
-~~~http
-MCP-Protocol-Version: 2026-07-28
-Mcp-Method: tools/call
-Mcp-Name: search
+2. **第二次请求怎样识别为同一次操作。**  
+   Client 应保持稳定的 Operation ID 或 Idempotency Key，Server 应避免把重试解释成新的业务动作。
+
+3. **用户批准的对象是什么。**  
+   Approval 应绑定具体 Tool、参数、目标、费用、作用域和有效期。参数发生变化时重新确认。
+
+4. **拒绝、取消、超时怎样结束流程。**  
+   三者需要可区分状态，方便 Runtime 决定终止、重规划或再次询问。
+
+如果首次请求必须产生准备性状态，Server 应返回显式 Continuation Handle，并为其定义过期与清理规则。这样，中间状态仍然是领域对象，而不是重新藏回连接。
+
+## 长任务状态：Tasks Extension 取代连接生命周期
+
+长时间运行的数据处理、代码构建或外部工作流不能依赖 HTTP 连接一直存活。新版把 Tasks 从实验性核心移入 io.modelcontextprotocol/tasks 扩展：
+
+- Client 通过 tasks/get 轮询任务状态；
+- tasks/update 支持任务状态更新；
+- subscriptions/listen 提供按需订阅，而不是让所有请求维持双向流。
+
+协议只定义交互边界，任务状态仍需要可靠存储。一个可运营的任务对象至少应具备：
+
+~~~yaml
+task:
+  task_id: task_42
+  owner: tenant-a
+  operation: dataset.import
+  status: running
+  progress_ref: progress_18
+  created_at: 2026-08-17T10:00:00Z
+  expires_at: 2026-08-18T10:00:00Z
+  result_ref: null
 ~~~
 
-Gateway、Rate Limiter 和 WAF 可以直接根据 Header 完成：
+具体字段由实现决定，但责任不能模糊：
 
-- 按 Method 和 Tool 路由；
-- 按租户、工具和风险等级限流；
-- 执行 Allow、Ask、Block 策略；
-- 记录使用量、延迟和错误；
-- 在解析 JSON Body 前阻断不合规请求。
+- Task ID 绑定用户和租户，不能仅凭 ID 越权查询；
+- 状态迁移保持单调或具备明确回退原因；
+- Worker 重启后任务可以继续、重试或进入确定失败；
+- 任务取消与业务回滚分别建模；
+- 最终结果引用对应 Artifact、外部状态或完成证据；
+- 轮询和订阅看到同一个事实源。
 
-这使 MCP 请求更接近标准企业 API 流量，也为统一治理大量 Server 提供了稳定入口。
+Tasks 的意义不是为长连接换一个名称，而是让长任务的生命周期独立于网络连接和单个 Server 实例。
 
-需要同时防止 Header 与 Body 不一致。Gateway 或 Server 应验证 Mcp-Method、Mcp-Name 与 JSON-RPC Payload 的实际内容一致，避免路由和审计对象与执行对象分离。
+## 其他规范变化只承担辅助作用
 
-## 缓存与确定性排序为何重要
+Header、缓存和 OAuth 变化很重要，但它们服务于无状态核心，无需再次展开成完整 Gateway 架构。
 
-tools/list、prompts/list、resources/list 和 resources/read 现在可以返回 ttlMs 与 cacheScope，列表结果还要求确定性排序。
+| 变化 | 直接作用 |
+|---|---|
+| Mcp-Method、Mcp-Name Header | Gateway 可直接路由、限流和计量 |
+| ttlMs、cacheScope、确定性排序 | Tool、Prompt 与 Resource 结果可以稳定缓存 |
+| RFC 9207 iss 校验 | 防止 Authorization Server Mix-up |
+| Credential 与 Issuer 绑定 | 限制凭证跨授权服务器复用 |
+| CIMD 替代 DCR | 让 Client Metadata 管理更可控 |
+| 正式 Extensions Framework | 让 Tasks、Apps、企业授权独立演进 |
 
-这项变化同时改善两个层面：
+Header 与 JSON-RPC Body 必须保持一致；Cache Key 必须包含身份与 Scope；OAuth Credential 必须绑定正确 Issuer。这些是无状态部署的配套约束。
 
-1. 客户端可以避免重复拉取稳定目录，降低服务压力和启动延迟；
-2. 工具顺序保持稳定，减少上游 Prompt Cache 因目录排列变化而失效。
+Tool Catalog、Top-K Discovery、Registry 和 Gateway 适用边界已在[《Agent 工具规模化之后，为什么需要 MCP Gateway》](https://sunionpeaks.pages.dev/zh/notes/scalable-llm-agent-tool-access-in-the-cloud)中展开。本文只讨论协议状态迁移。
 
-在大型 Agent 平台中，完整工具目录通常由 Gateway 检索和过滤，再向模型暴露一个经过授权的 Top-K 集合。协议级缓存提示可以与 Registry 版本、租户权限版本和工具 Schema Digest 共同构成缓存键。
+## 迁移时不要直接删除 Session Store
 
-缓存安全需要把身份与作用域纳入设计。包含租户权限或用户特定数据的结果不能被错误地跨主体复用，cacheScope 必须与 Gateway 的授权上下文保持一致。
+从旧协议迁移时，最危险的做法是先删除 Session，再逐个修复出现的错误。更可靠的顺序是先完成状态盘点。
 
-## Authorization：从能连接走向可信身份
+### 第一步：列出 Session 中的全部字段
 
-新版规范增加多项 OAuth 加固：
+记录字段的写入者、读取者、更新频率、敏感度、过期规则和故障恢复方式。
 
-- Authorization Server 返回 RFC 9207 iss，客户端在兑换授权码前验证 Issuer；
-- Client Credential 与签发它的 Issuer 绑定；
-- 桌面和 CLI 客户端通过 application_type 正确处理本地重定向；
-- Dynamic Client Registration 进入弃用周期，标准方向转向 Client ID Metadata Documents。
+### 第二步：为每个字段重新分类
 
-这些变化反映了 MCP 生产接入中的真实成本：协议连接容易，跨客户端、服务端和授权服务器建立稳定身份关系更困难。
+| 字段性质 | 新位置 |
+|---|---|
+| 解释单次请求所需 | Request Header 或 _meta |
+| 指向业务对象 | Domain Handle |
+| 等待用户补充输入 | MRTR |
+| 描述长任务进度 | Tasks Store |
+| 身份、审批、策略与轨迹 | Agent Runtime / Gateway |
+| 只为连接维护 | 删除 |
 
-企业 Agent Runtime 应进一步把用户身份、Agent 身份、MCP Client 身份和后端服务身份连接为一条委托链：
+### 第三步：定义失败语义
 
-~~~text
-User
-→ Agent Session
-→ Runtime Policy Decision
-→ MCP Client Credential
-→ Backend Subject / Scope
-~~~
+重点明确：
 
-审计记录需要说明最终调用代表谁、使用了什么权限、由哪条策略授权，以及凭证能否在其他 Issuer 或环境复用。
+- 请求超时后是否可以安全重试；
+- Handle 过期后能否恢复；
+- 两个请求同时修改同一对象时如何裁决；
+- input_required 前是否已经发生副作用；
+- Task Worker 失效后由谁接管；
+- Client 重连后从哪里恢复任务状态。
 
-## Tasks 与 Extensions：保持核心克制
+### 第四步：用故障场景验收
 
-Tasks 从实验性核心移入 io.modelcontextprotocol/tasks 扩展，使用轮询式 tasks/get、新的 tasks/update 以及按需订阅流。MCP Apps、Enterprise Managed Authorization 等能力也进入正式扩展框架。
+迁移测试至少覆盖：
 
-与此同时，Roots、Sampling、Logging 和旧 HTTP+SSE 进入至少 12 个月的弃用周期。
+1. 连续请求被分配到不同 Server 实例；
+2. 请求在得到响应前超时并重试；
+3. 同一 Idempotency Key 被重复提交；
+4. Handle 过期、撤销、跨租户和版本冲突；
+5. MRTR 的批准、拒绝、修改参数和超时；
+6. 长任务期间 Worker 与 Gateway 分别重启；
+7. Polling 与 Subscription 返回一致状态；
+8. 旧 Client 与新 Server 的版本协商和明确失败。
 
-这体现了成熟协议的重要原则：核心保持小而稳定，不同生命周期和采用速度的能力通过扩展演进。Agent 平台可以根据业务需求选择 Tasks、Apps 或企业授权能力，而基础 Tool 与 Resource 调用保持较低复杂度。
+只有这些场景通过，无状态化才真正带来可靠性，而不是把原来的 Session Bug 转移成分布式状态 Bug。
 
-## 状态所有权重新划分
+## 新规范没有解决什么
 
-新版 MCP 最重要的架构启示，是明确三个平面的责任。
+2026-07-28 规范明确了通信方式，但仍有几项责任留给 Agent 平台：
 
-~~~mermaid
-flowchart TB
-  Runtime["Agent Runtime / Control Plane<br/>任务状态、Skill、策略、审批、证据"]
-  Gateway["MCP Gateway<br/>身份、发现、路由、限流、审计"]
-  Server["MCP Capability Servers<br/>无状态请求处理、显式 Domain Handle"]
-  Backend["Business Systems<br/>数据库、SaaS、内部服务"]
+- 哪些工具应该对当前 Agent 可见；
+- 多个工具和 Skill 如何编排；
+- 高风险动作由谁批准；
+- Domain Handle 应采用怎样的一致性模型；
+- Task 完成需要哪些证据；
+- 执行轨迹怎样关联用户、规则和外部副作用。
 
-  Runtime --> Gateway
-  Gateway --> Server
-  Server --> Backend
-  Backend --> Server
-  Server --> Gateway
-  Gateway --> Runtime
-~~~
-
-### Agent Runtime
-
-负责用户意图、任务计划、长期状态、Skill 流程、权限判断、人工审批、重试策略、执行轨迹和完成证据。
-
-### MCP Gateway
-
-负责身份映射、授权目录、Tool Discovery、Header 路由、流量治理、协议适配、可观察性和 Server 生命周期。
-
-### MCP Server
-
-负责清晰、原子的领域能力，以无状态方式处理请求；需要跨调用状态时创建显式 Handle，并定义 Handle 的权限、生命周期和并发规则。
-
-这种分层使能力服务可以独立扩缩容，也避免每个 Server 重复实现完整 Agent 编排逻辑。
-
-## 对用户体验的影响
-
-协议升级最终应转化为更稳定的用户体验：
-
-- 实例扩缩容和重连不再轻易丢失协议会话；
-- 工具确认可以在统一客户端界面展示；
-- 长任务拥有明确状态和进度；
-- Tool Catalog 缓存降低等待时间；
-- 权限错误能够定位到身份、Issuer 和 Scope；
-- 显式 Handle 让用户理解当前操作针对哪个业务对象。
-
-Runtime 还需要处理用户看不到的复杂性：断线重试、重复请求、Handle 过期、部分成功和版本不兼容。这些状态应转换为清晰的恢复动作，而不是直接暴露协议错误。
-
-## 从专用协议回归 Web 工程经验
-
-MCP 2026-07-28 的深层信号是“去特殊化”。Agent 连接工具仍有独特语义，但基础设施开始采用成熟 Web 系统已经验证的原则：无状态、可路由、可缓存、显式身份、有限核心和扩展机制。
-
-这也是一种经验主义选择。协议没有追求用持久双向会话表达所有交互，而是依据大规模部署反馈，把复杂状态上移到更适合管理它的 Runtime 和业务层。
-
-能力与治理由此分离：
-
-- MCP 负责让能力可发现、可调用；
-- Gateway 负责让能力可规模化运营；
-- Runtime 负责决定为何调用、何时调用、由谁批准，以及结果是否可以被接受。
+因此，无状态 MCP Server 不能替代 Agent Runtime。协议负责让请求独立、状态显式；Runtime 负责把这些能力组织成可恢复、可授权、可验证的任务。
 
 ## 结语
 
-MCP 的无状态化并没有消除状态，而是让状态所有权更加清晰。传输状态退出协议核心，业务状态通过 Handle 显式表达，任务与治理状态集中到 Agent Runtime。
+MCP 取消 Session 之后，状态去了五个地方：
 
-这次变化说明，Agent 基础设施的下一阶段将由可靠性、扩展性、身份和治理能力主导。真正成熟的平台不会把 MCP Server 当作完整 Agent，而是把它建设为可水平扩展的能力层，再由 Runtime 组织任务、约束行动并验证交付。
+~~~text
+请求上下文 → 自描述 Request
+业务状态   → Domain Handle
+交互状态   → MRTR
+长任务状态 → Tasks Extension
+治理状态   → Agent Runtime / Gateway
+~~~
+
+这比“有状态还是无状态”的二选一更准确。新版 MCP 移除的是协议对隐式连接状态的依赖，并没有消除业务状态。它要求系统为每一种状态明确所有者、标识、权限、生命周期、并发和恢复语义。
+
+当这些责任被正确分配，MCP Server 才能真正实现任意实例处理、普通负载均衡和故障恢复；Agent Runtime 也获得更清晰的状态边界。
