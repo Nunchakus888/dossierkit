@@ -7,7 +7,7 @@ summary: "MCP 2026-07-28 移除了协议级 Session，但没有让 Agent
   应用变成“没有状态”的系统。它真正做的是拆开过去混在长连接里的状态，并把它们交给更明确的所有者："
 featured: false
 date: "2026-08-17"
-updatedAt: "2026-08-17T00:32:21.507Z"
+updatedAt: "2026-08-17T02:01:15.016Z"
 kind: "engineering"
 topics:
   - "MCP"
@@ -23,7 +23,7 @@ tags:
   - "MRTR"
   - "Agent Runtime"
   - "Task State"
-contentHash: "sha256:ceafe84b123fcbd68707180a3dde5282797225548dbfaa2c6bcd859234b9624d"
+contentHash: "sha256:c4b6d70408ad8de8656deb6034f3a675738344a2df9562da07df3ae96291092f"
 ---
 
 MCP 2026-07-28 移除了协议级 Session，但没有让 Agent 应用变成“没有状态”的系统。它真正做的是拆开过去混在长连接里的状态，并把它们交给更明确的所有者：
@@ -37,7 +37,8 @@ MCP 2026-07-28 移除了协议级 Session，但没有让 Agent 应用变成“�
 这次变更的核心不是“删除状态”，而是**让每一种状态都能被看见、命名、授权、恢复和审计**。
 
 > 原始资料：Model Context Protocol，[*The 2026-07-28 Specification*](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/main/blog/content/posts/2026-07-28-spec-ga/index.md)，2026-07-28。  
-> 正式规范：[MCP Specification 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)。
+> 正式规范：[MCP Specification 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28)。  
+> 实现参考：[TypeScript SDK 2026-07-28 Migration Guide](https://ts.sdk.modelcontextprotocol.io/v2/migration/support-2026-07-28)、[SEP-2663: Tasks Extension](https://modelcontextprotocol.io/seps/2663-tasks-extension)。
 
 ## MCP 究竟取消了什么
 
@@ -101,6 +102,49 @@ Self-contained Request ──> Server B
 
 自描述请求的原则是：**携带解释当前调用所需的最小上下文，把可变状态留在拥有它的系统中。**
 
+### 代码对比一：握手加 Session，变成单次自描述请求
+
+旧版 `2025-11-25` 要先初始化：
+
+~~~http
+POST /mcp HTTP/1.1
+Content-Type: application/json
+
+{"jsonrpc":"2.0","id":1,"method":"initialize",
+ "params":{"protocolVersion":"2025-11-25","capabilities":{},
+           "clientInfo":{"name":"my-app","version":"1.0"}}}
+~~~
+
+Server 签发 `Mcp-Session-Id` 后，后续调用必须带回它：
+
+~~~http
+POST /mcp HTTP/1.1
+Mcp-Session-Id: 1868a90c-3a3f-4f5b
+Content-Type: application/json
+
+{"jsonrpc":"2.0","id":2,"method":"tools/call",
+ "params":{"name":"search","arguments":{"q":"otters"}}}
+~~~
+
+新版 `2026-07-28` 直接发送完整调用：
+
+~~~http
+POST /mcp HTTP/1.1
+MCP-Protocol-Version: 2026-07-28
+Mcp-Method: tools/call
+Mcp-Name: search
+Content-Type: application/json
+
+{"jsonrpc":"2.0","id":1,"method":"tools/call",
+ "params":{"name":"search","arguments":{"q":"otters"},
+           "_meta":{"io.modelcontextprotocol/clientInfo":
+                    {"name":"my-app","version":"1.0"}}}}
+~~~
+
+对负载均衡器而言，差别非常具体：旧请求的正确处理依赖 `Mcp-Session-Id` 对应的历史；新请求只依赖当前 Header、Body 与外部授权上下文。`Mcp-Method` 和 `Mcp-Name` 让 Gateway 无需解析完整 JSON 即可路由，但它们必须与 Body 一致，否则应拒绝请求。
+
+`clientInfo` 是客户端自报信息，只适合日志、显示与调试，不能代替 Access Token、Principal 或租户校验。把它用于授权，会把“自描述”误实现成“自证明”。
+
 ## 业务状态：用显式 Domain Handle 取代隐藏 Session
 
 官方说明明确指出，取消协议 Session 不要求应用保持无状态。Server 需要跨调用保存业务状态时，可以由 Tool 创建一个显式 Handle，再让模型或 Runtime 在下一次调用中把它作为参数传回。
@@ -138,6 +182,122 @@ Server 返回：
 ~~~
 
 关键变化在于：过去由传输层暗中关联的状态，现在成为 Tool Schema 中可见的领域对象。
+
+### 代码对比二：进程内 Session Map，变成显式领域对象
+
+下面是旧实现中常见的写法。业务对象被挂在协议 Session 下，并保存在单实例内存中：
+
+~~~typescript
+type Basket = { items: Array<{ sku: string; quantity: number }> };
+
+const sessions = new Map<
+  string,
+  { tenantId: string; basket: Basket }
+>();
+
+async function addItem(req: Request, args: { sku: string; quantity: number }) {
+  const sessionId = req.headers.get("Mcp-Session-Id");
+  const state = sessionId ? sessions.get(sessionId) : undefined;
+
+  if (!state) throw new Error("SESSION_NOT_FOUND");
+
+  state.basket.items.push({ sku: args.sku, quantity: args.quantity });
+  return { item_count: state.basket.items.length };
+}
+~~~
+
+这个函数看似简单，实际隐含了三个前提：请求必须回到能访问该 Map 的实例；Session 同时承担连接关联和业务对象定位；并发写入没有版本冲突语义。
+
+新版应把 Basket 设计成 Tool 明确创建、持久化并返回的领域对象。以下是与 MCP SDK 无关的应用层 TypeScript：
+
+~~~typescript
+type Principal = { tenantId: string; subjectId: string };
+
+type BasketRecord = {
+  basketId: string;
+  tenantId: string;
+  ownerId: string;
+  revision: number;
+  expiresAt: string;
+  items: Array<{ sku: string; quantity: number }>;
+};
+
+async function createBasket(principal: Principal) {
+  const basket: BasketRecord = {
+    basketId: `bsk_${crypto.randomUUID()}`,
+    tenantId: principal.tenantId,
+    ownerId: principal.subjectId,
+    revision: 1,
+    expiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+    items: []
+  };
+
+  await basketStore.insert(basket);
+  return {
+    basket_id: basket.basketId,
+    revision: basket.revision,
+    expires_at: basket.expiresAt
+  };
+}
+
+async function addItem(
+  principal: Principal,
+  args: {
+    basket_id: string;
+    expected_revision: number;
+    idempotency_key: string;
+    sku: string;
+    quantity: number;
+  }
+) {
+  const replay = await idempotencyStore.get(
+    principal.tenantId,
+    args.idempotency_key
+  );
+  if (replay) return replay;
+
+  const current = await basketStore.get(args.basket_id);
+  if (!current) throw new Error("BASKET_NOT_FOUND");
+  if (
+    current.tenantId !== principal.tenantId ||
+    current.ownerId !== principal.subjectId
+  ) {
+    throw new Error("BASKET_FORBIDDEN");
+  }
+  if (Date.parse(current.expiresAt) <= Date.now()) {
+    throw new Error("BASKET_EXPIRED");
+  }
+  if (current.revision !== args.expected_revision) {
+    throw new Error("REVISION_CONFLICT");
+  }
+
+  const next: BasketRecord = {
+    ...current,
+    revision: current.revision + 1,
+    items: [...current.items, { sku: args.sku, quantity: args.quantity }]
+  };
+
+  await basketStore.compareAndSwap(
+    current.basketId,
+    current.revision,
+    next
+  );
+
+  const result = {
+    basket_id: next.basketId,
+    revision: next.revision,
+    item_count: next.items.length
+  };
+  await idempotencyStore.put(
+    principal.tenantId,
+    args.idempotency_key,
+    result
+  );
+  return result;
+}
+~~~
+
+这里的 `basket_id` 只负责定位对象；当前 Principal 决定能否访问，`expected_revision` 处理并发，`idempotency_key` 处理网络重试。四项责任彼此独立，任一 Server 实例都可以执行同一调用。
 
 ### 一个合格的 Handle 需要哪些约束
 
@@ -187,6 +347,178 @@ sequenceDiagram
 
 Server 返回 resultType: input_required 以及所需输入；Client 收集答案后，把 inputResponses 附加到原调用并重新请求。协议不再要求 Server 为等待用户保持一条双向连接。
 
+### 代码对比三：等待反向调用，变成显式返回与重入
+
+旧版 Handler 可以在一次调用内部暂停，主动向 Client 请求确认：
+
+~~~typescript
+const answer = await ctx.mcpReq.elicitInput({
+  mode: "form",
+  message: "确认删除 3 个文件？",
+  requestedSchema: {
+    type: "object",
+    properties: { approved: { type: "boolean" } },
+    required: ["approved"]
+  }
+});
+
+if (answer.action !== "accept" || !answer.content?.approved) {
+  return textResult("已取消");
+}
+return deleteFiles(args.files);
+~~~
+
+`await` 背后需要可用的 Server→Client 通道，以及仍然存活的原始请求。新版在线路上拆成三步。
+
+第一步，Client 发起普通 Tool Call：
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 41,
+  "method": "tools/call",
+  "params": {
+    "name": "files/delete",
+    "arguments": {
+      "operation_id": "op_817",
+      "files": ["a.csv", "b.csv", "c.csv"]
+    }
+  }
+}
+~~~
+
+第二步，Server 不删除文件，只返回待确认输入和一个不透明的 `requestState`：
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 41,
+  "result": {
+    "resultType": "input_required",
+    "inputRequests": {
+      "confirm_delete": {
+        "type": "elicitation",
+        "message": "确认删除 3 个文件？",
+        "schema": {
+          "type": "object",
+          "properties": { "approved": { "type": "boolean" } },
+          "required": ["approved"]
+        }
+      }
+    },
+    "requestState": "signed-opaque-state"
+  }
+}
+~~~
+
+第三步，Client 使用新的 JSON-RPC ID 重试原方法和原参数，并附上本轮答案：
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 42,
+  "method": "tools/call",
+  "params": {
+    "name": "files/delete",
+    "arguments": {
+      "operation_id": "op_817",
+      "files": ["a.csv", "b.csv", "c.csv"]
+    },
+    "inputResponses": {
+      "confirm_delete": {
+        "action": "accept",
+        "content": { "approved": true }
+      }
+    },
+    "requestState": "signed-opaque-state"
+  }
+}
+~~~
+
+用 TypeScript SDK v2 实现时，Handler 变成一个显式状态机：
+
+~~~typescript
+import {
+  acceptedContent,
+  createRequestStateCodec,
+  inputRequired
+} from "@modelcontextprotocol/server";
+import * as z from "zod/v4";
+
+const CONFIRM_SCHEMA = z.object({ approved: z.boolean() });
+const CONFIRM_REQUEST = {
+  type: "object" as const,
+  properties: { approved: { type: "boolean" as const } },
+  required: ["approved"]
+};
+
+type DeleteState = {
+  step: "awaiting-confirmation";
+  operationId: string;
+  argsHash: string;
+};
+
+const REQUEST_STATE_KEY = Buffer.from(
+  process.env.MCP_REQUEST_STATE_SECRET!,
+  "base64url"
+);
+if (REQUEST_STATE_KEY.length < 32) {
+  throw new Error("MCP_REQUEST_STATE_SECRET_TOO_SHORT");
+}
+
+const stateCodec = createRequestStateCodec<DeleteState>({
+  key: REQUEST_STATE_KEY,
+  ttlSeconds: 300
+});
+
+// 创建 Server 时配置：
+// { requestState: { verify: stateCodec.verify } }
+
+async function deleteFilesTool(args: DeleteArgs, ctx: ToolContext) {
+  const state = ctx.mcpReq.requestState<DeleteState>();
+  const argsHash = await stableHash(args.files);
+
+  if (!state) {
+    return inputRequired({
+      inputRequests: {
+        confirm_delete: inputRequired.elicit({
+          message: `确认删除 ${args.files.length} 个文件？`,
+          requestedSchema: CONFIRM_REQUEST
+        })
+      },
+      requestState: await stateCodec.mint({
+        step: "awaiting-confirmation",
+        operationId: args.operation_id,
+        argsHash
+      })
+    });
+  }
+
+  if (
+    state.operationId !== args.operation_id ||
+    state.argsHash !== argsHash
+  ) {
+    throw new Error("APPROVAL_CONTEXT_CHANGED");
+  }
+
+  const answer = acceptedContent(
+    ctx.mcpReq.inputResponses,
+    "confirm_delete",
+    CONFIRM_SCHEMA
+  );
+  if (!answer?.approved) return textResult("已取消");
+
+  return idempotencyStore.runOnce(
+    args.operation_id,
+    () => deleteFiles(args.files)
+  );
+}
+~~~
+
+这段代码表达了四个边界：`input_required` 前不产生删除副作用；`requestState` 只保存续跑所需的最小状态；确认绑定原参数摘要；真正执行仍以 `operation_id` 保证幂等。
+
+`requestState` 会经过 Client，因此必须视为不可信输入。SDK 的 Codec 提供 HMAC 完整性保护，但不加密 Payload；敏感内容应存入服务端状态库，只在 `requestState` 中放短期 Operation Handle。多轮交互中，`inputResponses` 只包含当前一轮答案，前几轮已收集的信息需要进入签名后的 `requestState` 或服务端持久化对象。
+
 ### MRTR 的关键不是多一次请求，而是重试语义
 
 实现 MRTR 时需要明确四件事：
@@ -207,11 +539,112 @@ Server 返回 resultType: input_required 以及所需输入；Client 收集答�
 
 ## 长任务状态：Tasks Extension 取代连接生命周期
 
-长时间运行的数据处理、代码构建或外部工作流不能依赖 HTTP 连接一直存活。新版把 Tasks 从实验性核心移入 io.modelcontextprotocol/tasks 扩展：
+长时间运行的数据处理、代码构建或外部工作流不能依赖 HTTP 连接一直存活。新版把 Tasks 从 `2025-11-25` 的实验性核心能力移入 `io.modelcontextprotocol/tasks` 扩展。
 
-- Client 通过 tasks/get 轮询任务状态；
-- tasks/update 支持任务状态更新；
-- subscriptions/listen 提供按需订阅，而不是让所有请求维持双向流。
+旧方案要求 Client 先通过 `tools/list` 了解方法与具体 Tool 是否支持 Task，再决定是否给请求增加 Task 参数。遇到 `input_required` 时，Client 还要提前调用会阻塞的 `tasks/result`，让 Server 获得可发送 Elicitation 或 Sampling 的 SSE 通道。能力发现、执行和连接生命周期因此相互耦合。
+
+新版只保留三项任务操作：
+
+- `tasks/get`：读取任务当前状态、待处理输入或最终结果；
+- `tasks/update`：Client 回传任务等待的 `inputResponses`；
+- `tasks/cancel`：表达取消意图。
+
+`tasks/list` 被移除，因为无 Session 架构下很难为“列出当前调用者的全部任务”定义天然且安全的作用域。Task ID 应作为不可猜测的 Handle，并继续绑定当前授权主体。
+
+### 代码对比四：阻塞等待，变成可恢复轮询
+
+Client 在当前 `tools/call` 中声明 Tasks Extension。Server 可以自行决定立即返回结果，还是创建 Task：
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 101,
+  "method": "tools/call",
+  "params": {
+    "name": "dataset/import",
+    "arguments": { "source_uri": "s3://tenant-a/orders.parquet" },
+    "_meta": {
+      "io.modelcontextprotocol/clientCapabilities": {
+        "extensions": { "io.modelcontextprotocol/tasks": {} }
+      }
+    }
+  }
+}
+~~~
+
+Task 必须在 Server 返回 Handle 前持久化完成，保证 Client 随即调用 `tasks/get` 时已经能够读到：
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 101,
+  "result": {
+    "resultType": "task",
+    "taskId": "task_42",
+    "status": "working",
+    "statusMessage": "正在导入数据",
+    "createdAt": "2026-08-17T10:00:00Z",
+    "lastUpdatedAt": "2026-08-17T10:00:00Z",
+    "ttlMs": 86400000,
+    "pollIntervalMs": 5000
+  }
+}
+~~~
+
+Client 按 Server 建议的间隔轮询，而不是保持原始 Tool Call：
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 102,
+  "method": "tasks/get",
+  "params": { "taskId": "task_42" }
+}
+~~~
+
+任务完成时，`tasks/get` 在同一对象中返回终态和原始 `tools/call` 对应的结果：
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 102,
+  "result": {
+    "resultType": "complete",
+    "taskId": "task_42",
+    "status": "completed",
+    "statusMessage": "导入完成",
+    "createdAt": "2026-08-17T10:00:00Z",
+    "lastUpdatedAt": "2026-08-17T10:04:12Z",
+    "ttlMs": 86400000,
+    "result": {
+      "content": [
+        { "type": "text", "text": "已导入 12,480,331 行" }
+      ]
+    }
+  }
+}
+~~~
+
+如果任务进入 `input_required`，`tasks/get` 会带回 `inputRequests`；Client 收集答案后调用 `tasks/update`：
+
+~~~json
+{
+  "jsonrpc": "2.0",
+  "id": 103,
+  "method": "tasks/update",
+  "params": {
+    "taskId": "task_42",
+    "inputResponses": {
+      "resolve_schema_conflict": {
+        "action": "accept",
+        "content": { "strategy": "create_nullable_column" }
+      }
+    }
+  }
+}
+~~~
+
+`tasks/update` 只确认接收输入，不直接宣告任务已经推进到某个状态。Worker 更新状态库，Client 再通过 `tasks/get` 读取新的事实。这个区分避免 Client 越权修改服务端任务状态，也允许执行系统采用最终一致的 Worker 与队列。
 
 协议只定义交互边界，任务状态仍需要可靠存储。一个可运营的任务对象至少应具备：
 
