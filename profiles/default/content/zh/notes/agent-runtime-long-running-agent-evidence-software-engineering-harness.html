@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="核心结论：长任务 Agent 的关键不是让一次会话持续更久，而是让每一轮都产生可恢复、可验证、可继续的净进展。Harness-of-Harness（HoH）真正新增的是一层长周期开发控制面：固定模型与基础 Harness…">
+  <title>长任务 Agent 如何保存净进展：精读 Harness-of-Harness</title>
+  <script type="application/json" id="dossierkit-note-metadata">{"locale":"zh","translationStatus":"reviewed","lastReviewedAt":"2026-09-06","title":"长任务 Agent 如何保存净进展：精读 Harness-of-Harness","summary":"核心结论：长任务 Agent 的关键不是让一次会话持续更久，而是让每一轮都产生可恢复、可验证、可继续的净进展。Harness-of-Harness（HoH）真正新增的是一层长周期开发控制面：固定模型与基础 Harness…","featured":false,"date":"2026-09-06","updatedAt":"2026-09-06T16:17:50.362Z","kind":"research","topics":["Agent Runtime","Long-running Agent","Evidence","Software Engineering","Harness"],"tags":["Agent Runtime","Long-running Agent","Evidence","Software Engineering","Harness"],"contentHash":"sha256:a91adb2783fdeddbfeb5b2c7cedc53a11053adebbee869a5b9e9b4f5413041df","format":"html"}</script>
+  <style>
+    body { max-width: 800px; margin: 48px auto; padding: 0 24px; color: #13231c; font: 17px/1.7 system-ui, sans-serif; }
+    img, table, pre { max-width: 100%; } pre { overflow: auto; padding: 16px; background: #f4f7f5; }
+    table { border-collapse: collapse; } th, td { border: 1px solid #d9e2dd; padding: 8px 10px; text-align: left; }
+  </style>
+</head>
+<body>
+  <article data-dossierkit-note-body>
+    <h1>长任务 Agent 如何保存净进展：精读 Harness-of-Harness</h1>
+    <article>
+      
+    
+      <p><strong>核心结论：</strong>长任务 Agent 的关键不是让一次会话持续更久，而是让每一轮都产生可恢复、可验证、可继续的净进展。Harness-of-Harness（HoH）真正新增的是一层长周期开发控制面：固定模型与基础 Harness，通过规划、开发、独立验收的循环，持续推进版本化制品与证据状态。</p>
+    
+      <p>原文：<a href="https://arxiv.org/abs/2609.01481">Harness-of-Harness: A General Framework for Iterative Agentic Software Development</a>（2026-09-01）。</p>
+    
+      <h2>一、它解决的不是“Agent 能否继续跑”，而是“继续跑是否仍在积累价值”</h2>
+    
+      <p>长时间运行常被简化为更大的上下文窗口、更多 Token 或自动 continuation。但这些手段只延长了执行时间，没有回答四个工程问题：</p>
+    
+      <ul>
+        <li>上一轮究竟交付了什么稳定结果？</li>
+        <li>哪些能力已经通过独立验证，哪些仍只是开发者自述？</li>
+        <li>失败后从哪里恢复，如何避免重复探索？</li>
+        <li>下一轮为什么应该做这件事，而不是继续扩张任务范围？</li>
+      </ul>
+    
+      <p>HoH 的回答是把“继续对话”改造成“推进一个版本化开发过程”。系统每轮处理的核心对象不是对话历史，而是制品状态与证据状态：</p>
+    
+      
+        
+          (At−1,Et−1)
+          →S,loop t
+          (At,Et)
+        
+      
+    
+      <p>其中，<code>A</code> 是代码、资源、配置与可运行构建等制品；<code>E</code> 是测试结果、验收报告、失败轨迹与未解决风险。规格 <code>S</code> 在整个运行期间保持稳定，避免目标在迭代中悄然漂移。</p>
+    
+      <pre><code class="language-mermaid">flowchart LR
+        S[稳定规格 S] --&gt; P[Planner\n读取制品与证据]
+        A0[(Artifact Aₜ₋₁)] --&gt; P
+        E0[(Evidence Eₜ₋₁)] --&gt; P
+        P --&gt; I[有界增量 Iₜ]
+        I --&gt; D[Developer\n唯一写入者]
+        D --&gt; A1[(候选制品 Aₜ)]
+        A1 --&gt; Q[Independent QA\n冻结版本、只读验收]
+        Q --&gt; E1[(新证据 Eₜ)]
+        E1 --&gt;|未通过或发现新缺口| P
+        E1 --&gt;|满足完成条件| R[发布或收束]
+      </code></pre>
+    
+      <h2>二、三种分离构成 HoH 的机制核心</h2>
+    
+      <h3>1. 制品与证据分离</h3>
+    
+      <p>“代码已经写完”不等于“能力已经成立”。制品说明系统现在是什么，证据说明哪些主张已被外部检查支持。两者分开后，下一轮规划不必相信上一轮的自然语言总结，而可以直接消费可执行制品和机器可读证据。</p>
+    
+      <h3>2. 生产者与验证者分离</h3>
+    
+      <p>Developer 是制品的单一写入者；QA 面对冻结候选版本，以只读方式检查。这样既减少并发写入冲突，也降低同一个 Agent 同时“写答案、解释答案、给自己打分”产生的确认偏差。独立验收的价值不在角色名称，而在权限边界和输入快照。</p>
+    
+      <h3>3. 长期目标与当轮增量分离</h3>
+    
+      <p>Planner 不把整个规格再次交给 Developer，而是选择一个局部完备、可独立验证的增量。每轮必须留下稳定检查点，使失败成本被限制在一轮内。长任务因此不再依赖一条脆弱的超长轨迹，而是由一串可审计的小事务构成。</p>
+    
+      <pre><code class="language-mermaid">stateDiagram-v2
+        [*] --&gt; Planned
+        Planned --&gt; Developing: 锁定有界增量
+        Developing --&gt; Candidate: 提交唯一写入
+        Candidate --&gt; Verifying: 冻结候选版本
+        Verifying --&gt; Accepted: 验收证据充分
+        Verifying --&gt; Rework: 失败证据/风险缺口
+        Rework --&gt; Planned: 证据进入下一轮规划
+        Accepted --&gt; Planned: 仍有规格未满足
+        Accepted --&gt; Completed: 规格与退出条件满足
+      </code></pre>
+    
+      <h2>三、实验真正支持了什么</h2>
+    
+      <p>论文在 GameCraft-Bench、FrontierSWE 与 ProgramBench 上组合三组 Harness 与模型。摘要报告三轮迭代平均相对提升 52.25%，最高 82.86%；另展示了一个持续 70 多轮、跨多日开发的 FPS 项目。</p>
+    
+      <table>
+        <thead><tr><th>GameCraft 配置</th><th>得分</th><th>Token</th><th>可读出的结论</th></tr></thead>
+        <tbody>
+          <tr><td>Vanilla 1</td><td>49.58</td><td>2.59M</td><td>单轮基线</td></tr>
+          <tr><td>Vanilla continuation 3</td><td>58.24</td><td>6.33M</td><td>延长执行有效，但提升有限</td></tr>
+          <tr><td>HoH 1</td><td>59.71</td><td>2.88M</td><td>一轮结构化控制已超过三轮普通续跑</td></tr>
+          <tr><td>HoH 2</td><td>64.84</td><td>5.67M</td><td>Token 少于 Vanilla 3，得分更高</td></tr>
+          <tr><td>HoH 3</td><td>71.52</td><td>8.41M</td><td>迭代继续积累可测收益</td></tr>
+        </tbody>
+      </table>
+    
+      <p>消融实验更能定位因果来源：删除计划更新后得分降至 63.39，删除证据反馈后降至 65.23，取消 warm start 后降至 63.67 且 Token 增至 11.12M。也就是说，收益不是简单来自“多调用几次模型”，而来自进展状态、反馈闭环与恢复机制的组合。</p>
+    
+      <p>证据边界同样重要：基准中的循环条件受控；70 多轮案例只是一个开放式项目，并额外使用工具、Skill 和版本管理。论文证明了这种控制结构具有潜力，但没有证明它已经普遍解决真实组织中的自主软件交付、需求变更或生产事故责任。</p>
+    
+      <h2>四、落到 Agent Runtime，应建设哪些一等对象</h2>
+    
+      <p>HoH 不应被实现成三个角色名称和一段轮询提示词。可迁移的设计是把版本、证据和退出条件放进 Runtime：</p>
+    
+      <pre><code class="language-typescript">type RunId = string;
+    type ArtifactVersion = string;
+    
+    interface Evidence {
+      artifactVersion: ArtifactVersion;
+      checkId: string;
+      verdict: "pass" | "fail" | "inconclusive";
+      producedAt: string;
+      reportUri: string;
+    }
+    
+    interface IterationState {
+      runId: RunId;
+      specificationHash: string;
+      artifactVersion: ArtifactVersion;
+      acceptedEvidence: Evidence[];
+      openRisks: string[];
+      nextIncrement?: {
+        objective: string;
+        acceptanceChecks: string[];
+        writeScope: string[];
+      };
+    }
+    
+    async function advance(state: IterationState): Promise&lt;IterationState&gt; {
+      const plan = await planner.plan(state);
+      const candidate = await developer.apply(plan, {
+        baseVersion: state.artifactVersion,
+        exclusiveWriteScope: plan.writeScope,
+      });
+      const evidence = await qa.verifyReadOnly(candidate.version, plan.acceptanceChecks);
+      return checkpoint(reconcile(state, candidate, evidence));
+    }</code></pre>
+    
+      <p>这段参考实现刻意表达五个约束：规格以哈希固定；写入范围显式化；QA 绑定确定的制品版本；失败也写入证据；每轮结束生成可恢复检查点。角色可以替换，约束不能被提示词默契代替。</p>
+    
+      <h2>五、工程与用户体验上的直接启发</h2>
+    
+      <ul>
+        <li><strong>进度应该由证据定义。</strong>面向用户显示“3/5 个验收条件已通过”，比“Agent 已思考 47 分钟”更可信。</li>
+        <li><strong>允许从稳定版本继续。</strong>恢复点必须同时指向制品和证据，避免恢复后重新证明已经完成的工作。</li>
+        <li><strong>把不确定性保留下来。</strong><code>inconclusive</code> 不是失败的别名，它提醒下一轮补充观测，而不是编造确定性。</li>
+        <li><strong>退出条件属于产品。</strong>预算耗尽、风险上升、验收完成与需要人工决策都应成为可配置终止语义。</li>
+      </ul>
+    
+      <p>从经验主义角度看，HoH 的价值是把 Agent 的“理解”降格为假设，把可复现证据提升为状态。系统不因模型宣称完成而前进，只因新版本经受了明确检查而前进。长周期智能由此不再表现为持续意识，而表现为能够保留、质疑并累积外部化成果。</p>
+    
+      <h2>结语</h2>
+    
+      <p>Harness-of-Harness 最值得吸收的不是 Planner、Developer、QA 三个标签，而是一个长任务不变量：每轮必须把制品推进到新版本，并把与该版本绑定的证据写入可恢复状态。Agent Runtime 的前沿因此不是无限延长 Session，而是建设能够保存净进展的控制面。</p>
+    </article>
+  </article>
+</body>
+</html>
