@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="核心结论：Agent Harness 不是可随意替换模型的中性外壳，而是会与创建它、执行它的模型共同适配的可运行产品。HarnessDev 最有价值的贡献，是把评测对象从单次答案提升为 Harness 本身，并用跨执行器…">
+  <title>Harness 也会过拟合模型：精读 HarnessDev</title>
+  <script type="application/json" id="dossierkit-note-metadata">{"locale":"zh","translationStatus":"reviewed","lastReviewedAt":"2026-09-06","title":"Harness 也会过拟合模型：精读 HarnessDev","summary":"核心结论：Agent Harness 不是可随意替换模型的中性外壳，而是会与创建它、执行它的模型共同适配的可运行产品。HarnessDev 最有价值的贡献，是把评测对象从单次答案提升为 Harness 本身，并用跨执行器…","featured":false,"date":"2026-09-06","updatedAt":"2026-09-06T16:17:47.398Z","kind":"research","topics":["Agent Harness","Evaluation","Self-Evolution","Model Compatibility","Agent Runtime"],"tags":["Agent Harness","Evaluation","Self-Evolution","Model Compatibility","Agent Runtime"],"contentHash":"sha256:6277a0dead0f6ea4207d933930b06296be7eb061939744f41caee18b44782159","format":"html"}</script>
+  <style>
+    body { max-width: 800px; margin: 48px auto; padding: 0 24px; color: #13231c; font: 17px/1.7 system-ui, sans-serif; }
+    img, table, pre { max-width: 100%; } pre { overflow: auto; padding: 16px; background: #f4f7f5; }
+    table { border-collapse: collapse; } th, td { border: 1px solid #d9e2dd; padding: 8px 10px; text-align: left; }
+  </style>
+</head>
+<body>
+  <article data-dossierkit-note-body>
+    <h1>Harness 也会过拟合模型：精读 HarnessDev</h1>
+    <article>
+      
+    
+      <p><strong>核心结论：</strong>Agent Harness 不是可随意替换模型的中性外壳，而是会与创建它、执行它的模型共同适配的可运行产品。HarnessDev 最有价值的贡献，是把评测对象从单次答案提升为 Harness 本身，并用跨执行器与 held-out 评测揭示：在原模型上有效的 Harness，换一个模型或换一组任务后可能明显退化。</p>
+    
+      <p>原文：<a href="https://arxiv.org/abs/2609.01437">HarnessDev: Evaluating LLMs as Agent Harness Creators and Evolvers</a>（2026-09-01）。</p>
+    
+      <h2>一、为什么要评测 Harness，而不只评测 Agent 的最终答案</h2>
+    
+      <p>常规 Agent Eval 把模型、提示词、工具循环、上下文管理、恢复策略混在一个系统里，最后只看任务成功率。这能回答“整套系统现在表现如何”，却无法回答“是谁制造了提升”。当 Harness 开始由模型自动生成或修改时，评测单位必须升级：</p>
+    
+      <ul>
+        <li>创建阶段：模型能否从规格生成一个可运行、通用的 Harness？</li>
+        <li>演化阶段：模型能否根据运行反馈修改 Harness，同时改善未见任务？</li>
+        <li>迁移阶段：同一个 Harness 换执行模型后，能力是否仍然成立？</li>
+      </ul>
+    
+      <pre><code class="language-mermaid">flowchart TB
+        C[Creator LLM] --&gt; H0[创建 Harness H₀]
+        H0 --&gt; F[冻结版本]
+        F --&gt; SE[Self-Eval\n原执行器]
+        F --&gt; UE[Unified-Eval\n统一 Gemini 执行器]
+        SE --&gt; D{差距来自哪里?}
+        UE --&gt; D
+        D --&gt;|两边都好| G[较强的通用 Harness]
+        D --&gt;|Self 好、Unified 差| M[模型—Harness 共适配]
+        D --&gt;|可见集好、Held-out 差| O[反馈过拟合]
+        D --&gt;|声明能力未触发| T[死代码或无效机制]
+      </code></pre>
+    
+      <p>论文使用 6 个 Creator LLM、4 个领域、5 个下游基准，共 2,207 个独立实例。这个设计把“能写 Agent 代码”与“能产出跨任务、跨执行器有效的 Agent 基础设施”区分开来。</p>
+    
+      <h2>二、一个 Harness 至少包含六类机制</h2>
+    
+      <table>
+        <thead><tr><th>模块</th><th>核心问题</th><th>应观测的运行证据</th></tr></thead>
+        <tbody>
+          <tr><td>E：Execution loop</td><td>如何决定下一步并结束循环</td><td>迭代次数、停止原因、动作序列</td></tr>
+          <tr><td>T：Tool policy</td><td>何时选工具、如何处理工具结果</td><td>调用、拒绝、重试、回退</td></tr>
+          <tr><td>C：Context management</td><td>如何选择、压缩、排列上下文</td><td>来源、预算、裁剪与缓存命中</td></tr>
+          <tr><td>S：State / memory</td><td>什么跨步骤或跨运行保存</td><td>状态读写、检查点与恢复</td></tr>
+          <tr><td>L：Lifecycle / recovery</td><td>失败、超时、中断后如何继续</td><td>错误分类、重试边界、恢复点</td></tr>
+          <tr><td>V：Verification</td><td>如何判断结果满足要求</td><td>验证器输入、结果与反馈闭环</td></tr>
+        </tbody>
+      </table>
+    
+      <p>这六类不是功能清单，而是评测坐标。一个 Harness 可以在源码中声明 State 类和 checkpoint API，但如果轨迹中从未发生保存，它在真实运行里就没有恢复能力。</p>
+    
+      <h2>三、最关键的发现：Self-Eval 会高估 Harness 的可迁移能力</h2>
+    
+      <p>创建阶段，Claude Opus 4.8 生成的 Harness 综合分为 67.8，仍低于论文引用的人工工程系统 86.2。这里不能把差距解释成严格的人机同条件比较：人工参考结果来自公开系统，通常搭配不同执行模型，并非同一执行器下的配对对照。</p>
+    
+      <p>更有解释力的是执行器替换：</p>
+    
+      <ul>
+        <li>Opus 创建的代码 Harness 在 SWE-Pro 上，自身执行得分 69.3；改由统一 Gemini 执行后降至 33.0。</li>
+        <li>同一 Creator 的搜索 Harness，重复查询率从 10.1% 上升到 88.2%。</li>
+      </ul>
+    
+      <p>这说明 Harness 中存在大量隐式协议：提示词措辞、工具返回格式、错误容忍、停止信号和上下文布局都可能恰好契合原执行模型。把模型视为可替换依赖，往往会漏掉行为层 ABI。</p>
+    
+      <pre><code class="language-mermaid">flowchart LR
+        H[Harness 版本] --&gt; P[Prompt / Tool / State 协议]
+        P --&gt; M1[Executor M₁]
+        P --&gt; M2[Executor M₂]
+        M1 --&gt; B1[行为分布 B₁]
+        M2 --&gt; B2[行为分布 B₂]
+        B1 --&gt; E[任务结果 + Runtime Trace]
+        B2 --&gt; E
+        E --&gt; G{跨模型门禁}
+        G --&gt;|差距可接受| Ship[允许晋升]
+        G --&gt;|差距过大| Scope[绑定模型或修订协议]
+      </code></pre>
+    
+      <h2>四、源码中“有能力”不等于运行中“用到了能力”</h2>
+    
+      <p>论文的架构分析显示：18/18 个代码 Harness 有执行循环，13/18 有工具策略，13/18 有生命周期处理，15/18 有验证；11/18 定义了 State 类，但只有 1 个提供状态保存接口、1 个实现周期检查点。在 26,679 条轨迹里，实际 checkpoint 事件为 0。</p>
+    
+      <p>这组数字把 Harness 评审从静态代码审查推向运行证据审查。真正需要验证的是：</p>
+    
+      <pre><code class="language-typescript">interface HarnessCapabilityGate {
+      capability: "checkpoint" | "retry" | "verification" | "tool_admission";
+      declaredBy: string[];       // 源码中的接口、配置或策略
+      requiredEvents: string[];   // 轨迹中必须出现的事件
+      minimumCoverage: number;    // 在适用轨迹中的触发覆盖率
+      failureSemantics: string;   // 未触发、失败、跳过如何区分
+    }
+    
+    function verifyCapability(
+      gate: HarnessCapabilityGate,
+      traces: RuntimeTrace[],
+    ): GateResult {
+      const applicable = traces.filter(t =&gt; isApplicable(gate, t));
+      const covered = applicable.filter(t =&gt; hasAllEvents(t, gate.requiredEvents));
+      return {
+        declared: gate.declaredBy.length &gt; 0,
+        exercised: covered.length &gt; 0,
+        coverage: applicable.length ? covered.length / applicable.length : 0,
+        passed: covered.length / Math.max(applicable.length, 1) &gt;= gate.minimumCoverage,
+      };
+    }</code></pre>
+    
+      <p>因此，Harness CI 不能只跑 lint、单元测试和接口快照，还要对真实轨迹断言：恢复是否发生、验证反馈是否被下一步消费、重试是否遵守上限、工具拒绝是否真正改变计划。</p>
+    
+      <h2>五、自我演化有效，但最容易优化错对象</h2>
+    
+      <p>论文让 Creator 根据反馈继续修改 Harness。五组自运行 Creator 都能改善可见反馈任务，但 held-out 收益显著缩小，最大提升仅为 4.44 分。换成固定 Gemini 执行器后，只有 Opus 创建的 Harness 在 held-out 集上仍提升；其他 Creator 出现回退。GPT-5.5 创建的 Harness 在固定 Gemini 下由 42.22 降至 31.90，下降 10.32 分。</p>
+    
+      <p>另一个值得保留的信号是：自测数量与表现的 Spearman 相关仅 0.13–0.26，且不显著；修订调用次数与表现的相关达到 0.57，<code>p ≤ 0.0005</code>。机械增加测试数量不是关键，能否把失败证据闭环成有效修订更重要。</p>
+    
+      <h2>六、把 Harness 当作产品发布，而不是提示词热更新</h2>
+    
+      <pre><code class="language-mermaid">flowchart LR
+        Change[Harness 变更] --&gt; Static[静态检查]
+        Static --&gt; Replay[轨迹回放]
+        Replay --&gt; Visible[可见任务]
+        Replay --&gt; Held[Held-out 任务]
+        Held --&gt; Cross[跨执行器矩阵]
+        Cross --&gt; Cost[质量 / Token / 时延 / 风险]
+        Cost --&gt; Shadow[Shadow 运行]
+        Shadow --&gt; Gate{晋升门禁}
+        Gate --&gt;|通过| Release[版本化发布]
+        Gate --&gt;|失败| Rollback[保留旧版本并回滚]
+      </code></pre>
+    
+      <p>一套可操作的发布门禁至少应包含：</p>
+    
+      <ol>
+        <li><strong>冻结 Harness 版本。</strong>提示词、工具 schema、状态结构、验证器和恢复策略共同版本化。</li>
+        <li><strong>拆分调参与验收数据。</strong>可见反馈只用于迭代；晋升由 held-out 集决定。</li>
+        <li><strong>建立执行器矩阵。</strong>至少覆盖生产主模型、降级模型和下一候选模型。</li>
+        <li><strong>同时记录结果与轨迹。</strong>成功率解释“是否完成”，轨迹解释“机制是否真的工作”。</li>
+        <li><strong>以失败语义阻止伪提升。</strong>超预算、无效循环、重复工具调用和验证器绕过不能被平均分掩盖。</li>
+      </ol>
+    
+      <h2>七、对 Agent 工程的边界判断</h2>
+    
+      <p>HarnessDev 支持“Harness 已成为独立优化层”，但不支持“模型已经能稳定自我改进基础设施”。现有证据更接近：模型可以生成有竞争力的 Harness 原型，也能利用局部反馈改进它；然而泛化、跨模型迁移和运行机制覆盖仍不可靠。</p>
+    
+      <p>其哲学含义也很直接：智能行为不是模型参数的孤立属性，而是模型与环境协议共同生成的结果。更换模型就像更换一个没有完全遵循同一 ABI 的运行时。工程上应承认这种耦合、测量这种耦合，并通过显式协议和发布门禁控制它，而不是假定 Harness 天然通用。</p>
+    
+      <h2>结语</h2>
+    
+      <p>HarnessDev 把一个容易被忽略的事实变成了可测对象：Harness 会过拟合任务，也会过拟合执行模型。下一阶段的 Harness Engineering 应具备软件产品同等严格的版本、CI/CD、held-out 评测、跨执行器兼容性和运行证据。只有当提升能够离开创建它的模型与反馈集继续成立，它才配进入全局 Runtime。</p>
+    </article>
+  </article>
+</body>
+</html>
