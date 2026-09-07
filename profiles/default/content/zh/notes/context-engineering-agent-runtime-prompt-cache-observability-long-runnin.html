@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="核心结论：下一代 Agent Context 不应继续由散落的 messages.push() 拼接逻辑承担。ContextPipe 的实质贡献是把 Context Assembly 抽象成可规划、可优化、可执行、可反馈…">
+  <meta name="description" content="ContextPipe 将上下文组装从调用前的拼接逻辑提升为可规划、优化、执行与反馈的运行时子系统。">
   <title>Context 组装应成为独立执行引擎</title>
-  <script type="application/json" id="dossierkit-note-metadata">{"locale":"zh","translationStatus":"reviewed","lastReviewedAt":"2026-09-07","title":"Context 组装应成为独立执行引擎","summary":"核心结论：下一代 Agent Context 不应继续由散落的 messages.push() 拼接逻辑承担。ContextPipe 的实质贡献是把 Context Assembly 抽象成可规划、可优化、可执行、可反馈…","featured":false,"date":"2026-09-06","updatedAt":"2026-09-07T00:38:52.920Z","kind":"research","topics":["Context Engineering","Agent Runtime","Prompt Cache","Observability","Long-running Agent"],"tags":["Context Engineering","Agent Runtime","Prompt Cache","Observability","Long-running Agent"],"contentHash":"sha256:420355299aa31cfb32443746251d274a08ccb467dfe233f620eb273b3c1b2774","format":"html"}</script>
+  <script type="application/json" id="dossierkit-note-metadata">{"locale":"zh","translationStatus":"reviewed","lastReviewedAt":"2026-09-07","title":"Context 组装应成为独立执行引擎","summary":"ContextPipe 将上下文组装从调用前的拼接逻辑提升为可规划、优化、执行与反馈的运行时子系统。","featured":false,"date":"2026-09-06","updatedAt":"2026-09-07T02:22:55.000Z","kind":"research","topics":["Context Engineering","Agent Runtime","Prompt Cache","Observability","Long-running Agent"],"tags":["Context Engineering","Agent Runtime","Prompt Cache","Observability","Long-running Agent"],"contentHash":"sha256:788343b6987dc6e74a398202a1a16b846c5a6e102a2b97bf5724f1f20caa4a2c","format":"html"}</script>
   <style>
     body { max-width: 800px; margin: 48px auto; padding: 0 24px; color: #13231c; font: 17px/1.7 system-ui, sans-serif; }
     img, table, pre { max-width: 100%; } pre { overflow: auto; padding: 16px; background: #f4f7f5; }
@@ -17,8 +17,6 @@
     <h1>Context 组装应成为独立执行引擎</h1>
     <article>
           
-        
-          <p><strong>核心结论：</strong>下一代 Agent Context 不应继续由散落的 <code>messages.push()</code> 拼接逻辑承担。ContextPipe 的实质贡献是把 Context Assembly 抽象成可规划、可优化、可执行、可反馈的独立运行时：Plan → Bind → Optimize → Execute → Feedback。它的架构方向很强，但端到端实验规模很小，论文摘要与表格还存在数字不一致，固定阈值不宜直接复制到生产。</p>
         
           <p>原文：<a href="https://arxiv.org/abs/2609.00749">ContextPipe: A Context-Engineering Runtime for Long-Horizon Agents</a>（2026-09-01）。</p>
         

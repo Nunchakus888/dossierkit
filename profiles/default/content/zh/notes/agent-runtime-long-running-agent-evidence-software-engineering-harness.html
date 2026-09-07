@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="核心结论：长任务 Agent 的关键不是让一次会话持续更久，而是让每一轮都产生可恢复、可验证、可继续的净进展。Harness-of-Harness（HoH）真正新增的是一层长周期开发控制面：固定模型与基础 Harness…">
+  <meta name="description" content="Harness-of-Harness 通过规划、开发与独立验收循环，将长任务推进转化为可恢复、可验证的净进展。">
   <title>长任务 Agent 如何保存净进展</title>
-  <script type="application/json" id="dossierkit-note-metadata">{"locale":"zh","translationStatus":"reviewed","lastReviewedAt":"2026-09-07","title":"长任务 Agent 如何保存净进展","summary":"核心结论：长任务 Agent 的关键不是让一次会话持续更久，而是让每一轮都产生可恢复、可验证、可继续的净进展。Harness-of-Harness（HoH）真正新增的是一层长周期开发控制面：固定模型与基础 Harness…","featured":false,"date":"2026-09-06","updatedAt":"2026-09-07T00:38:48.027Z","kind":"research","topics":["Agent Runtime","Long-running Agent","Evidence","Software Engineering","Harness"],"tags":["Agent Runtime","Long-running Agent","Evidence","Software Engineering","Harness"],"contentHash":"sha256:5f2b37e18b1cd8463122823e388994dcaa07b58d7862d2d963f919e67a8b1aa5","format":"html"}</script>
+  <script type="application/json" id="dossierkit-note-metadata">{"locale":"zh","translationStatus":"reviewed","lastReviewedAt":"2026-09-07","title":"长任务 Agent 如何保存净进展","summary":"Harness-of-Harness 通过规划、开发与独立验收循环，将长任务推进转化为可恢复、可验证的净进展。","featured":false,"date":"2026-09-06","updatedAt":"2026-09-07T02:22:53.000Z","kind":"research","topics":["Agent Runtime","Long-running Agent","Evidence","Software Engineering","Harness"],"tags":["Agent Runtime","Long-running Agent","Evidence","Software Engineering","Harness"],"contentHash":"sha256:e50d1a30942562b80f439223fb3e97c7898b11e1f3f63e9ce3838c6009300843","format":"html"}</script>
   <style>
     body { max-width: 800px; margin: 48px auto; padding: 0 24px; color: #13231c; font: 17px/1.7 system-ui, sans-serif; }
     img, table, pre { max-width: 100%; } pre { overflow: auto; padding: 16px; background: #f4f7f5; }
@@ -17,8 +17,6 @@
     <h1>长任务 Agent 如何保存净进展</h1>
     <article>
           
-        
-          <p><strong>核心结论：</strong>长任务 Agent 的关键不是让一次会话持续更久，而是让每一轮都产生可恢复、可验证、可继续的净进展。Harness-of-Harness（HoH）真正新增的是一层长周期开发控制面：固定模型与基础 Harness，通过规划、开发、独立验收的循环，持续推进版本化制品与证据状态。</p>
         
           <p>原文：<a href="https://arxiv.org/abs/2609.01481">Harness-of-Harness: A General Framework for Iterative Agentic Software Development</a>（2026-09-01）。</p>
         

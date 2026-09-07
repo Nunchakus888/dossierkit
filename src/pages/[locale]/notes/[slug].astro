@@ -512,12 +512,16 @@ const kindLabel = {
   }
 
   .diagram-viewer {
-    width: min(96vw, 1600px);
+    position: fixed;
+    inset: 0;
+    box-sizing: border-box;
+    width: 100vw;
     max-width: none;
-    height: min(92vh, 1000px);
+    height: 100dvh;
     max-height: none;
-    border: 1px solid var(--color-border);
-    border-radius: 22px;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
     padding: 0;
     background: var(--color-background);
     box-shadow: 0 28px 90px rgba(19, 35, 28, 0.28);
@@ -624,16 +628,16 @@ const kindLabel = {
   }
 
   .diagram-viewer-canvas {
-    display: flex;
+    display: grid;
+    width: max-content;
     min-width: 100%;
+    height: max-content;
     min-height: 100%;
-    align-items: flex-start;
-    justify-content: center;
+    place-items: center;
   }
 
   .diagram-viewer-canvas :global(svg) {
     display: block;
-    flex: none;
     max-width: none !important;
   }
 
@@ -667,13 +671,6 @@ const kindLabel = {
   @media (max-width: 560px) {
     .note-toc nav {
       grid-template-columns: 1fr;
-    }
-
-    .diagram-viewer {
-      width: 100vw;
-      height: 100dvh;
-      border: 0;
-      border-radius: 0;
     }
 
     .diagram-viewer-header {

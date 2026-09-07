@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="核心结论：Agent Harness 不是可随意替换模型的中性外壳，而是会与创建它、执行它的模型共同适配的可运行产品。HarnessDev 最有价值的贡献，是把评测对象从单次答案提升为 Harness 本身，并用跨执行器…">
+  <meta name="description" content="HarnessDev 表明 Harness 会与创建、执行它的模型共同适配；有效性必须通过跨模型与未见任务验证。">
   <title>Harness 也会过拟合模型</title>
-  <script type="application/json" id="dossierkit-note-metadata">{"locale":"zh","translationStatus":"reviewed","lastReviewedAt":"2026-09-07","title":"Harness 也会过拟合模型","summary":"核心结论：Agent Harness 不是可随意替换模型的中性外壳，而是会与创建它、执行它的模型共同适配的可运行产品。HarnessDev 最有价值的贡献，是把评测对象从单次答案提升为 Harness 本身，并用跨执行器…","featured":false,"date":"2026-09-06","updatedAt":"2026-09-07T00:38:50.450Z","kind":"research","topics":["Agent Harness","Evaluation","Self-Evolution","Model Compatibility","Agent Runtime"],"tags":["Agent Harness","Evaluation","Self-Evolution","Model Compatibility","Agent Runtime"],"contentHash":"sha256:ba162a9e231241091c20da58daf20d2a7eb53ae67e14fce65ba0a52faf2738b4","format":"html"}</script>
+  <script type="application/json" id="dossierkit-note-metadata">{"locale":"zh","translationStatus":"reviewed","lastReviewedAt":"2026-09-07","title":"Harness 也会过拟合模型","summary":"HarnessDev 表明 Harness 会与创建、执行它的模型共同适配；有效性必须通过跨模型与未见任务验证。","featured":false,"date":"2026-09-06","updatedAt":"2026-09-07T02:22:54.000Z","kind":"research","topics":["Agent Harness","Evaluation","Self-Evolution","Model Compatibility","Agent Runtime"],"tags":["Agent Harness","Evaluation","Self-Evolution","Model Compatibility","Agent Runtime"],"contentHash":"sha256:16acd9af24da86b16a8a920bde95b6b351e0d426eb68e257ce6711b26e52875a","format":"html"}</script>
   <style>
     body { max-width: 800px; margin: 48px auto; padding: 0 24px; color: #13231c; font: 17px/1.7 system-ui, sans-serif; }
     img, table, pre { max-width: 100%; } pre { overflow: auto; padding: 16px; background: #f4f7f5; }
@@ -17,8 +17,6 @@
     <h1>Harness 也会过拟合模型</h1>
     <article>
           
-        
-          <p><strong>核心结论：</strong>Agent Harness 不是可随意替换模型的中性外壳，而是会与创建它、执行它的模型共同适配的可运行产品。HarnessDev 最有价值的贡献，是把评测对象从单次答案提升为 Harness 本身，并用跨执行器与 held-out 评测揭示：在原模型上有效的 Harness，换一个模型或换一组任务后可能明显退化。</p>
         
           <p>原文：<a href="https://arxiv.org/abs/2609.01437">HarnessDev: Evaluating LLMs as Agent Harness Creators and Evolvers</a>（2026-09-01）。</p>
         
