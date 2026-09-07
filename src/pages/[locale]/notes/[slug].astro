@@ -74,6 +74,58 @@ const kindLabel = {
       <div class="prose note-prose" set:html={rendered.html} />
     </div>
   </article>
+
+  <dialog
+    id="diagram-viewer"
+    class="diagram-viewer no-print"
+    data-diagram-viewer
+    aria-labelledby="diagram-viewer-title"
+  >
+    <div class="diagram-viewer-panel">
+      <header class="diagram-viewer-header">
+        <div>
+          <p>{locale === "zh" ? "交互式图表" : "Interactive diagram"}</p>
+          <h2 id="diagram-viewer-title">{locale === "zh" ? "放大查看" : "Expanded view"}</h2>
+        </div>
+        <div
+          class="diagram-viewer-toolbar"
+          role="toolbar"
+          aria-label={locale === "zh" ? "图表缩放控制" : "Diagram zoom controls"}
+        >
+          <button
+            type="button"
+            data-diagram-zoom-out
+            aria-label={locale === "zh" ? "缩小图表" : "Zoom out"}
+          >−</button>
+          <output data-diagram-zoom-output aria-live="polite">100%</output>
+          <button
+            type="button"
+            data-diagram-zoom-in
+            aria-label={locale === "zh" ? "放大图表" : "Zoom in"}
+          >+</button>
+          <button type="button" data-diagram-reset>
+            {locale === "zh" ? "适应窗口" : "Fit"}
+          </button>
+          <button type="button" data-diagram-close>
+            {locale === "zh" ? "关闭" : "Close"}
+          </button>
+        </div>
+      </header>
+      <div
+        class="diagram-viewer-stage"
+        data-diagram-stage
+        tabindex="0"
+        aria-label={locale === "zh" ? "可滚动的放大图表" : "Scrollable enlarged diagram"}
+      >
+        <div class="diagram-viewer-canvas" data-diagram-canvas></div>
+      </div>
+      <p class="diagram-viewer-hint">
+        {locale === "zh"
+          ? "使用 + / − 缩放，按 0 适应窗口；放大后可拖动或滚动查看，Esc 关闭。"
+          : "Use + / − to zoom and 0 to fit; drag or scroll after zooming, and press Esc to close."}
+      </p>
+    </div>
+  </dialog>
 </BaseLayout>
 
 <script>
@@ -91,7 +143,9 @@ const kindLabel = {
 
   const diagrams = document.querySelectorAll<HTMLElement>("[data-mermaid-diagram]");
   if (diagrams.length > 0) {
-    renderDiagrams().catch(() => {
+    renderDiagrams().then(() => {
+      enableDiagramViewer(diagrams);
+    }).catch(() => {
       diagrams.forEach((diagram) => diagram.classList.add("mermaid-failed"));
     });
   }
@@ -113,6 +167,184 @@ const kindLabel = {
       }
     });
     await mermaid.run({ nodes: Array.from(diagrams) });
+  }
+
+  function enableDiagramViewer(diagramNodes: NodeListOf<HTMLElement>) {
+    const viewer = document.querySelector<HTMLDialogElement>("[data-diagram-viewer]");
+    const stage = viewer?.querySelector<HTMLElement>("[data-diagram-stage]");
+    const canvas = viewer?.querySelector<HTMLElement>("[data-diagram-canvas]");
+    const zoomOutput = viewer?.querySelector<HTMLOutputElement>("[data-diagram-zoom-output]");
+    const zoomInButton = viewer?.querySelector<HTMLButtonElement>("[data-diagram-zoom-in]");
+    const zoomOutButton = viewer?.querySelector<HTMLButtonElement>("[data-diagram-zoom-out]");
+    const resetButton = viewer?.querySelector<HTMLButtonElement>("[data-diagram-reset]");
+    const closeButton = viewer?.querySelector<HTMLButtonElement>("[data-diagram-close]");
+    if (!viewer || !stage || !canvas || !zoomOutput || !zoomInButton || !zoomOutButton || !resetButton || !closeButton) {
+      return;
+    }
+
+    const isChinese = document.documentElement.lang.startsWith("zh");
+    let activeTrigger: HTMLButtonElement | undefined;
+    let activeSvg: SVGSVGElement | undefined;
+    let baseWidth = 0;
+    let aspectRatio = 1.6;
+    let scale = 1;
+    let dragging = false;
+    let dragStart = { x: 0, y: 0, left: 0, top: 0 };
+
+    diagramNodes.forEach((diagram, index) => {
+      const svg = diagram.querySelector<SVGSVGElement>("svg");
+      if (!svg) return;
+
+      diagram.classList.add("mermaid-ready");
+      const trigger = document.createElement("button");
+      trigger.type = "button";
+      trigger.className = "mermaid-zoom-trigger";
+      trigger.textContent = isChinese ? "放大查看" : "Expand";
+      trigger.setAttribute("aria-label", isChinese ? `放大查看图表 ${index + 1}` : `Expand diagram ${index + 1}`);
+      trigger.setAttribute("aria-haspopup", "dialog");
+      trigger.setAttribute("aria-controls", viewer.id);
+      trigger.addEventListener("click", () => openDiagram(svg, trigger));
+      diagram.append(trigger);
+    });
+
+    zoomInButton.addEventListener("click", () => setScale(scale + 0.25));
+    zoomOutButton.addEventListener("click", () => setScale(scale - 0.25));
+    resetButton.addEventListener("click", fitDiagram);
+    closeButton.addEventListener("click", () => viewer.close());
+
+    viewer.addEventListener("click", (event) => {
+      if (event.target !== viewer) return;
+      const bounds = viewer.getBoundingClientRect();
+      const outside = event.clientX < bounds.left
+        || event.clientX > bounds.right
+        || event.clientY < bounds.top
+        || event.clientY > bounds.bottom;
+      if (outside) viewer.close();
+    });
+
+    viewer.addEventListener("keydown", (event) => {
+      if (event.key === "+" || event.key === "=") {
+        event.preventDefault();
+        setScale(scale + 0.25);
+      } else if (event.key === "-") {
+        event.preventDefault();
+        setScale(scale - 0.25);
+      } else if (event.key === "0") {
+        event.preventDefault();
+        fitDiagram();
+      }
+    });
+
+    stage.addEventListener("wheel", (event) => {
+      if (!event.ctrlKey && !event.metaKey) return;
+      event.preventDefault();
+      setScale(scale + (event.deltaY < 0 ? 0.25 : -0.25));
+    }, { passive: false });
+
+    stage.addEventListener("dblclick", () => setScale(scale + 0.25));
+    stage.addEventListener("pointerdown", (event) => {
+      if (event.pointerType !== "mouse" || event.button !== 0 || scale <= 1) return;
+      dragging = true;
+      dragStart = {
+        x: event.clientX,
+        y: event.clientY,
+        left: stage.scrollLeft,
+        top: stage.scrollTop
+      };
+      stage.classList.add("is-dragging");
+      stage.setPointerCapture(event.pointerId);
+    });
+    stage.addEventListener("pointermove", (event) => {
+      if (!dragging) return;
+      stage.scrollLeft = dragStart.left - (event.clientX - dragStart.x);
+      stage.scrollTop = dragStart.top - (event.clientY - dragStart.y);
+    });
+    stage.addEventListener("pointerup", stopDragging);
+    stage.addEventListener("pointercancel", stopDragging);
+    window.addEventListener("resize", () => {
+      if (viewer.open) fitDiagram();
+    });
+
+    viewer.addEventListener("close", () => {
+      canvas.replaceChildren();
+      activeSvg = undefined;
+      activeTrigger?.focus();
+      activeTrigger = undefined;
+    });
+
+    function openDiagram(sourceSvg: SVGSVGElement, trigger: HTMLButtonElement) {
+      const clone = sourceSvg.cloneNode(true) as SVGSVGElement;
+      clone.removeAttribute("width");
+      clone.removeAttribute("height");
+      clone.removeAttribute("style");
+      canvas.replaceChildren(clone);
+      activeTrigger = trigger;
+      activeSvg = clone;
+
+      const viewBox = sourceSvg.viewBox.baseVal;
+      const bounds = sourceSvg.getBoundingClientRect();
+      aspectRatio = viewBox.width > 0 && viewBox.height > 0
+        ? viewBox.width / viewBox.height
+        : Math.max(bounds.width / Math.max(bounds.height, 1), 0.25);
+
+      viewer.showModal();
+      window.requestAnimationFrame(() => {
+        fitDiagram();
+        stage.focus();
+      });
+    }
+
+    function fitDiagram() {
+      if (!activeSvg) return;
+      const styles = window.getComputedStyle(stage);
+      const horizontalPadding = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+      const verticalPadding = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+      const availableWidth = Math.max(stage.clientWidth - horizontalPadding, 220);
+      const availableHeight = Math.max(stage.clientHeight - verticalPadding, 180);
+      baseWidth = Math.max(Math.min(availableWidth, availableHeight * aspectRatio), 220);
+      scale = 1;
+      updateDiagramSize(false);
+    }
+
+    function setScale(nextScale: number, preserveCenter = true) {
+      const clamped = Math.min(4, Math.max(0.5, nextScale));
+      if (!activeSvg || clamped === scale) return;
+
+      const previousWidth = baseWidth * scale;
+      const previousHeight = previousWidth / aspectRatio;
+      const centerX = (stage.scrollLeft + stage.clientWidth / 2) / Math.max(previousWidth, 1);
+      const centerY = (stage.scrollTop + stage.clientHeight / 2) / Math.max(previousHeight, 1);
+      scale = clamped;
+      updateDiagramSize(preserveCenter, centerX, centerY);
+    }
+
+    function updateDiagramSize(preserveCenter: boolean, centerX = 0.5, centerY = 0.5) {
+      if (!activeSvg) return;
+      const width = baseWidth * scale;
+      activeSvg.style.width = `${width}px`;
+      activeSvg.style.height = `${width / aspectRatio}px`;
+      zoomOutput.value = `${Math.round(scale * 100)}%`;
+      zoomOutput.textContent = zoomOutput.value;
+      zoomInButton.disabled = scale >= 4;
+      zoomOutButton.disabled = scale <= 0.5;
+      stage.classList.toggle("is-zoomed", scale > 1);
+
+      window.requestAnimationFrame(() => {
+        if (preserveCenter) {
+          stage.scrollLeft = centerX * width - stage.clientWidth / 2;
+          stage.scrollTop = centerY * (width / aspectRatio) - stage.clientHeight / 2;
+        } else {
+          stage.scrollTo({ left: 0, top: 0 });
+        }
+      });
+    }
+
+    function stopDragging(event: PointerEvent) {
+      if (!dragging) return;
+      dragging = false;
+      stage.classList.remove("is-dragging");
+      if (stage.hasPointerCapture(event.pointerId)) stage.releasePointerCapture(event.pointerId);
+    }
   }
 </script>
 
@@ -235,6 +467,7 @@ const kindLabel = {
   }
 
   :global(.note-prose .mermaid) {
+    position: relative;
     margin: 28px 0;
     overflow-x: auto;
     border: 1px solid var(--color-border);
@@ -242,6 +475,34 @@ const kindLabel = {
     padding: 22px;
     background: rgba(255, 255, 255, 0.7);
     text-align: center;
+  }
+
+  :global(.note-prose .mermaid-ready) {
+    padding-top: 62px;
+  }
+
+  :global(.mermaid-zoom-trigger) {
+    position: absolute;
+    z-index: 1;
+    top: 12px;
+    right: 12px;
+    min-height: 36px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 7px 12px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 8px 24px rgba(19, 35, 28, 0.08);
+    color: var(--color-foreground);
+    cursor: zoom-in;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 750;
+  }
+
+  :global(.mermaid-zoom-trigger:hover),
+  :global(.mermaid-zoom-trigger:focus-visible) {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
   }
 
   :global(.note-prose .mermaid svg) {
@@ -253,6 +514,140 @@ const kindLabel = {
   :global(.note-prose .mermaid-failed) {
     white-space: pre-wrap;
     text-align: left;
+  }
+
+  .diagram-viewer {
+    width: min(96vw, 1600px);
+    max-width: none;
+    height: min(92vh, 1000px);
+    max-height: none;
+    border: 1px solid var(--color-border);
+    border-radius: 22px;
+    padding: 0;
+    background: var(--color-background);
+    box-shadow: 0 28px 90px rgba(19, 35, 28, 0.28);
+    color: var(--color-foreground);
+  }
+
+  .diagram-viewer::backdrop {
+    background: rgba(10, 20, 16, 0.68);
+    backdrop-filter: blur(5px);
+  }
+
+  .diagram-viewer-panel {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: 100%;
+  }
+
+  .diagram-viewer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    border-bottom: 1px solid var(--color-border);
+    padding: 16px 20px;
+  }
+
+  .diagram-viewer-header p {
+    margin: 0 0 2px;
+    color: var(--color-accent);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .diagram-viewer-header h2 {
+    margin: 0;
+    font-size: 1.15rem;
+  }
+
+  .diagram-viewer-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .diagram-viewer-toolbar button {
+    min-width: 38px;
+    min-height: 38px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 7px 12px;
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--color-foreground);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 750;
+  }
+
+  .diagram-viewer-toolbar button:hover,
+  .diagram-viewer-toolbar button:focus-visible {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  .diagram-viewer-toolbar button:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+  }
+
+  .diagram-viewer-toolbar output {
+    min-width: 54px;
+    color: var(--color-muted);
+    text-align: center;
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .diagram-viewer-stage {
+    overflow: auto;
+    overscroll-behavior: contain;
+    padding: 32px;
+    background:
+      linear-gradient(rgba(93, 118, 106, 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(93, 118, 106, 0.055) 1px, transparent 1px);
+    background-size: 24px 24px;
+    outline: none;
+    touch-action: pan-x pan-y;
+  }
+
+  .diagram-viewer-stage.is-zoomed {
+    cursor: grab;
+  }
+
+  .diagram-viewer-stage.is-dragging {
+    cursor: grabbing;
+    user-select: none;
+  }
+
+  .diagram-viewer-stage:focus-visible {
+    box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--color-accent) 42%, transparent);
+  }
+
+  .diagram-viewer-canvas {
+    display: flex;
+    min-width: 100%;
+    min-height: 100%;
+    align-items: flex-start;
+    justify-content: center;
+  }
+
+  .diagram-viewer-canvas :global(svg) {
+    display: block;
+    flex: none;
+    max-width: none !important;
+  }
+
+  .diagram-viewer-hint {
+    margin: 0;
+    border-top: 1px solid var(--color-border);
+    padding: 10px 20px;
+    color: var(--color-muted);
+    font-size: 0.78rem;
   }
 
   @media (max-width: 900px) {
@@ -277,6 +672,39 @@ const kindLabel = {
   @media (max-width: 560px) {
     .note-toc nav {
       grid-template-columns: 1fr;
+    }
+
+    .diagram-viewer {
+      width: 100vw;
+      height: 100dvh;
+      border: 0;
+      border-radius: 0;
+    }
+
+    .diagram-viewer-header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px;
+    }
+
+    .diagram-viewer-toolbar {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .diagram-viewer-stage {
+      padding: 18px;
+    }
+
+    .diagram-viewer-hint {
+      padding: 9px 14px;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .diagram-viewer::backdrop {
+      backdrop-filter: none;
     }
   }
 </style>
