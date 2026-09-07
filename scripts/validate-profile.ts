@@ -22,7 +22,7 @@ export async function main() {
         contentByKind.set(`${locale}:${kind}`, new Set(entries.map((entry) => entry.slug)));
 
         for (const entry of entries) {
-          if (path.basename(entry.filePath).replace(/\.(?:md|mdx)$/, "") !== entry.slug) {
+          if (path.basename(entry.filePath, path.extname(entry.filePath)) !== entry.slug) {
             errors.push(`${entry.filePath}: filename must match frontmatter slug "${entry.slug}"`);
           }
           if (/^#\s+/m.test(entry.body)) {
