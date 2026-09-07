@@ -55,9 +55,6 @@ const kindLabel = {
           {topics.map((topic) => <li class="tag">{topic}</li>)}
         </ul>
       )}
-      <div class="note-actions no-print">
-        <button type="button" data-copy-link>{locale === "zh" ? "复制链接" : "Copy link"}</button>
-      </div>
     </header>
 
     <div class:list={["note-layout", { "without-toc": rendered.headings.length === 0 }]}>
@@ -129,18 +126,6 @@ const kindLabel = {
 </BaseLayout>
 
 <script>
-  const copyButton = document.querySelector<HTMLButtonElement>("[data-copy-link]");
-  copyButton?.addEventListener("click", async () => {
-    const original = copyButton.textContent || "";
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      copyButton.textContent = document.documentElement.lang === "zh" ? "已复制" : "Copied";
-      window.setTimeout(() => { copyButton.textContent = original; }, 1600);
-    } catch {
-      copyButton.textContent = window.location.href;
-    }
-  });
-
   const diagrams = document.querySelectorAll<HTMLElement>("[data-mermaid-diagram]");
   if (diagrams.length > 0) {
     renderDiagrams().then(() => {
@@ -195,12 +180,17 @@ const kindLabel = {
       const svg = diagram.querySelector<SVGSVGElement>("svg");
       if (!svg) return;
 
-      diagram.classList.add("mermaid-ready");
       const trigger = document.createElement("button");
       trigger.type = "button";
       trigger.className = "mermaid-zoom-trigger";
-      trigger.textContent = isChinese ? "放大查看" : "Expand";
-      trigger.setAttribute("aria-label", isChinese ? `放大查看图表 ${index + 1}` : `Expand diagram ${index + 1}`);
+      trigger.innerHTML = `
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
+        </svg>
+      `;
+      const triggerLabel = isChinese ? `放大查看图表 ${index + 1}` : `Expand diagram ${index + 1}`;
+      trigger.setAttribute("aria-label", triggerLabel);
+      trigger.title = triggerLabel;
       trigger.setAttribute("aria-haspopup", "dialog");
       trigger.setAttribute("aria-controls", viewer.id);
       trigger.addEventListener("click", () => openDiagram(svg, trigger));
@@ -393,25 +383,6 @@ const kindLabel = {
     font-size: clamp(1.05rem, 1.7vw, 1.25rem);
   }
 
-  .note-actions {
-    display: flex;
-    gap: 10px;
-    margin-top: 22px;
-  }
-
-  .note-actions button,
-  .note-actions a {
-    min-height: 40px;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    padding: 8px 13px;
-    background: rgba(255, 255, 255, 0.76);
-    color: var(--color-foreground);
-    cursor: pointer;
-    font: inherit;
-    font-weight: 700;
-  }
-
   .note-layout {
     display: grid;
     grid-template-columns: 230px minmax(0, 800px);
@@ -477,35 +448,59 @@ const kindLabel = {
     text-align: center;
   }
 
-  :global(.note-prose .mermaid-ready) {
-    padding-top: 62px;
-  }
-
   :global(.mermaid-zoom-trigger) {
     position: absolute;
     z-index: 1;
-    top: 12px;
-    right: 12px;
-    min-height: 36px;
+    top: 10px;
+    right: 10px;
+    display: grid;
+    width: 32px;
+    height: 32px;
+    place-items: center;
     border: 1px solid var(--color-border);
-    border-radius: 999px;
-    padding: 7px 12px;
-    background: rgba(255, 255, 255, 0.94);
-    box-shadow: 0 8px 24px rgba(19, 35, 28, 0.08);
+    border-radius: 9px;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.82);
+    box-shadow: 0 4px 14px rgba(19, 35, 28, 0.06);
     color: var(--color-foreground);
     cursor: zoom-in;
-    font: inherit;
-    font-size: 0.82rem;
-    font-weight: 750;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-2px);
+    transition: border-color 160ms ease, color 160ms ease, opacity 160ms ease, transform 160ms ease;
+  }
+
+  :global(.mermaid-zoom-trigger svg) {
+    width: 16px;
+    min-width: 0;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
   }
 
   :global(.mermaid-zoom-trigger:hover),
   :global(.mermaid-zoom-trigger:focus-visible) {
     border-color: var(--color-accent);
     color: var(--color-accent);
+    opacity: 1;
   }
 
-  :global(.note-prose .mermaid svg) {
+  :global(.note-prose .mermaid:hover .mermaid-zoom-trigger),
+  :global(.note-prose .mermaid:focus-within .mermaid-zoom-trigger) {
+    opacity: 0.76;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  :global(.note-prose .mermaid:hover .mermaid-zoom-trigger:hover),
+  :global(.note-prose .mermaid:focus-within .mermaid-zoom-trigger:focus-visible) {
+    opacity: 1;
+  }
+
+  :global(.note-prose .mermaid > svg) {
     width: 100%;
     min-width: 640px;
     height: auto;
@@ -699,6 +694,14 @@ const kindLabel = {
 
     .diagram-viewer-hint {
       padding: 9px 14px;
+    }
+  }
+
+  @media (hover: none), (pointer: coarse) {
+    :global(.mermaid-zoom-trigger) {
+      opacity: 0.58;
+      pointer-events: auto;
+      transform: none;
     }
   }
 
