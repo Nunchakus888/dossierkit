@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="核心结论：下一代 Agent Context 不应继续由散落的 messages.push() 拼接逻辑承担。ContextPipe 的实质贡献是把 Context Assembly 抽象成可规划、可优化、可执行、可反馈…">
-  <title>Context 组装应成为独立执行引擎：精读 ContextPipe</title>
-  <script type="application/json" id="dossierkit-note-metadata">{"locale":"zh","translationStatus":"reviewed","lastReviewedAt":"2026-09-06","title":"Context 组装应成为独立执行引擎：精读 ContextPipe","summary":"核心结论：下一代 Agent Context 不应继续由散落的 messages.push() 拼接逻辑承担。ContextPipe 的实质贡献是把 Context Assembly 抽象成可规划、可优化、可执行、可反馈…","featured":false,"date":"2026-09-06","updatedAt":"2026-09-06T16:17:53.461Z","kind":"research","topics":["Context Engineering","Agent Runtime","Prompt Cache","Observability","Long-running Agent"],"tags":["Context Engineering","Agent Runtime","Prompt Cache","Observability","Long-running Agent"],"contentHash":"sha256:5dbd75808538e4a8a466c52955ca6a417a9132dcef1b3c827543ffd469c52cca","format":"html"}</script>
+  <title>Context 组装应成为独立执行引擎</title>
+  <script type="application/json" id="dossierkit-note-metadata">{"locale":"zh","translationStatus":"reviewed","lastReviewedAt":"2026-09-07","title":"Context 组装应成为独立执行引擎","summary":"核心结论：下一代 Agent Context 不应继续由散落的 messages.push() 拼接逻辑承担。ContextPipe 的实质贡献是把 Context Assembly 抽象成可规划、可优化、可执行、可反馈…","featured":false,"date":"2026-09-06","updatedAt":"2026-09-07T00:38:52.920Z","kind":"research","topics":["Context Engineering","Agent Runtime","Prompt Cache","Observability","Long-running Agent"],"tags":["Context Engineering","Agent Runtime","Prompt Cache","Observability","Long-running Agent"],"contentHash":"sha256:420355299aa31cfb32443746251d274a08ccb467dfe233f620eb273b3c1b2774","format":"html"}</script>
   <style>
     body { max-width: 800px; margin: 48px auto; padding: 0 24px; color: #13231c; font: 17px/1.7 system-ui, sans-serif; }
     img, table, pre { max-width: 100%; } pre { overflow: auto; padding: 16px; background: #f4f7f5; }
@@ -14,196 +14,195 @@
 </head>
 <body>
   <article data-dossierkit-note-body>
-    <h1>Context 组装应成为独立执行引擎：精读 ContextPipe</h1>
+    <h1>Context 组装应成为独立执行引擎</h1>
     <article>
-      
-    
-      <p><strong>核心结论：</strong>下一代 Agent Context 不应继续由散落的 <code>messages.push()</code> 拼接逻辑承担。ContextPipe 的实质贡献是把 Context Assembly 抽象成可规划、可优化、可执行、可反馈的独立运行时：Plan → Bind → Optimize → Execute → Feedback。它的架构方向很强，但端到端实验规模很小，论文摘要与表格还存在数字不一致，固定阈值不宜直接复制到生产。</p>
-    
-      <p>原文：<a href="https://arxiv.org/abs/2609.00749">ContextPipe: A Context-Engineering Runtime for Long-Horizon Agents</a>（2026-09-01）。</p>
-    
-      <h2>一、Context 问题已经从“装多少”转向“如何执行”</h2>
-    
-      <p>长任务 Agent 的上下文同时包含系统指令、工具定义、历史消息、记忆、检索结果、制品摘要和本轮临时状态。传统写法把它们在调用前依次追加：</p>
-    
-      <pre><code class="language-typescript">const messages = [systemPrompt];
-    messages.push(...history);
-    messages.push(...retrievedMemory);
-    messages.push({ role: "user", content: input });
-    
-    if (estimateTokens(messages) &gt; limit) {
-      messages.splice(1, Math.floor(messages.length / 2));
-    }
-    
-    return model.generate({ messages, tools });</code></pre>
-    
-      <p>这段逻辑把来源发现、I/O、预算分配、裁剪、排序、缓存和模型调用混在一起。其结果是：无法解释某段信息为何进入上下文，无法安全并行检索，无法稳定复现裁剪决策，也无法知道模型实际消耗与计划偏差来自哪里。</p>
-    
-      <h2>二、五阶段管线重新划分了责任边界</h2>
-    
-      <pre><code class="language-mermaid">flowchart LR
-        C[(Context Catalog)] --&gt; P[Plan\n纯函数、无 I/O]
-        P --&gt; B[Bind\n并发获取数据]
-        B --&gt; O[Optimize\n预算、排序、压缩]
-        O --&gt; X[Execute\n唯一模型调用]
-        X --&gt; F[Feedback\n真实 Token / Cache / Truncation]
-        F --&gt; C
-    
-        P -. 查询计划 .-&gt; EX[EXPLAIN]
-        B -. 绑定时延 .-&gt; EX
-        O -. 选择与裁剪 .-&gt; EX
-        X -. Provider 使用量 .-&gt; EX
-        F -. 预测偏差 .-&gt; EX
-      </code></pre>
-    
-      <table>
-        <thead><tr><th>阶段</th><th>允许做什么</th><th>禁止混入什么</th></tr></thead>
-        <tbody>
-          <tr><td>Plan</td><td>选择来源、估算预算、生成依赖图</td><td>网络或存储 I/O</td></tr>
-          <tr><td>Bind</td><td>读取历史、记忆、检索与制品</td><td>随返回顺序临时改策略</td></tr>
-          <tr><td>Optimize</td><td>确定性裁剪、压缩、排序和降级</td><td>隐式 Provider 调用</td></tr>
-          <tr><td>Execute</td><td>提交最终请求并接收响应</td><td>再次拼接不可追踪内容</td></tr>
-          <tr><td>Feedback</td><td>记录实际使用量、缓存与截断</td><td>仅记录最终答案而忽略执行事实</td></tr>
-        </tbody>
-      </table>
-    
-      <p>Plan 保持纯函数尤其关键：同样的目录、任务状态和预算应生成同样的计划，使单元测试、离线回放和 shadow diff 成为可能。Bind 成为唯一 I/O 阶段后，互不依赖的检索可以安全并行。</p>
-    
-      <h2>三、Context Source Catalog 是运行时的“系统表”</h2>
-    
-      <p>ContextPipe 为每个来源登记元数据，包括生命周期层级、内容类型、作用域、优先级、估算 Token、绑定延迟、可恢复性、可标记性和依赖关系。这相当于数据库优化器依赖的 catalog：</p>
-    
-      <pre><code class="language-typescript">interface ContextSource&lt;T&gt; {
-      id: string;
-      tier: "system" | "session" | "turn" | "emergent";
-      kind: "instruction" | "history" | "memory" | "artifact" | "tool";
-      scope: "global" | "session" | "none";
-      priority: number;
-      estimatedTokens: (state: RunState) =&gt; number;
-      bindLatencyMs: number;
-      recoverable: boolean;
-      markerable: boolean;
-      dependencies: string[];
-      bind: (state: RunState, signal: AbortSignal) =&gt; Promise&lt;T&gt;;
-    }
-    
-    const plan = contextPlanner.plan({
-      catalog,
-      runState,
-      modelWindow: 128_000,
-      responseReserve: 8_000,
-      thinkingReserve: 12_000,
-      schemaReserve: toolRegistry.estimatedTokens,
-    });
-    
-    const bound = await contextBinder.bindConcurrently(plan);
-    const optimized = contextOptimizer.optimize(bound, plan.pressureTier);
-    const result = await executor.run(optimized.request);
-    feedbackStore.record(plan, optimized.trace, result.usage);</code></pre>
-    
-      <p>这不是要求所有来源共享同一种数据格式，而是要求它们共享一组可用于决策和解释的元数据。只有被目录化，Context 才能参与预算、依赖和生命周期管理。</p>
-    
-      <h2>四、预算应包含即将发生的消耗</h2>
-    
-      <p>只用当前 Prompt Token 判断压力会低估响应、推理和工具 schema 的占用。论文区分原始压力与预测压力：</p>
-    
-      
+          
         
-          Praw=TL
-          Ppred=T+RL
+          <p><strong>核心结论：</strong>下一代 Agent Context 不应继续由散落的 <code>messages.push()</code> 拼接逻辑承担。ContextPipe 的实质贡献是把 Context Assembly 抽象成可规划、可优化、可执行、可反馈的独立运行时：Plan → Bind → Optimize → Execute → Feedback。它的架构方向很强，但端到端实验规模很小，论文摘要与表格还存在数字不一致，固定阈值不宜直接复制到生产。</p>
         
-      
-    
-      <p><code>T</code> 是当前上下文估算，<code>L</code> 是模型窗口，<code>R</code> 是响应、思考与 schema 预留。论文给出的压力档位为：</p>
-    
-      <table>
-        <thead><tr><th>预测压力</th><th>策略</th><th>含义</th></tr></thead>
-        <tbody>
-          <tr><td>[0, 0.60)</td><td>Normal</td><td>保留正常上下文</td></tr>
-          <tr><td>[0.60, 0.75)</td><td>TrimSchemas</td><td>先压缩工具 schema</td></tr>
-          <tr><td>[0.75, 0.90)</td><td>CompactHistory</td><td>压缩历史并保留关键锚点</td></tr>
-          <tr><td>[0.90, 1]</td><td>AggressivePrune</td><td>激进裁剪低优先级来源</td></tr>
-        </tbody>
-      </table>
-    
-      <p>预测只能把策略升级，恢复阶段还可继续升级；系统消息不得被删除。工程上应吸收“单调升级、保护不变量”的思想，但这些阈值来自特定实现，不是跨模型、跨业务的通用常数。生产系统应以实际截断率、质量损失、缓存价格和尾延迟校准。</p>
-    
-      <h2>五、缓存优化不是简单追求更高命中率</h2>
-    
-      <p>ContextPipe 把稳定、低波动内容放在前面，把频繁变化的内容放在后面，以形成可复用前缀。但实验出现了一个反直觉结果：结构化方案减少总 Prompt Token，却让 fresh token 增加、缓存命中率下降。因此成本必须同时考虑 fresh 与 cached token：</p>
-    
-      
-        E(r)=fresh+r·cached
-      
-    
-      <p>论文据此得到盈亏平衡点 r*=0.145。当缓存 Token 单价低于 fresh Token 的约 14.5% 时，扁平基线可能更便宜；高于该比例时，结构化方案更可能节省成本。结论不是“压缩越多越省”，而是 Context 成本是 Token 数、缓存结构、价格、时延与质量的联合优化。</p>
-    
-      <h2>六、必须明确记录论文的数字不一致</h2>
-    
-      <p>摘要声称总 Token 减少 31%、LLM 调用减少 23%、响应时间减少 9%。但论文表 4 的均值为：</p>
-    
-      <table>
-        <thead><tr><th>指标</th><th>Flat</th><th>Structured</th><th>按表格计算</th></tr></thead>
-        <tbody>
-          <tr><td>总 Prompt Token</td><td>1,045,222</td><td>730,978</td><td>减少 30.1%</td></tr>
-          <tr><td>Fresh Token</td><td>46,581</td><td>99,967</td><td>增加 114.6%</td></tr>
-          <tr><td>Cache hit</td><td>95.3%</td><td>86.2%</td><td>下降 9.1 个百分点</td></tr>
-          <tr><td>Duration</td><td>204</td><td>188</td><td>减少 7.8%</td></tr>
-          <tr><td>LLM calls</td><td>30.2</td><td>25.0</td><td>减少 17.2%</td></tr>
-        </tbody>
-      </table>
-    
-      <p>正文附近又写成调用减少 23.1%、时延减少 8.7%，与表格不一致。稳妥做法是把表 4 的原始数值作为可复算证据，并将摘要百分比标记为作者报告而非无条件采用。</p>
-    
-      <h2>七、EXPLAIN ANALYZE 比某个裁剪算法更值得产品化</h2>
-    
-      <p>ContextPipe 最具长期价值的产品思想，是为每次模型调用输出可解释执行轨迹：</p>
-    
-      <pre><code class="language-json">{
-      "planId": "ctx-1842",
-      "pressure": { "raw": 0.68, "predicted": 0.82, "tier": "CompactHistory" },
-      "sources": [
-        { "id": "system", "decision": "keep", "estimated": 2140, "actual": 2098 },
-        { "id": "tool.schemas", "decision": "trim", "before": 18400, "after": 6200 },
-        { "id": "history", "decision": "compact", "before": 51000, "after": 17300 },
-        { "id": "artifact.summary", "decision": "keep", "bindMs": 42 }
-      ],
-      "provider": { "promptTokens": 29211, "cachedTokens": 9600, "truncated": false },
-      "predictionError": { "tokens": -527, "ratio": -0.018 }
-    }</code></pre>
-    
-      <p>这让开发者能回答：哪条规则删除了信息、哪种来源拖慢了请求、预算估计为何失准、缓存结构为何变化。新优化器可以先在 shadow 模式下生成计划，与旧请求做 diff，而不直接改变用户结果。</p>
-    
-      <pre><code class="language-mermaid">sequenceDiagram
-        participant R as Agent Runtime
-        participant P as Context Planner
-        participant B as Binder
-        participant O as Optimizer
-        participant L as LLM Provider
-        participant F as Feedback Store
-        R-&gt;&gt;P: task state + catalog + budget
-        P--&gt;&gt;R: deterministic plan
-        par independent bindings
-          R-&gt;&gt;B: history
-          R-&gt;&gt;B: memory
-          R-&gt;&gt;B: artifacts
-        end
-        B--&gt;&gt;O: bound sources + latency
-        O--&gt;&gt;L: ordered request + reserves
-        L--&gt;&gt;F: usage + cache + truncation
-        F--&gt;&gt;P: calibration data for next plan
-      </code></pre>
-    
-      <h2>八、还不能由这篇论文推出什么</h2>
-    
-      <p>端到端实验只覆盖 Qutebrowser 子集中的 3 个任务，每个重复 3 次。机制级消融 A1–A4 仍未完成，端到端 solve rate 消融也被列为未来工作。因此论文足以支持“Context 应成为独立、可观测的运行时子系统”，不足以证明这套固定阶段、阈值或策略已在广泛任务上优于其他实现。</p>
-    
-      <p>对 Agent 工程的合理迁移顺序是：先建 Catalog 与 EXPLAIN Trace，再引入预测预算和确定性策略，随后 shadow 对比，最后才让优化器影响生产请求。先获得可观测性，再追求自动优化。</p>
-    
-      <h2>结语</h2>
-    
-      <p>ContextPipe 的价值不在“节省 31% Token”这一句摘要，而在它改变了 Context 的系统身份：Context 不再是模型调用前的一段拼接代码，而是一个拥有目录、计划、执行、反馈与解释能力的执行引擎。这个方向值得进入 Agent Runtime；论文中的固定阈值和性能数字，则应继续接受更大规模、可复现的验证。</p>
-    </article>
+          <p>原文：<a href="https://arxiv.org/abs/2609.00749">ContextPipe: A Context-Engineering Runtime for Long-Horizon Agents</a>（2026-09-01）。</p>
+        
+          <h2>一、Context 问题已经从“装多少”转向“如何执行”</h2>
+        
+          <p>长任务 Agent 的上下文同时包含系统指令、工具定义、历史消息、记忆、检索结果、制品摘要和本轮临时状态。传统写法把它们在调用前依次追加：</p>
+        
+          <pre><code class="language-typescript">const messages = [systemPrompt];
+        messages.push(...history);
+        messages.push(...retrievedMemory);
+        messages.push({ role: "user", content: input });
+        
+        if (estimateTokens(messages) &gt; limit) {
+          messages.splice(1, Math.floor(messages.length / 2));
+        }
+        
+        return model.generate({ messages, tools });</code></pre>
+        
+          <p>这段逻辑把来源发现、I/O、预算分配、裁剪、排序、缓存和模型调用混在一起。其结果是：无法解释某段信息为何进入上下文，无法安全并行检索，无法稳定复现裁剪决策，也无法知道模型实际消耗与计划偏差来自哪里。</p>
+        
+          <h2>二、五阶段管线重新划分了责任边界</h2>
+        
+          <pre><code class="language-mermaid">flowchart LR
+            C[(Context Catalog)] --&gt; P[Plan\n纯函数、无 I/O]
+            P --&gt; B[Bind\n并发获取数据]
+            B --&gt; O[Optimize\n预算、排序、压缩]
+            O --&gt; X[Execute\n唯一模型调用]
+            X --&gt; F[Feedback\n真实 Token / Cache / Truncation]
+            F --&gt; C
+        
+            P -. 查询计划 .-&gt; EX[EXPLAIN]
+            B -. 绑定时延 .-&gt; EX
+            O -. 选择与裁剪 .-&gt; EX
+            X -. Provider 使用量 .-&gt; EX
+            F -. 预测偏差 .-&gt; EX
+          </code></pre>
+        
+          <table>
+            <thead><tr><th>阶段</th><th>允许做什么</th><th>禁止混入什么</th></tr></thead>
+            <tbody>
+              <tr><td>Plan</td><td>选择来源、估算预算、生成依赖图</td><td>网络或存储 I/O</td></tr>
+              <tr><td>Bind</td><td>读取历史、记忆、检索与制品</td><td>随返回顺序临时改策略</td></tr>
+              <tr><td>Optimize</td><td>确定性裁剪、压缩、排序和降级</td><td>隐式 Provider 调用</td></tr>
+              <tr><td>Execute</td><td>提交最终请求并接收响应</td><td>再次拼接不可追踪内容</td></tr>
+              <tr><td>Feedback</td><td>记录实际使用量、缓存与截断</td><td>仅记录最终答案而忽略执行事实</td></tr>
+            </tbody>
+          </table>
+        
+          <p>Plan 保持纯函数尤其关键：同样的目录、任务状态和预算应生成同样的计划，使单元测试、离线回放和 shadow diff 成为可能。Bind 成为唯一 I/O 阶段后，互不依赖的检索可以安全并行。</p>
+        
+          <h2>三、Context Source Catalog 是运行时的“系统表”</h2>
+        
+          <p>ContextPipe 为每个来源登记元数据，包括生命周期层级、内容类型、作用域、优先级、估算 Token、绑定延迟、可恢复性、可标记性和依赖关系。这相当于数据库优化器依赖的 catalog：</p>
+        
+          <pre><code class="language-typescript">interface ContextSource&lt;T&gt; {
+          id: string;
+          tier: "system" | "session" | "turn" | "emergent";
+          kind: "instruction" | "history" | "memory" | "artifact" | "tool";
+          scope: "global" | "session" | "none";
+          priority: number;
+          estimatedTokens: (state: RunState) =&gt; number;
+          bindLatencyMs: number;
+          recoverable: boolean;
+          markerable: boolean;
+          dependencies: string[];
+          bind: (state: RunState, signal: AbortSignal) =&gt; Promise&lt;T&gt;;
+        }
+        
+        const plan = contextPlanner.plan({
+          catalog,
+          runState,
+          modelWindow: 128_000,
+          responseReserve: 8_000,
+          thinkingReserve: 12_000,
+          schemaReserve: toolRegistry.estimatedTokens,
+        });
+        
+        const bound = await contextBinder.bindConcurrently(plan);
+        const optimized = contextOptimizer.optimize(bound, plan.pressureTier);
+        const result = await executor.run(optimized.request);
+        feedbackStore.record(plan, optimized.trace, result.usage);</code></pre>
+        
+          <p>这不是要求所有来源共享同一种数据格式，而是要求它们共享一组可用于决策和解释的元数据。只有被目录化，Context 才能参与预算、依赖和生命周期管理。</p>
+        
+          <h2>四、预算应包含即将发生的消耗</h2>
+        
+          <p>只用当前 Prompt Token 判断压力会低估响应、推理和工具 schema 的占用。论文区分原始压力与预测压力：</p>
+        
+          
+            
+              Praw=TL
+              Ppred=T+RL
+            
+          
+        
+          <p><code>T</code> 是当前上下文估算，<code>L</code> 是模型窗口，<code>R</code> 是响应、思考与 schema 预留。论文给出的压力档位为：</p>
+        
+          <table>
+            <thead><tr><th>预测压力</th><th>策略</th><th>含义</th></tr></thead>
+            <tbody>
+              <tr><td>[0, 0.60)</td><td>Normal</td><td>保留正常上下文</td></tr>
+              <tr><td>[0.60, 0.75)</td><td>TrimSchemas</td><td>先压缩工具 schema</td></tr>
+              <tr><td>[0.75, 0.90)</td><td>CompactHistory</td><td>压缩历史并保留关键锚点</td></tr>
+              <tr><td>[0.90, 1]</td><td>AggressivePrune</td><td>激进裁剪低优先级来源</td></tr>
+            </tbody>
+          </table>
+        
+          <p>预测只能把策略升级，恢复阶段还可继续升级；系统消息不得被删除。工程上应吸收“单调升级、保护不变量”的思想，但这些阈值来自特定实现，不是跨模型、跨业务的通用常数。生产系统应以实际截断率、质量损失、缓存价格和尾延迟校准。</p>
+        
+          <h2>五、缓存优化不是简单追求更高命中率</h2>
+        
+          <p>ContextPipe 把稳定、低波动内容放在前面，把频繁变化的内容放在后面，以形成可复用前缀。但实验出现了一个反直觉结果：结构化方案减少总 Prompt Token，却让 fresh token 增加、缓存命中率下降。因此成本必须同时考虑 fresh 与 cached token：</p>
+        
+          
+            E(r)=fresh+r·cached
+          
+        
+          <p>论文据此得到盈亏平衡点 r*=0.145。当缓存 Token 单价低于 fresh Token 的约 14.5% 时，扁平基线可能更便宜；高于该比例时，结构化方案更可能节省成本。结论不是“压缩越多越省”，而是 Context 成本是 Token 数、缓存结构、价格、时延与质量的联合优化。</p>
+        
+          <h2>六、必须明确记录论文的数字不一致</h2>
+        
+          <p>摘要声称总 Token 减少 31%、LLM 调用减少 23%、响应时间减少 9%。但论文表 4 的均值为：</p>
+        
+          <table>
+            <thead><tr><th>指标</th><th>Flat</th><th>Structured</th><th>按表格计算</th></tr></thead>
+            <tbody>
+              <tr><td>总 Prompt Token</td><td>1,045,222</td><td>730,978</td><td>减少 30.1%</td></tr>
+              <tr><td>Fresh Token</td><td>46,581</td><td>99,967</td><td>增加 114.6%</td></tr>
+              <tr><td>Cache hit</td><td>95.3%</td><td>86.2%</td><td>下降 9.1 个百分点</td></tr>
+              <tr><td>Duration</td><td>204</td><td>188</td><td>减少 7.8%</td></tr>
+              <tr><td>LLM calls</td><td>30.2</td><td>25.0</td><td>减少 17.2%</td></tr>
+            </tbody>
+          </table>
+        
+          <p>正文附近又写成调用减少 23.1%、时延减少 8.7%，与表格不一致。稳妥做法是把表 4 的原始数值作为可复算证据，并将摘要百分比标记为作者报告而非无条件采用。</p>
+        
+          <h2>七、EXPLAIN ANALYZE 比某个裁剪算法更值得产品化</h2>
+        
+          <p>ContextPipe 最具长期价值的产品思想，是为每次模型调用输出可解释执行轨迹：</p>
+        
+          <pre><code class="language-json">{
+          "planId": "ctx-1842",
+          "pressure": { "raw": 0.68, "predicted": 0.82, "tier": "CompactHistory" },
+          "sources": [
+            { "id": "system", "decision": "keep", "estimated": 2140, "actual": 2098 },
+            { "id": "tool.schemas", "decision": "trim", "before": 18400, "after": 6200 },
+            { "id": "history", "decision": "compact", "before": 51000, "after": 17300 },
+            { "id": "artifact.summary", "decision": "keep", "bindMs": 42 }
+          ],
+          "provider": { "promptTokens": 29211, "cachedTokens": 9600, "truncated": false },
+          "predictionError": { "tokens": -527, "ratio": -0.018 }
+        }</code></pre>
+        
+          <p>这让开发者能回答：哪条规则删除了信息、哪种来源拖慢了请求、预算估计为何失准、缓存结构为何变化。新优化器可以先在 shadow 模式下生成计划，与旧请求做 diff，而不直接改变用户结果。</p>
+        
+          <pre><code class="language-mermaid">sequenceDiagram
+            participant R as Agent Runtime
+            participant P as Context Planner
+            participant B as Binder
+            participant O as Optimizer
+            participant L as LLM Provider
+            participant F as Feedback Store
+            R-&gt;&gt;P: task state + catalog + budget
+            P--&gt;&gt;R: deterministic plan
+            par independent bindings
+              R-&gt;&gt;B: history
+              R-&gt;&gt;B: memory
+              R-&gt;&gt;B: artifacts
+            end
+            B--&gt;&gt;O: bound sources + latency
+            O--&gt;&gt;L: ordered request + reserves
+            L--&gt;&gt;F: usage + cache + truncation
+            F--&gt;&gt;P: calibration data for next plan
+          </code></pre>
+        
+          <h2>八、还不能由这篇论文推出什么</h2>
+        
+          <p>端到端实验只覆盖 Qutebrowser 子集中的 3 个任务，每个重复 3 次。机制级消融 A1–A4 仍未完成，端到端 solve rate 消融也被列为未来工作。因此论文足以支持“Context 应成为独立、可观测的运行时子系统”，不足以证明这套固定阶段、阈值或策略已在广泛任务上优于其他实现。</p>
+        
+          <p>对 Agent 工程的合理迁移顺序是：先建 Catalog 与 EXPLAIN Trace，再引入预测预算和确定性策略，随后 shadow 对比，最后才让优化器影响生产请求。先获得可观测性，再追求自动优化。</p>
+        
+          <h2>结语</h2>
+        
+          <p>ContextPipe 的价值不在“节省 31% Token”这一句摘要，而在它改变了 Context 的系统身份：Context 不再是模型调用前的一段拼接代码，而是一个拥有目录、计划、执行、反馈与解释能力的执行引擎。这个方向值得进入 Agent Runtime；论文中的固定阈值和性能数字，则应继续接受更大规模、可复现的验证。</p></article>
   </article>
 </body>
 </html>
