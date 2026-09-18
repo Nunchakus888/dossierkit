@@ -1,0 +1,198 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-09-18"
+title: "GitHub Copilot 企业权限与托管沙箱：授权、隔离及执行边界"
+summary: "研究类型：产品架构与安全机制研究。材料基线：2026-09-16；整理日期：2026-09-18。本文依据既有深度研究稿编辑整理，保留原稿\
+  的一手来源，不将本次编辑视为对最新产品状态的重新核验。说明性接口与实验方案均为研究…"
+featured: false
+date: "2026-09-18"
+updatedAt: "2026-09-18T07:51:57.102Z"
+kind: "research"
+topics:
+  - "GitHub Copilot"
+  - "Agent 权限"
+  - "Sandbox"
+  - "MCP"
+  - "运行时安全"
+tags:
+  - "GitHub Copilot"
+  - "Agent 权限"
+  - "Sandbox"
+  - "MCP"
+  - "运行时安全"
+contentHash: "sha256:34ef3782bda21e05b1f9149d1bd154d893121ddb29be0d14a2f68a0a69ade07f"
+---
+
+> 研究类型：产品架构与安全机制研究。材料基线：2026-09-16；整理日期：2026-09-18。本文依据既有深度研究稿编辑整理，保留原稿的一手来源，不将本次编辑视为对最新产品状态的重新核验。说明性接口与实验方案均为研究推演，不是 GitHub 官方配置规范。
+
+## 摘要
+
+GitHub 在 2026 年 9 月 8—9 日分别发布 JetBrains 企业托管沙箱与 Copilot Agent 企业托管操作权限。两项机制针对不同问题：权限策略判定某次操作是否获得授权，沙箱限制执行进程实际可以接触的资源。二者共同构成模型之外的控制层，但不能据此推断所有 Copilot 客户端、内置工具和远程 MCP 服务均受到同一种隔离保护。[1][2][3][4]
+
+核心研究问题是：**一次由模型提出的动作，如何在获得授权之后，仍被约束在可验证的资源边界内？**
+
+## 1. 背景：从交互确认到组织级授权
+
+工具调用前的确认弹窗解决了局部交互问题，却没有完整回答组织授权问题。用户可能开启自动批准；此前的批准可能被重复使用；不同工作区可能配置不同规则。安全要求若只存在于模型提示或客户端偏好中，就难以形成统一约束。
+
+GitHub 的企业托管权限将 Shell、文件读取、文件修改与网络域名访问纳入集中策略，采用 `deny / ask / allow`。原研究稿引用的 Managed Settings 文档描述了 `deny > ask > allow` 的优先关系，以及企业 `ask` 规则对新人工批准的要求；普通自动批准、历史批准或绕过模式不能代替这一批准。[1][3]
+
+这里的“不能绕过”应放在产品威胁模型中理解：它描述受支持客户端对企业策略的执行优先级，不等价于证明具有宿主机管理员权限的对手无法篡改客户端或执行环境。
+
+## 2. 执行环境必须分别讨论
+
+| 执行环境 | 主要控制对象 | 不能直接外推的结论 |
+|---|---|---|
+| 本地 IDE Agent | IDE 发起的工具调用、子进程、文件和网络访问 | 某一 IDE 发布新策略，不代表其他客户端同日具备相同能力 |
+| 本地 Copilot CLI | CLI 内置工具与其派生进程 | 子进程进入 OS 沙箱，不代表 CLI 本身及全部进程内工具进入沙箱 |
+| 本地 stdio MCP / LSP | 独立启动的服务进程 | 需要确认这些进程是否被实际纳入隔离 |
+| 远程 MCP | 外部服务调用与服务端身份、权限 | 本地沙箱不能隔离远程服务器的进程或数据库 |
+| 托管 Cloud Sandbox | 托管隔离环境及其资源配置 | 不能把本地沙箱机制直接当作云端实现说明 |
+| GitHub Actions / Agentic Workflows | 工作流身份、Runner、令牌与工作流权限 | 本次两项发布不证明它们自动继承相同的桌面托管策略 |
+
+JetBrains 发布涉及集中管理沙箱启用、文件系统、网络、代理、开发工具及 macOS Keychain，并提供策略诊断。GitHub 的本地与云端沙箱文档则分别解释不同执行环境的边界。[2][4]
+
+## 3. 两个相互独立的安全问题
+
+### 3.1 授权：操作是否应被允许
+
+权限判定依赖主体、资源、动作、参数和策略版本。例如，读取某项目文件与读取 SSH 私钥不能只因为都属于“文件读取”而共享授权；提交代码与向远端推送也具有不同副作用。
+
+GitHub 的 Managed Settings 使用 Shell、Read、Edit、Domain 等选择器表达规则，并提供限制绕过模式的配置。MCP 准入也进入同一管理面，包括允许和拒绝的服务列表。[3]
+
+### 3.2 隔离：进程实际上能做什么
+
+沙箱不判断业务目的是否合理，而限制文件、网络、凭据和其他系统资源的可达性。上层错误地批准一个动作时，隔离层仍可能阻止其访问敏感资源。
+
+```text
+组织策略与主体身份
+        ↓
+动作规范化 → 权限判定
+        ├─ deny：拒绝
+        ├─ ask：取得绑定本次动作的批准
+        └─ allow
+              ↓
+       沙箱可用性检查
+              ↓
+       受限执行环境
+              ↓
+       工具 / 文件 / 网络
+              ↓
+       执行结果与审计证据
+```
+
+这一流程是对产品机制的概念性归纳，不是 GitHub 内部实现的逐层复刻。
+
+## 4. 边界细节
+
+### 4.1 Fail-closed 与默认降级
+
+原稿引用的配置包括 `sandbox.enabled`、`sandbox.failIfUnavailable` 和 `sandbox.allowBypass`。它们分别涉及是否启用、不可用时是否停止、是否允许绕过。[3]
+
+必须区分以下两种状态：
+
+```text
+沙箱不可用 → 拒绝执行
+沙箱不可用 → 直接在宿主机执行
+```
+
+第二种状态改变了原先的安全假设。研究和测试不能只覆盖正常启动，还应覆盖策略解析失败、隔离后端缺失与启动中断。
+
+### 4.2 进程内工具不一定受 OS 沙箱保护
+
+原研究稿引用的 GitHub 文档将本地隔离描述为较轻量的机制，并列出不同操作系统后端。文档特别说明，CLI 自身未被同一沙箱包裹时，内置的进程内文件工具不能依赖子进程沙箱来限制访问，而需要应用层遵守策略。[4]
+
+因此，安全评估对象应是完整执行图，而非单独的 Shell：
+
+```text
+模型
+ ├─ 进程内文件工具 → 应用层权限检查
+ ├─ Shell 子进程  → OS 隔离
+ ├─ 本地 MCP      → 进程隔离 + 工具授权
+ └─ 远程 MCP      → 网络准入 + 服务端授权
+```
+
+### 4.3 MCP 名称不是可靠身份
+
+原稿引用的 Managed Settings 按远程 URL 或本地命令及参数识别 MCP 服务，并提醒显示名称是用户可配置的。服务身份与名称必须分离。[3]
+
+进一步的安全分析是：远程 URL 只标识连接位置，不能单独证明服务器代码版本、租户身份或工具权限；本地命令相同，也不意味着运行时解析到的依赖内容相同。这些问题需要分别由供应链完整性、身份认证和服务端授权处理。
+
+### 4.4 代理设置不等于强制网络边界
+
+配置代理只描述一种连接路径。若进程仍可直接出网，不使用代理的程序仍可能绕过该路径。原研究稿引用的 GitHub 文档也提示这一局限。[3]
+
+概念上的完整约束是：允许的连接必须经受控路径，而其他出站路径由独立网络机制限制。代理负责精细审计与协议策略，网络层负责路径不可绕过性。
+
+## 5. 说明性授权模型
+
+下列接口用于研究授权绑定关系，并非 GitHub API：
+
+```typescript
+type Decision = "ALLOW" | "DENY" | "REQUIRE_APPROVAL";
+
+interface ActionRequest {
+  actionId: string;
+  runId: string;
+  principalId: string;
+  capability: "shell.exec" | "fs.read" | "fs.write"
+    | "network.connect" | "mcp.invoke";
+  canonicalResource: string;
+  argumentsHash: string;
+  policyVersion: string;
+}
+
+interface AuthorizationGrant {
+  actionId: string;
+  principalId: string;
+  runId: string;
+  argumentsHash: string;
+  policyVersion: string;
+  decision: Decision;
+  approvalEventId?: string;
+  expiresAt: string;
+  singleUse: boolean;
+}
+```
+
+这里表达四个约束：批准绑定具体主体与运行；批准绑定实际参数；批准具有有效期；批准消费与执行之间需要避免重复使用和状态竞争。参数改变、策略更新或批准过期后，原批准不能被自然语言记忆重新解释为持续授权。
+
+命令白名单本身也存在语义边界。以 `npm test` 为例，相同命令可能运行已被修改的项目脚本。因此，对命令文本的允许不能代替对脚本内容、工作区版本与执行能力的限制。这是一般性安全推演，不是对某一 Copilot 缺陷的认定。
+
+## 6. 实验设计与验证指标
+
+可以将策略判定和隔离执行分开测试，再验证二者组合。实验仅使用受控资源，不依赖真实第三方系统。
+
+| 实验变量 | 观测对象 | 主要指标 |
+|---|---|---|
+| 冲突的 allow / ask / deny | 最终决策及匹配规则 | 决策一致性、错误放行与错误拒绝 |
+| 已批准动作发生参数变化 | 批准是否仍被接受 | 重放与参数替换成功率 |
+| 沙箱启动或策略编译失败 | 是否降级至宿主执行 | Fail-open 次数与原因 |
+| 相同资源经不同工具访问 | 进程内、Shell、MCP 路径 | 策略覆盖率、路径间差异 |
+| 本地 MCP 派生子进程 | 子进程权限与生命周期 | 隔离继承、残留进程 |
+| 代理不可用或被忽略 | 实际网络路径 | 未授权出站连接、审计遗漏 |
+
+指标必须附带测试集规模、客户端版本、操作系统、有效策略与威胁模型。“测试中未发生绕过”不能写成“证明不可绕过”。
+
+## 7. 局限与开放问题
+
+产品策略覆盖面不等于形式化安全证明。客户端版本、执行后端、进程内工具、远程服务和宿主机信任假设都会影响实际保证。[3][4]
+
+值得继续研究的问题包括：多来源策略如何合并且保持单调收紧；批准与执行之间如何处理文件或 DNS 状态变化；策略更新如何影响已运行进程；远程 MCP 的准入身份如何与实际工具权限绑定；审计中如何证明拒绝规则覆盖了全部副作用路径。
+
+## 结论
+
+企业权限与托管沙箱的关键在于分离两类事实：**授权决定动作是否被允许，隔离决定执行环境实际能够触达什么。** 单独的确认弹窗、提示词、命令白名单或进程沙箱，都不能代表完整的 Agent 安全边界。
+
+## 参考资料
+
+以下为原研究稿列出的一手资料；产品文档会持续更新，复现时需保留实际版本与文档快照。
+
+[1] GitHub. [Enterprise managed permissions for GitHub Copilot agent operations](https://github.blog/changelog/2026-09-09-enterprise-managed-permissions-for-github-copilot-agent-operations/). 2026-09-09.
+
+[2] GitHub. [Enterprise-managed sandbox in Copilot for JetBrains](https://github.blog/changelog/2026-09-08-enterprise-managed-sandbox-in-copilot-for-jetbrains/). 2026-09-08.
+
+[3] GitHub Docs. [Enterprise managed settings](https://docs.github.com/en/copilot/reference/enterprise-administrators/enterprise-managed-settings).
+
+[4] GitHub Docs. [About cloud and local sandboxes](https://docs.github.com/en/copilot/concepts/about-cloud-and-local-sandboxes).
