@@ -1,0 +1,18 @@
+---
+import { integrationContext } from '../../lib/integrations';
+const { config, production } = integrationContext();
+const manual = production && config.analytics.provider === 'cloudflare' && config.analytics.mode === 'manual';
+// Pages mode is injected by Cloudflare. Never add a second beacon in that mode.
+---
+{manual && <span hidden data-cf-config data-origin={config.productionOrigin} data-token={config.analytics.token}></span>}
+<script>
+  const config = document.querySelector<HTMLElement>('[data-cf-config]');
+  if (config && window.location.origin === config.dataset.origin
+    && !document.querySelector('script[src*="cloudflareinsights.com/beacon"]')) {
+    const script = document.createElement('script');
+    script.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+    script.defer = true;
+    script.setAttribute('data-cf-beacon', JSON.stringify({ token: config.dataset.token }));
+    document.body.appendChild(script);
+  }
+</script>

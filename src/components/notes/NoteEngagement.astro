@@ -1,0 +1,90 @@
+---
+import { integrationContext, noteIntegration } from '../../lib/integrations';
+import { composePost } from '../../lib/social-text.mjs';
+const { noteRef, title, summary, url, locale = 'zh' } = Astro.props;
+const { config, production } = integrationContext();
+const options = noteIntegration(config, noteRef);
+const visible = production && (options.share || options.comments);
+const draft = production && options.share ? composePost({ title, summary, url, text: options.socialText }) : undefined;
+const zh = locale === 'zh';
+const comments = config.comments;
+---
+{visible && (
+  <section class="page-shell note-engagement no-print" data-engagement data-origin={config.productionOrigin} data-pagefind-ignore aria-label={zh ? '分享与讨论' : 'Share and discuss'}>
+    {options.share && draft && <div class="share-row">
+      <strong>{zh ? '分享这篇笔记' : 'Share this note'}</strong>
+      <a href={draft.intentUrl} target="_blank" rel="noopener noreferrer">{zh ? '分享到 X' : 'Share on X'}</a>
+      <button type="button" data-copy-link={url}>{zh ? '复制链接' : 'Copy link'}</button>
+      <span class="copy-status" role="status" aria-live="polite" data-copy-status></span>
+      <input class="copy-fallback" data-copy-fallback type="text" readonly hidden aria-label={zh ? '文章链接' : 'Article link'} value={url} />
+    </div>}
+    {options.comments && <section class="comments-panel" aria-label={zh ? '评论与反馈' : 'Comments and reactions'}>
+      <h2>{zh ? '评论与反馈' : 'Comments and reactions'}</h2>
+      <p>{zh ? '通过 GitHub 参与讨论或留下反馈。评论公开保存在 GitHub Discussions。' : 'Join the discussion or leave a reaction with GitHub. Comments are public in GitHub Discussions.'}</p>
+      <div class="giscus" data-giscus-root data-repo={comments.repo} data-repo-id={comments.repoId} data-category={comments.category} data-category-id={comments.categoryId} data-term={options.threadKey} data-theme={comments.theme} data-lang={zh ? 'zh-CN' : 'en'} data-reactions={comments.reactions ? '1' : '0'}></div>
+      <p><a href={`https://github.com/${comments.repo}/discussions`} target="_blank" rel="noopener noreferrer">{zh ? '在 GitHub 查看讨论' : 'View discussions on GitHub'}</a></p>
+    </section>}
+  </section>
+)}
+<script>
+  document.querySelectorAll<HTMLElement>('[data-engagement]').forEach((panel) => {
+    // A copied build or preview hostname must not send events to a production integration.
+    if (window.location.origin !== panel.dataset.origin) { panel.hidden = true; return; }
+    panel.querySelector<HTMLButtonElement>('[data-copy-link]')?.addEventListener('click', async (event) => {
+      const button = event.currentTarget as HTMLButtonElement;
+      const status = panel.querySelector<HTMLElement>('[data-copy-status]');
+      const zh = document.documentElement.lang.startsWith('zh');
+      try {
+        await navigator.clipboard.writeText(button.dataset.copyLink || '');
+        if (status) status.textContent = zh ? '链接已复制' : 'Link copied';
+      } catch {
+        const input = panel.querySelector<HTMLInputElement>('[data-copy-fallback]');
+        if (input) { input.hidden = false; input.focus(); input.select(); }
+        if (status) status.textContent = zh ? '请复制下方链接' : 'Copy the link below';
+      }
+    });
+    const root = panel.querySelector<HTMLElement>('[data-giscus-root]');
+    if (!root) return;
+    const load = () => {
+      if (root.dataset.loaded) return;
+      root.dataset.loaded = 'true';
+      const script = document.createElement('script');
+      script.src = 'https://giscus.app/client.js';
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      const attributes: Record<string, string> = {
+        repo: root.dataset.repo!, 'repo-id': root.dataset.repoId!, category: root.dataset.category!,
+        'category-id': root.dataset.categoryId!, mapping: 'specific', term: root.dataset.term!,
+        strict: '1', 'reactions-enabled': root.dataset.reactions!, 'emit-metadata': '0',
+        'input-position': 'top', theme: root.dataset.theme!, lang: root.dataset.lang!, loading: 'lazy'
+      };
+      for (const [key, value] of Object.entries(attributes)) script.setAttribute(`data-${key}`, value);
+      script.onerror = () => {
+        root.textContent = document.documentElement.lang.startsWith('zh')
+          ? '评论区暂时无法加载，可通过下方链接参与讨论。'
+          : 'Comments are unavailable here. Use the GitHub link below.';
+      };
+      root.appendChild(script);
+    };
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) { observer.disconnect(); load(); }
+      }, { rootMargin: '400px' });
+      observer.observe(root);
+    } else load();
+  });
+</script>
+<style>
+  .note-engagement { margin-top: 1.5rem; margin-bottom: 3rem; }
+  .share-row { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; padding: 1.25rem 0; border-top: 1px solid var(--color-border); }
+  .share-row strong { margin-right: auto; }
+  .share-row a, .share-row button { border: 1px solid var(--color-border); border-radius: .65rem; padding: .6rem .85rem; background: var(--color-surface); color: var(--color-foreground); text-decoration: none; font: inherit; cursor: pointer; }
+  .share-row :is(a, button):focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+  .copy-status { color: var(--color-muted); font-size: .875rem; }
+  .copy-fallback { width: 100%; padding: .6rem; }
+  .comments-panel { border-top: 1px solid var(--color-border); padding-top: 1.5rem; }
+  .comments-panel h2 { font-size: 1.15rem; margin-bottom: .5rem; }
+  .comments-panel p { color: var(--color-muted); font-size: .9rem; margin: .6rem 0 1rem; }
+  .giscus { min-height: 3rem; }
+  [hidden] { display: none !important; }
+</style>

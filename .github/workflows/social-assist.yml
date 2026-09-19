@@ -1,0 +1,67 @@
+name: Social assist
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      action:
+        description: Prepare drafts or record a human result (never sends to X)
+        type: choice
+        options: [prepare, confirm, skip]
+        default: prepare
+      run_id:
+        description: Successful production CI run; blank selects the latest
+        type: string
+        required: false
+      issue_number:
+        description: Sharing Issue number for confirm/skip
+        type: string
+        required: false
+      draft_hash:
+        description: Current draft hash from the Issue; required for confirm
+        type: string
+        required: false
+      post_url:
+        description: Actual X post URL; required for confirm
+        type: string
+        required: false
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: social-assist-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  assist:
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout trusted default branch, not artifact code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prepare or confirm sharing tasks
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          ACTION_MODE: ${{ inputs.action || 'prepare' }}
+          UPSTREAM_RUN_ID: ${{ github.event.workflow_run.id || inputs.run_id }}
+          ISSUE_NUMBER: ${{ inputs.issue_number }}
+          DRAFT_HASH: ${{ inputs.draft_hash }}
+          POST_URL: ${{ inputs.post_url }}
+        run: node scripts/social/assist.mjs
