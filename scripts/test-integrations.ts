@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import { integrationsSchema, loadIntegrations, noteIntegration } from '../src/lib/integrations';
+import { publicationManifest } from '../src/lib/publication';
+const defaults = integrationsSchema.parse({});
+assert.equal(defaults.comments.provider, 'none');
+assert.equal(defaults.social.assisted, false);
+assert.equal(defaults.analytics.provider, 'none');
+assert.deepEqual(loadIntegrations('missing-optional-profile'), defaults);
+const base = { productionOrigin: 'https://notes.example.org/', instanceRepository: 'owner/notes',
+  social: { assisted: true, readerShare: true, baselineSha: 'a'.repeat(40) } };
+const config = integrationsSchema.parse(base);
+assert.equal(config.productionOrigin, 'https://notes.example.org');
+assert.equal(noteIntegration(config, 'zh/first-note').assisted, true);
+assert.equal(noteIntegration(config, 'en/first-note').assisted, false);
+assert.throws(() => integrationsSchema.parse({ ...base, social: { assisted: true } }));
+assert.throws(() => integrationsSchema.parse({ analytics: { provider: 'goatcounter' } }));
+assert.throws(() => integrationsSchema.parse({ ...base, analytics: { provider: 'cloudflare', mode: 'manual' } }));
+assert.throws(() => integrationsSchema.parse({ ...base, analytics: { provider: 'cloudflare', mode: 'pages', token: 'a'.repeat(32) } }));
+assert.throws(() => integrationsSchema.parse({ ...base, comments: { provider: 'giscus' } }));
+const comments = integrationsSchema.parse({ ...base, comments: { provider: 'giscus', repo: 'owner/public-comments', repoId: 'R_kg123', category: 'Site Comments', categoryId: 'DIC_123' }, overrides: [{ noteRef: 'zh/first-note', threadKey: 'original-thread', share: false }] });
+assert.equal(noteIntegration(comments, 'zh/first-note').threadKey, 'original-thread');
+assert.equal(noteIntegration(comments, 'zh/first-note').share, false);
+assert.equal(noteIntegration(comments, 'zh/first-note').comments, true);
+assert.throws(() => integrationsSchema.parse({ ...base, overrides: [{ noteRef: 'zh/first-note' }, { noteRef: 'zh/first-note' }] }));
+const manifest = publicationManifest();
+assert.equal(new Set(manifest.notes.map((note) => note.noteRef)).size, manifest.notes.length);
+for (const note of manifest.notes) assert.match(note.fingerprint, /^sha256:[a-f0-9]{64}$/);
+console.log(`Integration configuration checks passed; ${manifest.notes.length} published notes indexed.`);

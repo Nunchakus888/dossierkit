@@ -12,10 +12,12 @@
     "preview": "astro preview",
     "validate": "tsx scripts/validate-profile.ts",
     "test:notes": "tsx scripts/test-notes.ts",
+    "test:integrations": "node --test scripts/social/*.test.mjs && tsx scripts/test-integrations.ts",
+    "social:assist": "node scripts/social/assist.mjs",
     "provision:notes-access": "tsx scripts/provision-notes-access.ts",
     "dossier": "tsx scripts/dossier.ts",
     "create-profile": "tsx scripts/create-profile.ts",
-    "generate-admin-config": "tsx scripts/generate-admin-config.ts",
+    "generate-admin-config": "tsx scripts/generate-cms.ts",
     "generate-pdf": "tsx scripts/generate-pdf.ts",
     "export-profile": "tsx scripts/export-profile.ts"
   },

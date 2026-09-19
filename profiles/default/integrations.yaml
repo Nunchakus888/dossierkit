@@ -1,0 +1,25 @@
+version: 1
+siteId: george-notes
+productionOrigin: https://sunionpeaks.pages.dev
+instanceRepository: Nunchakus888/dossierkit
+analytics:
+  provider: cloudflare
+  mode: pages
+  token: ""
+# giscus requires a PUBLIC discussion repository and installation of its GitHub App.
+# This production source repository stays private. Enable only after supplying real IDs.
+comments:
+  provider: none
+  repo: ""
+  repoId: ""
+  category: ""
+  categoryId: ""
+  reactions: true
+  theme: light
+social:
+  readerShare: true
+  assisted: true
+  baselineSha: c62ddffc94c9f91ac6082f945e6f9ed2b697b0ff
+  locales: [zh]
+  maxPerRun: 5
+overrides: []

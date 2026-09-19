@@ -5,7 +5,7 @@ const args = process.argv.slice(3);
 const scripts: Record<string, string> = {
   "create-profile": "scripts/create-profile.ts",
   validate: "scripts/validate-profile.ts",
-  "generate-admin-config": "scripts/generate-admin-config.ts",
+  "generate-admin-config": "scripts/generate-cms.ts",
   "generate-pdf": "scripts/generate-pdf.ts",
   "export-profile": "scripts/export-profile.ts",
   "generate-og": "scripts/generate-og.ts"
