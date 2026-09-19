@@ -1,7 +1,9 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { validateArticleHtml } from './social/core.mjs';
-const manifest = JSON.parse(fs.readFileSync('dist/meta/notes.json', 'utf8'));
+const manifest = JSON.parse(fs.readFileSync('artifacts/notes-publication/notes.json', 'utf8'));
+assert.ok(!fs.existsSync('dist/meta/notes.json'), 'Author publication manifest must not be public.');
+assert.ok(!fs.existsSync('dist/_meta/notes.json'), 'Author publication manifest must not be public.');
 for (const note of manifest.notes) {
   const url = new URL(note.url);
   const file = `dist${url.pathname}/index.html`;
