@@ -4,11 +4,10 @@ translationStatus: "reviewed"
 lastReviewedAt: "2026-09-19"
 title: "OpenAI Agents API：Codex Harness API 化，以及 Managed Harness 与 Execution
   Environment 的架构解耦"
-summary: "时间锚点：2026-09-18。 核心发布：2026-09-10。 检索窗口：2026-09-05 至 2026-09-18，扩展至近 14
-  天。 扩展原因：Agents API 正式 Public Beta 发布于 9…"
+summary: "OpenAI Agents API 将 Codex Harness 托管化，拆分控制状态与执行环境，并分析 MCP 网络边界、凭据隔离、Session 数据治理及可观测性。"
 featured: false
 date: "2026-09-19"
-updatedAt: "2026-09-19T03:11:36.774Z"
+updatedAt: "2026-09-19T04:02:24.785Z"
 kind: "research"
 topics:
   - "OpenAI Agents API"
@@ -24,27 +23,8 @@ tags:
   - "MCP"
   - "凭据隔离"
   - "可观测性"
-contentHash: "sha256:1c8168753e4832eb0f69d442bc1bb9dc777924e279de461b0e1a0f112f0c3cdf"
+contentHash: "sha256:9cd5357b56b51fed03513d3b8c48f66c34f35a590ae39aaea594d128c0d0010b"
 ---
-
-## 时间锚点与证据边界
-
-- 时间锚点：**2026-09-18**。
-- 核心发布：**2026-09-10**。
-- 检索窗口：**2026-09-05 至 2026-09-18，扩展至近 14 天**。
-- 扩展原因：Agents API 正式 Public Beta 发布于 9 月 10 日，超出严格 7 天窗口两天，但属于本主题在研究时点最重要的一手变化。
-- 来源优先级：**OpenAI 官方产品发布 > OpenAI 官方 API 文档 > OpenAI 官方安全/Runtime 文档**。
-- 本笔记仅采用 OpenAI 官方来源作为事实依据。下文的产品状态、API 示例、数据驻留和 ZDR 支持情况均按上述时间锚点记录。
-
-### 主要来源
-
-1. [OpenAI — Introducing the Agents API](https://openai.com/index/introducing-the-agents-api/) — 官方发布，2026-09-10。
-2. [OpenAI API Docs — Agents API overview](https://developers.openai.com/api/docs/guides/agents-api/overview) — 官方文档。
-3. [OpenAI API Docs — Architecture](https://developers.openai.com/api/docs/guides/agents-api/architecture) — 官方架构文档。
-4. [OpenAI API Docs — Self-hosted sandboxes](https://developers.openai.com/api/docs/guides/agents-api/environments/self-hosted) — 官方文档。
-5. [OpenAI API Docs — Sandbox security](https://developers.openai.com/api/docs/guides/agents-api/environments/security) — 官方安全文档。
-6. [OpenAI API Docs — Observability](https://developers.openai.com/api/docs/guides/agents-api/observability) — 官方文档。
-7. [OpenAI API Docs — Tracing](https://developers.openai.com/api/docs/guides/agents-api/tracing) — 官方文档。
 
 ## 摘要
 
