@@ -6,14 +6,14 @@ analytics:
   provider: cloudflare
   mode: pages
   token: ""
-# giscus requires a PUBLIC discussion repository and installation of its GitHub App.
-# This production source repository stays private. Enable only after supplying real IDs.
+# Public reader discussions are separate from the private production repository.
+# Repository-level giscus.json origin restrictions are tracked in issue #22.
 comments:
-  provider: none
-  repo: ""
-  repoId: ""
-  category: ""
-  categoryId: ""
+  provider: giscus
+  repo: Nunchakus888/dossierkit-community
+  repoId: R_kgDOUhhD1w
+  category: Announcements
+  categoryId: DIC_kwDOUhhD184DF-s4
   reactions: true
   theme: light
 social:
