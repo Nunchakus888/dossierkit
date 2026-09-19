@@ -1,68 +1,90 @@
-# Interactions and assisted sharing
+# 互动与辅助分享
 
-The existing `ci.yml` remains the only production build/deployment workflow. Notes stay in Git; comments and analytics never modify Notes or trigger a site deployment. No X API, GoatCounter, custom account system, or interaction database is used.
+保留现有 `ci.yml` 作为唯一生产构建、部署入口。Notes 仍在 Git 中；评论、反馈与统计不写回文章、不触发部署。不接 X 付费 API、GoatCounter、自建账户或互动数据库。
 
-## Configuration
+## 配置与内容管理
 
-Optional configuration lives in `profiles/<id>/integrations.yaml`. Missing configuration disables all integrations. `pnpm generate-admin-config` and `pnpm dossier generate-admin-config` include an **Integrations** editor in Decap when this file exists. Notes themselves remain editable through the canonical MCP/Git workflow; HTML Notes are not routed through a Markdown editor.
+可选配置：`profiles/<id>/integrations.yaml`。缺少文件时所有集成关闭。两种生成命令均在 Decap 的 Profile Config 中加入「互动与分享 / Integrations」：
 
-- `productionOrigin` is a bare HTTPS origin. Browser integrations only activate on this origin.
-- `instanceRepository` binds assisted sharing to the production repository. Fork builds do not operate on the source instance.
-- `siteId` is stable across title/domain changes. Each discussion uses `siteId:profileId:noteRef` with giscus `specific` + strict mapping.
-- `overrides` can disable comments, reader sharing or assisted sharing for one `noteRef`, supply a short social text, or preserve an old discussion key after a path migration.
-- Feature configuration contains public IDs, not API secrets. Runtime interaction data does not belong in frontmatter.
+```sh
+pnpm generate-admin-config
+pnpm dossier generate-admin-config
+```
+
+笔记仍通过 canonical MCP/Git 管理；不把 HTML Notes 塞入 Markdown 编辑器。
+
+| 配置 | 用途 |
+|---|---|
+| `productionOrigin` | 正式 HTTPS origin；浏览器在其他域名不启用集成 |
+| `instanceRepository` | 绑定生产仓库，Fork 构建不使用原实例的互动配置 |
+| `siteId` | 稳定站点身份，不随文章标题变化 |
+| `analytics` | 仅 Cloudflare；Pages 自动注入或手工 beacon 二选一 |
+| `comments` | giscus 仓库、分类、反应和主题 |
+| `social` | 读者分享、作者待发 Issue、存量基线、语言和每次上限 |
+| `overrides` | 按 noteRef 关闭功能、覆写短文案或保留迁移前讨论标识 |
+
+配置只放公开标识，不放 Cloudflare API token、GitHub token 或 X 凭据。访问数、点赞数、待发状态不进入文章 frontmatter。
 
 ## Cloudflare Web Analytics
 
-Use `analytics.provider: cloudflare`, `mode: pages`, and an empty `token` with Pages automatic injection. Enable Web Analytics in the existing Pages project if it is not already enabled; Cloudflare injects the beacon on a subsequent deployment. This code cannot enable a Cloudflare account setting without account access.
+默认 `provider: cloudflare`、`mode: pages`，`token` 留空，保留 Pages 自动注入。若账户尚未开启，在现有 Pages 项目开启 Web Analytics；后续部署由 Cloudflare 注入 beacon。代码不会假装已经修改账户开关。
 
-For deployments without automatic injection, choose `mode: manual` and supply the public Web Analytics beacon token. Never put a Cloudflare API token here. The schema rejects combining Pages mode with a manual token, and the browser loader checks for an existing beacon.
+非自动注入部署可使用 `mode: manual` 并填公开 beacon token，不能填 Cloudflare API token。schema 禁止 Pages 模式同时填写 token；浏览器也检查已有 beacon，避免重复。
 
-Analytics remain in the Cloudflare dashboard. There is no fabricated public visit counter, custom-event reporting, or promise of UTM/click-through attribution. Preview hosts must not be registered for production tracking.
+只提供 Cloudflare 后台统计，不伪造公开访问计数、自定义事件或 UTM/点击率归因。生产统计不应启用于预览域名。
 
-Official setup: https://developers.cloudflare.com/pages/how-to/web-analytics/
+官方说明：https://developers.cloudflare.com/pages/how-to/web-analytics/
 
-## Comments and reactions
+## 评论与反馈
 
-The production source repository remains private. Before selecting `comments.provider: giscus`:
+生产源仓库保持私有。启用 `comments.provider: giscus` 前，必须选择一个公开仓库，开启 Discussions、设置专用分类，并安装 giscus GitHub App。从 https://giscus.app/ 获取真实的 `repo`、`repoId`、`category`、`categoryId`，填入配置后通过原 CI 发布。
 
-1. Select/create a **public** discussion repository, enable Discussions and a dedicated category (Announcements recommended).
-2. Install the giscus GitHub App on that repository and use https://giscus.app/ to obtain `repo`, `repoId`, `category`, `categoryId`.
-3. Configure those real identifiers in Integrations, then publish through the existing CI.
+组件懒加载评论与 reactions，加载失败保留 GitHub Discussions 入口。评论账户授权与 Decap OAuth、Notes MCP Access 分开；reactions 需要 GitHub 登录，不是匿名点赞。
 
-The component lazy-loads giscus, includes reactions, and links to GitHub Discussions if embedding is unavailable. Readers authorize giscus using GitHub, separately from Decap OAuth and Notes MCP Access. Reactions are not anonymous likes.
-
-Place `giscus.json` in the **discussion repository**, not automatically in the private source repository:
+在**讨论仓库**放置 `giscus.json`，不要误以为私有源仓库的配置会控制另一个仓库：
 
 ```json
 {"origins":["https://YOUR-PRODUCTION-HOST"],"defaultCommentOrder":"oldest"}
 ```
 
-Changing a title or adding query parameters does not split a discussion. Changing `siteId`, `profileId`, or a filename can; preserve the prior key with an override when migrating. Repository installation/authorization is never simulated by a code-only upgrade.
+讨论使用 `siteId:profileId:noteRef` 的 specific + strict 映射；改标题或附加 URL 查询参数不分裂讨论。改文件名、profileId 或 siteId 时，通过 override 保留旧 threadKey。代码升级不能代替仓库公开设置及 App 安装授权。
 
-Official configuration: https://giscus.app/ and https://github.com/giscus/giscus/blob/main/ADVANCED-USAGE.md
+## X：仅辅助发送
 
-## X: reader share and author assistance
+文章页提供「分享到 X」和「复制链接」。前者只打开官方编辑框，不发送帖子。文案使用确定性模板；按 X 单权重 Unicode 区间保守计算，URL 预留 23 字符，组合 emoji 可能被高估，但不会截断字素。不额外安装依赖，最终校验与发送由 X 完成。
 
-Reader share buttons open the official X editor with prefilled text or copy the canonical URL. They never send a post. Draft budgeting uses X's documented single-weight code-point ranges and reserves 23 characters for the URL; emoji sequences are conservatively overcounted and truncation preserves graphemes. Final sending and validation remain in X. No new package dependency is required.
+`social-assist.yml` 不安装依赖、不构建、不部署，仅在成功的 push-to-main CI 后或手动运行时执行：
 
-The separate `social-assist.yml` **does not install dependencies, build, or deploy**. It runs after successful push-to-main CI or from Actions → Social assist → Run workflow.
+1. 校验上游运行和不可变的 `notes-publication` artifact。
+2. 用完整已部署清单对账，按 `baselineSha` 排除所有存量 Notes。
+3. 校验正式 URL、canonical、noteRef 和重新计算的文章指纹。
+4. 创建或刷新私有 `[待分享 X]` Issue；记录创建提交、部署提交与固定文案。
 
-`prepare` validates the upstream CI and its immutable `notes-publication` artifact, scans the complete deployed Notes list, verifies canonical URL + identity + recomputed publication fingerprint, then creates/refreshes a private `[待分享 X]` Issue. `baselineSha` excludes all pre-existing Notes. Closed Issues and human-confirmed results are terminal. Updates retain the Issue and human notes; changed text invalidates the draft hash. Creation commits and deployed commits are recorded separately.
+GitHub Issue 是持久待发记录。不要删除记录或编辑机器标识。关闭或已经确认的任务不自动重开；文章改动只刷新未发送草稿，并保留人工备注。文案变化会更新 draftHash。若创建 Issue 请求超时，不在原调用内盲目重试，下次先全量读取记录再对账。
 
-Issues created by this workflow are the durable task ledger. Do not delete them or edit their machine marker. A missing baseline, duplicate managed records, wrong artifact, or incomplete scan fails closed. A POST timeout is not immediately retried; the next full Issue scan checks for an already-created task first.
+在 Actions → Social assist → Run workflow 中：
 
-After sending manually, run `confirm` with the Issue number, its current draft hash and actual X post URL. This records `published_manual` and closes the Issue; it does not claim API verification. `skip` records an intentional skip. Simply opening the editor is never treated as success. Manually closing a task prevents it being reopened automatically.
+| action | 操作 |
+|---|---|
+| `prepare` | 默认读取最近成功生产 CI；可指定 run_id 补偿检查 |
+| `confirm` | 人工发出后，填 Issue 编号、当前 draftHash 和真实帖子 URL；记为 published_manual 并关闭 |
+| `skip` | 填 Issue 编号，记为跳过并关闭 |
 
-`maxPerRun` bounds new/refreshed drafts. Re-run `prepare` for backlog or transient URL failures. There is no background polling by default. Artifacts are retained for 90 days; after expiry, use a fresh successful production CI. Disabled/deleted articles must not be shared from an old draft: always check the article before sending.
+`published_manual` 只代表作者确认，不是 X API 核验。打开编辑框、复制链接均不代表成功发送。手动关闭未登记的任务也不会被重新创建。
 
-The workflow only receives the normal GitHub token with contents/actions read and Issues write. It never receives Cloudflare, Notes MCP or X credentials. `workflow_run` artifacts are treated as bounded JSON data, not executable code.
+每次生成/刷新数量受 `maxPerRun` 限制；有积压或临时 URL 错误时重新运行 prepare。默认不轮询。artifact 保留 90 天，过期后使用一次新的成功生产 CI。发送前总是检查正式文章，尤其是笔记已删除或关闭分发的情况。
 
-## Checks
+分发任务仅使用普通 GitHub token 的 contents/actions 读取与 Issues 写入权限，不接触 Cloudflare、MCP 或 X 凭据。下载的 artifact 仅作为有大小和来源约束的 JSON，不执行其中的代码。
 
-- `pnpm test:notes` — existing canonical Notes checks.
-- `pnpm test:integrations` — configuration, identity, URL guards, baseline, duplicate prevention, conservative text budgeting and mocked Issue workflows.
-- `pnpm build` — the single static build also generates `_meta/notes.json` and article identity metadata.
-- CI uploads that exact manifest only after both existing deployments succeed.
+## 验证
 
-On production, inspect a real Notes page for share buttons, matching canonical/identity metadata and (when configured) the giscus frame. Check that exactly one Cloudflare beacon is injected. A 200 response or a giscus component in source alone does not prove the integrations are active.
+```sh
+pnpm test:notes
+pnpm test:integrations
+pnpm build
+node scripts/test-publication-build.mjs
+```
+
+唯一静态构建同时生成 `/meta/notes.json` 和文章身份元数据；CI 逐篇验证构建产物、分享和评论开关，仅在既有两个部署成功后上传该清单。
+
+上线后检查真实文章按钮、canonical 与指纹，配置完成后再核验 giscus iframe，并确认页面只有一个 Cloudflare beacon。HTTP 200 或源码存在组件，不等于外部服务已启用。
