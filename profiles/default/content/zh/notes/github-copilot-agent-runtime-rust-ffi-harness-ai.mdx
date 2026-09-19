@@ -4,11 +4,10 @@ translationStatus: "reviewed"
 lastReviewedAt: "2026-09-19"
 title: "GitHub Copilot Agent Runtime 的 Rust 迁移：Harness 与 UI 解耦、FFI Runtime 及
   Agent-assisted 大规模重写"
-summary: "时间锚点：2026-09-18。 主要检索窗口：2026-09-12 至 2026-09-18。 核心材料发布时间：2026-09-16。
-  来源优先级：GitHub Engineering 官方技术复盘 > GitHub…"
+summary: "GitHub 将 Copilot 共享 Agent Runtime 从 TypeScript/Node 迁移到 Rust，重点分析 Harness 与 UI 解耦、跨语言 FFI、渐进式迁移及性能测量边界。"
 featured: false
 date: "2026-09-19"
-updatedAt: "2026-09-19T03:10:43.559Z"
+updatedAt: "2026-09-19T04:02:24.785Z"
 kind: "research"
 topics:
   - "GitHub Copilot"
@@ -24,18 +23,8 @@ tags:
   - "FFI"
   - "Harness 架构"
   - "AI 辅助迁移"
-contentHash: "sha256:3fa9b437b0be5683d23badf3d647159fac2a11b04327049f28e115ded6d07718"
+contentHash: "sha256:72b0926a13f0e147b4d28fd49fadc36f8a2d3ec0faad185b1ef4230996f6aec8"
 ---
-
-## 时间锚点与证据边界
-
-- 时间锚点：**2026-09-18**。
-- 主要检索窗口：**2026-09-12 至 2026-09-18**。
-- 核心材料发布时间：**2026-09-16**。
-- 来源优先级：**GitHub Engineering 官方技术复盘 > GitHub 官方仓库/发布材料 > 其他资料**。
-- 所有迁移数据均来自 GitHub 自身测量，并非独立第三方 Benchmark。下文的产品状态和数据均按上述时间锚点记录。
-
-**主要来源：**[GitHub Engineering — Migrating the GitHub Copilot runtime to Rust, using Copilot](https://github.blog/ai-and-ml/generative-ai/migrating-the-github-copilot-runtime-to-rust-using-copilot/)，2026-09-16。
 
 ## 摘要
 
