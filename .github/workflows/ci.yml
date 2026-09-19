@@ -139,6 +139,10 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler pages deploy dist-mcp --project-name=${{ steps.notes_access.outputs.project_name }} --branch=main
 
+      - name: Verify live production articles and observe analytics injection
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: node scripts/verify-live-publication.mjs
+
       - name: Record successful production publication
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
