@@ -2,3 +2,11 @@ interface:
   display_name: "DossierKit Note Publishing"
   short_description: "Deep-read sources and publish evidence-backed notes"
   default_prompt: "Use $publish-note to deep-read this source and prepare a focused, evidence-backed note for DossierKit publication."
+
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "dossierkit-notes"
+      description: "Read, save, and delete canonical DossierKit notes"
+      transport: "streamable_http"
+      url: "https://dossierkit-notes-mcp.pages.dev/api/mcp"

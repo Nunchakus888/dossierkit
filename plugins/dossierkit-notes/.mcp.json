@@ -1,3 +1,7 @@
 {
-  "mcpServers": {}
+  "mcpServers": {
+    "dossierkit-notes": {
+      "url": "https://dossierkit-notes-mcp.pages.dev/api/mcp"
+    }
+  }
 }

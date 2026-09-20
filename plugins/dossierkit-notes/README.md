@@ -2,19 +2,27 @@
 
 One authoring Skill, one remote MCP contract, and the same three note tools in Codex and ChatGPT. The Skill covers source research, canonical-note consolidation, formal writing, SVG artwork, publication, and revision. DossierKit Notes 1.5 or newer is required for SVG assets. The client needs neither a local image renderer nor a model API key.
 
-## Configure your instance
+## Canonical endpoint
 
-The source package intentionally contains no active destination. In a copy of this directory:
+The repository package is ready to use with the canonical production endpoint:
+
+```text
+https://dossierkit-notes-mcp.pages.dev/api/mcp
+```
+
+The same endpoint is declared in portable `mcp.json`, Codex `.mcp.json`, and the Skill's `agents/openai.yaml` dependency. Installing the repository plugin therefore loads both the Skill and the MCP connection.
+
+To target another deployment, configure a copy of the package:
 
 ```sh
 node configure.mjs --url https://YOUR-NOTES-MCP/api/mcp
 ```
 
-This writes the same HTTPS endpoint to portable `mcp.json`, the Codex compatibility `.mcp.json`, and the Skill's `agents/openai.yaml` dependency. The writing instructions remain identical across products. Do not point another user's plugin at the original author's private server; deploy and configure your own instance and authorize your own GitHub repository.
+The command rewrites all three endpoint declarations together. The writing instructions remain identical across products. Independent deployments should authorize their own GitHub repository and users.
 
 ## Codex and ChatGPT use the same configured package
 
-Configure one copy with the intended MCP endpoint, then use that package for both Codex and ChatGPT. Codex loads the packaged Skill and MCP definition. ChatGPT binds the same package to the registered connection identified by `.app.json`. The endpoint, tool workflow, Skill, references, and plugin metadata remain the same; each client completes its own OAuth grant.
+Use the same configured package for both Codex and ChatGPT. Codex loads the packaged Skill and MCP definition. ChatGPT binds the package to the registered connection identified by `.app.json`. The endpoint, tool workflow, Skill, references, and plugin metadata remain the same; each client completes its own OAuth grant.
 
 For Codex local development, install the plugin from a supported local or repository marketplace. The repository catalog is `.agents/plugins/marketplace.json`. Keep the plugin as the only active registration for this endpoint.
 

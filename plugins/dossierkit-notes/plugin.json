@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "dossierkit-notes",
-  "version": "1.5.2",
+  "version": "1.5.2+codex.20260920033413",
   "description": "Deep-read technical sources and publish evidence-backed notes with SVG artwork through one authenticated MCP endpoint.",
   "author": {
     "name": "SunionPeak",

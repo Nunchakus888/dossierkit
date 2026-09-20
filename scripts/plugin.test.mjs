@@ -6,21 +6,25 @@ import path from 'node:path';
 import { configure } from '../plugins/dossierkit-notes/configure.mjs';
 import { copyPluginFiles, PLUGIN_FILES } from './package-notes-plugin.mjs';
 const source = path.resolve('plugins/dossierkit-notes');
-test('portable plugin is inert by default and has one valid Skill', () => {
+test('canonical plugin bundles one production MCP and one valid Skill', () => {
   const plugin = JSON.parse(fs.readFileSync(path.join(source,'plugin.json'),'utf8'));
   const codex = JSON.parse(fs.readFileSync(path.join(source,'.codex-plugin/plugin.json'),'utf8'));
   assert.equal(plugin.name,'dossierkit-notes');
-  assert.equal(plugin.version,'1.5.2');
+  assert.match(plugin.version,/^1\.5\.2\+codex\.[a-z0-9-]+$/);
   assert.equal(codex.version,plugin.version);
   assert.equal(plugin.$schema,'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json');
-  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(source,'mcp.json'),'utf8')).mcpServers,{});
-  assert.deepEqual(JSON.parse(fs.readFileSync(path.join(source,'.mcp.json'),'utf8')).mcpServers,{});
+  const portableMcp=JSON.parse(fs.readFileSync(path.join(source,'mcp.json'),'utf8')).mcpServers['dossierkit-notes'];
+  const codexMcp=JSON.parse(fs.readFileSync(path.join(source,'.mcp.json'),'utf8')).mcpServers['dossierkit-notes'];
+  assert.equal(portableMcp.type,'streamable-http');
+  assert.equal(portableMcp.url,'https://dossierkit-notes-mcp.pages.dev/api/mcp');
+  assert.equal(codexMcp.url,portableMcp.url);
   assert.deepEqual(codex.interface,plugin.extensions['com.openai'].interface);
   const skill = fs.readFileSync(path.join(source,'skills/publish-note/SKILL.md'),'utf8');
   const agent = fs.readFileSync(path.join(source,'skills/publish-note/agents/openai.yaml'),'utf8');
   assert.match(skill,/^---\nname: publish-note\ndescription:/);
   assert.match(skill,/philosophical proposition/);
-  assert.doesNotMatch(agent,/^dependencies:/m);
+  assert.match(agent,/^dependencies:/m);
+  assert.match(agent,/url: "https:\/\/dossierkit-notes-mcp\.pages\.dev\/api\/mcp"/);
   assert.ok(fs.existsSync(path.join(source,'skills/publish-note/references/research-quality.md')));
   assert.ok(fs.existsSync(path.join(source,'skills/publish-note/references/visual-authoring.md')));
   for (const file of PLUGIN_FILES) {

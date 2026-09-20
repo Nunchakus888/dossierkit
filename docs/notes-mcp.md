@@ -52,7 +52,9 @@ Cloudflare Access provides OAuth discovery, dynamic client registration, PKCE au
 
 Each client receives its own OAuth grant. ChatGPT and Codex therefore share configuration and behavior without sharing an access token or refresh token. Both grants resolve to the same authorized identity and MCP backend; revoking one client leaves the other grant independent.
 
-Create one configured plugin package:
+The repository plugin already declares the production endpoint consistently in portable `mcp.json`, Codex `.mcp.json`, and the `publish-note` Skill dependency. Installing it loads the Skill and the named MCP server together.
+
+To retarget another deployment or add a ChatGPT connection mapping, configure a copy:
 
 ```bash
 node plugins/dossierkit-notes/configure.mjs \
@@ -60,7 +62,7 @@ node plugins/dossierkit-notes/configure.mjs \
   --app-id YOUR_REGISTERED_CONNECTION_ID
 ```
 
-The command writes the endpoint consistently to portable `mcp.json`, Codex `.mcp.json`, and the `publish-note` Skill dependency. The optional `.app.json` binds ChatGPT to the connection previously registered for that same endpoint; it contains no credential.
+The command rewrites the endpoint consistently across all three declarations. The optional `.app.json` binds ChatGPT to the connection previously registered for that same endpoint; it contains no credential.
 
 Install this configured package in Codex locally when needed. Import the same package and registered connection in ChatGPT for remote use. Complete OAuth separately in each client. Keep only this plugin registration active for the endpoint so the three tools appear once.
 
