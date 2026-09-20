@@ -28,3 +28,20 @@ test('one instance configuration produces portable, Codex and optional Web bindi
     assert.throws(() => configure(dir,'http://example.com/api/mcp'));
   } finally { fs.rmSync(dir,{recursive:true,force:true}); }
 });
+
+test('plugin exports only approved files and excludes local account state', async () => {
+  const {copyPluginFiles, PLUGIN_FILES} = await import('./package-notes-plugin.mjs');
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'notes-package-'));
+  try {
+    const input=path.join(root,'source'), output=path.join(root,'output');
+    fs.cpSync(source,input,{recursive:true});
+    fs.writeFileSync(path.join(input,'.env'),'LOCAL_SENTINEL_ONLY=not-a-real-secret');
+    fs.writeFileSync(path.join(input,'.app.json'),'{}');
+    fs.writeFileSync(path.join(input,'unrelated.txt'),'not part of this plugin');
+    copyPluginFiles(input,output);
+    assert.ok(!fs.existsSync(path.join(output,'.env')));
+    assert.ok(!fs.existsSync(path.join(output,'.app.json')));
+    assert.ok(!fs.existsSync(path.join(output,'unrelated.txt')));
+    for (const file of PLUGIN_FILES) assert.ok(fs.existsSync(path.join(output,file)));
+  } finally { fs.rmSync(root,{recursive:true,force:true}); }
+});
