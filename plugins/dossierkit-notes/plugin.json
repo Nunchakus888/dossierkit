@@ -1,0 +1,8 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "dossierkit-notes",
+  "version": "1.5.0",
+  "description": "Write and publish complete research notes with SVG artwork through one authenticated MCP endpoint.",
+  "license": "MIT",
+  "keywords": ["notes", "research", "svg", "mcp"]
+}

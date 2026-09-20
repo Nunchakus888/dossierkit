@@ -1,0 +1,12 @@
+{
+  "name": "dossierkit-local",
+  "interface": {"displayName": "DossierKit Notes"},
+  "plugins": [
+    {
+      "name": "dossierkit-notes",
+      "source": {"source": "local", "path": "./plugins/dossierkit-notes"},
+      "policy": {"installation": "AVAILABLE", "authentication": "ON_INSTALL"},
+      "category": "Productivity"
+    }
+  ]
+}

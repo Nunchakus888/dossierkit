@@ -62,6 +62,9 @@ jobs:
       - name: Test canonical Notes workflow
         run: pnpm test:notes
 
+      - name: Test note assets, atomic publishing and plugin package
+        run: pnpm test:assets
+
       - name: Test modular integrations and assisted sharing
         run: pnpm test:integrations
 
@@ -73,8 +76,20 @@ jobs:
           pnpm build
           pnpm exec tsx scripts/export-publication.ts
 
-      - name: Verify built publication identities and feature switches
-        run: node scripts/test-publication-build.mjs
+      - name: Verify built publication identities, feature switches and cover images
+        run: |
+          node scripts/test-publication-build.mjs
+          node scripts/verify-note-covers.mjs
+
+      - name: Package reusable Notes plugin
+        run: pnpm package:plugin
+
+      - name: Upload reusable Notes plugin
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: dossierkit-notes-plugin
+          path: artifacts/plugins/*.zip
+          if-no-files-found: error
 
       - name: Build isolated Notes MCP artifact
         run: pnpm build:mcp
@@ -139,9 +154,11 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm exec wrangler pages deploy dist-mcp --project-name=${{ steps.notes_access.outputs.project_name }} --branch=main
 
-      - name: Verify live production articles and observe analytics injection
+      - name: Verify live production articles, covers and analytics injection
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: node scripts/verify-live-publication.mjs
+        run: |
+          node scripts/verify-live-publication.mjs
+          node scripts/verify-note-covers.mjs --live
 
       - name: Record successful production publication
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
