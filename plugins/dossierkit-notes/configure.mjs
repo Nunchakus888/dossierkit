@@ -3,9 +3,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const skillAgentConfig = (endpoint) => `interface:
-  display_name: "DossierKit 笔记发布"
-  short_description: "精读技术资料并发布证据充分的正式笔记"
-  default_prompt: "使用 $publish-note 精读这份材料，形成一篇论点集中、证据清晰并适合 DossierKit 发布的正式笔记。"
+  display_name: "DossierKit Note Publishing"
+  short_description: "Deep-read sources and publish evidence-backed notes"
+  default_prompt: "Use $publish-note to deep-read this source and prepare a focused, evidence-backed note for DossierKit publication."
 
 dependencies:
   tools:

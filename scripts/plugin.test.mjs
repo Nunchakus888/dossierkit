@@ -4,12 +4,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { configure } from '../plugins/dossierkit-notes/configure.mjs';
+import { copyPluginFiles, PLUGIN_FILES } from './package-notes-plugin.mjs';
 const source = path.resolve('plugins/dossierkit-notes');
 test('portable plugin is inert by default and has one valid Skill', () => {
   const plugin = JSON.parse(fs.readFileSync(path.join(source,'plugin.json'),'utf8'));
   const codex = JSON.parse(fs.readFileSync(path.join(source,'.codex-plugin/plugin.json'),'utf8'));
   assert.equal(plugin.name,'dossierkit-notes');
-  assert.equal(plugin.version,'1.5.1');
+  assert.equal(plugin.version,'1.5.2');
   assert.equal(codex.version,plugin.version);
   assert.equal(plugin.$schema,'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json');
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(source,'mcp.json'),'utf8')).mcpServers,{});
@@ -22,6 +23,9 @@ test('portable plugin is inert by default and has one valid Skill', () => {
   assert.doesNotMatch(agent,/^dependencies:/m);
   assert.ok(fs.existsSync(path.join(source,'skills/publish-note/references/research-quality.md')));
   assert.ok(fs.existsSync(path.join(source,'skills/publish-note/references/visual-authoring.md')));
+  for (const file of PLUGIN_FILES) {
+    assert.doesNotMatch(fs.readFileSync(path.join(source,file),'utf8'),/[\u3400-\u9fff]/,`${file} must use English-only plugin copy`);
+  }
 });
 test('one instance configuration produces portable, Codex and optional Web binding', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(),'dossierkit-plugin-'));
@@ -55,8 +59,7 @@ test('one instance configuration produces portable, Codex and optional Web bindi
   } finally { fs.rmSync(dir,{recursive:true,force:true}); }
 });
 
-test('plugin exports only approved files and excludes local account state', async () => {
-  const {copyPluginFiles, PLUGIN_FILES} = await import('./package-notes-plugin.mjs');
+test('plugin exports only approved files and excludes local account state', () => {
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'notes-package-'));
   try {
     const input=path.join(root,'source'), output=path.join(root,'output');
