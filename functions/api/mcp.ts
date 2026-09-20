@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { noteDeleteInputSchema, noteGetInputSchema, noteSaveInputSchema, deleteNoteFromGitHub, getNoteFromGitHub, saveNoteToGitHub } from '../../src/server/github-note-bundles';
 import { AccessAuthenticationError, AccessConfigurationError, verifyCloudflareAccess, type AccessAuthEnvironment } from '../../src/server/access-auth';
 import type { NotesEnvironment } from '../../src/server/github-notes';
+import { registerNoteSkill } from '../../src/server/mcp-note-skill';
 type Environment = NotesEnvironment & AccessAuthEnvironment;
 
 export const onRequest = async ({request,env}:{request:Request;env:Environment}) => {
@@ -15,13 +16,14 @@ export const onRequest = async ({request,env}:{request:Request;env:Environment})
   await server.connect(transport);
   return corsResponse(await transport.handleRequest(request));
 };
-function createServer(env:Environment, origin:string) {
+export function createServer(env:Environment, origin:string) {
   const candidate = z.object({noteRef:z.string(),title:z.string(),summary:z.string(),publicUrl:z.string(),format:z.enum(['markdown','html'])});
   const saveOutput = z.object({action:z.enum(['created','updated','unchanged']),noteRef:z.string(),path:z.string(),commitUrl:z.string().optional(),publicUrl:z.string(),contentHash:z.string(),assetNames:z.array(z.string())});
   const getOutput = z.object({status:z.enum(['found','ambiguous','not_found']),note:candidate.extend({locale:z.enum(['zh','en']),kind:z.enum(['research','learning','engineering']).optional(),topics:z.array(z.string()),markdown:z.string().optional(),html:z.string().optional(),contentHash:z.string(),assetNames:z.array(z.string()),assets:z.record(z.string(),z.string()).optional()}).optional(),candidates:z.array(candidate).optional()});
   const deleteOutput = z.object({action:z.literal('deleted'),noteRef:z.string(),title:z.string(),format:z.enum(['markdown','html']),path:z.string(),publicUrl:z.string(),contentHash:z.string(),commitUrl:z.string().optional()});
-  const server = new McpServer({name:'dossierkit-notes',version:'1.5.0'},{instructions:
+  const server = new McpServer({name:'dossierkit-notes',version:'1.6.0'},{instructions:
     'Save only a finished note. Provide exactly one Markdown or safe semantic HTML document with one H1, then concise topics. Optional assets is a filename-to-SVG map: cover.svg is the 1200x630 share cover; other SVGs are inline diagrams. Author a topic-specific cover.svg with each new note by default unless the user requests text only or provides a suitable existing cover; text-only edits preserve existing artwork. SVG must have xmlns, viewBox and a root title, using static shapes/text and presentation attributes; scripts, styles, external resources, foreignObject, use, animation, entities and nested SVG are rejected. Use ![alt](asset:name.svg) in Markdown or <img src="asset:name.svg" alt="..."> in HTML; a cover need not appear in the body. No share fields, paths, base64 or remote downloads. Omitted assets are preserved; same-name source replaces; null explicitly removes an unreferenced asset. get_note first before editing/deleting; preserve its noteRef and format. Request includeAssets only to edit SVG sources. contentHash covers the document and assets and must be copied from the latest read for delete_note. A successful save commits once; report deployment separately after CI and URL checks. Neither MCP nor CI calls another model.'});
+  registerNoteSkill(server);
   server.registerTool('get_note',{title:'Read canonical note',description:'Find the current note before editing or deleting. Returns portable image references and assetNames; includeAssets=true also returns SVG sources when artwork needs editing.',inputSchema:noteGetInputSchema,outputSchema:getOutput,annotations:{readOnlyHint:true,destructiveHint:false,idempotentHint:true,openWorldHint:false}}, async(input) => {
     try { const result = await getNoteFromGitHub(input,env,origin); return {content:[{type:'text',text:result.status === 'found' ? `Found ${result.note!.noteRef}. Preserve this identity and omit unchanged assets.` : result.status === 'ambiguous' ? 'Multiple notes matched; select one returned noteRef and read again.' : 'No canonical note matched.'}],structuredContent:result}; }
     catch(error) { return toolError(error); }

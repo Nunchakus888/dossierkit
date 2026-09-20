@@ -7,6 +7,7 @@ import { configure } from '../plugins/dossierkit-notes/configure.mjs';
 export const PLUGIN_FILES = [
   'plugin.json', 'mcp.json', '.mcp.json', '.codex-plugin/plugin.json',
   'configure.mjs', 'README.md', 'LICENSE',
+  'assets/icon.svg', 'assets/logo.svg',
   'skills/publish-note/SKILL.md',
   'skills/publish-note/agents/openai.yaml',
   'skills/publish-note/references/research-quality.md',

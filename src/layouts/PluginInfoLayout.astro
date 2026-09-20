@@ -1,0 +1,45 @@
+---
+import BaseLayout from "./BaseLayout.astro";
+
+type Props = {
+  title: string;
+  description: string;
+  canonicalPath: string;
+  eyebrow?: string;
+};
+
+const { title, description, canonicalPath, eyebrow = "DossierKit Notes" } = Astro.props;
+---
+
+<BaseLayout locale="en" title={title} description={description} canonicalPath={canonicalPath}>
+  <article class="plugin-page page-shell">
+    <header>
+      <p class="eyebrow">{eyebrow}</p>
+      <h1>{title}</h1>
+      <p class="lede">{description}</p>
+    </header>
+    <nav aria-label="DossierKit Notes information">
+      <a href="/plugins/dossierkit-notes">Overview</a>
+      <a href="/plugins/dossierkit-notes/privacy">Privacy</a>
+      <a href="/plugins/dossierkit-notes/terms">Terms</a>
+      <a href="/plugins/dossierkit-notes/support">Support</a>
+    </nav>
+    <div class="plugin-copy prose">
+      <slot />
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .plugin-page { max-width: 900px; padding-block: clamp(48px, 8vw, 96px); }
+  header { max-width: 760px; }
+  .eyebrow { margin: 0 0 10px; color: var(--color-accent); font-size: .82rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+  h1 { margin: 0; font-size: clamp(2.25rem, 6vw, 4.5rem); line-height: .98; letter-spacing: -.045em; }
+  .lede { margin: 22px 0 0; color: var(--color-muted); font-size: clamp(1.05rem, 2vw, 1.3rem); line-height: 1.65; }
+  nav { display: flex; flex-wrap: wrap; gap: 10px; margin: 34px 0 42px; }
+  nav a { border: 1px solid var(--color-border); border-radius: 999px; padding: 8px 13px; background: var(--color-surface); font-weight: 700; }
+  .plugin-copy :global(h2) { margin: 38px 0 12px; font-size: 1.45rem; }
+  .plugin-copy :global(p), .plugin-copy :global(li) { line-height: 1.72; }
+  .plugin-copy :global(ul) { padding-left: 1.2rem; }
+  .plugin-copy :global(code) { border-radius: 6px; padding: .12em .36em; background: color-mix(in srgb, var(--color-accent-soft), white 42%); }
+</style>

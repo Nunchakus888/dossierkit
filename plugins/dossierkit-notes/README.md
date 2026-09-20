@@ -1,56 +1,51 @@
-# DossierKit Notes plugin
+# DossierKit Notes
 
-One authoring Skill, one remote MCP contract, and the same three note tools in Codex and ChatGPT. The Skill covers source research, canonical-note consolidation, formal writing, SVG artwork, publication, and revision. DossierKit Notes 1.5 or newer is required for SVG assets. The client needs neither a local image renderer nor a model API key.
+DossierKit Notes combines one canonical publishing Skill with an authenticated remote MCP service. It deep-reads technical sources, consolidates overlapping notes, drafts evidence-backed articles, creates focused SVG covers, and publishes complete note packages.
 
-## Canonical endpoint
+## One source, two delivery surfaces
 
-The repository package is ready to use with the canonical production endpoint:
+The repository is the source of truth for every surface:
+
+- `skills/publish-note/SKILL.md` and its supporting files define the authoring workflow.
+- `mcp.json` and `.mcp.json` connect Codex and ChatGPT desktop to the production service.
+- The production MCP advertises the same Skill through `io.modelcontextprotocol/skills` for ChatGPT plugin scanning and publication.
+
+The MCP Skill catalog is generated from the packaged Skill during the build. It is never maintained as an independent copy.
+
+## Production endpoint
 
 ```text
 https://dossierkit-notes-mcp.pages.dev/api/mcp
 ```
 
-The same endpoint is declared in portable `mcp.json`, Codex `.mcp.json`, and the Skill's `agents/openai.yaml` dependency. Installing the repository plugin therefore loads both the Skill and the MCP connection.
+The endpoint exposes `get_note`, `save_note`, and `delete_note`. Authentication and authorization remain server-side. Each client completes its own OAuth grant; credentials are never stored in this package.
 
-To target another deployment, configure a copy of the package:
+To point a desktop package copy at another deployment:
 
 ```sh
 node configure.mjs --url https://YOUR-NOTES-MCP/api/mcp
 ```
 
-The command rewrites all three endpoint declarations together. The writing instructions remain identical across products. Independent deployments should authorize their own GitHub repository and users.
+## Install in Codex or ChatGPT desktop
 
-## Codex and ChatGPT use the same configured package
+Install `dossierkit-notes` from the repository marketplace at `.agents/plugins/marketplace.json`. The package supplies both the Skill and the MCP connection. Start a new task after installation so the updated instructions and tools are loaded.
 
-Use the same configured package for both Codex and ChatGPT. Codex loads the packaged Skill and MCP definition. ChatGPT binds the package to the registered connection identified by `.app.json`. The endpoint, tool workflow, Skill, references, and plugin metadata remain the same; each client completes its own OAuth grant.
+Do not also register the endpoint with `codex mcp add`; that creates a duplicate MCP registration. A direct MCP registration plus a separately installed Skill is only a compatibility option for clients that cannot install plugins.
 
-For Codex local development, install the plugin from a supported local or repository marketplace. The repository catalog is `.agents/plugins/marketplace.json`. Keep the plugin as the only active registration for this endpoint.
+## Use in ChatGPT Web
 
-Clients without plugin support can use the compatibility path below, but it must not be enabled alongside the plugin:
+Connect the production endpoint in ChatGPT developer mode, then use **Scan tools** in the plugin submission flow. The scan imports a static snapshot of the canonical Skill and its supporting files from the MCP server.
 
-```sh
-codex mcp add dossierkit-notes --url https://YOUR-NOTES-MCP/api/mcp
-codex mcp login dossierkit-notes
-```
+Repository marketplace imports that declare `mcp.json` or `.mcp.json` are desktop-only, including packages that point to a remote HTTPS server. Use the MCP scan and submission route for a Web-capable ChatGPT plugin. After changing the Skill, deploy the MCP, scan again, review the imported Skill, and submit a new plugin version.
 
-Install `skills/publish-note/` separately only in that compatibility mode. The client manages its OAuth grant and tool confirmations. Refresh tool discovery after a server upgrade.
+Private workspace and public directory publication are account-level actions. They require the appropriate ChatGPT workspace role, OAuth connection, publisher identity, domain verification, and review settings; none of those credentials belong in this repository.
 
-## ChatGPT Web
+## Asset contract
 
-Register the remote endpoint in ChatGPT's developer-mode plugin connections and complete OAuth. Use that real connection's technical ID to prepare the binding:
-
-```sh
-node configure.mjs --url https://YOUR-NOTES-MCP/api/mcp --app-id YOUR_REGISTERED_CONNECTION_ID
-```
-
-Then use the host's plugin authoring or install flow to import the configured package and registered connection. The generated `.app.json` is a connection reference, not a credential. A downloaded ZIP does not install itself in a web account or transfer a Codex login. Use the exact registered connection ID and keep OAuth tokens outside the package. Public-directory listing follows the platform's submission and review process.
-
-## Content contract
-
-`assets` maps flat SVG filenames to source. `cover.svg` is the share cover; use `asset:name.svg` only when an image belongs in the body. Omitted files stay, same names update, and `null` deletes unreferenced files. The Skill contains the research and publication workflow, while its references hold the detailed evidence and visual rules. The MCP commits a complete note package once; the existing website CI rasterizes only the cover and emits OG metadata. No share object or asset manifest is required.
+`assets` maps flat SVG filenames to source. `cover.svg` is the sharing cover; use `asset:name.svg` only when an image belongs in the note body. Omitted files are preserved, same-name files are updated, and `null` deletes an unreferenced asset. The website keeps body SVGs as SVG and rasterizes only the sharing cover for social metadata.
 
 ## Verification
 
-The repository tests validate one-endpoint configuration generation, package contents, Skill frontmatter, MCP wire schema, and SVG publishing semantics. Client installation and authenticated write testing still run in the actual destination account.
+The repository verifies package contents, English-only plugin copy, Skill frontmatter, MCP Skill discovery, resource digests, tool schemas, and SVG publishing semantics. A successful note save proves a repository commit; production deployment is verified separately through CI and live URL checks.
 
-Sources: https://agent-plugins.org/schemas/1.0.0/plugin.schema.json · https://agent-plugins.org/schemas/1.0.0/mcp.schema.json · https://developers.openai.com/plugins/build/plugins · https://developers.openai.com/plugins/build/skills
+Documentation: https://sunionpeaks.pages.dev/plugins/dossierkit-notes

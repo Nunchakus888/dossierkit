@@ -1,6 +1,6 @@
 {
-  "name": "dossierkit-local",
-  "interface": {"displayName": "DossierKit Notes"},
+  "name": "dossierkit",
+  "interface": {"displayName": "DossierKit"},
   "plugins": [
     {
       "name": "dossierkit-notes",

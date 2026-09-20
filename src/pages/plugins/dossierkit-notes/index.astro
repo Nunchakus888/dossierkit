@@ -1,0 +1,22 @@
+---
+import PluginInfoLayout from "../../../layouts/PluginInfoLayout.astro";
+---
+
+<PluginInfoLayout
+  title="Research notes with a verifiable publication path"
+  description="DossierKit Notes turns technical sources into focused, evidence-backed notes and publishes each approved document through an authenticated MCP service."
+  canonicalPath="/plugins/dossierkit-notes"
+>
+  <h2>What it does</h2>
+  <p>The plugin deep-reads technical sources, checks the canonical note archive, drafts one coherent argument, creates a topic-specific SVG cover, and saves the complete note package in one repository commit.</p>
+  <p>Its three focused tools read an existing note, save a complete note with optional artwork, and delete an explicitly confirmed note. The publishing Skill defines the evidence, writing, visual, revision, and verification workflow.</p>
+
+  <h2>Consistent across supported agents</h2>
+  <p>Codex and ChatGPT desktop install the repository plugin, which packages the Skill and its MCP connection. ChatGPT Web receives the same Skill from the production MCP during plugin scanning. Both delivery paths originate from the same versioned <code>SKILL.md</code>.</p>
+
+  <h2>Data access</h2>
+  <p>The service accesses only the authenticated repository and note content needed to complete an authorized request. OAuth, repository permissions, and write authorization are enforced by the service.</p>
+
+  <h2>Support</h2>
+  <p>For access, publishing, or account questions, use the <a href="/plugins/dossierkit-notes/support">support page</a>.</p>
+</PluginInfoLayout>

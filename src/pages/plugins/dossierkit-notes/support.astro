@@ -1,0 +1,24 @@
+---
+import PluginInfoLayout from "../../../layouts/PluginInfoLayout.astro";
+---
+
+<PluginInfoLayout
+  title="Support"
+  description="Help with DossierKit Notes access, authentication, canonical note updates, and publication verification."
+  canonicalPath="/plugins/dossierkit-notes/support"
+>
+  <h2>Contact</h2>
+  <p>Email <a href="mailto:sunionpeaks@gmail.com">sunionpeaks@gmail.com</a> with the affected account, approximate time, requested action, and returned error message. Exclude access tokens, OAuth codes, private repository contents, and other credentials.</p>
+
+  <h2>Useful diagnostic details</h2>
+  <ul>
+    <li>The client and surface in use, such as ChatGPT Web, ChatGPT desktop, or Codex.</li>
+    <li>The plugin version or MCP endpoint.</li>
+    <li>The canonical <code>noteRef</code> when a published note is involved.</li>
+    <li>The commit URL or content hash returned by the service.</li>
+    <li>Whether the issue concerns authentication, a repository commit, CI deployment, or the live page.</li>
+  </ul>
+
+  <h2>Verification boundary</h2>
+  <p>A successful save confirms a repository commit. The note becomes publicly available only after the configured deployment completes and the canonical URL is reachable.</p>
+</PluginInfoLayout>

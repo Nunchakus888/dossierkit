@@ -1,0 +1,26 @@
+---
+import PluginInfoLayout from "../../../layouts/PluginInfoLayout.astro";
+---
+
+<PluginInfoLayout
+  title="Privacy Policy"
+  description="How DossierKit Notes handles authenticated account information, source material, note content, and operational records."
+  canonicalPath="/plugins/dossierkit-notes/privacy"
+>
+  <p><strong>Effective date:</strong> September 20, 2026</p>
+
+  <h2>Information processed</h2>
+  <p>DossierKit Notes processes identity and authorization claims supplied by the configured OAuth provider, repository identifiers, source material supplied in a request, canonical note content, SVG artwork, commit metadata, and tool inputs required to read, save, or delete a note.</p>
+
+  <h2>Purpose and sharing</h2>
+  <p>This information is used to authenticate requests, enforce repository access, perform the requested publication workflow, prevent conflicting updates, and diagnose service failures. Data is shared only with infrastructure providers required to operate the service, including Cloudflare for the MCP endpoint and GitHub for repository storage and commits. Personal information is not sold or used for advertising.</p>
+
+  <h2>Storage and retention</h2>
+  <p>Published notes and assets are retained in the authorized Git repository according to that repository's settings and Git history. Authentication tokens remain in the relevant platform's protected credential storage and are not placed in plugin packages or note content. Operational logs may retain request metadata needed for security and reliability without intentionally recording credentials or complete private note bodies.</p>
+
+  <h2>Deletion and control</h2>
+  <p>An authorized deletion removes the current canonical note and its exclusively owned assets. Git history remains the recovery and audit record. Repository administrators can also manage access, retention, and deletion directly through GitHub and the OAuth provider.</p>
+
+  <h2>Contact</h2>
+  <p>Privacy questions can be sent to <a href="mailto:sunionpeaks@gmail.com">sunionpeaks@gmail.com</a>.</p>
+</PluginInfoLayout>
