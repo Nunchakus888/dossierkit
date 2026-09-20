@@ -1,6 +1,6 @@
 # DossierKit Notes plugin
 
-One writing Skill, the same remote MCP, three tools. Requires the DossierKit Notes 1.5 server for SVG assets. No local image renderer or model API key is needed by the client.
+One authoring Skill, one remote MCP contract, and the same three note tools in Codex and ChatGPT. The Skill covers source research, canonical-note consolidation, formal writing, SVG artwork, publication, and revision. DossierKit Notes 1.5 or newer is required for SVG assets. The client needs neither a local image renderer nor a model API key.
 
 ## Configure your instance
 
@@ -10,18 +10,22 @@ The source package intentionally contains no active destination. In a copy of th
 node configure.mjs --url https://YOUR-NOTES-MCP/api/mcp
 ```
 
-This writes portable `mcp.json` and the thin `.mcp.json` Codex compatibility file. It does not change the Skill. Do not point another user's plugin at the original author's private server; deploy/configure your own instance and authorize your own GitHub repository.
+This writes the same HTTPS endpoint to portable `mcp.json`, the Codex compatibility `.mcp.json`, and the Skill's `agents/openai.yaml` dependency. The writing instructions remain identical across products. Do not point another user's plugin at the original author's private server; deploy and configure your own instance and authorize your own GitHub repository.
 
-## Codex and other MCP clients
+## Codex and ChatGPT use the same configured package
 
-Install the plugin using a supported local or repository marketplace. The repository catalog is `.agents/plugins/marketplace.json`. Older clients can install `skills/publish-note/` as a Skill and configure the same remote MCP separately. For Codex's standalone MCP connection:
+Configure one copy with the intended MCP endpoint, then use that package for both Codex and ChatGPT. Codex loads the packaged Skill and MCP definition. ChatGPT binds the same package to the registered connection identified by `.app.json`. The endpoint, tool workflow, Skill, references, and plugin metadata remain the same; each client completes its own OAuth grant.
+
+For Codex local development, install the plugin from a supported local or repository marketplace. The repository catalog is `.agents/plugins/marketplace.json`. Keep the plugin as the only active registration for this endpoint.
+
+Clients without plugin support can use the compatibility path below, but it must not be enabled alongside the plugin:
 
 ```sh
 codex mcp add dossierkit-notes --url https://YOUR-NOTES-MCP/api/mcp
 codex mcp login dossierkit-notes
 ```
 
-Keep only one active connection to this endpoint in a client to avoid duplicate tools. The client manages its OAuth grant and tool confirmations. Refresh tool discovery after a server upgrade. Native plugin loading and marketplace availability vary by client/version; the standalone MCP + Skill path is the compatibility fallback.
+Install `skills/publish-note/` separately only in that compatibility mode. The client manages its OAuth grant and tool confirmations. Refresh tool discovery after a server upgrade.
 
 ## ChatGPT Web
 
@@ -31,14 +35,14 @@ Register the remote endpoint in ChatGPT's developer-mode plugin connections and 
 node configure.mjs --url https://YOUR-NOTES-MCP/api/mcp --app-id YOUR_REGISTERED_CONNECTION_ID
 ```
 
-Then use the host's plugin authoring/install flow (such as its plugin-creator) to import this directory/Skill and the registered connection. The generated `.app.json` is a connection reference, not a credential. A downloaded ZIP does not automatically install itself in a web account or transfer a Codex login. Do not fabricate a connection ID or store OAuth tokens in the package. Public-directory listing requires the platform's submission/review process; packaging alone is not publication.
+Then use the host's plugin authoring or install flow to import the configured package and registered connection. The generated `.app.json` is a connection reference, not a credential. A downloaded ZIP does not install itself in a web account or transfer a Codex login. Use the exact registered connection ID and keep OAuth tokens outside the package. Public-directory listing follows the platform's submission and review process.
 
 ## Content contract
 
-`assets` maps flat SVG filenames to source. `cover.svg` is the share cover; use `asset:name.svg` only when an image belongs in the body. Omitted files stay; same names update; null deletes unreferenced files. See the Skill for the compact static SVG dialect and read-before-edit workflow. The MCP commits a complete note package once; the existing website CI rasterizes only the cover and emits OG metadata. No share object or asset manifest is required.
+`assets` maps flat SVG filenames to source. `cover.svg` is the share cover; use `asset:name.svg` only when an image belongs in the body. Omitted files stay, same names update, and `null` deletes unreferenced files. The Skill contains the research and publication workflow, while its references hold the detailed evidence and visual rules. The MCP commits a complete note package once; the existing website CI rasterizes only the cover and emits OG metadata. No share object or asset manifest is required.
 
 ## Verification
 
-The repository tests validate configuration generation, package contents, Skills frontmatter, MCP wire schema and SVG publishing semantics. Client installation and authenticated write testing must also be performed in the actual destination account; this package does not claim universal client certification.
+The repository tests validate one-endpoint configuration generation, package contents, Skill frontmatter, MCP wire schema, and SVG publishing semantics. Client installation and authenticated write testing still run in the actual destination account.
 
-Sources: https://agent-plugins.org/schemas/1.0.0/plugin.schema.json · https://agent-plugins.org/schemas/1.0.0/mcp.schema.json · https://agentskills.io/specification · https://developers.openai.com/plugins/build/plugins · https://developers.openai.com/codex/mcp
+Sources: https://agent-plugins.org/schemas/1.0.0/plugin.schema.json · https://agent-plugins.org/schemas/1.0.0/mcp.schema.json · https://developers.openai.com/plugins/build/plugins · https://developers.openai.com/plugins/build/skills

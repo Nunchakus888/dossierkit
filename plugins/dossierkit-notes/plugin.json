@@ -1,8 +1,31 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "dossierkit-notes",
-  "version": "1.5.0",
-  "description": "Write and publish complete research notes with SVG artwork through one authenticated MCP endpoint.",
+  "version": "1.5.1",
+  "description": "Deep-read technical sources and publish evidence-backed notes with SVG artwork through one authenticated MCP endpoint.",
+  "author": {
+    "name": "SunionPeak",
+    "url": "https://github.com/Nunchakus888"
+  },
+  "homepage": "https://github.com/Nunchakus888/dossierkit",
+  "repository": "https://github.com/Nunchakus888/dossierkit",
   "license": "MIT",
-  "keywords": ["notes", "research", "svg", "mcp"]
+  "keywords": ["notes", "research", "evidence", "svg", "mcp"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "DossierKit Notes",
+        "shortDescription": "Deep-read and publish evidence-backed technical notes.",
+        "longDescription": "Deep-read technical sources, consolidate canonical notes, create focused SVG covers, and publish through the authenticated DossierKit Notes MCP.",
+        "developerName": "SunionPeak",
+        "category": "Productivity",
+        "capabilities": ["Read", "Write"],
+        "defaultPrompt": [
+          "Deep-read this source and prepare a focused DossierKit note for review.",
+          "Update this DossierKit note while preserving its identity and artwork.",
+          "Publish the reviewed note with a topic-specific cover."
+        ]
+      }
+    }
+  }
 }

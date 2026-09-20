@@ -40,9 +40,9 @@ The service also protects identity in two ways:
 
 The Function does not call a second language model. ChatGPT supplies the polished title, body, format, and topics through the MCP schema; the API handles authentication, HTML sanitization, validation, deterministic path generation, identity, persistence, deletion, and retries.
 
-## One production endpoint
+## One plugin and one production endpoint
 
-ChatGPT web and Codex CLI use the same endpoint, tool definitions, identity policy, and persistence code:
+The canonical `dossierkit-notes` plugin gives ChatGPT and Codex the same Skill, references, MCP endpoint, tool definitions, identity policy, and persistence behavior:
 
 ```text
 https://dossierkit-notes-mcp.pages.dev/api/mcp
@@ -50,26 +50,23 @@ https://dossierkit-notes-mcp.pages.dev/api/mcp
 
 Cloudflare Access provides OAuth discovery, dynamic client registration, PKCE authorization, short-lived access tokens, and refresh tokens. ChatGPT uses its registered HTTPS callback, while Codex CLI uses a temporary localhost loopback callback protected by PKCE. The MCP origin validates the signed `Cf-Access-Jwt-Assertion` before accepting a request. One-time PIN login is restricted to the configured owner email.
 
-Each client receives its own OAuth grant. ChatGPT and Codex therefore do not share an access token or refresh token, but both grants resolve to the same authorized identity and the same MCP backend. Revoking one client does not invalidate the other.
+Each client receives its own OAuth grant. ChatGPT and Codex therefore share configuration and behavior without sharing an access token or refresh token. Both grants resolve to the same authorized identity and MCP backend; revoking one client leaves the other grant independent.
 
-In ChatGPT web:
-
-1. Enable Developer mode in **Settings → Security and login**.
-2. Open **Settings → Plugins**, create an app, and enter the endpoint above.
-3. Complete the Cloudflare email authorization once.
-4. Refresh or scan the app and enable `get_note`, `save_note`, and `delete_note`.
-
-ChatGPT requests confirmation before the write action. The OAuth grant lasts up to two weeks and refreshes 15-minute access tokens without routine interaction.
-
-For Codex CLI:
+Create one configured plugin package:
 
 ```bash
-codex mcp remove dossierkit-notes
-codex mcp add dossierkit-notes --url https://dossierkit-notes-mcp.pages.dev/api/mcp
-codex mcp login dossierkit-notes
+node plugins/dossierkit-notes/configure.mjs \
+  --url https://dossierkit-notes-mcp.pages.dev/api/mcp \
+  --app-id YOUR_REGISTERED_CONNECTION_ID
 ```
 
-The last command completes the same Cloudflare Access login through a separate OAuth grant. No long-lived bearer token needs to be copied into the shell or launch environment.
+The command writes the endpoint consistently to portable `mcp.json`, Codex `.mcp.json`, and the `publish-note` Skill dependency. The optional `.app.json` binds ChatGPT to the connection previously registered for that same endpoint; it contains no credential.
+
+Install this configured package in Codex locally when needed. Import the same package and registered connection in ChatGPT for remote use. Complete OAuth separately in each client. Keep only this plugin registration active for the endpoint so the three tools appear once.
+
+Standalone Skill plus `codex mcp add` remains a compatibility route for clients without plugin support. It replaces the plugin in that client rather than running beside it.
+
+ChatGPT requests confirmation before write actions. Cloudflare Access handles client authorization without copying a long-lived bearer token into the package, shell, or launch environment.
 
 ## Runtime configuration
 
@@ -109,15 +106,15 @@ Open and merge the pull request. The main deployment removes the public page. Th
 
 ## Authoring instruction
 
-Use this durable instruction for ChatGPT research workflows:
+The packaged `publish-note` Skill is the durable authoring instruction. Its core publication contract is:
 
 ```text
-When creating a finished note, call save_note with exactly one polished Markdown
-or semantic HTML document, exactly one H1, and three to six concrete topics.
-The server owns the canonical path. When editing, call get_note first, revise the
-returned content, preserve its format, and save with the unchanged noteRef.
-When deleting, call get_note first and pass its exact noteRef and contentHash to
-delete_note after explicit confirmation. Never invent noteRef or a repository path.
+Open with one evidence-grounded philosophical proposition, then develop one
+central technical argument in a complete Markdown or semantic HTML document with
+one H1 and three to six topics. The server owns the canonical path. For edits,
+read first and preserve noteRef and format. For deletion, obtain confirmation and
+use the exact latest noteRef and contentHash. Create a topic-specific cover.svg
+for new notes by default while preserving artwork during text-only edits.
 ```
 
 ## Local verification

@@ -6,7 +6,11 @@ import { spawnSync } from 'node:child_process';
 import { configure } from '../plugins/dossierkit-notes/configure.mjs';
 export const PLUGIN_FILES = [
   'plugin.json', 'mcp.json', '.mcp.json', '.codex-plugin/plugin.json',
-  'configure.mjs', 'README.md', 'LICENSE', 'skills/publish-note/SKILL.md'
+  'configure.mjs', 'README.md', 'LICENSE',
+  'skills/publish-note/SKILL.md',
+  'skills/publish-note/agents/openai.yaml',
+  'skills/publish-note/references/research-quality.md',
+  'skills/publish-note/references/visual-authoring.md'
 ];
 export function copyPluginFiles(source, destination) {
   const root = fs.realpathSync(source) + path.sep;
