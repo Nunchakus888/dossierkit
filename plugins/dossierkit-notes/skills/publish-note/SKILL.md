@@ -17,7 +17,7 @@ Discover the actual tool schema. Version 1.5 adds only `assets` to saves; older 
 
 Write a clear title and a meaningful opening summary, then the necessary sections, sources and limits. Put the opening summary before images so automatic excerpts remain useful. Avoid fabricated citations, placeholders and redundant metadata.
 
-During the same authoring task, create one topic-specific `cover.svg` when a new illustrated note is requested. Add other diagrams only when they clarify the content. Explain each diagram's important conclusion in adjacent text. Do not regenerate artwork during a text-only edit, or turn all historical notes into a backfill job.
+During the same authoring task, create one topic-specific `cover.svg` for each new note by default, unless the user explicitly requests text only or supplies a suitable existing cover. Add other diagrams only when they clarify the content. Explain each diagram's important conclusion in adjacent text. Do not regenerate artwork during a text-only edit, or turn all historical notes into a backfill job.
 
 ## Artwork
 
