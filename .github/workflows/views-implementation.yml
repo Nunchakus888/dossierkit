@@ -1,0 +1,78 @@
+name: View counter implementation checks
+on:
+  push:
+    branches: [implementation/view-counter-20260921]
+    paths:
+      - .github/workflows/views-implementation.yml
+      - scripts/views/**
+      - src/lib/view-counter/**
+      - src/components/views/**
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      ACTIVE_PROFILE: default
+      DEFAULT_LOCALE: zh
+      PUBLIC_SITE_URL: https://sunionpeaks.pages.dev
+      PUBLIC_VIEWS_ENABLED: 'true'
+      GITHUB_REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Integrate and capture a clean candidate tree
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor origin/main HEAD
+          echo "VIEWS_BASE=$(git rev-parse origin/main)" >> "$GITHUB_ENV"
+          python3 scripts/views/apply-existing.py
+          git rm -f .github/workflows/views-preflight.yml .github/workflows/views-implementation.yml scripts/views/apply-existing.py
+          git add package.json docs src .github/workflows/ci.yml
+          echo "VIEWS_TREE=$(git write-tree)" >> "$GITHUB_ENV"
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Existing behavior and new counter tests
+        run: |
+          pnpm dossier generate-admin-config
+          pnpm test:views
+          pnpm test:notes
+          pnpm test:assets
+          pnpm test:integrations
+          pnpm validate
+      - name: Build enabled UI and verify static publication
+        run: |
+          pnpm build
+          pnpm exec tsx scripts/export-publication.ts
+          node scripts/test-publication-build.mjs
+          node scripts/verify-note-covers.mjs
+      - name: Verify desktop and mobile UI without writing production data
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          node scripts/views/browser-test.mjs
+      - name: Push tested candidate branch only
+        env:
+          GIT_AUTHOR_NAME: George
+          GIT_AUTHOR_EMAIL: nunchakus2012@hotmail.com
+          GIT_COMMITTER_NAME: George
+          GIT_COMMITTER_EMAIL: nunchakus2012@hotmail.com
+        run: |
+          CANDIDATE=$(printf '%s\n' 'feat: add aggregate site and article view counters with daily rollups' | git commit-tree "$VIEWS_TREE" -p "$VIEWS_BASE")
+          git push origin "$CANDIDATE:refs/heads/candidate/views-20260921"
+          mkdir -p artifacts/views
+          printf '{"commit":"%s","base":"%s","tree":"%s","tests":"passed","ui":"desktop-and-mobile-passed","productionWrites":0}\n' "$CANDIDATE" "$VIEWS_BASE" "$VIEWS_TREE" > artifacts/views/candidate.json
+          cat artifacts/views/candidate.json
+      - name: Store private test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: views-implementation-tests
+          path: artifacts/views/
+          if-no-files-found: warn
+          retention-days: 7

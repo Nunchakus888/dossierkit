@@ -1,0 +1,47 @@
+import assert from 'node:assert/strict';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+const infra = JSON.parse(await readFile('artifacts/views/infrastructure.json', 'utf8'));
+const manifest = JSON.parse(await readFile('src/lib/view-counter/manifest.json', 'utf8'));
+const articlePath = Object.keys(manifest.pages).find((path) => manifest.pages[path]);
+const get = (path) => fetch(manifest.origin + path, {
+  headers: { 'User-Agent': 'DossierKit-Deployment-Audit/1.0' }, cache: 'no-store', signal: AbortSignal.timeout(15000)
+});
+let lastError;
+for (let attempt = 0; attempt < 5; attempt++) {
+  try {
+    const [home, article, api] = await Promise.all([get('/zh/'), get(articlePath + '/'), get('/api/views')]);
+    assert.equal(home.status, 200); assert.equal(article.status, 200);
+    const [homeHtml, articleHtml, counts] = await Promise.all([home.text(), article.text(), api.json()]);
+    const active = infra.ready === true;
+    assert.equal(api.status, active ? 200 : 503);
+    assert.equal(homeHtml.includes('data-view-counter-config'), active);
+    assert.equal(articleHtml.includes('data-view-count='), active);
+    if (active) {
+      assert.ok(Number.isSafeInteger(counts.totalViews) && counts.totalViews >= 0);
+      assert.ok(counts.since); assert.equal(counts.timeZone, manifest.timeZone);
+      const summary = await (await get('/api/views?mode=summary')).json();
+      assert.equal(summary.trend.length, 30);
+      assert.ok(Number.isSafeInteger(summary.last7Days));
+      const top = await (await get('/api/views?mode=top&period=7d')).json();
+      assert.ok(Array.isArray(top.articles));
+      assert.ok(homeHtml.includes('data-view-count="site:total"'));
+      assert.ok(articleHtml.includes(`data-view-count="${manifest.pages[articlePath]}"`));
+    } else {
+      assert.ok(!('totalViews' in counts));
+      assert.ok(!homeHtml.includes('data-view-count='));
+    }
+    const receipt = { checkedAt: new Date().toISOString(), counterActive: active,
+      productionOrigin: manifest.origin, apiStatus: api.status, staticPagesHealthy: true,
+      automatedWritesToProduction: 0,
+      status: active ? 'active' : 'code-deployed-awaiting-d1-permission',
+      requiredAction: active ? null : infra.requiredAction };
+    await mkdir('artifacts/views', { recursive: true });
+    await writeFile('artifacts/views/live-receipt.json', JSON.stringify(receipt, null, 2));
+    console.log(JSON.stringify(receipt, null, 2));
+    process.exit(0);
+  } catch (error) {
+    lastError = error;
+    if (attempt < 4) await new Promise((resolve) => setTimeout(resolve, 4000));
+  }
+}
+throw lastError;
