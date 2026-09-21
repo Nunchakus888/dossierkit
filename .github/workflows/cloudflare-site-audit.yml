@@ -6,108 +6,27 @@ on:
     branches: [main]
     paths:
       - .github/workflows/cloudflare-site-audit.yml
+      - scripts/cloudflare-site-audit.py
 
 permissions:
   contents: read
+
+concurrency:
+  group: cloudflare-site-audit
+  cancel-in-progress: false
 
 jobs:
   audit:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Read Pages inventory, analytics and public HTTP behavior
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Read Pages inventory, attribution, sampling and public HTTP behavior
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          python3 - <<'PY'
-          import json, os, pathlib, datetime, urllib.request, urllib.error, re
-          token = os.environ['CLOUDFLARE_API_TOKEN']
-          account = os.environ['CLOUDFLARE_ACCOUNT_ID']
-          base = 'https://api.cloudflare.com/client/v4'
-          report = {'generated_at': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'read_only': True, 'pages': [], 'analytics': {}, 'http': []}
-          def api(path, body=None):
-              req = urllib.request.Request(base + path, data=None if body is None else json.dumps(body).encode(), headers={'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json'})
-              try:
-                  with urllib.request.urlopen(req, timeout=35) as response:
-                      return json.load(response)
-              except urllib.error.HTTPError as error:
-                  try: details = json.load(error).get('errors', [])
-                  except Exception: details = []
-                  return {'success': False, 'http_status': error.code, 'errors': details}
-              except Exception as error:
-                  return {'success': False, 'error': type(error).__name__}
-          def collect(path):
-              results = []
-              for page in range(1, 21):
-                  sep = '&' if '?' in path else '?'
-                  result = api(path + sep + 'per_page=100&page=' + str(page))
-                  if result.get('success') is False:
-                      return {'error': result, 'partial_results': results}
-                  batch = result.get('result', [])
-                  if not isinstance(batch, list): return {'error': 'Unexpected list response'}
-                  results.extend(batch)
-                  info = result.get('result_info', {})
-                  if page >= info.get('total_pages', page if len(batch) < 100 else page + 1): break
-              else: return {'error': 'Pagination limit reached', 'partial_results': results}
-              return results
-          projects = collect('/accounts/' + account + '/pages/projects')
-          if isinstance(projects, list):
-              for project in projects:
-                  configs = project.get('deployment_configs') or {}
-                  production = configs.get('production') or {}
-                  deployment = project.get('canonical_deployment') or {}
-                  source = project.get('source') or {}
-                  source_config = source.get('config') or {}
-                  report['pages'].append({'name': project.get('name'), 'subdomain': project.get('subdomain'), 'domains': project.get('domains'), 'production_branch': project.get('production_branch'), 'source_type': source.get('type'), 'source_repository': source_config.get('repo_name'), 'source_owner': source_config.get('owner'), 'production_deployment_id': deployment.get('id'), 'production_created_on': deployment.get('created_on'), 'production_stage': deployment.get('latest_stage'), 'analytics_site_tag': production.get('web_analytics_tag'), 'analytics_configured': bool(production.get('web_analytics_tag') or production.get('web_analytics_token')), 'binding_names': list((production.get('env_vars') or {}).keys())})
-          else: report['pages_error'] = projects.get('error')
-          sites = collect('/accounts/' + account + '/rum/site_info/list')
-          if isinstance(sites, list):
-              report['analytics_sites'] = [{'site_tag': s.get('site_tag'), 'created': s.get('created'), 'auto_install': s.get('auto_install'), 'ruleset': s.get('ruleset'), 'rules': s.get('rules')} for s in sites]
-          else: report['analytics_sites_error'] = sites.get('error')
-          zones = collect('/zones?account.id=' + account)
-          if isinstance(zones, list): report['zones'] = [{'name': z.get('name'), 'status': z.get('status')} for z in zones]
-          else: report['zones_error'] = zones.get('error')
-          def gql(query): return api('/graphql', {'query': query, 'variables': {}})
-          now = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0)
-          def stamp(dt): return dt.isoformat().replace('+00:00', 'Z')
-          for host in ['sunionpeaks.pages.dev', 'dossierkit.pages.dev']:
-              report['analytics'][host] = {}
-              denied = False
-              for days in [7, 30]:
-                  if denied: break
-                  filt = '{datetime_geq:' + json.dumps(stamp(now - datetime.timedelta(days=days))) + ',datetime_lt:' + json.dumps(stamp(now)) + ',requestHost:' + json.dumps(host) + '}'
-                  entry = {'from_utc': stamp(now - datetime.timedelta(days=days)), 'to_utc': stamp(now), 'breakdowns': {}}
-                  for dimension in ['requestHost', 'date', 'refererHost', 'requestPath', 'countryName', 'deviceType', 'browserName', 'operatingSystemName']:
-                      query = '{viewer{accounts(filter:{accountTag:' + json.dumps(account) + '}){rumPageloadEventsAdaptiveGroups(limit:100,filter:' + filt + ',orderBy:[count_DESC]){count sum{visits} dimensions{' + dimension + '}}}}}'
-                      data = gql(query)
-                      entry['breakdowns'][dimension] = data
-                      if data.get('errors') or data.get('success') is False:
-                          error_text = json.dumps(data).lower()
-                          if any(x in error_text for x in ['permission', 'not authorized', 'authentication', 'unauthorized', 'forbidden']):
-                              denied = True
-                              break
-                  report['analytics'][host][str(days) + 'd'] = entry
-                  if denied: break
-          class NoRedirect(urllib.request.HTTPRedirectHandler):
-              def redirect_request(self, req, fp, code, msg, headers, newurl): return None
-          opener = urllib.request.build_opener(NoRedirect())
-          urls = ['https://sunionpeaks.pages.dev/', 'https://sunionpeaks.pages.dev/?utm_source=audit&utm_medium=verification', 'https://sunionpeaks.pages.dev/zh', 'https://sunionpeaks.pages.dev/robots.txt', 'https://sunionpeaks.pages.dev/sitemap-index.xml', 'https://sunionpeaks.pages.dev/sitemap-0.xml', 'https://sunionpeaks.pages.dev/__audit_missing_page_20260921', 'https://dossierkit.pages.dev/', 'https://dossierkit.pages.dev/zh']
-          for url in urls:
-              try:
-                  try: response = opener.open(urllib.request.Request(url, headers={'User-Agent': 'DossierKit-Deployment-Audit/1.0'}), timeout=30)
-                  except urllib.error.HTTPError as error: response = error
-                  text = response.read(1500000).decode('utf-8', 'replace')
-                  report['http'].append({'url': url, 'status': response.code, 'content_type': response.headers.get('Content-Type'), 'location': response.headers.get('Location'), 'meta_refresh': bool(re.search(r'<meta[^>]+http-equiv=[\"\x27]refresh', text, re.I)), 'open_dossierkit': 'Open DossierKit' in text, 'beacon_count': len(re.findall(r'<script[^>]+src=[\"\x27][^\"\x27]*cloudflareinsights.com/beacon', text)), 'canonical': re.findall(r'<link[^>]+rel=[\"\x27]canonical[\"\x27][^>]*>', text), 'robots_body': text if url.endswith('/robots.txt') and len(text) < 2000 else None})
-              except Exception as error:
-                  report['http'].append({'url': url, 'error': type(error).__name__})
-          pathlib.Path('audit').mkdir(exist_ok=True)
-          encoded = json.dumps(report, ensure_ascii=False, indent=2)
-          pathlib.Path('audit/cloudflare-site-audit.json').write_text(encoded)
-          print(encoded)
-          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as summary:
-              summary.write('## Read-only Cloudflare audit\n\nNo resources or credentials were changed. See the audit artifact for Pages inventory, analytics permission results and public HTTP checks.\n')
-          PY
+        run: python3 scripts/cloudflare-site-audit.py
       - name: Store sanitized audit
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
