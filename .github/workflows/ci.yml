@@ -6,6 +6,8 @@ on:
       - AGENTS.md
       - README.md
       - docs/**
+      - .github/workflows/cloudflare-site-audit.yml
+      - scripts/cloudflare-site-audit.py
   push:
     branches:
       - main
@@ -13,6 +15,8 @@ on:
       - AGENTS.md
       - README.md
       - docs/**
+      - .github/workflows/cloudflare-site-audit.yml
+      - scripts/cloudflare-site-audit.py
   workflow_dispatch:
     inputs:
       active_profile:
@@ -99,14 +103,14 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm exec wrangler pages deploy dist --project-name=${{ vars.CLOUDFLARE_PROJECT_NAME }} --branch=${{ github.ref_name }}
+        run: pnpm exec wrangler pages deploy dist --project-name=sunionpeaks --branch=${{ github.ref_name }}
 
       - name: Enforce public site has no Notes write secrets
         if: github.event_name != 'pull_request'
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          PUBLIC_PROJECT_NAME: ${{ vars.CLOUDFLARE_PROJECT_NAME }}
+          PUBLIC_PROJECT_NAME: sunionpeaks
         run: |
           for secret_name in NOTES_MCP_TOKEN NOTES_GITHUB_TOKEN NOTES_GITHUB_REPOSITORY NOTES_GITHUB_BRANCH NOTES_PROFILE_ID PUBLIC_SITE_URL; do
             printf 'y\n' | pnpm exec wrangler pages secret delete "$secret_name" --project-name="$PUBLIC_PROJECT_NAME"
@@ -160,9 +164,34 @@ jobs:
           node scripts/verify-live-publication.mjs
           node scripts/verify-note-covers.mjs --live
 
+      - name: Retire legacy content and verify one-hop public routing
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/consolidate-pages.mjs
+
+      - name: Capture production host inventory and source attribution
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: python3 scripts/cloudflare-site-audit.py
+
+      - name: Record verified routing and private analytics audit
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: site-routing-and-analytics
+          path: |
+            artifacts/site-routing/receipt.json
+            audit/cloudflare-site-audit.json
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Record successful production publication
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: notes-publication
           path: artifacts/notes-publication/notes.json
