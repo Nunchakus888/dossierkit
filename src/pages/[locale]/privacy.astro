@@ -1,0 +1,46 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { locales } from '../../lib/config';
+export function getStaticPaths() { return locales.map((locale) => ({ params: { locale } })); }
+const locale = Astro.params.locale as 'zh' | 'en';
+const zh = locale === 'zh';
+---
+<BaseLayout locale={locale} title={zh ? '浏览统计与隐私' : 'View statistics and privacy'}>
+  <article class="page-shell privacy-page">
+    <h1>{zh ? '浏览统计与隐私' : 'View statistics and privacy'}</h1>
+    <p>{zh ? '小眼睛显示页面浏览次数，不代表独立人数或阅读完成量。正常刷新属于新的浏览；同一次打开的重复上报只计算一次。' : 'The eye icon shows page views, not unique people or completed reads. A reload is a new view; duplicate reports for one opening count once.'}</p>
+    <p>{zh ? '为估算独立浏览器访客，本站在浏览器本地保存一个随机标识，最多保留 90 天。服务器使用站点专用 HMAC 保存其假名化摘要，不将它关联到账号。不同设备、浏览器、无痕环境或清除站点数据可能产生新的标识。' : 'A random first-party browser identifier is kept locally for up to 90 days to estimate unique browsers. The server stores a site-specific HMAC digest, not an account identity. Different devices, browsers, private sessions or cleared storage can produce new identifiers.'}</p>
+    <p>{zh ? '本站只保留页面、日期、浏览量及简化的来源分类。用于去重的事件回执保留约 48 小时，访客每日去重记录保留最近 90 个自然日，并定期清理；不保存原始 IP、完整来源网址、邮箱、设备指纹或逐次点击轨迹。Cloudflare 托管服务自身的请求处理及备份保留规则另行适用。' : 'Counters retain page/date aggregates and coarse source categories. Idempotency receipts expire after about 48 hours; daily pseudonymous sightings cover 90 calendar days and are periodically pruned. This counter does not store raw IPs, full referrer URLs, email addresses, device fingerprints or click histories. Cloudflare hosting request processing and backup retention are separate.'}</p>
+    <p>{zh ? '来源优先采用链接中的 utm_source / utm_medium，否则使用可获得的外部来源域名。来源标签不保证真实访问平台；无法识别时保留“直接 / 未知”。同一标签页内的站内跳转可在 30 分钟入口链有效期内继承来源。' : 'Sources use utm_source / utm_medium tags or an available external referrer hostname. Tags do not verify the actual platform. Missing sources remain Direct / Unknown. Internal navigation in a tab can inherit the entry source within a 30-minute activity window.'}</p>
+    <p>{zh ? '下面的开关仅影响当前浏览器的本站计数器。关闭后清除本地访客标识，页面只读取数字，不再上报；已形成的聚合计数不会被重写。本站计数器也尊重浏览器的 Do Not Track / Global Privacy Control 信号。' : 'The control below affects this first-party counter in the current browser. Opting out removes its local identifier and switches to read-only counts; existing aggregates are not rewritten. The counter also respects Do Not Track / Global Privacy Control signals.'}</p>
+    <button type="button" data-counter-preference>{zh ? '关闭本站浏览统计' : 'Opt out of this counter'}</button>
+    <p role="status" data-preference-status></p>
+    <p>{zh ? 'Cloudflare Web Analytics 用于独立的性能诊断，本开关不改变其配置。UV 是可识别的浏览器数量，不是跨设备去重后的真实人数。' : 'Cloudflare Web Analytics is separately used for performance diagnostics; this control does not change its configuration. UV counts identifiable browsers, not cross-device unique people.'}</p>
+  </article>
+</BaseLayout>
+<script>
+  import { clearIdentity, EXCLUDE_KEY } from '../../lib/view-counter/browser-context.mjs';
+  const button = document.querySelector<HTMLButtonElement>('[data-counter-preference]');
+  const status = document.querySelector<HTMLElement>('[data-preference-status]');
+  const zh = document.documentElement.lang === 'zh';
+  const render = () => {
+    try {
+      const excluded = localStorage.getItem(EXCLUDE_KEY) === '1';
+      if (button) button.textContent = excluded ? (zh ? '恢复本站浏览统计' : 'Enable this counter') : (zh ? '关闭本站浏览统计' : 'Opt out of this counter');
+      if (status) status.textContent = excluded ? (zh ? '当前浏览器已关闭上报，仅显示计数。' : 'Reporting disabled in this browser. Counts remain visible.') : (zh ? '当前浏览器允许本站计数；浏览器隐私信号仍优先。' : 'Counter enabled; browser privacy signals take precedence.');
+    } catch { if (status) status.textContent = zh ? '浏览器禁止本地存储，无法保存偏好；不会建立持久访客标识。' : 'Local storage is unavailable; no persistent visitor identity is created.'; }
+  };
+  button?.addEventListener('click', () => {
+    try {
+      if (localStorage.getItem(EXCLUDE_KEY) === '1') localStorage.removeItem(EXCLUDE_KEY);
+      else { localStorage.setItem(EXCLUDE_KEY, '1'); clearIdentity(window); }
+    } catch { /* Disabled storage cannot persist preferences. */ } finally { render(); }
+  });
+  render();
+</script>
+<style>
+  .privacy-page { max-width: 800px; padding-top: 1rem; padding-bottom: 3rem; line-height: 1.8; }
+  h1 { font-size: 1.6rem; margin-bottom: 1rem; }
+  p { margin: 1rem 0; }
+  button { border: 1px solid var(--color-border); border-radius: .5rem; padding: .6rem 1rem; background: var(--color-surface); cursor: pointer; }
+</style>
