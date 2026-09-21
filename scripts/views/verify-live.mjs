@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { inspectViewMarkup } from './html-inspect.mjs';
 const infra = JSON.parse(await readFile('artifacts/views/infrastructure.json', 'utf8'));
 const manifest = JSON.parse(await readFile('src/lib/view-counter/manifest.json', 'utf8'));
 const articlePath = Object.keys(manifest.pages).find((path) => manifest.pages[path]);
@@ -12,10 +13,12 @@ for (let attempt = 0; attempt < 5; attempt++) {
     const [home, article, api] = await Promise.all([get('/zh/'), get(articlePath + '/'), get('/api/views')]);
     assert.equal(home.status, 200); assert.equal(article.status, 200);
     const [homeHtml, articleHtml, counts] = await Promise.all([home.text(), article.text(), api.json()]);
+    const homeMarkup = inspectViewMarkup(homeHtml);
+    const articleMarkup = inspectViewMarkup(articleHtml);
     const active = infra.ready === true;
     assert.equal(api.status, active ? 200 : 503);
-    assert.equal(homeHtml.includes('data-view-counter-config'), active);
-    assert.equal(articleHtml.includes('data-view-count='), active);
+    assert.equal(homeMarkup.configured, active);
+    assert.equal(articleMarkup.configured, active);
     if (active) {
       assert.ok(Number.isSafeInteger(counts.totalViews) && counts.totalViews >= 0);
       assert.ok(counts.since); assert.equal(counts.timeZone, manifest.timeZone);
@@ -24,11 +27,12 @@ for (let attempt = 0; attempt < 5; attempt++) {
       assert.ok(Number.isSafeInteger(summary.last7Days));
       const top = await (await get('/api/views?mode=top&period=7d')).json();
       assert.ok(Array.isArray(top.articles));
-      assert.ok(homeHtml.includes('data-view-count="site:total"'));
-      assert.ok(articleHtml.includes(`data-view-count="${manifest.pages[articlePath]}"`));
+      assert.ok(homeMarkup.refs.includes('site:total'));
+      assert.ok(articleMarkup.refs.includes(manifest.pages[articlePath]));
     } else {
       assert.ok(!('totalViews' in counts));
-      assert.ok(!homeHtml.includes('data-view-count='));
+      assert.equal(homeMarkup.refs.length, 0);
+      assert.equal(articleMarkup.refs.length, 0);
     }
     const receipt = { checkedAt: new Date().toISOString(), counterActive: active,
       productionOrigin: manifest.origin, apiStatus: api.status, staticPagesHealthy: true,

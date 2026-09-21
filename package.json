@@ -23,7 +23,7 @@
     "generate-admin-config": "tsx scripts/generate-cms.ts",
     "generate-pdf": "tsx scripts/generate-pdf.ts",
     "export-profile": "tsx scripts/export-profile.ts",
-    "test:views": "node --experimental-sqlite --test scripts/views/counter.test.mjs"
+    "test:views": "node --experimental-sqlite --test scripts/views/*.test.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.1",
