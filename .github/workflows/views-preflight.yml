@@ -1,0 +1,57 @@
+name: Views implementation preflight
+on:
+  push:
+    branches: [implementation/view-counter-20260921]
+    paths: [.github/workflows/views-preflight.yml]
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v7
+      - name: Prepare private source snapshot and D1 resource
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          mkdir -p artifacts/views-preflight
+          git archive --format=zip HEAD -o artifacts/views-preflight/source.zip
+          python3 - <<'PY'
+          import json, os, pathlib, urllib.request, urllib.error
+          root='https://api.cloudflare.com/client/v4/accounts/'+os.environ['CLOUDFLARE_ACCOUNT_ID']
+          def call(path, body=None):
+              req=urllib.request.Request(root+path, data=None if body is None else json.dumps(body).encode(), headers={'Authorization':'Bearer '+os.environ['CLOUDFLARE_API_TOKEN'],'Content-Type':'application/json'})
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as r: return json.load(r)
+              except urllib.error.HTTPError as e:
+                  try: details=json.load(e).get('errors',[])
+                  except Exception: details=[]
+                  return {'success':False,'http_status':e.code,'errors':details}
+          results=[]
+          error=None
+          for page in range(1,21):
+              r=call('/d1/database?per_page=100&page='+str(page))
+              if not r.get('success'): error=r; break
+              batch=r.get('result',[]); results.extend(batch)
+              if len(batch)<100: break
+          report={'database_name':'sunionpeaks-views','created':False}
+          if error: report['error']=error
+          else:
+              existing=[d for d in results if d.get('name')=='sunionpeaks-views']
+              if existing: database=existing[0]
+              else:
+                  r=call('/d1/database',{'name':'sunionpeaks-views'})
+                  if r.get('success'): database=r['result']; report['created']=True
+                  else: database=None; report['error']=r
+              if database: report['database']={k:database.get(k) for k in ['name','uuid','created_at','version']}
+          pathlib.Path('artifacts/views-preflight/preflight.json').write_text(json.dumps(report,indent=2))
+          print(json.dumps(report,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: views-preflight
+          path: artifacts/views-preflight/
+          retention-days: 1
+          if-no-files-found: error
