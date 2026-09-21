@@ -4,7 +4,10 @@ import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 
 const site = process.env.PUBLIC_SITE_URL || "https://sunionpeaks.pages.dev";
-const visibleInSitemap = (page) => !new URL(page).pathname.startsWith("/admin");
+const visibleInSitemap = (page) => {
+  const pathname = new URL(page).pathname;
+  return pathname !== "/" && !/^\/404(?:\.html|\/)?$/.test(pathname) && !pathname.startsWith("/admin");
+};
 
 export default defineConfig({
   site,
