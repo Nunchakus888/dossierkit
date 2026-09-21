@@ -7,7 +7,7 @@
   "scripts": {
     "generate:mcp-skill": "tsx scripts/generate-mcp-skill.ts",
     "dev": "pnpm generate:mcp-skill && tsx scripts/generate-note-covers.ts && astro dev",
-    "build": "pnpm generate:mcp-skill && tsx scripts/generate-note-covers.ts && astro build",
+    "build": "pnpm generate:mcp-skill && tsx scripts/generate-note-covers.ts && astro build && node scripts/views/generate-manifest.mjs",
     "build:mcp": "pnpm generate:mcp-skill && tsx scripts/build-mcp-static.ts",
     "postbuild": "pagefind --site dist --output-subdir pagefind",
     "preview": "astro preview",
@@ -22,7 +22,8 @@
     "create-profile": "tsx scripts/create-profile.ts",
     "generate-admin-config": "tsx scripts/generate-cms.ts",
     "generate-pdf": "tsx scripts/generate-pdf.ts",
-    "export-profile": "tsx scripts/export-profile.ts"
+    "export-profile": "tsx scripts/export-profile.ts",
+    "test:views": "node --experimental-sqlite --test scripts/views/counter.test.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.1",

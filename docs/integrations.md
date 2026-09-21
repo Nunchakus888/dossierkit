@@ -1,6 +1,6 @@
 # 互动与辅助分享
 
-保留 `ci.yml` 作为唯一生产构建、部署入口。Notes 仍在 Git；评论、反馈与统计不写回文章、不触发部署。不接 X 付费 API、GoatCounter、自建账户或互动数据库。
+保留 `ci.yml` 作为唯一生产构建、部署入口。Notes 仍在 Git；评论、反馈与统计不写回文章、不触发部署。不接 X 付费 API、GoatCounter 或自建账户。公开浏览量使用独立 D1 聚合计数表，不保存访客记录。
 
 ## 配置与内容管理
 
@@ -24,7 +24,7 @@
 
 非自动注入部署可使用 `mode: manual` 和公开 beacon token，不能填 Cloudflare API token。schema 禁止 Pages 模式同时填写 token；浏览器也检查已有 beacon，避免重复。
 
-只提供 Cloudflare 后台统计，不伪造公开访问计数、自定义事件或 UTM/点击率归因。生产统计不应启用于预览域名。
+Cloudflare 后台保留原有统计；公开浏览次数来自独立的 D1 计数器，不与 RUM 数据相加，不提供 UTM 或行为归因。详见 `docs/view-counter.md`。生产统计不启用于预览域名。
 
 官方说明：https://developers.cloudflare.com/pages/how-to/web-analytics/
 

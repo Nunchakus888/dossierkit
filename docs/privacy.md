@@ -30,3 +30,9 @@ The `/admin` page is static, but CMS write access uses GitHub. Protect it with:
 ## Private deployments
 
 For private job searches or confidential advisory profiles, deploy behind Cloudflare Access or a private preview URL and keep the GitHub repository private.
+
+## Public view counter
+
+The first-party `/api/views` endpoint stores only cumulative and daily aggregate counts by published article ID. It does not persist IP addresses, visitor identifiers, referrers, device data, query strings, cookies, or per-visit logs. The request body contains a public page path and public article IDs only. Existing Cloudflare Web Analytics remains a separate integration.
+
+The counter is disabled on previews, admin and missing pages. Failed/unconfigured counters stay hidden. To opt out on the current browser, set `localStorage.setItem('dossierkit:views:exclude', '1')`; remove it to resume counting. This setting applies only to the first-party counter, not to Cloudflare Web Analytics. Global Privacy Control, Do Not Track and automated browser contexts use read-only requests. Counts represent browser page loads, not unique people or verified reading.

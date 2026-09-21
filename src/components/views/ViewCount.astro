@@ -1,0 +1,17 @@
+---
+import { viewsEnabled } from '../../lib/view-counter/config';
+type Props = { noteRef?: string; locale?: string };
+const { noteRef, locale = 'zh' } = Astro.props;
+const zh = locale === 'zh';
+---
+{viewsEnabled && <span class="view-count no-print" data-view-count={noteRef || 'site:total'} data-pagefind-ignore hidden>
+  <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+  {!noteRef && <span>{zh ? '本站累计浏览' : 'Site views'}</span>}
+  <span data-view-number></span>
+  {!noteRef && <span>{zh ? '次' : ''}</span>}
+</span>}
+<style>
+  .view-count { display: inline-flex; align-items: center; gap: .3rem; color: var(--color-muted); font-size: .8rem; font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .view-count[hidden] { display: none !important; }
+  svg { flex-shrink: 0; }
+</style>

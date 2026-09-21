@@ -1,4 +1,6 @@
 ---
+import ViewCount from "../views/ViewCount.astro";
+import { viewsEnabled } from "../../lib/view-counter/config";
 import type { Locale } from "../../lib/config";
 import { localize } from "../../lib/i18n";
 import type { ProfilePack } from "../../lib/profile-loader";
@@ -13,10 +15,11 @@ const tagline = pack.navigation.footer?.tagline;
 ---
 
 {
-  tagline && (
+  (tagline || viewsEnabled) && (
     <footer class="site-footer no-print">
       <div class="page-shell footer-inner">
-        <p>{localize(tagline, locale)}</p>
+        {tagline && <p>{localize(tagline, locale)}</p>}
+        <ViewCount locale={locale} />
       </div>
     </footer>
   )
@@ -32,6 +35,9 @@ const tagline = pack.navigation.footer?.tagline;
 
   .footer-inner {
     text-align: center;
+    display: grid;
+    justify-items: center;
+    gap: .5rem;
   }
 
   p {

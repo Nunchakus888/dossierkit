@@ -1,0 +1,6 @@
+{
+  "origin": "https://sunionpeaks.pages.dev",
+  "timeZone": "Asia/Shanghai",
+  "databaseName": "sunionpeaks-views",
+  "binding": "VIEWS_DB"
+}

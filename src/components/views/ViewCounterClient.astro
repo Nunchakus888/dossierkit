@@ -1,0 +1,8 @@
+---
+import { viewsEnabled, viewsOrigin } from '../../lib/view-counter/config';
+---
+{viewsEnabled && <span hidden data-view-counter-config data-origin={viewsOrigin}></span>}
+<script>
+  import { startViewCounter } from '../../lib/view-counter/client.mjs';
+  startViewCounter();
+</script>

@@ -1,4 +1,5 @@
 ---
+import ViewCount from "../views/ViewCount.astro";
 import Icon from "../common/Icon.astro";
 import type { Locale } from "../../lib/config";
 import { labels, localePath } from "../../lib/i18n";
@@ -44,6 +45,7 @@ function formatTimestamp(value: string) {
     <div class="note-meta">
       <span>{kindLabel}</span>
       {timestamp && <time datetime={timestamp}>{timestampLabel}</time>}
+      <ViewCount noteRef={`${locale}/${entry.slug}`} locale={locale} />
     </div>
     <h2><a href={localePath(locale, `notes/${entry.slug}`)}>{entry.data.title}</a></h2>
     <p>{entry.data.summary}</p>
