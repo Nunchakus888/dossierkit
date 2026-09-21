@@ -1,16 +1,22 @@
 ---
+import NotesFeed from "../components/dossier/NotesFeed.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
 import { defaultLocale } from "../lib/config";
+import { getCollection } from "../lib/content-query";
+import { labels } from "../lib/i18n";
+
+// Cloudflare redirects / at the edge via public/_redirects.
+// Other static hosts and local preview still render real content, never an interstitial.
+const locale = defaultLocale;
+const entries = getCollection(locale, "notes");
+const l = labels[locale];
 ---
 
-<!doctype html>
-<html lang={defaultLocale}>
-  <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="refresh" content={`0; url=/${defaultLocale}`} />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>DossierKit</title>
-  </head>
-  <body>
-    <a href={`/${defaultLocale}`}>Open DossierKit</a>
-  </body>
-</html>
+<BaseLayout
+  locale={locale}
+  title={l.latestNotes}
+  canonicalPath={`/${locale}`}
+  description={locale === "zh" ? "企业 Agent 平台架构、工程实践与持续研究笔记。" : "Notes on enterprise Agent platform architecture, engineering practice, and ongoing research."}
+>
+  <NotesFeed locale={locale} entries={entries} />
+</BaseLayout>
