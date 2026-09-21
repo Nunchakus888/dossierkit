@@ -1,6 +1,9 @@
 """Prepare only sunionpeaks' aggregate counter; no token changes or secret exports."""
 import json
 import os
+import secrets
+import subprocess
+import sys
 from pathlib import Path
 import urllib.error
 import urllib.request
@@ -56,11 +59,21 @@ def provision():
     existing = bindings.get(SETTINGS['binding'])
     if existing and existing.get('id') != database_id:
         raise ApiError('VIEWS_DB points to another database; not overwritten')
-    # CREATE IF NOT EXISTS / INSERT OR IGNORE only. No count resets or destructive DDL.
-    schema = (ROOT / 'migrations/views/0001_views.sql').read_text()
-    result = api(f'/d1/database/{database_id}/query', 'POST', {'sql': schema, 'params': []})
-    if any(item.get('success') is False for item in result):
-        raise ApiError('Counter schema initialization failed')
+    # Every migration is additive and idempotent; v1 counters never get reset.
+    REPORT['migrations'] = []
+    for migration in sorted((ROOT / 'migrations/views').glob('*.sql')):
+        result = api(f'/d1/database/{database_id}/query', 'POST', {'sql': migration.read_text(), 'params': []})
+        if any(item.get('success') is False for item in result):
+            raise ApiError('Counter schema initialization failed')
+        REPORT['migrations'].append(migration.name)
+    # Runtime-only application HMAC secret. Never export or log the value.
+    if 'VIEWS_HASH_SECRET' not in (production.get('env_vars') or {}):
+        result = subprocess.run(['pnpm', 'exec', 'wrangler', 'pages', 'secret', 'put',
+            'VIEWS_HASH_SECRET', '--project-name=sunionpeaks'],
+            input=secrets.token_urlsafe(48), text=True, capture_output=True, timeout=60, cwd=ROOT)
+        if result.returncode:
+            raise ApiError('Could not provision the runtime HMAC binding')
+        REPORT['hashSecretCreated'] = True
     check = api(f'/d1/database/{database_id}/query', 'POST', {
         'sql': "SELECT key, views, started_at FROM view_totals WHERE key = 'site:total'", 'params': []})
     if not check or len(check[0].get('results', [])) != 1:
@@ -72,17 +85,17 @@ def provision():
     after = api(project_path).get('deployment_configs', {}).get('production', {})
     if after.get('d1_databases', {}).get(SETTINGS['binding'], {}).get('id') != database_id:
         raise ApiError('Production binding could not be verified')
-    if set((after.get('env_vars') or {}).keys()) != set((production.get('env_vars') or {}).keys()):
+    if set((after.get('env_vars') or {}).keys()) != set((production.get('env_vars') or {}).keys()) | {'VIEWS_HASH_SECRET'}:
         raise ApiError('Unexpected environment binding change')
-    REPORT.update(ready=True, databaseId=database_id,
+    REPORT.update(ready=True, schemaVersion=2, hashSecretBound=True, databaseId=database_id,
         since=check[0]['results'][0]['started_at'], timeZone=SETTINGS['timeZone'])
 
 try:
     provision()
 except Exception as error:
     REPORT['reason'] = str(error) if isinstance(error, ApiError) else type(error).__name__
-    REPORT['requiredAction'] = 'Grant Account / D1 / Edit on the existing deployment token, or set a dedicated CLOUDFLARE_D1_API_TOKEN secret for this account, then rerun CI.'
-    print('::warning::View counter inactive: D1 preparation did not succeed. Existing website remains available; no fake counts will be shown.')
+    REPORT['requiredAction'] = 'Check D1 Write and Pages Edit permissions, preserve VIEWS_HASH_SECRET, then rerun CI. Existing production is not replaced by a failed upgrade.'
+    print('::error::Counter upgrade could not be prepared; stopping before production deployment.')
 finally:
     directory = ROOT / 'artifacts/views'
     directory.mkdir(parents=True, exist_ok=True)
@@ -91,3 +104,6 @@ finally:
         with open(os.environ['GITHUB_ENV'], 'a') as output:
             output.write('PUBLIC_VIEWS_ENABLED=' + str(REPORT['ready']).lower() + '\n')
     print(json.dumps(REPORT, indent=2))
+
+if not REPORT["ready"]:
+    sys.exit(1)

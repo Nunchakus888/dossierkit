@@ -21,7 +21,7 @@ const server = createServer(async (req, res) => {
 });
 await new Promise((resolve) => server.listen(4178, '127.0.0.1', resolve));
 const browser = await chromium.launch({ headless: true });
-const counts = { totalViews: 2416, articles: Object.fromEntries(Object.values(manifest.pages).filter(Boolean).map((ref) => [ref, 128])), since: '2026-09-21T00:00:00Z', timeZone: 'Asia/Shanghai' };
+const counts = { totalViews: 2416, articles: Object.fromEntries(Object.entries(manifest.pages).map(([path, ref]) => [ref || `page:${path}`, ref ? 128 : 36])), since: '2026-09-21T00:00:00Z', timeZone: 'Asia/Shanghai' };
 const checks = [];
 try {
   for (const viewport of [{ width: 1440, height: 1000 }, { width: 390, height: 844 }]) {
@@ -43,7 +43,13 @@ try {
     assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
     await mkdir('artifacts/views/ui', { recursive: true });
     await page.screenshot({ path: `artifacts/views/ui/article-${viewport.width}.png`, fullPage: false });
-    checks.push({ viewport, articleCounter: true, cardCounters: true, footerCounter: true, horizontalOverflow: false, productionWrites: 0 });
+    await page.goto('http://127.0.0.1:4178/zh/cv/');
+    await page.locator('.cv-header [data-view-count="page:/zh/cv"]').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('.cv-header [data-view-number]').textContent(), '36');
+    assert.equal(await page.locator('[data-view-count="page:/zh/cv"]').count(), 1);
+    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    await page.screenshot({ path: `artifacts/views/ui/cv-${viewport.width}.png`, fullPage: false });
+    checks.push({ cvIndependentCounter: true, viewport, articleCounter: true, cardCounters: true, footerCounter: true, horizontalOverflow: false, productionWrites: 0 });
     await page.route('**/api/views*', (route) => route.fulfill({ status: 503, json: { error: 'unavailable' } }));
     await page.reload(); await page.waitForTimeout(300);
     assert.equal(await page.locator('[data-view-count]').filter({ visible: true }).count(), 0);

@@ -25,6 +25,23 @@ for (let attempt = 0; attempt < 5; attempt++) {
       const summary = await (await get('/api/views?mode=summary')).json();
       assert.equal(summary.trend.length, 30);
       assert.ok(Number.isSafeInteger(summary.last7Days));
+      assert.equal(counts.schemaVersion, 2);
+      assert.equal(summary.uv.identity, 'first-party-browser');
+      assert.ok(Number.isSafeInteger(summary.uv.last30Days));
+      for (const path of ['/zh/cv/', '/en/cv/', '/zh/contact/']) {
+        const page = await get(path); assert.equal(page.status, 200);
+        const markup = inspectViewMarkup(await page.text());
+        assert.ok(markup.refs.includes('page:' + path.replace(/\/+$/, '')));
+        const statsResponse = await get('/api/views?mode=summary&path=' + encodeURIComponent(path));
+        assert.equal(statsResponse.status, 200);
+        const stats = await statsResponse.json(); assert.ok(Number.isSafeInteger(stats.total));
+        assert.ok(Number.isSafeInteger(stats.uv.today));
+      }
+      const sourceResponse = await get('/api/views?mode=sources&period=7d&path=%2Fzh%2Fcv%2F');
+      assert.equal(sourceResponse.status, 200);
+      const sourceData = await sourceResponse.json(); assert.ok(Array.isArray(sourceData.sources));
+      assert.ok(!JSON.stringify(sourceData).includes('visitor_hash'));
+      const privacy = await get('/zh/privacy/'); assert.equal(privacy.status, 200);
       const top = await (await get('/api/views?mode=top&period=7d')).json();
       assert.ok(Array.isArray(top.articles));
       assert.ok(homeMarkup.refs.includes('site:total'));
@@ -35,6 +52,7 @@ for (let attempt = 0; attempt < 5; attempt++) {
       assert.equal(articleMarkup.refs.length, 0);
     }
     const receipt = { checkedAt: new Date().toISOString(), counterActive: active,
+      schemaVersion: 2, standalonePagesVerified: ['/zh/cv/', '/en/cv/', '/zh/contact/'], uvAndSourcesVerified: active,
       productionOrigin: manifest.origin, apiStatus: api.status, staticPagesHealthy: true,
       automatedWritesToProduction: 0,
       status: active ? 'active' : 'code-deployed-awaiting-d1-permission',

@@ -20,6 +20,7 @@ const tagline = pack.navigation.footer?.tagline;
       <div class="page-shell footer-inner">
         {tagline && <p>{localize(tagline, locale)}</p>}
         <ViewCount locale={locale} />
+        {viewsEnabled && <a class="counter-privacy" href={`/${locale}/privacy/`}>{locale === "zh" ? "统计与隐私" : "Statistics & privacy"}</a>}
       </div>
     </footer>
   )
@@ -39,6 +40,8 @@ const tagline = pack.navigation.footer?.tagline;
     justify-items: center;
     gap: .5rem;
   }
+
+  .counter-privacy { font-size: .75rem; color: var(--color-muted); text-underline-offset: .2em; }
 
   p {
     margin: 0;

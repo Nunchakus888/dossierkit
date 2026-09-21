@@ -1,4 +1,5 @@
 ---
+import ViewCount from "../components/views/ViewCount.astro";
 import ViewCounterClient from "../components/views/ViewCounterClient.astro";
 import Header from "../components/layout/Header.astro";
 import Footer from "../components/layout/Footer.astro";
@@ -20,10 +21,11 @@ type Props = {
   ogType?: "website" | "article";
   publishedTime?: string;
   modifiedTime?: string;
+  pageCounterInline?: boolean;
 };
 const {
   locale = defaultLocale, title, description, canonicalPath = Astro.url.pathname,
-  ogType = "website", publishedTime, modifiedTime
+  ogType = "website", publishedTime, modifiedTime, pageCounterInline = false
 } = Astro.props;
 const pack = loadProfilePack();
 const theme = pack.theme;
@@ -34,6 +36,9 @@ const canonicalUrl = new URL(canonicalPath, Astro.site || Astro.url.origin).toSt
 const noteMatch = /^\/(zh|en)\/notes\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/.exec(canonicalPath);
 const note = noteMatch ? findContentBySlug(locale, "notes", noteMatch[2]) : undefined;
 const noteRef = note ? `${locale}/${note.slug}` : undefined;
+const path = Astro.url.pathname.replace(/\/index\.html$/, "/").replace(/\/+$/, "") || "/";
+const publicPage = /^\/(zh|en)(\/|$)/.test(path || "");
+const pageRef = noteRef || `page:${path}`;
 const cssVars = [
   `--color-background: ${colors.background}`, `--color-surface: ${colors.surface}`,
   `--color-foreground: ${colors.foreground}`, `--color-muted: ${colors.muted}`,
@@ -58,6 +63,7 @@ const cssVars = [
     <meta name="twitter:title" content={titleText} />
     <meta name="twitter:description" content={descriptionText} />
     <ShareMetadata noteRef={noteRef} locale={locale} />
+    {publicPage && <meta name="dossierkit:page-ref" content={pageRef} />}
     {note && <meta name="dossierkit:note-ref" content={noteRef} />}
     {note && <meta name="dossierkit:content-hash" content={publicationHash(note)} />}
     {publishedTime && <meta property="article:published_time" content={publishedTime} />}
@@ -72,11 +78,16 @@ const cssVars = [
   <body>
     <Header locale={locale} pack={pack} />
     <main data-pagefind-body>
+      {publicPage && !note && !pageCounterInline && <div class="page-shell page-view-meta no-print" data-pagefind-ignore><ViewCount noteRef={pageRef} locale={locale} /></div>}
       <slot />
       {note && <NoteEngagement noteRef={noteRef} title={note.data.title} summary={note.data.summary} url={canonicalUrl} locale={locale} />}
     </main>
     <Footer locale={locale} pack={pack} />
     <CloudflareAnalytics />
-    <ViewCounterClient />
+    {publicPage && <ViewCounterClient />}
   </body>
 </html>
+
+<style>
+  .page-view-meta { display: flex; justify-content: flex-end; padding-top: .6rem; min-height: 1.5rem; }
+</style>

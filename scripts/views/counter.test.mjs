@@ -11,7 +11,7 @@ const manifest = { origin, timeZone: 'Asia/Shanghai', pages: {
 const now = new Date('2026-09-21T18:00:00Z');
 function fixture() {
   const sqlite = new DatabaseSync(':memory:');
-  const migration = readFileSync(new URL('../../migrations/views/0001_views.sql', import.meta.url), 'utf8');
+  const migration = ['0001_views.sql','0002_uv_sources.sql'].map((name) => readFileSync(new URL('../../migrations/views/' + name, import.meta.url), 'utf8')).join('\n');
   sqlite.exec(migration);
   const execute = (sql, params = []) => {
     const prepared = sqlite.prepare(sql);
@@ -130,7 +130,7 @@ function browser({ visible = true, exclude = false, available = true, configured
   const doc = { documentElement: { lang: 'zh' }, visibilityState: visible ? 'visible' : 'hidden',
     querySelector: () => configured ? { dataset: { origin } } : null,
     querySelectorAll: () => widgets, addEventListener: (key, fn) => listeners.set(key, fn), removeEventListener: (key) => listeners.delete(key) };
-  const win = { location: { origin, pathname: '/zh/' }, navigator: {}, localStorage: { getItem: () => exclude ? '1' : null },
+  const win = { crypto, location: { origin, pathname: '/zh/' }, navigator: {}, localStorage: { getItem: () => exclude ? '1' : null },
     setTimeout, clearTimeout,
     fetch: async (url, options) => { calls.push({ url: url.href, options }); return available ? Response.json({ totalViews: 7, articles: { 'zh/first': 4 }, timeZone: 'Asia/Shanghai', since: '2026-09-21T00:00:00Z' }) : new Response(null, { status: 503 }); } };
   return { doc, win, calls, widgets, listeners };
