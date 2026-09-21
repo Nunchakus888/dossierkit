@@ -1,3 +1,6 @@
+# Resolve the locale at the edge before serving any HTML.
+/ /zh 301
+/index.html /zh 301
 /resumes/dossierkit-demo-zh.pdf /resumes/george-zh.pdf 301
 /resumes/dossierkit-demo-en.pdf /resumes/george-en.pdf 301
 /resumes/george-zhang-zh.pdf /resumes/george-zh.pdf 301
