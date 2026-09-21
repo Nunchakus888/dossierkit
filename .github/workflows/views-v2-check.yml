@@ -1,0 +1,20 @@
+name: View counter v2 checks
+on:
+  push:
+    branches: [implementation/views-v2-20260921]
+permissions:
+  contents: read
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v7
+      - run: |
+          mkdir -p /tmp/views-source
+          git archive --format=zip HEAD > /tmp/views-source/source.zip
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: views-v2-source
+          path: /tmp/views-source/source.zip
+          retention-days: 1
