@@ -8,9 +8,10 @@ import type { ProfilePack } from "../../lib/profile-loader";
 type Props = {
   locale: Locale;
   pack: ProfilePack;
+  pageRef?: string;
 };
 
-const { locale, pack } = Astro.props;
+const { locale, pack, pageRef } = Astro.props;
 const tagline = pack.navigation.footer?.tagline;
 ---
 
@@ -19,8 +20,10 @@ const tagline = pack.navigation.footer?.tagline;
     <footer class="site-footer no-print">
       <div class="page-shell footer-inner">
         {tagline && <p>{localize(tagline, locale)}</p>}
-        <ViewCount locale={locale} />
-        {viewsEnabled && <a class="counter-privacy" href={`/${locale}/privacy/`}>{locale === "zh" ? "统计与隐私" : "Statistics & privacy"}</a>}
+        {viewsEnabled && <div class="footer-meta" data-pagefind-ignore>
+          <ViewCount noteRef={pageRef} showTotal={Boolean(pageRef)} locale={locale} />
+          <a class="counter-privacy" href={`/${locale}/privacy/`}>{locale === "zh" ? "统计与隐私" : "Statistics & privacy"}</a>
+        </div>}
       </div>
     </footer>
   )
@@ -40,6 +43,8 @@ const tagline = pack.navigation.footer?.tagline;
     justify-items: center;
     gap: .5rem;
   }
+
+  .footer-meta { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .4rem .9rem; }
 
   .counter-privacy { font-size: .75rem; color: var(--color-muted); text-underline-offset: .2em; }
 

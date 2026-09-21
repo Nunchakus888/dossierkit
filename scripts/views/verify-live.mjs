@@ -7,6 +7,16 @@ const articlePath = Object.keys(manifest.pages).find((path) => manifest.pages[pa
 const get = (path) => fetch(manifest.origin + path, {
   headers: { 'User-Agent': 'DossierKit-Deployment-Audit/1.0' }, cache: 'no-store', signal: AbortSignal.timeout(15000)
 });
+function verifyFooter(html, ref, paired) {
+  const footer = html.match(/<footer\b[^>]*>[\s\S]*?<\/footer>/i)?.[0] || '';
+  assert.deepEqual(inspectViewMarkup(footer).refs, [ref]);
+  assert.equal(/data-view-total="true"/.test(footer), paired);
+  assert.ok(!/本站累计浏览|Site views/.test(footer));
+  if (paired && !ref.startsWith('page:/zh/notes') && !ref.startsWith('page:/en/notes')) {
+    const main = html.match(/<main\b[^>]*>[\s\S]*?<\/main>/i)?.[0] || '';
+    assert.equal(inspectViewMarkup(main).refs.length, 0, 'Page counter must not duplicate above the footer');
+  }
+}
 let lastError;
 for (let attempt = 0; attempt < 5; attempt++) {
   try {
@@ -28,9 +38,13 @@ for (let attempt = 0; attempt < 5; attempt++) {
       assert.equal(counts.schemaVersion, 2);
       assert.equal(summary.uv.identity, 'first-party-browser');
       assert.ok(Number.isSafeInteger(summary.uv.last30Days));
+      verifyFooter(homeHtml, 'site:total', false);
+      verifyFooter(articleHtml, manifest.pages[articlePath], true);
       for (const path of ['/zh/cv/', '/en/cv/', '/zh/contact/']) {
         const page = await get(path); assert.equal(page.status, 200);
-        const markup = inspectViewMarkup(await page.text());
+        const pageHtml = await page.text();
+        const markup = inspectViewMarkup(pageHtml);
+        verifyFooter(pageHtml, 'page:' + path.replace(/\/+$/, ''), true);
         assert.ok(markup.refs.includes('page:' + path.replace(/\/+$/, '')));
         const statsResponse = await get('/api/views?mode=summary&path=' + encodeURIComponent(path));
         assert.equal(statsResponse.status, 200);
@@ -52,6 +66,7 @@ for (let attempt = 0; attempt < 5; attempt++) {
       assert.equal(articleMarkup.refs.length, 0);
     }
     const receipt = { checkedAt: new Date().toISOString(), counterActive: active,
+      footerDisplay: active ? 'home-total-and-subpage-pair' : 'disabled',
       schemaVersion: 2, standalonePagesVerified: ['/zh/cv/', '/en/cv/', '/zh/contact/'], uvAndSourcesVerified: active,
       productionOrigin: manifest.origin, apiStatus: api.status, staticPagesHealthy: true,
       automatedWritesToProduction: 0,

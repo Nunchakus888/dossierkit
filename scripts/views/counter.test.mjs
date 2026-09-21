@@ -125,7 +125,7 @@ test('rankings are generated from aggregates, not extra tracking', async () => {
 function browser({ visible = true, exclude = false, available = true, configured = true } = {}) {
   const listeners = new Map(); const calls = [];
   const widget = (ref) => ({ dataset: { viewCount: ref }, hidden: true, number: { textContent: '' },
-    querySelector() { return this.number; }, setAttribute() {} });
+    querySelector(selector) { return selector === '[data-view-number]' ? this.number : null; }, setAttribute() {} });
   const widgets = [widget('site:total'), widget('zh/first')];
   const doc = { documentElement: { lang: 'zh' }, visibilityState: visible ? 'visible' : 'hidden',
     querySelector: () => configured ? { dataset: { origin } } : null,
@@ -159,4 +159,30 @@ test('failed statistics stay hidden; disabled build makes no API request', async
   const b = browser({ available: false }); startViewCounter(b.win, b.doc); await settle();
   assert.ok(b.widgets.every((widget) => widget.hidden)); assert.equal(b.calls.length, 1);
   const disabled = browser({ configured: false }); startViewCounter(disabled.win, disabled.doc); await settle(); assert.equal(disabled.calls.length, 0);
+});
+
+// Footer combines two existing values without a second report or a new counter.
+test('footer pair shares one report, has one accessible meaning, and leaves cards unchanged', async () => {
+  const b = browser();
+  const pair = b.widgets[1];
+  pair.dataset.viewTotal = 'true';
+  pair.totalNumber = { textContent: '' };
+  pair.querySelector = function(selector) { return selector === '[data-view-number]' ? this.number : selector === '[data-view-total-number]' ? this.totalNumber : null; };
+  pair.setAttribute = function(name, value) { this[name] = value; };
+  startViewCounter(b.win, b.doc); await settle();
+  assert.equal(b.calls.length, 1);
+  assert.equal(pair.number.textContent, '4'); assert.equal(pair.totalNumber.textContent, '7');
+  assert.equal(pair.hidden, false); assert.match(pair['aria-label'], /本页浏览 4 次 \/ 全站浏览 7 次/);
+  assert.equal(b.widgets[0].number.textContent, '7');
+});
+test('footer never shows a partial pair, but genuine zero counts render', async () => {
+  for (const totalViews of [undefined, -1, '7', 0]) {
+    const b = browser(); const pair = b.widgets[1]; pair.dataset.viewTotal = 'true';
+    pair.totalNumber = { textContent: '' };
+    pair.querySelector = function(selector) { return selector === '[data-view-number]' ? this.number : selector === '[data-view-total-number]' ? this.totalNumber : null; };
+    b.win.fetch = async () => Response.json({ totalViews, articles: { 'zh/first': 0 } });
+    startViewCounter(b.win, b.doc); await settle();
+    assert.equal(pair.hidden, totalViews !== 0);
+    if (totalViews === 0) { assert.equal(pair.number.textContent, '0'); assert.equal(pair.totalNumber.textContent, '0'); }
+  }
 });

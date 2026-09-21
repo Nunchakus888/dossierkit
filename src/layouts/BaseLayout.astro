@@ -1,5 +1,4 @@
 ---
-import ViewCount from "../components/views/ViewCount.astro";
 import ViewCounterClient from "../components/views/ViewCounterClient.astro";
 import Header from "../components/layout/Header.astro";
 import Footer from "../components/layout/Footer.astro";
@@ -21,11 +20,10 @@ type Props = {
   ogType?: "website" | "article";
   publishedTime?: string;
   modifiedTime?: string;
-  pageCounterInline?: boolean;
 };
 const {
   locale = defaultLocale, title, description, canonicalPath = Astro.url.pathname,
-  ogType = "website", publishedTime, modifiedTime, pageCounterInline = false
+  ogType = "website", publishedTime, modifiedTime
 } = Astro.props;
 const pack = loadProfilePack();
 const theme = pack.theme;
@@ -39,6 +37,8 @@ const noteRef = note ? `${locale}/${note.slug}` : undefined;
 const path = Astro.url.pathname.replace(/\/index\.html$/, "/").replace(/\/+$/, "") || "/";
 const publicPage = /^\/(zh|en)(\/|$)/.test(path || "");
 const pageRef = noteRef || `page:${path}`;
+// Locale homes show only the site total; every child page shows page / site.
+const footerPageRef = publicPage && !/^\/(zh|en)$/.test(path) ? pageRef : undefined;
 const cssVars = [
   `--color-background: ${colors.background}`, `--color-surface: ${colors.surface}`,
   `--color-foreground: ${colors.foreground}`, `--color-muted: ${colors.muted}`,
@@ -78,16 +78,12 @@ const cssVars = [
   <body>
     <Header locale={locale} pack={pack} />
     <main data-pagefind-body>
-      {publicPage && !note && !pageCounterInline && <div class="page-shell page-view-meta no-print" data-pagefind-ignore><ViewCount noteRef={pageRef} locale={locale} /></div>}
       <slot />
       {note && <NoteEngagement noteRef={noteRef} title={note.data.title} summary={note.data.summary} url={canonicalUrl} locale={locale} />}
     </main>
-    <Footer locale={locale} pack={pack} />
+    <Footer locale={locale} pack={pack} pageRef={footerPageRef} />
     <CloudflareAnalytics />
     {publicPage && <ViewCounterClient />}
   </body>
 </html>
 
-<style>
-  .page-view-meta { display: flex; justify-content: flex-end; padding-top: .6rem; min-height: 1.5rem; }
-</style>

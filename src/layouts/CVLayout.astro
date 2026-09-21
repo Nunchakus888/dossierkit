@@ -1,5 +1,4 @@
 ---
-import ViewCount from "../components/views/ViewCount.astro";
 import BaseLayout from "./BaseLayout.astro";
 import Icon from "../components/common/Icon.astro";
 import type { Locale } from "../lib/config";
@@ -36,7 +35,7 @@ function splitLinkedTitle(title: string, linkText?: string) {
 }
 ---
 
-<BaseLayout pageCounterInline locale={locale} title={l.cv} description={localize(pack.profile.summary, locale)}>
+<BaseLayout locale={locale} title={l.cv} description={localize(pack.profile.summary, locale)}>
   <article class={`page-shell cv-page cv-${locale}`}>
     <header class="cv-header">
       <div class="identity">
@@ -55,7 +54,6 @@ function splitLinkedTitle(title: string, linkText?: string) {
           </svg>
         </h1>
         <h2>{localize(pack.profile.headline, locale)}</h2>
-        <ViewCount noteRef={`page:/${locale}/cv`} locale={locale} />
       </div>
 
       <div class="contact-block">
