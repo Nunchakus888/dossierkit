@@ -52,7 +52,7 @@ try {
     for (const [path, label] of [[article + '/', 'article'], ['/zh/cv/', 'cv'], ['/en/cv/', 'cv-en'], ['/zh/contact/', 'contact'], ['/zh/notes/', 'notes-list']]) {
       requests.length = 0;
       await page.goto(base + path);
-      const ref = manifest.pages[path.replace(/\/+$/, '')];
+      const ref = manifest.pages[path.replace(/\/+$/, '')] || `page:${path.replace(/\/+$/, '')}`;
       const widget = page.locator('footer [data-view-count]');
       await widget.waitFor({ state: 'visible' });
       assert.equal(await widget.count(), 1);
