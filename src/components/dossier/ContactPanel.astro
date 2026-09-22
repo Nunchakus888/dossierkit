@@ -1,5 +1,5 @@
 ---
-import Icon from "../common/Icon.astro";
+import IconAction from "../common/IconAction.astro";
 import type { Locale } from "../../lib/config";
 import { labels, localize } from "../../lib/i18n";
 import type { ProfilePack } from "../../lib/profile-loader";
@@ -21,12 +21,9 @@ const l = labels[locale];
       <p>{locale === "zh" ? "关注 Agent Runtime、工具治理、评测发布门禁与核心业务流程集成。" : "Focused on Agent Runtime, tool governance, evaluation release gates, and core workflow integration."}</p>
     </div>
     <div class="contact-actions">
-      <a class="button primary" href={`mailto:${pack.profile.links.email}`}>
-        <Icon name="mail" size={16} />
-        {pack.profile.links.email}
-      </a>
-      {pack.profile.links.github && <a class="button" href={pack.profile.links.github}>GitHub</a>}
-      {pack.profile.links.linkedin && <a class="button" href={pack.profile.links.linkedin}>LinkedIn</a>}
+      <IconAction icon="mail" href={`mailto:${pack.profile.links.email}`} label={`${locale === 'zh' ? '邮件' : 'Email'}: ${pack.profile.links.email}`} />
+      {pack.profile.links.github && <IconAction icon="github" href={pack.profile.links.github} label="GitHub" />}
+      {pack.profile.links.linkedin && <IconAction icon="linkedin" href={pack.profile.links.linkedin} label="LinkedIn" />}
     </div>
   </div>
 </section>
@@ -71,8 +68,9 @@ const l = labels[locale];
 
   .contact-actions {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 4px;
   }
 
   @media (max-width: 760px) {

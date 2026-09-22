@@ -1,4 +1,5 @@
 ---
+import IconAction from "../common/IconAction.astro";
 import ViewCount from "../views/ViewCount.astro";
 import { viewsEnabled } from "../../lib/view-counter/config";
 import type { Locale } from "../../lib/config";
@@ -22,7 +23,7 @@ const tagline = pack.navigation.footer?.tagline;
         {tagline && <p>{localize(tagline, locale)}</p>}
         {viewsEnabled && <div class="footer-meta" data-pagefind-ignore>
           <ViewCount noteRef={pageRef} showTotal={Boolean(pageRef)} locale={locale} />
-          <a class="counter-privacy" href={`/${locale}/privacy/`}>{locale === "zh" ? "统计与隐私" : "Statistics & privacy"}</a>
+          <IconAction icon="shield" size={15} class="counter-privacy" href={`/${locale}/privacy/`} label={locale === "zh" ? "统计与隐私" : "Statistics & privacy"} />
         </div>}
       </div>
     </footer>
@@ -45,8 +46,6 @@ const tagline = pack.navigation.footer?.tagline;
   }
 
   .footer-meta { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: .4rem .9rem; }
-
-  .counter-privacy { font-size: .75rem; color: var(--color-muted); text-underline-offset: .2em; }
 
   p {
     margin: 0;

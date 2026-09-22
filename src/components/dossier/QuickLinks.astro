@@ -1,4 +1,5 @@
 ---
+import IconAction from "../common/IconAction.astro";
 import Icon from "../common/Icon.astro";
 import type { Locale } from "../../lib/config";
 import { localePath, localize } from "../../lib/i18n";
@@ -42,10 +43,7 @@ function navHref(path: string) {
       </span>
       <strong>{localize(contact.label, locale)}</strong>
       <a class="contact-email" href={`mailto:${email}`}>{email}</a>
-      <a class="contact-action" href={navHref("contact")}>
-        <Icon name={contact.icon} size={24} strokeWidth={1.9} />
-        <span>{localize(contact.actionLabel, locale)}</span>
-      </a>
+      <IconAction icon={contact.icon} href={navHref("contact")} label={localize(contact.actionLabel, locale)} />
     </div>
   </div>
 </section>
@@ -179,29 +177,6 @@ function navHref(path: string) {
     color: var(--color-mint);
   }
 
-  .contact-action {
-    display: inline-flex;
-    min-height: 58px;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    border-radius: 18px;
-    padding: 14px 24px;
-    background: var(--gradient-primary);
-    color: white;
-    font-size: 1.04rem;
-    font-weight: 830;
-    box-shadow: var(--shadow-glow);
-    transition:
-      transform 180ms var(--ease-out),
-      box-shadow 180ms var(--ease-out);
-  }
-
-  .contact-action:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 20px 36px rgba(85, 190, 162, 0.3);
-  }
-
   @media (max-width: 1040px) {
     .quick-card {
       grid-template-columns: 1fr;
@@ -236,13 +211,6 @@ function navHref(path: string) {
     }
 
     .contact-email,
-    .contact-action {
-      grid-column: 1 / -1;
-    }
-
-    .contact-action {
-      width: 100%;
-    }
   }
 
   @media (max-width: 460px) {

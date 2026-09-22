@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./icon-actions.css";
 @source not "../../scripts";
 
 :root {
@@ -238,6 +239,8 @@ main > article {
 
 .prose {
   max-width: 760px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .prose h2,

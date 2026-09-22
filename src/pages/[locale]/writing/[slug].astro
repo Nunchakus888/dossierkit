@@ -1,4 +1,5 @@
 ---
+import IconAction from "../../../components/common/IconAction.astro";
 import BaseLayout from "../../../layouts/BaseLayout.astro";
 import { locales, type Locale } from "../../../lib/config";
 import { labels, localePath } from "../../../lib/i18n";
@@ -20,7 +21,7 @@ const l = labels[locale];
 
 <BaseLayout locale={locale} title={entry.data.title} description={entry.data.summary}>
   <article class="page-shell article-page">
-    <a class="back-link no-print" href={localePath(locale, "writing")}>{l.backToList}</a>
+    <IconAction icon="arrow-left" class="back-link no-print" href={localePath(locale, "writing")} label={l.backToList} />
     <header>
       <p>{entry.data.date || l.writing}</p>
       <h1>{entry.data.title}</h1>
@@ -33,11 +34,6 @@ const l = labels[locale];
 <style>
   .article-page {
     padding: 46px 0 72px;
-  }
-
-  .back-link {
-    color: var(--color-accent);
-    font-weight: 750;
   }
 
   header {

@@ -14,3 +14,7 @@ Use a public, professional voice:
 - Sanitized metrics are acceptable; missing metrics should be omitted from public pages rather than called out as missing.
 
 Before committing content changes, scan public content for placeholder or internal wording: `demo`, `example`, `待补`, `后续`, `短板`, `面试官`, `不需要`, `不作为`, `not a demo`, `to be filled`.
+
+## Public UI actions
+
+Use the shared `IconAction` for familiar utility actions (share, copy, language, contact, download, print, back, zoom, close). Keep utility chrome icon-first, neutral, and quiet. Remove redundant action headings and explanatory prose. Retain meaningful navigation labels and content titles where an icon would be ambiguous. Every icon-only action needs a localized accessible name and hover title, visible keyboard focus, and a 44px touch target. Success feedback may be a temporary check mark with a live-region announcement; keep a usable fallback when an operation fails. Do not change collection semantics, metrics, content, or destinations during visual-only changes.

@@ -1,0 +1,16 @@
+---
+import Icon from './Icon.astro';
+type Props = {
+  icon: string;
+  label: string;
+  href?: string;
+  size?: number;
+  class?: string;
+  [attribute: string]: unknown;
+};
+const { icon, label, href, size = 18, class: className, ...attributes } = Astro.props;
+const Tag = href ? 'a' : 'button';
+---
+<Tag {...attributes} href={href} type={href ? undefined : 'button'} class:list={['icon-action', className]} title={label} aria-label={label} data-icon-action>
+  <Icon name={icon} size={size} />
+</Tag>
