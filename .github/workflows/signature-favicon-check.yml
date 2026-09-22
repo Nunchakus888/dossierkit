@@ -27,6 +27,14 @@ jobs:
           test "$(git rev-parse origin/main)" = 03cf45855f7ffd8bcafcdac97e71c018b937464e
           echo "BRAND_BASE=$(git rev-parse origin/main)" >> "$GITHUB_ENV"
           python3 scripts/ui/apply-signature-refresh.py
+          python3 - <<'PY'
+          from pathlib import Path
+          for name in ['generate-brand-icons.mjs', 'brand-refresh.test.mjs']:
+              p = Path('scripts/ui') / name
+              text = p.read_text()
+              assert text.count("import sharp from 'sharp';") == 1
+              p.write_text(text.replace("import sharp from 'sharp';", "import { createRequire } from 'node:module';\nconst require = createRequire(import.meta.url);\nconst sharp = createRequire(require.resolve('astro/package.json'))('sharp');"))
+          PY
           git rm -f .github/workflows/signature-favicon-check.yml scripts/ui/apply-signature-refresh.py
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
