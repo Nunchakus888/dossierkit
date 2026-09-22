@@ -1,0 +1,51 @@
+name: Verify deployed branding
+on:
+  push:
+    branches: [ops/verify-branding-20260922]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Read deployed pages and icon assets without counting visits
+        run: |
+          python3 - <<'PY'
+          import urllib.request,json,re,struct,datetime,pathlib
+          origin='https://sunionpeaks.pages.dev'
+          checks=[]
+          def get(path):
+              req=urllib.request.Request(origin+path,headers={'User-Agent':'DossierKit-Deployment-Audit/1.0'})
+              with urllib.request.urlopen(req,timeout=20) as r:
+                  body=r.read();checks.append({'path':path,'status':r.status,'contentType':r.headers.get('Content-Type'),'bytes':len(body)})
+                  assert r.status==200
+                  return body
+          for path in ['/zh/','/en/','/zh/notes/','/zh/cv/']:
+              html=get(path).decode()
+              assert 'href="/favicon.svg?v=george-g1"' in html
+              assert 'class="site-tagline signature-wordmark"' in html
+              assert 'class="brand-word signature-wordmark"' in html
+              assert not re.search(r'<a\b[^>]*class="note-link',html)
+              assert 'data-view-counter-config' in html
+          svg=get('/favicon.svg?v=george-g1').decode()
+          assert '<title id="title">George</title>' in svg
+          assert not re.search(r'<(?:text|script|image|foreignObject)\b',svg)
+          for name,n in [('favicon-32.png',32),('apple-touch-icon.png',180)]:
+              body=get('/'+name+'?v=george-g1')
+              assert body[:8]==b'\x89PNG\r\n\x1a\n'
+              assert struct.unpack('>II',body[16:24])==(n,n)
+          ico=get('/favicon.ico?v=george-g1')
+          assert struct.unpack('<HHH',ico[:6])==(0,1,3)
+          assert [ico[6+16*i] for i in range(3)]==[16,32,48]
+          assert json.loads(get('/api/views'))['schemaVersion']==2
+          receipt={'verifiedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'readOnly':True,'productionWrites':0,'checks':checks}
+          pathlib.Path('evidence').mkdir();pathlib.Path('evidence/live-branding.json').write_text(json.dumps(receipt,ensure_ascii=False,indent=2))
+          print(json.dumps(receipt,ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: branding-live-receipt
+          path: evidence/live-branding.json
+          retention-days: 7
+          if-no-files-found: error
