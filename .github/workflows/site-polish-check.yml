@@ -1,0 +1,74 @@
+name: Site polish verification
+on:
+  push:
+    branches: [implementation/site-polish-20260922]
+permissions:
+  contents: write
+concurrency:
+  group: site-polish-verification
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      ACTIVE_PROFILE: default
+      DEFAULT_LOCALE: zh
+      PUBLIC_SITE_URL: https://sunionpeaks.pages.dev
+      PUBLIC_VIEWS_ENABLED: 'true'
+      GITHUB_REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Prepare UI-only candidate against unchanged production
+        run: |
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = ae15687010ef34fe2dd4de8ee4e11105bcd8e8b5
+          echo "POLISH_BASE=$(git rev-parse origin/main)" >> "$GITHUB_ENV"
+          python3 scripts/ui/apply-site-polish.py
+          git rm -f .github/workflows/site-polish-check.yml scripts/ui/apply-site-polish.py
+          git add AGENTS.md src scripts/ui
+          echo "POLISH_TREE=$(git write-tree)" >> "$GITHUB_ENV"
+          git diff --cached --stat origin/main
+          test -z "$(git diff --cached --name-only origin/main -- src/lib/view-counter migrations functions profiles .github)"
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Test navigation, content, integrations and unchanged counters
+        run: |
+          pnpm dossier generate-admin-config
+          pnpm exec tsx --test scripts/ui/locale-navigation.test.ts
+          pnpm test:views
+          pnpm test:notes
+          pnpm test:integrations
+          pnpm validate
+          pnpm build
+          pnpm exec tsx scripts/export-publication.ts
+          node scripts/test-publication-build.mjs
+      - name: Verify responsive UI and interaction without production traffic
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          node scripts/ui/site-polish.test.mjs
+          node scripts/ui/icon-actions.test.mjs
+          node scripts/views/browser-test.mjs
+      - name: Save tested source-only candidate
+        run: |
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$POLISH_BASE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          sha=$(printf '%s\n' 'fix: make language switching safe and polish responsive diagrams and signature header' | git commit-tree "$POLISH_TREE" -p "$POLISH_BASE")
+          git push origin "$sha:refs/heads/candidate/site-polish-20260922"
+          printf '{"base":"%s","commit":"%s","tree":"%s","productionWrites":0}\n' "$POLISH_BASE" "$sha" "$POLISH_TREE" > artifacts/site-polish/candidate.json
+      - name: Store private verification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: site-polish-verification
+          path: artifacts/site-polish/
+          retention-days: 7
+          if-no-files-found: warn
