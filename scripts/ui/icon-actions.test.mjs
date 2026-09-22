@@ -73,8 +73,10 @@ try {
         assert.equal(await x.getAttribute('target'),'_blank');
         const intent=new URL(await x.getAttribute('href'));
         assert.ok(['twitter.com','x.com'].includes(intent.hostname));
-        assert.ok(intent.searchParams.get('text').includes(manifest.origin));
         const copy=page.locator('[data-copy-link]');
+        assert.equal(intent.searchParams.get('url'),await copy.getAttribute('data-copy-link'));
+        assert.equal(new URL(intent.searchParams.get('url')).origin,manifest.origin);
+        assert.ok(intent.searchParams.get('text').trim().length>0);
         await copy.focus();
         assert.notEqual(await copy.evaluate(el=>getComputedStyle(el).outlineStyle),'none');
         await page.screenshot({path:`${directory}/${label}-share-${width}.png`});
