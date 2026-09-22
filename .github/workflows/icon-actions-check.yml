@@ -27,6 +27,14 @@ jobs:
           test "$(git rev-parse origin/main)" = c5280dadad79a8305d80fc7d5eacc8e41769d306
           echo "ICON_BASE=$(git rev-parse origin/main)" >> "$GITHUB_ENV"
           python3 scripts/ui/apply-icon-ui.py
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('src/styles/global.css')
+          text = path.read_text()
+          old = '.prose {\n  max-width: 760px;\n}'
+          assert text.count(old) == 1
+          path.write_text(text.replace(old, '.prose {\n  max-width: 760px;\n  min-width: 0;\n  overflow-wrap: anywhere;\n}'))
+          PY
           git rm -f .github/workflows/icon-actions-check.yml scripts/ui/apply-icon-ui.py
           git add AGENTS.md src scripts/ui
           echo "ICON_TREE=$(git write-tree)" >> "$GITHUB_ENV"
@@ -51,8 +59,9 @@ jobs:
       - name: Mobile and desktop action checks, isolated from production
         run: |
           pnpm exec playwright install --with-deps chromium
-          node scripts/ui/icon-actions.test.mjs
-          node scripts/views/browser-test.mjs
+          mkdir -p artifacts/icon-actions
+          node scripts/ui/icon-actions.test.mjs 2> artifacts/icon-actions/browser-errors.txt
+          node scripts/views/browser-test.mjs 2> artifacts/icon-actions/footer-errors.txt
       - name: Save tested code-only branch
         run: |
           git fetch origin main
