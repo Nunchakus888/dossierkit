@@ -1,0 +1,157 @@
+name: Analytics D1 reconciliation
+on:
+  push:
+    branches: [ops/analytics-d1-reconcile-20260922]
+    paths: [.github/workflows/analytics-d1-reconcile.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+      - name: Read only Cloudflare analytics, aggregate SQL, and public GET endpoints
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_D1_API_TOKEN: ${{ secrets.CLOUDFLARE_D1_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          python3 - <<'PY'
+          import datetime as dt, json, os, re, urllib.request, urllib.error
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+          from urllib.parse import urlencode
+          ACCOUNT=os.environ['CLOUDFLARE_ACCOUNT_ID']
+          TOKEN=os.environ['CLOUDFLARE_API_TOKEN']
+          D1_TOKEN=os.environ.get('CLOUDFLARE_D1_API_TOKEN') or TOKEN
+          ORIGIN='https://sunionpeaks.pages.dev'
+          HOST='sunionpeaks.pages.dev'
+          UTC=dt.timezone.utc
+          TZ=ZoneInfo('Asia/Shanghai')
+          NOW=dt.datetime.now(UTC)
+          def stamp(d): return d.isoformat(timespec='milliseconds').replace('+00:00','Z')
+          def parse(s): return dt.datetime.fromisoformat(s.replace('Z','+00:00'))
+          def api(path,body=None):
+              token=D1_TOKEN if '/d1/' in path else TOKEN
+              req=urllib.request.Request('https://api.cloudflare.com/client/v4'+path,data=None if body is None else json.dumps(body).encode(),headers={'Authorization':'Bearer '+token,'Content-Type':'application/json'})
+              try:
+                  with urllib.request.urlopen(req,timeout=35) as r: return json.load(r)
+              except urllib.error.HTTPError as e:
+                  try: err=json.load(e).get('errors',[])
+                  except Exception: err=[]
+                  return {'success':False,'http_status':e.code,'errors':err}
+              except Exception as e: return {'success':False,'error':type(e).__name__}
+          report={'startedAt':stamp(NOW),'timeZone':'Asia/Shanghai','origin':ORIGIN,'readOnly':True,'productionWrites':0,'d1':{},'rum':{},'http':[]}
+          project=api('/accounts/'+ACCOUNT+'/pages/projects/sunionpeaks')
+          assert project.get('success'), 'Cannot inspect target Pages project'
+          project=project['result']
+          prod=project.get('deployment_configs',{}).get('production',{})
+          dbid=(prod.get('d1_databases') or {}).get('VIEWS_DB',{}).get('id')
+          assert dbid, 'Target has no VIEWS_DB binding'
+          deployment=project.get('canonical_deployment') or {}
+          report['project']={'name':project['name'],'domains':project.get('domains'),'deploymentId':deployment.get('id'),'deploymentAt':deployment.get('created_on'),'deploymentStage':deployment.get('latest_stage'),'d1BindingPresent':True,'hashSecretPresent':'VIEWS_HASH_SECRET' in (prod.get('env_vars') or {}),'beaconAutoConfigured':bool((project.get('build_config') or {}).get('web_analytics_tag'))}
+          meta=api('/accounts/'+ACCOUNT+'/d1/database/'+dbid)
+          if meta.get('success'): report['database']={k:meta['result'].get(k) for k in ['name','created_at','file_size','num_tables','version']}
+          def sql(query,params=[]):
+              assert re.match(r'^\s*(SELECT|WITH)\b',query,re.I), 'Read-only SQL required'
+              result=api('/accounts/'+ACCOUNT+'/d1/database/'+dbid+'/query',{'sql':query,'params':params})
+              if not result.get('success'): return {'error':result}
+              rows=result['result']
+              if not rows or rows[0].get('success') is False: return {'error':'D1 query failed'}
+              return rows[0]['results']
+          queries={
+            'meta':("SELECT key,value FROM view_meta WHERE key IN ('v2_since','schema_version')",[]),
+            'totals':('SELECT key,views,started_at FROM view_totals ORDER BY key',[]),
+            'daily':('SELECT key,day,views FROM view_daily ORDER BY day,key',[]),
+            'sources':('SELECT key,day,source,medium,basis,views,identified_views FROM view_sources_daily ORDER BY day,key,source',[]),
+            'dailyUV':('SELECT key,day,COUNT(DISTINCT visitor_hash) uv FROM view_visitors GROUP BY key,day ORDER BY day,key',[]),
+            'uv30':("SELECT key,COUNT(DISTINCT visitor_hash) uv FROM view_visitors WHERE day>=? GROUP BY key ORDER BY key",[(NOW.astimezone(TZ).date()-dt.timedelta(days=29)).isoformat()]),
+            'receiptSummary':('SELECT COUNT(*) events,MIN(expires_at-172800000) first_accepted_ms,MAX(expires_at-172800000) last_accepted_ms FROM view_events',[]),
+            'receiptHourly':("SELECT strftime('%Y-%m-%dT%H:00:00Z',(expires_at-172800000)/1000,'unixepoch') hour_utc,COUNT(*) events FROM view_events GROUP BY hour_utc ORDER BY hour_utc",[]),
+            'totalVsDailyMismatch':("SELECT t.key,t.views total,COALESCE(SUM(d.views),0) daily FROM view_totals t LEFT JOIN view_daily d ON d.key=t.key GROUP BY t.key HAVING t.views!=COALESCE(SUM(d.views),0)",[]),
+            'sourcesExceedPV':("SELECT s.key,s.day,SUM(s.views) source_pv,d.views daily_pv FROM view_sources_daily s LEFT JOIN view_daily d ON s.key=d.key AND s.day=d.day GROUP BY s.key,s.day HAVING SUM(s.views)>COALESCE(d.views,0)",[]),
+            'identifiedExceedsPV':('SELECT COUNT(*) errors FROM view_sources_daily WHERE identified_views>views OR identified_views<0 OR views<0',[]),
+            'siteVsPagesDaily':("SELECT day,SUM(CASE WHEN key='site:total' THEN views ELSE 0 END) site_pv,SUM(CASE WHEN key!='site:total' THEN views ELSE 0 END) page_pv FROM view_daily GROUP BY day ORDER BY day",[])
+          }
+          for key,(query,params) in queries.items(): report['d1'][key]=sql(query,params)
+          snapshot=dt.datetime.now(UTC)
+          report['d1']['snapshotAt']=stamp(snapshot)
+          totals=report['d1']['totals']; assert isinstance(totals,list),'Cannot read counters'
+          started=parse(next(r['started_at'] for r in totals if r['key']=='site:total'))
+          v2=next((parse(r['value']) for r in report['d1']['meta'] if r['key']=='v2_since'),started)
+          # Use completed windows for the strongest comparison; current-day snapshots have collection lag.
+          cutoff=(snapshot-dt.timedelta(minutes=15)).replace(second=0,microsecond=0)
+          earliest_receipt=report['d1']['receiptSummary'][0]['first_accepted_ms']
+          mature_start=max(v2, snapshot-dt.timedelta(hours=24))
+          report['d1']['matureEvents']={'from':stamp(mature_start),'to':stamp(cutoff),'completeReceiptCoverage': earliest_receipt is not None and earliest_receipt<=mature_start.timestamp()*1000+1000,'counts':sql('SELECT COUNT(*) events FROM view_events WHERE expires_at-172800000>=? AND expires_at-172800000<?',[int(mature_start.timestamp()*1000),int(cutoff.timestamp()*1000)])}
+          def gql(query): return api('/graphql',{'query':query,'variables':{}})
+          def fields(name):
+              result=gql('{__type(name:'+json.dumps(name)+'){fields{name description}}}')
+              return (((result.get('data') or {}).get('__type') or {}).get('fields') or [])
+          dimension_fields=fields('AccountRumPageloadEventsAdaptiveGroupsDimensions')
+          dims={f['name'] for f in dimension_fields}
+          report['rumDimensions']=dimension_fields
+          def groups(start,end,dimensions,host=HOST):
+              filt='datetime_geq:'+json.dumps(stamp(start))+',datetime_lt:'+json.dumps(stamp(end))
+              if host: filt+=',requestHost:'+json.dumps(host)
+              q='{viewer{accounts(filter:{accountTag:'+json.dumps(ACCOUNT)+'}){rumPageloadEventsAdaptiveGroups(limit:2000,filter:{'+filt+'}){count sum{visits} avg{sampleInterval} dimensions{'+dimensions+'}}}}}'
+              result=gql(q)
+              if result.get('errors') or result.get('success') is False: return {'error':result.get('errors',result)}
+              try: rows=result['data']['viewer']['accounts'][0]['rumPageloadEventsAdaptiveGroups']
+              except Exception: return {'error':'Unexpected GraphQL response'}
+              return {'rows':rows,'truncated':len(rows)>=2000}
+          windows=[('since_d1',started,snapshot),('since_v2',v2,snapshot),('mature_v2',mature_start,cutoff),('last7',snapshot-dt.timedelta(days=7),snapshot),('last30',snapshot-dt.timedelta(days=30),snapshot)]
+          firstday=started.astimezone(TZ).date(); today=snapshot.astimezone(TZ).date()
+          for n in range(min(8,(today-firstday).days+1)):
+              day=max(firstday,today-dt.timedelta(days=7))+dt.timedelta(days=n)
+              if day>today: break
+              daystart=dt.datetime.combine(day,dt.time.min,tzinfo=TZ).astimezone(UTC)
+              dayend=(daystart+dt.timedelta(days=1))
+              windows.append(('day_'+day.isoformat(),max(daystart,started),min(dayend,snapshot)))
+          for name,start,end in windows:
+              if end<=start: continue
+              item={'fromUTC':stamp(start),'toUTC':stamp(end),'fromLocal':start.astimezone(TZ).isoformat(),'toLocal':end.astimezone(TZ).isoformat(),'host':groups(start,end,'requestHost'),'paths':groups(start,end,'requestPath'),'referrers':groups(start,end,'refererHost')}
+              if name in ['since_d1','mature_v2']:
+                  for d in ['deviceType','userAgentBrowser','countryName','bot']:
+                      if d in dims: item[d]=groups(start,end,d)
+                  if 'datetimeHour' in dims: item['hourly']=groups(start,end,'datetimeHour')
+              report['rum'][name]=item
+          report['allRumHosts7d']=groups(snapshot-dt.timedelta(days=7),snapshot,'requestHost',host=None)
+          class NoRedirect(urllib.request.HTTPRedirectHandler):
+              def redirect_request(self,*args): return None
+          opener=urllib.request.build_opener(NoRedirect())
+          def public(path):
+              req=urllib.request.Request(ORIGIN+path,headers={'User-Agent':'DossierKit-Deployment-Audit/1.0','Cache-Control':'no-cache'})
+              try:
+                  try: r=opener.open(req,timeout=25)
+                  except urllib.error.HTTPError as e: r=e
+                  text=r.read(2000000).decode('utf-8','replace'); ct=r.headers.get('Content-Type','')
+                  item={'path':path,'status':r.code,'contentType':ct,'location':r.headers.get('Location')}
+                  if ct.startswith('application/json'):
+                      try: item['body']=json.loads(text)
+                      except Exception: item['bodyInvalid']=True
+                  elif ct.startswith('text/html'):
+                      item.update(beaconCount=len(re.findall(r'<script[^>]+src=[\"\x27][^\"\x27]*cloudflareinsights.com/beacon',text)), counterConfigured=bool(re.search(r'<[^>]+\sdata-view-counter-config(?:\s|=|>)',text)), widgetCount=len(re.findall(r'<span[^>]+\sdata-view-count(?:\s|=|>)',text)), contentSecurityPolicy=r.headers.get('Content-Security-Policy'), referrerPolicy=r.headers.get('Referrer-Policy'))
+                  return item
+              except Exception as e: return {'path':path,'error':type(e).__name__}
+          paths=['/','/zh/','/en/','/zh/cv/','/en/cv/','/zh/contact/','/zh/notes/github-copilot-agent-runtime-rust-ffi-harness-ai/','/plugins/dossierkit-notes/','/admin/','/__reconciliation_missing_page','/api/views','/api/views?mode=summary','/api/views?mode=summary&path=/zh/cv/','/api/views?mode=sources&period=7d','/api/views?mode=top&type=all&period=7d']
+          report['http']=[public(p) for p in paths]
+          report['d1']['closingSiteTotal']=sql("SELECT views FROM view_totals WHERE key='site:total'")
+          report['finishedAt']=stamp(dt.datetime.now(UTC))
+          Path('audit').mkdir(exist_ok=True)
+          Path('audit/reconciliation.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          # Keep logs short; all details are aggregated and contain no visitor identifiers.
+          digest={'startedAt':report['startedAt'],'finishedAt':report['finishedAt'],'d1Site':[r for r in totals if r['key']=='site:total'],'d1Daily':[r for r in report['d1']['daily'] if r['key']=='site:total'],'v2Since':stamp(v2),'rum':{k:v['host'] for k,v in report['rum'].items()},'integrity':{k:report['d1'][k] for k in ['totalVsDailyMismatch','sourcesExceedPV','identifiedExceedsPV','siteVsPagesDaily']},'httpErrors':[r for r in report['http'] if r.get('status',0)>=400]}
+          print(json.dumps(digest,ensure_ascii=False,indent=2))
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a') as f: f.write('## Read-only Analytics / D1 reconciliation\n\nNo deployments, secret changes, migrations, counter writes, or raw visitor exports. Matching host/time windows, sampling rates, database consistency, and public GET responses are in the private artifact.\n')
+          PY
+      - name: Save private aggregate evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: analytics-d1-reconciliation
+          path: audit/reconciliation.json
+          if-no-files-found: warn
+          retention-days: 7
