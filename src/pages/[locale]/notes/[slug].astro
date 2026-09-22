@@ -118,11 +118,21 @@ const kindLabel = {
 <script>
   const diagrams = document.querySelectorAll<HTMLElement>("[data-mermaid-diagram]");
   if (diagrams.length > 0) {
+    const initialHash = window.location.hash;
+    let userMoved = false;
+    const moved = () => { userMoved = true; };
+    const motionEvents = ['wheel', 'touchstart', 'pointerdown', 'keydown'] as const;
+    motionEvents.forEach(name => window.addEventListener(name, moved, { passive: true, once: true }));
     renderDiagrams().then(() => {
       enableDiagramViewer(diagrams);
+      // Async diagram layout must not leave a deep link above its intended heading.
+      if (initialHash && window.location.hash === initialHash && !userMoved) {
+        try { document.getElementById(decodeURIComponent(initialHash.slice(1)))?.scrollIntoView({ block: 'start' }); }
+        catch { /* A malformed fragment does not affect the page. */ }
+      }
     }).catch(() => {
       diagrams.forEach((diagram) => diagram.classList.add("mermaid-failed"));
-    });
+    }).finally(() => motionEvents.forEach(name => window.removeEventListener(name, moved)));
   }
 
   async function renderDiagrams() {
@@ -131,6 +141,7 @@ const kindLabel = {
       startOnLoad: false,
       securityLevel: "strict",
       theme: "base",
+      state: { padding: 8, nodeSpacing: 28, rankSpacing: 24 },
       themeVariables: {
         primaryColor: "#ecfdf5",
         primaryTextColor: "#13231c",
@@ -161,6 +172,7 @@ const kindLabel = {
     let activeTrigger: HTMLButtonElement | undefined;
     let activeSvg: SVGSVGElement | undefined;
     let baseWidth = 0;
+    let naturalWidth = 0;
     let aspectRatio = 1.6;
     let scale = 1;
     let dragging = false;
@@ -169,6 +181,17 @@ const kindLabel = {
     diagramNodes.forEach((diagram, index) => {
       const svg = diagram.querySelector<SVGSVGElement>("svg");
       if (!svg) return;
+      const box = svg.viewBox.baseVal;
+      // Use intrinsic dimensions, downscale only when needed. Narrow state charts
+      // must not be stretched to an arbitrary 640px minimum or the prose width.
+      if (box.width > 0 && box.height > 0) {
+        svg.style.width = `${box.width}px`;
+        svg.style.maxWidth = '100%';
+        svg.style.minWidth = '0';
+        svg.style.height = 'auto';
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        diagram.dataset.diagramReady = 'true';
+      }
 
       const trigger = document.createElement("button");
       trigger.type = "button";
@@ -263,6 +286,7 @@ const kindLabel = {
 
       const viewBox = sourceSvg.viewBox.baseVal;
       const bounds = sourceSvg.getBoundingClientRect();
+      naturalWidth = viewBox.width > 0 ? viewBox.width : bounds.width;
       aspectRatio = viewBox.width > 0 && viewBox.height > 0
         ? viewBox.width / viewBox.height
         : Math.max(bounds.width / Math.max(bounds.height, 1), 0.25);
@@ -279,9 +303,10 @@ const kindLabel = {
       const styles = window.getComputedStyle(stage);
       const horizontalPadding = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
       const verticalPadding = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
-      const availableWidth = Math.max(stage.clientWidth - horizontalPadding, 220);
-      const availableHeight = Math.max(stage.clientHeight - verticalPadding, 180);
-      baseWidth = Math.max(Math.min(availableWidth, availableHeight * aspectRatio), 220);
+      const availableWidth = Math.max(stage.clientWidth - horizontalPadding, 1);
+      const availableHeight = Math.max(stage.clientHeight - verticalPadding, 1);
+      // Fit BOTH axes, without a width floor that makes tall diagrams overflow.
+      baseWidth = Math.max(Math.min(availableWidth, availableHeight * aspectRatio, naturalWidth), 1);
       scale = 1;
       updateDiagramSize(false);
     }
@@ -428,7 +453,7 @@ const kindLabel = {
     overflow-x: auto;
     border: 1px solid var(--color-border);
     border-radius: 18px;
-    padding: 22px;
+    padding: 42px clamp(12px, 2.5vw, 22px) 18px;
     background: rgba(255, 255, 255, 0.7);
     text-align: center;
   }
@@ -486,10 +511,15 @@ const kindLabel = {
   }
 
   :global(.note-prose .mermaid > svg) {
-    width: 100%;
-    min-width: 640px;
+    display: block;
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
     height: auto;
+    margin-inline: auto;
   }
+
+  :global(.note-prose :is(h2, h3, h4)[id]) { scroll-margin-top: 100px; }
 
   :global(.note-prose .mermaid-failed) {
     white-space: pre-wrap;

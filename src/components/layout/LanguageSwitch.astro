@@ -1,0 +1,59 @@
+---
+import IconAction from '../common/IconAction.astro';
+import { localeTarget } from '../../lib/locale-navigation';
+import type { Locale } from '../../lib/config';
+import type { ProfilePack } from '../../lib/profile-loader';
+type Props = { locale: Locale; pack: ProfilePack };
+const { locale, pack } = Astro.props;
+const target = localeTarget(Astro.url.pathname, locale, pack);
+const zh = locale === 'zh';
+const label = zh ? 'English' : '中文';
+---
+<IconAction icon="languages" label={label} href={target.href} class="language-switch"
+  data-language-switch data-translation-available={String(target.available)}
+  aria-haspopup={!target.available ? 'dialog' : undefined}
+  aria-controls={!target.available ? 'language-notice' : undefined} />
+{!target.available && <dialog id="language-notice" class="language-notice" data-language-notice aria-labelledby="language-notice-title" aria-describedby="language-notice-description">
+  <div class="language-notice-heading">
+    <h2 id="language-notice-title">{zh ? '暂无英文版本' : 'No Chinese version yet'}</h2>
+    <IconAction icon="close" label={zh ? '关闭' : 'Close'} data-language-close />
+  </div>
+  <p id="language-notice-description">{zh ? '继续阅读原文，或浏览英文内容。' : 'Keep reading this page, or explore content in Chinese.'}</p>
+  <div class="language-notice-actions">
+    <button type="button" data-language-stay autofocus>{zh ? '继续阅读' : 'Keep reading'}</button>
+    <a href={target.href} data-language-fallback>{target.fallbackLabel}<span aria-hidden="true"> →</span></a>
+  </div>
+</dialog>}
+<script>
+  const trigger = document.querySelector<HTMLAnchorElement>('[data-language-switch]');
+  const notice = document.querySelector<HTMLDialogElement>('[data-language-notice]');
+  if (trigger && notice && !trigger.dataset.noticeBound) {
+    trigger.dataset.noticeBound = 'true';
+    trigger.addEventListener('click', event => {
+      // A modified click and a no-JS browser still receive a valid list/home URL.
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || !notice.showModal) return;
+      event.preventDefault();
+      notice.showModal();
+      trigger.setAttribute('aria-expanded', 'true');
+    });
+    notice.querySelector('[data-language-close]')?.addEventListener('click', () => notice.close());
+    notice.querySelector('[data-language-stay]')?.addEventListener('click', () => notice.close());
+    notice.addEventListener('click', event => {
+      if (event.target !== notice) return;
+      const bounds = notice.getBoundingClientRect();
+      if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) notice.close();
+    });
+    notice.addEventListener('close', () => { trigger.setAttribute('aria-expanded', 'false'); trigger.focus({ preventScroll: true }); });
+  }
+</script>
+<style>
+  .language-notice { width: min(23rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; box-sizing: border-box; margin: auto; padding: 1rem 1.25rem 1.25rem; border: 1px solid var(--color-border); border-radius: 18px; background: var(--color-surface); color: var(--color-foreground); box-shadow: 0 18px 60px rgb(0 0 0 / 12%); }
+  .language-notice::backdrop { background: rgb(18 30 28 / 20%); }
+  .language-notice-heading { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+  h2 { margin: 0; font-size: 1rem; font-weight: 600; }
+  p { margin: .5rem 0 1rem; color: var(--color-muted); font-size: .875rem; line-height: 1.6; }
+  .language-notice-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .5rem; }
+  .language-notice-actions a, .language-notice-actions button { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: .25rem; padding: .5rem .75rem; border: 1px solid var(--color-border); border-radius: 10px; color: var(--color-foreground); background: transparent; font: inherit; font-size: .85rem; cursor: pointer; text-decoration: none; }
+  .language-notice-actions a { background: var(--color-accent-soft); border-color: transparent; }
+  .language-notice-actions :is(a,button):focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; }
+</style>

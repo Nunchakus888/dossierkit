@@ -1,7 +1,7 @@
 ---
-import IconAction from "../common/IconAction.astro";
+import LanguageSwitch from "./LanguageSwitch.astro";
 import type { Locale } from "../../lib/config";
-import { labels, localePath, localize, otherLocale, switchLocalePath } from "../../lib/i18n";
+import { localePath, localize } from "../../lib/i18n";
 import type { ProfilePack } from "../../lib/profile-loader";
 
 type Props = {
@@ -10,9 +10,6 @@ type Props = {
 };
 
 const { locale, pack } = Astro.props;
-const l = labels[locale];
-const altLocale = otherLocale(locale);
-const altHref = switchLocalePath(Astro.url.pathname, altLocale);
 const configuredBrand = pack.navigation.brand.mark || "DossierKit";
 const normalizedPath = Astro.url.pathname.replace(/\/$/, "") || "/";
 const showNoteSearch = normalizedPath === localePath(locale) || normalizedPath === localePath(locale, "notes");
@@ -43,7 +40,7 @@ const brandLabel =
     )}
 
     <div class="header-actions">
-      <IconAction icon="languages" label={l.switchLanguage} href={altHref} class="language-switch" />
+      <LanguageSwitch locale={locale} pack={pack} />
     </div>
   </div>
 </header>
@@ -194,12 +191,18 @@ const brandLabel =
     background: linear-gradient(100deg, #207f72 0%, #2fb98f 44%, #55bea2 72%, #2b9f98 100%);
     background-clip: text;
     color: transparent;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: clamp(1.08rem, 1.8vw, 1.34rem);
-    font-style: italic;
-    font-weight: 620;
-    line-height: 1.15;
-    letter-spacing: -0.025em;
+    font-family: "Pacifico", "Brush Script MT", cursive;
+    font-size: clamp(1.35rem, 2.15vw, 1.9rem);
+    font-style: normal;
+    font-weight: 400;
+    line-height: 1.45;
+    letter-spacing: 0;
+    font-feature-settings: "liga" 1, "calt" 1;
+    text-wrap: balance;
+    padding: .08em .2em .16em 0;
+    transform: rotate(-2deg) skewX(-6deg);
+    transform-origin: center;
+    overflow-wrap: normal;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
@@ -237,8 +240,9 @@ const brandLabel =
     }
 
     .brand-word {
-      font-size: 0.74rem;
-      letter-spacing: -0.035em;
+      font-size: clamp(.95rem, 4.2vw, 1.15rem);
+      line-height: 1.4;
+      letter-spacing: 0;
     }
 
     .nav-card.has-note-search {
