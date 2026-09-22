@@ -1,0 +1,76 @@
+name: Signature and favicon verification
+on:
+  push:
+    branches: [implementation/signature-favicon-20260922]
+permissions:
+  contents: write
+concurrency:
+  group: signature-favicon-verification
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ACTIVE_PROFILE: default
+      DEFAULT_LOCALE: zh
+      PUBLIC_SITE_URL: https://sunionpeaks.pages.dev
+      PUBLIC_VIEWS_ENABLED: 'true'
+      GITHUB_REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Prepare scoped visual changes
+        run: |
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = 03cf45855f7ffd8bcafcdac97e71c018b937464e
+          echo "BRAND_BASE=$(git rev-parse origin/main)" >> "$GITHUB_ENV"
+          python3 scripts/ui/apply-signature-refresh.py
+          git rm -f .github/workflows/signature-favicon-check.yml scripts/ui/apply-signature-refresh.py
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Generate icons and freeze the source-only candidate
+        run: |
+          node scripts/ui/generate-brand-icons.mjs
+          git add AGENTS.md src public/favicon.svg public/favicon.ico public/favicon-32.png public/apple-touch-icon.png public/404.html scripts/ui
+          echo "BRAND_TREE=$(git write-tree)" >> "$GITHUB_ENV"
+          git diff --cached --stat origin/main
+          test -z "$(git diff --cached --name-only origin/main -- src/lib/view-counter migrations functions profiles .github)"
+      - name: Test and build
+        run: |
+          pnpm dossier generate-admin-config
+          pnpm test:views
+          pnpm test:notes
+          pnpm test:integrations
+          pnpm validate
+          pnpm build
+          pnpm exec tsx scripts/export-publication.ts
+          node scripts/test-publication-build.mjs
+      - name: Verify real font, title navigation, icons and existing interactions
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          node scripts/ui/brand-refresh.test.mjs
+          node scripts/ui/site-polish.test.mjs
+          node scripts/views/browser-test.mjs
+      - name: Save verified candidate without deploying
+        run: |
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$BRAND_BASE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          sha=$(printf '%s\n' 'style: unify handwritten wordmarks, simplify note links and add George tab icon' | git commit-tree "$BRAND_TREE" -p "$BRAND_BASE")
+          git push origin "$sha:refs/heads/candidate/signature-favicon-20260922"
+          printf '{"base":"%s","commit":"%s","tree":"%s","productionWrites":0}\n' "$BRAND_BASE" "$sha" "$BRAND_TREE" > artifacts/brand-refresh/candidate.json
+      - name: Save verification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: signature-favicon-verification
+          path: artifacts/brand-refresh/
+          retention-days: 7
+          if-no-files-found: warn
