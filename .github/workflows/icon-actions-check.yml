@@ -1,0 +1,72 @@
+name: Icon actions verification
+on:
+  push:
+    branches: [implementation/icon-actions-20260922]
+permissions:
+  contents: write
+concurrency:
+  group: icon-actions-verification
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ACTIVE_PROFILE: default
+      DEFAULT_LOCALE: zh
+      PUBLIC_SITE_URL: https://sunionpeaks.pages.dev
+      PUBLIC_VIEWS_ENABLED: 'true'
+      GITHUB_REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Prepare UI-only candidate, preserving production source and counter logic
+        run: |
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = c5280dadad79a8305d80fc7d5eacc8e41769d306
+          echo "ICON_BASE=$(git rev-parse origin/main)" >> "$GITHUB_ENV"
+          python3 scripts/ui/apply-icon-ui.py
+          git rm -f .github/workflows/icon-actions-check.yml scripts/ui/apply-icon-ui.py
+          git add AGENTS.md src scripts/ui
+          echo "ICON_TREE=$(git write-tree)" >> "$GITHUB_ENV"
+          git diff --cached --stat origin/main
+          test -z "$(git diff --cached --name-only origin/main -- src/lib/view-counter migrations functions profiles .github)"
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Existing content, integration, count and build checks
+        run: |
+          pnpm dossier generate-admin-config
+          pnpm test:views
+          pnpm test:notes
+          pnpm test:integrations
+          pnpm validate
+          pnpm build
+          pnpm exec tsx scripts/export-publication.ts
+          node scripts/test-publication-build.mjs
+      - name: Mobile and desktop action checks, isolated from production
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          node scripts/ui/icon-actions.test.mjs
+          node scripts/views/browser-test.mjs
+      - name: Save tested code-only branch
+        run: |
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$ICON_BASE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          sha=$(printf '%s\n' 'style: simplify sharing and site utilities into quiet icon actions' | git commit-tree "$ICON_TREE" -p "$ICON_BASE")
+          git push origin "$sha:refs/heads/candidate/icon-actions-20260922"
+          printf '{"base":"%s","commit":"%s","tree":"%s","productionWrites":0}\n' "$ICON_BASE" "$sha" "$ICON_TREE" > artifacts/icon-actions/candidate.json
+      - name: Store private UI acceptance evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: icon-actions-verification
+          path: artifacts/icon-actions/
+          retention-days: 7
+          if-no-files-found: warn
