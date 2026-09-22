@@ -24,7 +24,7 @@ const brandLabel =
 <header class="site-header no-print" data-site-header data-visibility="shown">
   <div class:list={["page-shell", "nav-card", { "has-note-search": showNoteSearch }]}>
     <a class="brand" href={localePath(locale)} aria-label={brandLabel || localize(pack.profile.name, locale)}>
-      {brandLabel && <span class="brand-word">{brandLabel}</span>}
+      {brandLabel && <span class="brand-word signature-wordmark">{brandLabel}</span>}
     </a>
 
     {showNoteSearch && (
@@ -191,17 +191,11 @@ const brandLabel =
     background: linear-gradient(100deg, #207f72 0%, #2fb98f 44%, #55bea2 72%, #2b9f98 100%);
     background-clip: text;
     color: transparent;
-    font-family: "Pacifico", "Brush Script MT", cursive;
     font-size: clamp(1.35rem, 2.15vw, 1.9rem);
-    font-style: normal;
-    font-weight: 400;
     line-height: 1.45;
     letter-spacing: 0;
-    font-feature-settings: "liga" 1, "calt" 1;
     text-wrap: balance;
     padding: .08em .2em .16em 0;
-    transform: rotate(-2deg) skewX(-6deg);
-    transform-origin: center;
     overflow-wrap: normal;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

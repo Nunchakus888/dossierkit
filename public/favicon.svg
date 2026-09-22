@@ -1,13 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="g" x1="10" y1="8" x2="54" y2="58" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#7EE1CF"/>
-      <stop offset="1" stop-color="#45BFA6"/>
-    </linearGradient>
-  </defs>
-  <path fill="url(#g)" d="M9 18c0-4 3-7 7-7h11l6 7h15c4 0 7 3 7 7v23c0 4-3 7-7 7H16c-4 0-7-3-7-7V18Z"/>
-  <path fill="#EFFFFB" d="M14 25c0-3 2-5 5-5h29c3 0 5 2 5 5v22c0 3-2 5-5 5H19c-3 0-5-2-5-5V25Z" opacity=".78"/>
-  <circle cx="25" cy="37" r="3" fill="#233041"/>
-  <circle cx="40" cy="37" r="3" fill="#233041"/>
-  <path fill="none" stroke="#233041" stroke-linecap="round" stroke-width="3" d="M28 44c3 3 7 3 10 0"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">George</title>
+  <style>.paper{fill:#f6f4ef}.ink{stroke:#243f38}@media(prefers-color-scheme:dark){.paper{fill:#24312d}.ink{stroke:#f6f4ef}}</style>
+  <rect class="paper" x="0" y="0" width="64" height="64" rx="14"/>
+  <g class="ink" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M45 20C59 7 54 5 40 14C24 24 10 40 8 48C5 60 23 53 42 39" stroke-width="3.6"/>
+    <path d="M34 35L49 29C47 34 41 43 36 48" stroke-width="3.9"/>
+  </g>
 </svg>

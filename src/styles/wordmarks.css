@@ -1,0 +1,12 @@
+/* Shared signature voice for the header and footer; content stays in normal type. */
+.signature-wordmark {
+  display: inline-block;
+  font-family: "Pacifico", "Brush Script MT", cursive;
+  font-style: normal;
+  font-weight: 400;
+  font-feature-settings: "liga" 1, "calt" 1;
+  letter-spacing: 0;
+  transform: rotate(-2deg) skewX(-6deg);
+  transform-origin: center;
+  overflow-wrap: normal;
+}
