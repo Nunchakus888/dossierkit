@@ -34,15 +34,15 @@ jobs:
             try {
               const base = 'https://sunionpeaks.pages.dev/zh/notes/structured-outputs-tool-calling-agent-runtime-pi-codex-claude-code/';
               let fresh = false;
-              for (let attempt=0;attempt<10;attempt++) {
-                const response = await page.goto(base+'?qa=005311-layout-'+attempt,{waitUntil:'networkidle',timeout:60000});
+              for (let attempt=0;attempt<12;attempt++) {
+                const response = await page.goto(base+'?qa=493bd2-lanes-'+attempt,{waitUntil:'networkidle',timeout:60000});
                 report.status = response.status();
                 assert.equal(report.status,200);
                 await page.waitForSelector('[data-mermaid-diagram] svg .node',{timeout:45000});
-                if ((await page.locator('[data-mermaid-diagram]').innerText()).includes('结果也是工具')) {fresh=true;break;}
+                if (await page.locator('[data-mermaid-diagram] .cluster').count() === 3) {fresh=true;break;}
                 await page.waitForTimeout(15000);
               }
-              assert.ok(fresh,'Expected latest diagram revision');
+              assert.ok(fresh,'Expected latest three-lane diagram revision');
               report.title = await page.locator('h1').innerText();
               assert.match(report.title,/一图看懂/);
               const diagram = page.locator('[data-mermaid-diagram]');
@@ -50,11 +50,14 @@ jobs:
               assert.equal(await diagram.count(),1);
               report.nodeCount = await chart.locator('.node').count();
               assert.equal(report.nodeCount,11);
+              report.laneCount = await chart.locator('.cluster').count();
+              assert.equal(report.laneCount,3);
               report.viewBox = await chart.getAttribute('viewBox');
               report.labels = await diagram.innerText();
               for (const name of ['pi','Codex','Claude Agent SDK','details','finalResponse','structured_output','应用验收']) assert.ok(report.labels.includes(name),name);
               assert.equal(await page.locator('.mermaid-failed').count(),0);
               await diagram.scrollIntoViewIfNeeded();
+              await diagram.hover();
               await page.screenshot({path:dir+'/desktop.png'});
               await diagram.screenshot({path:dir+'/diagram.png'});
               const expand = page.getByRole('button',{name:/放大查看图表/}).first();
@@ -75,6 +78,7 @@ jobs:
               await diagram.scrollIntoViewIfNeeded();
               report.mobile = await page.evaluate(() => ({viewport:innerWidth,pageWidth:document.documentElement.scrollWidth,diagram:document.querySelector('[data-mermaid-diagram]').getBoundingClientRect().toJSON()}));
               assert.ok(report.mobile.pageWidth <= report.mobile.viewport + 1,'page overflow');
+              await diagram.hover();
               await page.screenshot({path:dir+'/mobile.png'});
               await expand.click();
               await page.waitForSelector('[data-diagram-viewer][open] svg.flowchart');
