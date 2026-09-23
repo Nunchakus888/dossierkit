@@ -6,7 +6,7 @@ title: 一图看懂：pi、Codex、Claude Code 的工具调用与结构化输出
 summary: 用三条并列分支对照工具续轮、结果提交与校验重试：pi 的结果工具、Codex 的原生输出通道，以及 Claude Agent SDK 的结构化交付。
 featured: false
 date: '2026-09-23'
-updatedAt: '2026-09-23T04:41:36.688Z'
+updatedAt: '2026-09-23T04:55:59.466Z'
 kind: engineering
 topics:
 - Structured Outputs
@@ -22,7 +22,7 @@ tags:
 - pi
 - Codex
 - Claude Code
-contentHash: sha256:e588c332ed4d5955e8fef055abb3995a2eefb7ee3ea5b423efb1d83e24cc00eb
+contentHash: sha256:7e1a53ebdd02aaa7485eea3d14318ec0c7f42d5a044aebed4b7fdb090c997420
 ---
 
 格式规定结果长什么样，运行时决定什么时候可以交付。
@@ -33,35 +33,29 @@ contentHash: sha256:e588c332ed4d5955e8fef055abb3995a2eefb7ee3ea5b423efb1d83e24cc
 
 ```mermaid
 flowchart TB
-    A["任务：调用工具，并按 Schema 返回结果"]
+    A["任务 + 结果 Schema"]
+    A --> P["pi · 官方扩展<br/>结果也是工具"]
+    A --> C["Codex<br/>tools + text.format"]
+    A --> H["Claude Agent SDK<br/>tools + outputFormat"]
 
-    A --> P["pi · 官方扩展示例<br/>业务工具 + 结果工具"]
-    A --> C["Codex · CLI / SDK<br/>tools + text.format"]
-    A --> H["Claude Code · Agent SDK<br/>业务工具 + outputFormat"]
+    P --> P1["选择下一步"]
+    C --> C1["选择下一步"]
+    H --> H1["选择下一步"]
 
-    P --> P1{"模型选择工具"}
-    P1 -->|业务工具：执行并回填| P1
-    P1 -->|structured_output| P2["校验结果工具参数"]
-    P2 -.->|参数不合法| P1
-    P2 -->|通过| P3["结果写入 details<br/>整批满足终止条件时停止续轮"]
+    P1 -->|业务工具| P1
+    C1 -->|业务工具| C1
+    H1 -->|业务工具| H1
 
-    C --> C1{"模型选择输出"}
-    C1 -->|工具调用：执行并回填| C1
-    C1 -->|最终文本| C2["确认 turn 完成<br/>读取最终消息 finalResponse"]
+    P1 -->|structured_output| P2["校验工具参数<br/>结果在 details"]
+    C1 -->|最终文本| C2["等待 turn 完成<br/>读取 finalResponse"]
+    H1 -->|StructuredOutput| H2["SDK 校验 / 重试<br/>读取 structured_output"]
 
-    H --> H1{"Agent 继续执行或提交"}
-    H1 -->|业务工具：执行并回填| H1
-    H1 -->|StructuredOutput 路径| H2["SDK 校验候选结果"]
-    H2 -.->|不符且仍可重试| H1
-    H2 -->|成功且结果存在| H3["读取 structured_output"]
-
-    P3 --> V["应用验收：任务完成 · 结构正确 · 证据充分"]
-    C2 --> V
-    H3 --> V
-    V -->|全部通过| D["正式交付"]
+    P2 -->|整批满足 terminate| Z["应用验收后正式交付"]
+    C2 --> Z
+    H2 --> Z
 ```
 
-*回环表示工具执行后继续调用模型，虚线表示校验反馈。三条分支是不同实现，不是同时运行的三个 Agent；底部的业务验收是应用责任，不是框架自动保证。拒绝、截断和预算耗尽应单独退出失败路径。*
+*回环表示业务工具执行、结果回填后继续选择。三条分支是不同实现，并非同时运行的三个 Agent；图中展示成功交付主线。拒绝、截断、参数错误与重试耗尽应分别处理，底部的业务验收仍由应用负责。*
 
 ## 三个不能省略的边界
 
