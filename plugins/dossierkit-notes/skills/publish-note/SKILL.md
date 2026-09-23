@@ -7,6 +7,12 @@ description: Deep-read, draft, illustrate, review, publish, edit, or delete a Do
 
 Turn source material into one focused, externally readable note whose claims, evidence, visuals, and publication state can be checked.
 
+## Global authoring constraints
+
+Make each representation earn its place by reducing the reader's effort to understand the mechanism. For content that benefits from structured explanation, use the preference **Mermaid > Table > SVG > Text**, subject to fitness for the question. This is a representation-selection order, not a requirement to illustrate ordinary prose. Keep definitions and conclusions as concise prose when they are already clear; do not turn them into text-filled image cards or add a diagram merely to satisfy a picture count. Give each relationship one primary representation, with adjacent prose explaining implications rather than repeating every label.
+
+Treat the topic-specific Open Graph sharing cover as a separate publication requirement. A note may have no body illustrations and still needs its sharing cover by default. A request for fewer body images or a text-focused body does not remove the cover; only an explicit request to omit the cover does. Preserve an existing suitable cover during body-only edits.
+
 ## Choose the requested outcome
 
 Separate research, drafting, review, publishing, editing, and deletion. Analysis or review requests stop with recommendations or a complete draft. Call a write tool only when the user asks to publish or update; require explicit authorization for the specific note before deletion.
@@ -33,9 +39,11 @@ Provide 3–6 concise topics. Preserve source links and meaningful version or da
 
 ## Choose visuals deliberately
 
-Use a table for three or more exact mappings or comparisons. Use Mermaid for architecture, sequence, state, responsibility, and version-flow relationships. Use an SVG asset for the sharing cover and for a bespoke static illustration that Mermaid cannot express clearly. Avoid representing the same relationship as a long explanation, table, Mermaid diagram, and SVG at once.
+Apply the global necessity gate and representation order. Choose Mermaid for consequential branches, loops, state transitions, timing, dependencies, or interactions across responsibility boundaries. Choose a table for aligned comparisons, parameter mappings, decision conditions, or exact values when it is clearer than a graph. Use a body SVG only for a spatial or conceptual explanation that neither Mermaid nor a table can express well. Use concise prose for simple statements and as a readable fallback.
 
-For a new note, create one topic-specific `cover.svg` during the same authoring task unless the user requests text only or provides a suitable cover. Add body diagrams only when they clarify a real relationship, and explain the key conclusion in adjacent text. Text-only edits preserve existing artwork. Read [visual-authoring.md](references/visual-authoring.md) before producing a cover, body SVG, mathematical expression, protocol sample, or substantial code comparison.
+Before adding a body visual, identify the specific question that becomes easier to answer from its relationships rather than from its labels alone. Keep Mermaid source in the document and favor compact layouts that remain legible on mobile. During visual simplification, remove redundant body references and their owned assets while retaining useful tables, evidence, and the existing cover.
+
+For a new note, create one topic-specific `cover.svg` during the same authoring task unless the user explicitly omits the sharing cover or supplies a suitable existing one. Read [visual-authoring.md](references/visual-authoring.md) before producing a cover, body diagram, mathematical expression, protocol sample, or substantial code comparison.
 
 ## Use the asset contract
 
@@ -57,6 +65,6 @@ For deletion, read the exact note, present its title and public identity for con
 
 ## Verify and report
 
-Before saving, verify the single H1, opening proposition, evidence boundaries, citations, key numbers, protocol fields, topics, asset references, and public wording. Remove repeated conclusions and unsupported extrapolation.
+Before saving, verify the single H1, opening proposition, evidence boundaries, citations, key numbers, protocol fields, topics, asset references, and public wording. Review every body diagram for a distinct explanatory purpose, check Mermaid syntax and mobile legibility, and use a table or concise prose where they communicate the same point more directly. Remove repeated conclusions and unsupported extrapolation.
 
-Report the returned action, `noteRef`, and commit. A successful save proves a repository commit, not a deployment. When deployment tools are available, verify the existing CI plus the live article, canonical identity, and `og:image` before reporting the note as live. Otherwise report deployment as unverified. X sharing remains a separate manual action.
+Report the returned action, `noteRef`, and commit. A successful save proves a repository commit, not a deployment. When deployment tools are available, verify the existing CI plus the live article, canonical identity, and sharing metadata before reporting the note as live. Check the public cover response and actual dimensions as well as the `og:image` tag; use the Open Graph checklist in the visual reference. Otherwise report deployment as unverified. X sharing remains a separate manual action.

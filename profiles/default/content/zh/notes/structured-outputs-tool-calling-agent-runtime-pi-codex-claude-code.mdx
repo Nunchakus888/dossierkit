@@ -6,7 +6,7 @@ title: 结构化输出与工具选择：pi、Codex、Claude Code 的协议与终
 summary: 工具协议决定怎样做，Schema 定义交付什么，运行时决定何时完成。通过 pi、Codex 与 Claude Agent SDK 的源码和官方文档，对照原生双通道、终止型输出工具与独立收尾方案，建立兼容工具选择、格式修复与业务验收的执行模型。
 featured: false
 date: '2026-09-23'
-updatedAt: '2026-09-23T03:10:00.000Z'
+updatedAt: '2026-09-23T03:39:03.950Z'
 kind: engineering
 topics:
 - Structured Outputs
@@ -22,7 +22,7 @@ tags:
 - pi
 - Codex
 - Claude Code
-contentHash: sha256:c374f49c5c44b14e1ca6f2d6eff0d1150ef2ec3018552ed2fef356489d724d44
+contentHash: sha256:85e2ce2534e9fa0690d36494e438ddba2889d871acf0ae22ac5dcf5d6fe87dc0
 ---
 
 可靠性来自正确的责任边界，而不只是更严格的输出格式。
@@ -34,10 +34,6 @@ Anthropic 原生 API 明确允许结构化文本输出与严格工具调用组�
 > 核心命题：**Schema 有效性不等于终态，模型提交不等于运行时接受。** 本文依据官方文档与公开源码比较实现；状态机、适配接口及验收策略属于工程设计推演，不是三套产品共同承诺的接口，也不构成端点兼容性实测。
 
 ## 一、先分清四个不同的问题
-
-![工具协议、结果契约、运行时控制与外层 JSON 事件格式的职责分层](/profile-assets/default/notes/zh/structured-outputs-tool-calling-agent-runtime-pi-codex-claude-code/layers.svg)
-
-*图 1：工具和结果可以通过不同通道表达；外层事件是 JSON，也不代表其中的业务结果已经通过验收。此图为职责模型。*
 
 | 层次 | 负责的问题 | 不应承担的问题 |
 | --- | --- | --- |
@@ -89,9 +85,19 @@ const outputControls = {
 
 更准确的控制单位不是第几次模型调用，而是任务处于什么阶段。一个用户回合可能包含多次工具调用和模型续轮，每次续轮都可能仍在取证。
 
-![ACTING 执行、VALIDATING 验收与 FINALIZING 纯格式修复之间的状态与分支](/profile-assets/default/notes/zh/structured-outputs-tool-calling-agent-runtime-pi-codex-claude-code/lifecycle.svg)
+```mermaid
+flowchart TD
+    A["ACTING：执行 / 取证"] -->|业务工具调用| T["校验参数 · 执行 · 回填"]
+    T --> A
+    A -->|无待处理动作的候选| V{"结构与证据校验"}
+    V -->|通过| D["验收并交付"]
+    V -->|证据不足，可补充| A
+    V -->|仅格式错误| F["FINALIZING：冻结证据<br/>禁用业务工具"]
+    F -->|预算内修复| V
+    F -->|修复预算耗尽| E["明确失败"]
+```
 
-*图 2：只有格式问题进入 FINALIZING。证据不足、拒绝、截断和传输错误，不能统一当作 JSON 格式错误。此图为建议状态机。*
+*执行与修复的分支：格式错误使用已有证据，证据不足则重新取证。图示为建议状态机；无法补证时明确返回信息不足，拒绝、截断和传输错误按第九节分类处理。*
 
 ### ACTING：执行与取证
 
@@ -117,15 +123,7 @@ const outputControls = {
 
 pi 官方仓库包含 `packages/coding-agent/examples/extensions/structured-output.ts`。该扩展注册 `structured_output`，将最终结构作为工具参数；执行后把数据放入 `details`，并返回 `terminate: true`。它展示的是一个可以结束自动续轮的结果提交工具，而非所有 pi 会话默认开启的全局输出模式。[3][r3]
 
-其关键机制可以压缩为：
-
-```text
-模型选择工具
-  ├─ 业务工具 → 验证参数 → 执行 → 回填 → 继续
-  └─ 结果工具 → 验证参数 → 保存 details → 请求终止续轮
-```
-
-这把“选工具还是输出 JSON”改写成“选业务工具还是提交结果工具”。工具参数本身成为最终数据通道，运行时仍保留验收权。
+模型仍在同一个工具选择空间里决策：选择业务工具就执行并回填，选择 `structured_output` 就提交候选结果。工具参数成为最终数据通道，运行时仍保留验收权。
 
 ### 生成约束与执行校验是两层防线
 
@@ -137,13 +135,10 @@ pi 的工具约束采样支持 `constrainedSampling`。其中 `strict: "prefer"`
 
 pi 的 `shouldTerminateToolBatch()` 检查：当前批次非空，且每一个最终工具结果都要求终止，才跳过自动模型续轮。[5][r5]
 
-```text
-批次 A：structured_output(terminate=true)
-  → 可以跳过本批次后的自动续轮
-
-批次 B：read_file + structured_output(terminate=true)
-  → 混合批次不满足“全部终止”，继续正常处理
-```
+| 同批工具调用 | 是否满足批次终止条件 |
+| --- | --- |
+| 仅 `structured_output`，结果为 `terminate: true` | 满足，可跳过自动续轮 |
+| `read_file` 与 `structured_output` 混合，前者未要求终止 | 不满足，继续正常处理 |
 
 这避免仅因一个提交动作就把同批工作误判为全部完成。与此同时，它不是事务隔离保证：扩展工具自己的 `execute()` 可能已经运行。生产系统若要求严格的最终结果原子性，应在执行前识别混合批次，或把结果工具实现为“暂存候选”，待整批验收后再正式提交。
 
@@ -164,14 +159,12 @@ codex exec "审计当前仓库并交付结果" \
 
 ### 从用户选项到模型请求
 
-公开源码中的关键传播链是：
-
-```text
-final_output_json_schema
-  → Prompt.output_schema
-  → create_text_param_for_request(...)
-  → text.format = { type: json_schema, schema, strict, name }
-```
+| 所在阶段 | 字段或转换 |
+| --- | --- |
+| Turn 输入 | `final_output_json_schema` |
+| Prompt 构造 | `Prompt.output_schema` |
+| 请求序列化 | `create_text_param_for_request(...)` |
+| Responses 请求 | `text.format`，包含类型、Schema、strict 与 name |
 
 正常 turn 将最终输出 Schema 写入 prompt；请求构造时仍包含工具定义与 `tool_choice: "auto"`。这条路径不是等自由文本校验失败之后，才临时注入结果 Schema。具体 strict 设置存在内部会话例外，因此不应扩大为“所有 Codex 内部调用都严格相同”。[7][r7][8][r8]
 
@@ -203,13 +196,7 @@ TypeScript 使用 `outputFormat`，Python 使用 `output_format`；Python SDK �
 
 官方 TypeScript SDK 变更记录明确提到内部 `StructuredOutput` 工具，以及结构化输出重试失败时附带最后一个工具校验错误。这可以支持以下抽象，但不能证明每一次请求的完整隐藏编排细节：[11][r11]
 
-```text
-输出契约
-  → Agent 通过业务工具完成工作
-  → StructuredOutput 提交候选
-  → 校验；不匹配时在预算内重新提示
-  → 返回 structured_output 或结构化输出错误
-```
+Agent 先通过业务工具完成工作，再通过 `StructuredOutput` 提交候选；校验不匹配时在预算内重新提示，最终从 `structured_output` 或相应错误状态交付结果。
 
 因此，不应仅凭公开参数推断“始终强制某个工具”“固定第 N 轮注入”“成功提交后绝无模型续轮”，也不能断言内部完全不用原生约束解码。
 
@@ -236,9 +223,15 @@ if (message.type === "result") {
 
 ## 六、实现对照：它们并没有采用同一种折中
 
-![pi 的终止型工具、Codex 的原生双通道与 Claude Agent SDK 的编排层交付路径](/profile-assets/default/notes/zh/structured-outputs-tool-calling-agent-runtime-pi-codex-claude-code/implementations.svg)
+| 实现与研究范围 | 输出路径 | 终止或验收边界 |
+| --- | --- | --- |
+| pi 官方扩展 + Agent loop | `structured_output` 参数 → `details` | 整批结果均要求终止，才跳过自动续轮；不是默认全局模式 |
+| Codex 公开 CLI / SDK | 输出 Schema → `text.format`，同时保留 `tool_choice: auto` | 根据完成与错误事件识别最终消息，再做应用验收 |
+| Claude Agent SDK | `StructuredOutput` 提交候选，输出 `structured_output` | 校验与有限重试；检查成功状态和结果存在性 |
 
-*图 3：pi 部分对应官方扩展与 Agent loop；Codex 部分对应公开 CLI/SDK 请求链；Claude 部分只表达官方文档、桥接代码和变更记录可以支持的抽象。[3][r3][5][r5][7][r7][8][r8][9][r9][10][r10][11][r11][12][r12]*
+表中机制分别来自上述源码与官方文档；Claude 一栏仅表达公开材料支持的抽象，不推定完整内部编排。[3][r3][5][r5][7][r7][8][r8][9][r9][10][r10][11][r11][12][r12]
+
+### 抽象为三种可选架构
 
 | 方案 | 数据出口 | 优先解决的问题 | 仍需处理的边界 |
 | --- | --- | --- | --- |
@@ -246,7 +239,7 @@ if (message.type === "result") {
 | 终止型结果工具 | 提交工具的参数 | 显式提交意图、统一工具选择空间 | 提前提交、混合批次、结果工具验收 |
 | 独立收尾调用 | 禁用业务工具的结果调用 | 将执行与格式化隔离 | 额外成本、证据传递、语义漂移 |
 
-前三节描述具体实现；本表是从这些机制抽出的架构分类。一个运行时可以同时支持多种策略，而不是要求所有模型都服从同一种协议。
+上一张表比较具体实现；本表是从这些机制抽出的架构分类。一个运行时可以同时支持多种策略，而不是要求所有模型都服从同一种协议。
 
 ### 如何理解“首次不带，失败再修复”
 
@@ -331,11 +324,15 @@ interface ModelStep {
 
 ## 八、五道验收门：什么时候可以真正交付
 
-![调用状态、执行闭环、结构校验、证据检查与一致性提交构成最终结果验收](/profile-assets/default/notes/zh/structured-outputs-tool-calling-agent-runtime-pi-codex-claude-code/acceptance.svg)
+验收不是单个 `JSON.parse()`。下面是建议的应用验收顺序，不是模型 API 自动完成的保证。
 
-*图 4：这是建议的应用验收顺序，不是模型 API 自动完成的保证。*
-
-验收不是单个 `JSON.parse()`，而是一条完整链路：正常调用状态 → 执行闭环 → 完整结构校验 → 业务与证据检查 → 一致性提交。
+| 验收环节 | 通过条件 |
+| --- | --- |
+| 1. 调用状态 | 调用正常完成，未拒绝、截断或失败 |
+| 2. 执行闭环 | 没有未处理的工具、审批或子任务，候选对应当前完成状态 |
+| 3. 结构校验 | 可解析，且满足应用原始 Schema |
+| 4. 业务与证据 | 结论有依据，满足任务完成条件 |
+| 5. 一致性提交 | 结果绑定任务与证据版本，幂等提交后才触发下游 |
 
 ### 应用 Schema 与供应商 Schema 分开保存
 
