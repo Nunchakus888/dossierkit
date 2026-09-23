@@ -1,0 +1,101 @@
+name: Structured output diagram QA
+on:
+  push:
+    branches: [codex/verify-structured-output-diagram]
+    paths: [.github/workflows/structured-output-diagram-qa.yml]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: Install isolated browser test dependencies
+        run: |
+          npm install --prefix /tmp/diagram-qa playwright@1.54.2
+          /tmp/diagram-qa/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify live diagram, expansion, mobile layout and share cover
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/diagram-qa"
+          node <<'JS'
+          const { chromium } = require('/tmp/diagram-qa/node_modules/playwright');
+          const fs = require('node:fs');
+          const assert = require('node:assert/strict');
+          (async () => {
+            const browser = await chromium.launch({headless:true});
+            const page = await browser.newPage({viewport:{width:1440,height:1050},deviceScaleFactor:1});
+            const report = {pageErrors:[],requestErrors:[]};
+            const dir = process.env.GITHUB_WORKSPACE + '/diagram-qa';
+            page.on('pageerror', e => report.pageErrors.push(e.message));
+            page.on('requestfailed', r => report.requestErrors.push({url:r.url(),error:r.failure()?.errorText}));
+            try {
+              const url = 'https://sunionpeaks.pages.dev/zh/notes/structured-outputs-tool-calling-agent-runtime-pi-codex-claude-code/?qa=181b26b-playwright';
+              const response = await page.goto(url,{waitUntil:'networkidle',timeout:60000});
+              report.status = response.status();
+              assert.equal(report.status,200);
+              report.title = await page.locator('h1').innerText();
+              assert.match(report.title,/一图看懂/);
+              await page.waitForSelector('[data-mermaid-diagram] svg .node',{timeout:60000});
+              const diagram = page.locator('[data-mermaid-diagram]');
+              assert.equal(await diagram.count(),1);
+              report.nodeCount = await diagram.locator('svg .node').count();
+              assert.equal(report.nodeCount,14);
+              report.viewBox = await diagram.locator('svg').getAttribute('viewBox');
+              report.labels = await diagram.innerText();
+              for (const name of ['pi','Codex','Claude Code','details','finalResponse','structured_output','应用验收']) assert.ok(report.labels.includes(name),name);
+              assert.equal(await page.locator('.mermaid-failed').count(),0);
+              await diagram.scrollIntoViewIfNeeded();
+              await page.screenshot({path:dir+'/desktop.png'});
+              await diagram.screenshot({path:dir+'/diagram.png'});
+              const expand = page.getByRole('button',{name:/放大查看图表/}).first();
+              report.expandButton = await expand.count();
+              assert.ok(report.expandButton);
+              await expand.click();
+              await page.waitForSelector('[data-diagram-viewer][open] svg');
+              report.viewerOpened = true;
+              await page.screenshot({path:dir+'/viewer.png'});
+              await page.keyboard.press('Escape');
+              const disclosure = page.locator('details').filter({has:page.locator('summary',{hasText:'源码与证据范围'})});
+              report.disclosure = await disclosure.count();
+              assert.equal(report.disclosure,1);
+              assert.equal(await disclosure.getAttribute('open'),null);
+              report.tableCount = await page.locator('.note-prose table').count();
+              assert.equal(report.tableCount,1);
+              await page.setViewportSize({width:390,height:844});
+              await diagram.scrollIntoViewIfNeeded();
+              report.mobile = await page.evaluate(() => ({viewport:innerWidth,pageWidth:document.documentElement.scrollWidth,diagram:document.querySelector('[data-mermaid-diagram]').getBoundingClientRect().toJSON()}));
+              assert.ok(report.mobile.pageWidth <= report.mobile.viewport + 1,'page overflow');
+              await page.screenshot({path:dir+'/mobile.png'});
+              report.ogImage = await page.locator('meta[property="og:image"]').getAttribute('content');
+              report.canonical = await page.locator('link[rel="canonical"]').getAttribute('href');
+              const cover = await page.request.get(report.ogImage);
+              assert.equal(cover.status(),200);
+              const png = await cover.body();
+              assert.equal(png.subarray(0,8).toString('hex'),'89504e470d0a1a0a');
+              report.cover = {width:png.readUInt32BE(16),height:png.readUInt32BE(20),bytes:png.length};
+              assert.equal(report.cover.width,1200);
+              assert.equal(report.cover.height,630);
+              report.passed = true;
+            } catch(error) {
+              report.passed = false;
+              report.error = String(error);
+              report.diagramHtml = await page.locator('[data-mermaid-diagram]').evaluateAll(nodes=>nodes.map(n=>n.outerHTML.slice(0,10000))).catch(()=>[]);
+              await page.screenshot({path:dir+'/failure.png',fullPage:true}).catch(()=>{});
+              process.exitCode = 1;
+            } finally {
+              fs.writeFileSync(dir+'/report.json',JSON.stringify(report,null,2));
+              console.log(JSON.stringify(report,null,2));
+              await browser.close();
+            }
+          })().catch(e=>{console.error(e);process.exitCode=1;});
+          JS
+      - name: Upload browser verification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: structured-output-diagram-qa
+          path: diagram-qa/
+          if-no-files-found: warn
