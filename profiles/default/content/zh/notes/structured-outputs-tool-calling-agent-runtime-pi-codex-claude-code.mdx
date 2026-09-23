@@ -6,7 +6,7 @@ title: 一图看懂：pi、Codex、Claude Code 的工具调用与结构化输出
 summary: 用三条并列分支对照工具续轮、结果提交与校验重试：pi 的结果工具、Codex 的原生输出通道，以及 Claude Agent SDK 的结构化交付。
 featured: false
 date: '2026-09-23'
-updatedAt: '2026-09-23T04:55:59.466Z'
+updatedAt: '2026-09-23T05:00:56.322Z'
 kind: engineering
 topics:
 - Structured Outputs
@@ -22,7 +22,7 @@ tags:
 - pi
 - Codex
 - Claude Code
-contentHash: sha256:7e1a53ebdd02aaa7485eea3d14318ec0c7f42d5a044aebed4b7fdb090c997420
+contentHash: sha256:74eb1ebad4ba964e2594472d784dfea835e2c8d377c62f091098b37f8543e42b
 ---
 
 格式规定结果长什么样，运行时决定什么时候可以交付。
@@ -33,29 +33,38 @@ contentHash: sha256:7e1a53ebdd02aaa7485eea3d14318ec0c7f42d5a044aebed4b7fdb090c99
 
 ```mermaid
 flowchart TB
-    A["任务 + 结果 Schema"]
-    A --> P["pi · 官方扩展<br/>结果也是工具"]
-    A --> C["Codex<br/>tools + text.format"]
-    A --> H["Claude Agent SDK<br/>tools + outputFormat"]
+    A["任务：工具调用 + 结构化结果"]
 
-    P --> P1["选择下一步"]
-    C --> C1["选择下一步"]
-    H --> H1["选择下一步"]
+    subgraph PI["pi · 官方扩展示例"]
+        P0["把结果 Schema<br/>定义成工具参数"]
+        P1["调用结果工具<br/>structured_output"]
+        P2["参数校验 → details<br/>整批 terminate 才停止"]
+        P0 --> P1 --> P2
+    end
 
-    P1 -->|业务工具| P1
-    C1 -->|业务工具| C1
-    H1 -->|业务工具| H1
+    subgraph CX["Codex · CLI / SDK"]
+        C0["同一次请求<br/>tools + text.format"]
+        C1["选择工具调用<br/>或输出结构化文本"]
+        C2["确认 turn 完成<br/>读取 finalResponse"]
+        C0 --> C1 --> C2
+    end
 
-    P1 -->|structured_output| P2["校验工具参数<br/>结果在 details"]
-    C1 -->|最终文本| C2["等待 turn 完成<br/>读取 finalResponse"]
-    H1 -->|StructuredOutput| H2["SDK 校验 / 重试<br/>读取 structured_output"]
+    subgraph CL["Claude Agent SDK"]
+        H0["允许业务工具<br/>设置 outputFormat"]
+        H1["StructuredOutput 提交<br/>SDK 校验 / 有限重试"]
+        H2["成功且结果存在<br/>读取 structured_output"]
+        H0 --> H1 --> H2
+    end
 
-    P2 -->|整批满足 terminate| Z["应用验收后正式交付"]
+    A --> P0
+    A --> C0
+    A --> H0
+    P2 --> Z["应用验收后正式交付"]
     C2 --> Z
     H2 --> Z
 ```
 
-*回环表示业务工具执行、结果回填后继续选择。三条分支是不同实现，并非同时运行的三个 Agent；图中展示成功交付主线。拒绝、截断、参数错误与重试耗尽应分别处理，底部的业务验收仍由应用负责。*
+*三条路径都允许多轮业务工具调用；图中只展开结果交付方式。三条分支是不同实现，并非同时运行。拒绝、截断和预算耗尽应单独处理；底部的业务验收是应用责任。*
 
 ## 三个不能省略的边界
 
