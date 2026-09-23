@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<title>结构化输出与工具选择：pi、Codex、Claude Code 的协议与终止语义</title>
+<rect x="0" y="0" width="1200" height="630" rx="24" fill="#F7F8FC"/>
+<defs><linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#FA5560"/><stop offset="50%" stop-color="#B14BF4"/><stop offset="100%" stop-color="#4D91FF"/></linearGradient></defs>
+<rect x="56" y="50" width="1088" height="7" rx="3" fill="url(#accent)"/>
+<text x="60" y="109" fill="#7658CF" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="22" font-weight="700" text-anchor="start">AGENT RUNTIME  /  ENGINEERING NOTE</text>
+<text x="60" y="200" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="64" font-weight="700" text-anchor="start">结构化输出与工具选择</text>
+<text x="63" y="257" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="34" font-weight="500" text-anchor="start">pi · Codex · Claude Code</text>
+<text x="63" y="317" fill="#7658CF" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="34" font-weight="700" text-anchor="start">可解析，不等于已完成。</text>
+<rect x="60" y="365" width="338" height="143" rx="18" fill="#EAF2FB"/>
+<text x="85" y="409" fill="#397EBC" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="23" font-weight="700" text-anchor="start">TOOL</text>
+<text x="85" y="463" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="34" font-weight="600" text-anchor="start">选择怎样做</text>
+<rect x="431" y="365" width="338" height="143" rx="18" fill="#EEEAFC"/>
+<text x="456" y="409" fill="#7658CF" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="23" font-weight="700" text-anchor="start">SCHEMA</text>
+<text x="456" y="463" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="34" font-weight="600" text-anchor="start">定义交付什么</text>
+<rect x="802" y="365" width="338" height="143" rx="18" fill="#F9EBEF"/>
+<text x="827" y="409" fill="#B85970" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="23" font-weight="700" text-anchor="start">RUNTIME</text>
+<text x="827" y="463" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="34" font-weight="600" text-anchor="start">决定何时完成</text>
+<text x="60" y="571" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">协议分层 × 执行状态机 × 源码对照 × 结果验收</text>
+</svg>

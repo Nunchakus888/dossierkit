@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1050" viewBox="0 0 720 1050">
+<title>图一：工具、结果与终止判定属于三个不同的控制面</title>
+<rect x="0" y="0" width="720" height="1050" rx="24" fill="#F7F8FC"/>
+<text x="40" y="54" fill="#7658CF" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="18" font-weight="700" text-anchor="start">01  /  AGENT OUTPUT CONTRACT</text>
+<text x="40" y="109" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="34" font-weight="700" text-anchor="start">同一轮，不同职责</text>
+<text x="40" y="150" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="24" font-weight="400" text-anchor="start">格式与工具并非天然互斥。</text>
+<rect x="40" y="190" width="640" height="181" rx="18" fill="#FFFFFF" stroke="#DCE1ED" stroke-width="2"/>
+<rect x="60" y="212" width="49" height="45" rx="10" fill="#EAF2FB"/>
+<text x="84" y="244" fill="#397EBC" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="27" font-weight="700" text-anchor="middle">A</text>
+<text x="127" y="246" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="32" font-weight="700" text-anchor="start">工具协议</text>
+<text x="62" y="297" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="26" font-weight="400" text-anchor="start">tool_choice：选择哪项动作</text>
+<text x="62" y="335" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="26" font-weight="400" text-anchor="start">工具参数 Schema：约束动作输入</text>
+<rect x="40" y="400" width="640" height="181" rx="18" fill="#FFFFFF" stroke="#DCE1ED" stroke-width="2"/>
+<rect x="60" y="422" width="49" height="45" rx="10" fill="#EEEAFC"/>
+<text x="84" y="454" fill="#7658CF" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="27" font-weight="700" text-anchor="middle">B</text>
+<text x="127" y="456" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="32" font-weight="700" text-anchor="start">结果契约</text>
+<text x="62" y="507" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="26" font-weight="400" text-anchor="start">最终结果 Schema：约束交付数据</text>
+<text x="62" y="545" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="26" font-weight="400" text-anchor="start">约束格式，不证明事实与完成状态</text>
+<rect x="40" y="610" width="640" height="181" rx="18" fill="#FFFFFF" stroke="#DCE1ED" stroke-width="2"/>
+<rect x="60" y="632" width="49" height="45" rx="10" fill="#F9EBEF"/>
+<text x="84" y="664" fill="#B85970" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="27" font-weight="700" text-anchor="middle">C</text>
+<text x="127" y="666" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="32" font-weight="700" text-anchor="start">运行时控制</text>
+<text x="62" y="717" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="26" font-weight="400" text-anchor="start">处理工具、审批、预算与失败</text>
+<text x="62" y="755" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="26" font-weight="400" text-anchor="start">验收候选结果，决定继续或结束</text>
+<rect x="40" y="839" width="640" height="103" rx="18" fill="#EEEAFC"/>
+<text x="62" y="880" fill="#7658CF" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="27" font-weight="700" text-anchor="start">JSON / JSONL：外层消息与事件载体</text>
+<text x="62" y="920" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="24" font-weight="400" text-anchor="start">载体是 JSON，不代表业务结果通过 Schema。</text>
+<line x1="40" y1="982" x2="680" y2="982" stroke="#DCE1ED" stroke-width="3" stroke-linecap="round"/>
+<text x="40" y="1020" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="20" font-weight="400" text-anchor="start">概念图；各 API 的字段名与适用范围需分别映射。</text>
+</svg>

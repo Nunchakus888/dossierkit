@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="1240" viewBox="0 0 720 1240">
+<title>图三：pi、Codex 与 Claude Agent SDK 的结构化结果路径</title>
+<rect x="0" y="0" width="720" height="1240" rx="24" fill="#F7F8FC"/>
+<text x="40" y="54" fill="#7658CF" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="18" font-weight="700" text-anchor="start">03  /  AGENT OUTPUT CONTRACT</text>
+<text x="40" y="109" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="34" font-weight="700" text-anchor="start">三条实现路径，对照着看</text>
+<text x="40" y="150" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="24" font-weight="400" text-anchor="start">区分源码事实与未公开的内部细节。</text>
+<rect x="40" y="190" width="640" height="279" rx="18" fill="#FFFFFF" stroke="#DCE1ED" stroke-width="2"/>
+<rect x="40" y="190" width="8" height="279" rx="4" fill="#397EBC"/>
+<text x="65" y="236" fill="#397EBC" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="30" font-weight="700" text-anchor="start">pi · 终止型结果工具</text>
+<text x="65" y="276" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="22" font-weight="400" text-anchor="start">官方扩展示例，不等于默认全局行为</text>
+<text x="65" y="322" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">业务工具 ↔ Agent loop</text>
+<text x="65" y="361" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">structured_output → 参数校验</text>
+<text x="65" y="400" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">details + terminate: true</text>
+<text x="65" y="439" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">整批都终止 → 跳过自动模型续轮</text>
+<rect x="40" y="501" width="640" height="279" rx="18" fill="#FFFFFF" stroke="#DCE1ED" stroke-width="2"/>
+<rect x="40" y="501" width="8" height="279" rx="4" fill="#7658CF"/>
+<text x="65" y="547" fill="#7658CF" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="30" font-weight="700" text-anchor="start">Codex · 原生双通道</text>
+<text x="65" y="587" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="22" font-weight="400" text-anchor="start">公开 CLI / SDK 的正常请求路径</text>
+<text x="65" y="633" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">outputSchema / --output-schema</text>
+<text x="65" y="672" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">Prompt.output_schema → text.format</text>
+<text x="65" y="711" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">同一请求保留 tools + auto 选择</text>
+<text x="65" y="750" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">事件流结束后，识别并校验最终消息</text>
+<rect x="40" y="812" width="640" height="279" rx="18" fill="#FFFFFF" stroke="#DCE1ED" stroke-width="2"/>
+<rect x="40" y="812" width="8" height="279" rx="4" fill="#B85970"/>
+<text x="65" y="858" fill="#B85970" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="30" font-weight="700" text-anchor="start">Claude Agent SDK · 编排层交付</text>
+<text x="65" y="898" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="22" font-weight="400" text-anchor="start">公开文档、SDK 桥接与变更记录</text>
+<text x="65" y="944" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">outputFormat / --json-schema</text>
+<text x="65" y="983" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">业务工具 → StructuredOutput 提交</text>
+<text x="65" y="1022" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">校验不匹配 → 有上限地重新提示</text>
+<text x="65" y="1061" fill="#202438" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="25" font-weight="400" text-anchor="start">读取 result.structured_output</text>
+<line x1="40" y1="1172" x2="680" y2="1172" stroke="#DCE1ED" stroke-width="3" stroke-linecap="round"/>
+<text x="40" y="1210" fill="#647087" font-family="Noto Sans CJK SC, Noto Sans, Arial, sans-serif" font-size="20" font-weight="400" text-anchor="start">Claude 原生 API 支持双通道，不等同于其 Agent 编排实现。</text>
+</svg>
