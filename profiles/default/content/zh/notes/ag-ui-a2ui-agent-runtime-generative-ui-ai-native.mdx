@@ -7,7 +7,7 @@ summary: "如果同一个产品未来要接多个 Agent，又要同时运行在 
   这类平台里，真正的问题不是“聊天框要不要多几个卡片”，而是："
 featured: false
 date: "2026-09-24"
-updatedAt: "2026-09-24T11:45:26.112Z"
+updatedAt: "2026-09-24T11:46:24.532Z"
 kind: "research"
 topics:
   - "AG-UI"
@@ -23,7 +23,7 @@ tags:
   - "Generative UI"
   - "跨平台交互"
   - "AI-native"
-contentHash: "sha256:4408a8b47d428091f53ae15dc703a82a190f41b42556f82a6f152b9c345b6f65"
+contentHash: "sha256:4bb64fe70eb6f43cedf3006f7c19410f420065d98210d729dde90eccfc01b193"
 ---
 
 如果同一个产品未来要接多个 Agent，又要同时运行在 Web、移动端、桌面端甚至 Slack / Teams 这类平台里，真正的问题不是“聊天框要不要多几个卡片”，而是：
@@ -369,28 +369,19 @@ Agent 给出多个候选方案，同时生成一个可编辑 Surface。
 - 最后点击批准发布。
 
 ~~~mermaid
-sequenceDiagram
-  participant U as User
-  participant H as Host / Renderer
-  participant A as Agent
-  participant B as Business Service
-
-  U->>A: 生成活动方案
-  A-->>H: Proposal + A2UI
-  H-->>U: 可编辑界面
-
-  U->>H: 修改预算
-  H->>H: 本地更新 Data Model
-
-  U->>A: 第二个方案再保守一点
-  H->>A: 当前对象 + 最新语义状态
-  A-->>H: 更新方案
-
-  U->>H: 批准发布
-  H->>B: Action + Artifact Revision
-  B->>B: Permission / Revision / Idempotency
-  B-->>A: 真实执行结果
-  A-->>H: 完成状态
+flowchart TB
+  A["用户：生成活动方案"] --> B["Agent：返回 Proposal + A2UI"]
+  B --> C["Host：渲染可编辑界面"]
+  C --> D["用户直接修改预算"]
+  D --> E["Renderer：本地更新 Data Model"]
+  E --> F["用户：第二个方案再保守一点"]
+  F --> G["Host → Agent：当前对象 + 最新语义状态"]
+  G --> H["Agent：更新方案"]
+  H --> I["用户批准发布"]
+  I --> J["Business Service：Action + Artifact Revision"]
+  J --> K["Permission / Revision / Idempotency 校验"]
+  K --> L["执行真实业务动作"]
+  L --> M["返回可核验结果"]
 ~~~
 
 这里有一个重要设计：
