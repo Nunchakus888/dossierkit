@@ -58,6 +58,17 @@ const kindLabel = {
       )}
     </header>
 
+    {rendered.headings.length > 0 && (
+      <details class="note-toc-mobile no-print">
+        <summary>{locale === "zh" ? "目录" : "Contents"}</summary>
+        <nav aria-label={locale === "zh" ? "目录" : "Table of contents"}>
+          {rendered.headings.map((heading) => (
+            <a class:list={[`depth-${heading.depth}`]} href={`#${heading.id}`}>{heading.text}</a>
+          ))}
+        </nav>
+      </details>
+    )}
+
     <div class:list={["note-layout", { "without-toc": rendered.headings.length === 0 }]}>
       {rendered.headings.length > 0 && (
         <aside class="note-toc no-print" aria-label={locale === "zh" ? "目录" : "Table of contents"}>
@@ -379,11 +390,11 @@ const kindLabel = {
   }
 
   h1 {
-    max-width: 980px;
+    max-width: 900px;
     margin: 13px 0 0;
-    font-size: clamp(2.2rem, 5vw, 4.7rem);
-    line-height: 1.02;
-    letter-spacing: -0.025em;
+    font-size: clamp(1.9rem, 4vw, 3.35rem);
+    line-height: 1.08;
+    letter-spacing: -0.018em;
   }
 
   .summary {
@@ -440,6 +451,10 @@ const kindLabel = {
 
   .note-toc .depth-4 {
     padding-left: 24px;
+  }
+
+  .note-toc-mobile {
+    display: none;
   }
 
   .note-prose {
@@ -646,24 +661,76 @@ const kindLabel = {
     }
 
     .note-toc {
-      position: static;
-      max-height: none;
-      border: 1px solid var(--color-border);
-      border-radius: 16px;
-      padding: 16px;
-      background: rgba(255, 255, 255, 0.64);
+      display: none;
     }
 
-    .note-toc nav {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    .note-toc-mobile {
+      display: block;
+      margin: 0 0 28px;
+      overflow: hidden;
+      border: 1px solid color-mix(in srgb, var(--color-border), transparent 12%);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.52);
+    }
+
+    .note-toc-mobile summary {
+      display: flex;
+      min-height: 44px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 14px;
+      color: var(--color-muted);
+      cursor: pointer;
+      font-size: 0.86rem;
+      font-weight: 720;
+      list-style: none;
+      user-select: none;
+    }
+
+    .note-toc-mobile summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .note-toc-mobile summary::after {
+      margin-left: 12px;
+      color: color-mix(in srgb, var(--color-muted), transparent 18%);
+      content: "⌄";
+      font-size: 1rem;
+      line-height: 1;
+      transition: transform 160ms ease;
+    }
+
+    .note-toc-mobile[open] summary::after {
+      transform: rotate(180deg);
+    }
+
+    .note-toc-mobile nav {
+      display: grid;
+      gap: 8px;
+      border-top: 1px solid color-mix(in srgb, var(--color-border), transparent 28%);
+      padding: 12px 14px 14px;
+    }
+
+    .note-toc-mobile a {
+      color: var(--color-muted);
+      font-size: 0.84rem;
+      line-height: 1.4;
+    }
+
+    .note-toc-mobile a:hover {
+      color: var(--color-accent);
+    }
+
+    .note-toc-mobile .depth-3 {
+      padding-left: 12px;
+    }
+
+    .note-toc-mobile .depth-4 {
+      padding-left: 24px;
     }
   }
 
   @media (max-width: 560px) {
-    .note-toc nav {
-      grid-template-columns: 1fr;
-    }
-
     .diagram-viewer-header {
       align-items: flex-start;
       flex-direction: column;
