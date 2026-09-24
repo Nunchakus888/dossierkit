@@ -1,0 +1,78 @@
+name: Verify deployed Ge favicon
+on:
+  push:
+    branches: [ops/verify-ge-favicon-20260924]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v7
+      - name: Read production assets and compare them with the verified commit
+        run: |
+          python3 - <<'PY'
+          import datetime, hashlib, json, pathlib, re, time, urllib.request
+          from html.parser import HTMLParser
+          from urllib.parse import urljoin, urlparse
+          ORIGIN='https://sunionpeaks.pages.dev'
+          report={'generatedAt':datetime.datetime.now(datetime.timezone.utc).isoformat(),'commit':'cafa87bec16b3f3065e48a9dead15787c76ea17f','readOnly':True,'productionTrackingWrites':0,'assets':[],'pages':[]}
+          def get(path):
+              url=urljoin(ORIGIN,path)
+              assert urlparse(url).netloc=='sunionpeaks.pages.dev'
+              req=urllib.request.Request(url,headers={'User-Agent':'DossierKit-Deployment-Audit/1.0','DNT':'1','Sec-GPC':'1'})
+              with urllib.request.urlopen(req,timeout=25) as response:
+                  assert response.status==200
+                  return response.read(4000000),response.headers.get('Content-Type','')
+          expected=pathlib.Path('public/favicon.svg').read_bytes()
+          for attempt in range(36):
+              try:
+                  actual,_=get('/favicon.svg?v=george-ge2')
+                  if actual==expected:break
+              except Exception:
+                  pass
+              time.sleep(5)
+          else: raise RuntimeError('New favicon has not reached production')
+          for name in ['favicon.svg','favicon.ico','favicon-32.png','apple-touch-icon.png']:
+              actual,ctype=get('/'+name+'?v=george-ge2')
+              expected=pathlib.Path('public',name).read_bytes()
+              assert actual==expected,name+' differs from verified source'
+              report['assets'].append({'path':'/'+name,'status':200,'contentType':ctype,'matchesVerifiedCommit':True,'sha256':hashlib.sha256(actual).hexdigest()})
+          class Links(HTMLParser):
+              def __init__(self):super().__init__();self.links=[]
+              def handle_starttag(self,tag,attrs):
+                  if tag=='link':self.links.append(dict(attrs))
+          csscache={}
+          for path in ['/zh/','/en/','/zh/cv/','/zh/notes/github-copilot-agent-runtime-rust-ffi-harness-ai/','/en/notes/config-enhancer-semantic-guardrails/','/zh/writing/agent-evaluation-playbook/']:
+              html,ctype=get(path);html=html.decode('utf-8');links=Links();links.feed(html)
+              icons=[l for l in links.links if l.get('rel')=='icon']
+              assert any(l.get('href')=='/favicon.svg?v=george-ge2' for l in icons),path
+              assert not any('george-g1' in l.get('href','') for l in icons),path
+              row={'path':path,'status':200,'newIconVersion':True}
+              if '/notes/' in path or '/writing/' in path:
+                  css='\n'.join(re.findall(r'<style[^>]*>(.*?)</style>',html,re.S))
+                  for l in links.links:
+                      href=l.get('href','')
+                      if l.get('rel')=='stylesheet' and href.startswith('/_astro/'):
+                          if href not in csscache:csscache[href]=get(href)[0].decode('utf-8')
+                          css+='\n'+csscache[href]
+                  assert '.icon-action.back-link' in css,path+' missing back-link override'
+                  assert re.search(r'\.icon-action\.back-link\s*\{[^}]*justify-content:\s*flex-start',css),path
+                  row['backArrowAlignmentCss']=True
+              report['pages'].append(row)
+          data,_=get('/api/views?mode=summary')
+          summary=json.loads(data)
+          assert isinstance(summary.get('total'),(int,float))
+          report['counterApiStatus']=200
+          report['passed']=True
+          pathlib.Path('artifacts').mkdir(exist_ok=True)
+          pathlib.Path('artifacts/ge-favicon-live.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ge-favicon-live
+          path: artifacts/ge-favicon-live.json
+          retention-days: 7
+          if-no-files-found: error
