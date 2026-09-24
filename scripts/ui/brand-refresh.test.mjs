@@ -42,7 +42,7 @@ try {
  async function scan(dir){for(const e of await readdir(dir,{withFileTypes:true})){
   const path=resolve(dir,e.name);if(e.isDirectory()){await scan(path);continue;}if(!e.name.endsWith('.html'))continue;
   const html=await readFile(path,'utf8');
-  if(html.includes('<head>')){assert.match(html,/rel="icon"[^>]*href="\/favicon.svg\?v=george-g1"/);iconPages++;}
+  if(html.includes('<head>')){assert.match(html,/rel="icon"[^>]*href="\/favicon.svg\?v=george-ge2"/);iconPages++;}
  }}
  await scan(root);assert.ok(iconPages>=70);
  for(const width of [320,390,768,1440]){
@@ -84,7 +84,7 @@ try {
     await page.goto(base+path);await page.evaluate(()=>document.fonts.ready);
    }
    const f=page.locator('head link[rel="icon"][type="image/svg+xml"]');
-   assert.equal(await f.getAttribute('href'),'/favicon.svg?v=george-g1');
+   assert.equal(await f.getAttribute('href'),'/favicon.svg?v=george-ge2');
    if(path==='/zh/')await page.screenshot({path:`${out}/home-${width}.png`});
    await page.locator('footer').scrollIntoViewIfNeeded();await page.locator('footer [data-view-count]').waitFor({state:'visible'});
    assert.equal(await page.locator('footer [data-view-count]').count(),1);

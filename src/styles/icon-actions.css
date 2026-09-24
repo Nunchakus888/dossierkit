@@ -47,3 +47,16 @@
 }
 @media (prefers-reduced-motion: reduce) { .icon-action { transition: none; } }
 @media (forced-colors: active) { .icon-action { border-color: ButtonText; } }
+
+/* Align the visible arrow with the article edge, not the middle of a 44px box.
+   Keep the entire touch target inside the page; only the SVG whitespace shifts. */
+.icon-action.back-link {
+  justify-content: flex-start;
+  border-width: 0;
+  padding: 0;
+  margin-inline: 0;
+}
+.icon-action.back-link > svg {
+  /* arrow-left begins at x=5 in a 24-unit viewBox. */
+  transform: translateX(-20.833333%);
+}
