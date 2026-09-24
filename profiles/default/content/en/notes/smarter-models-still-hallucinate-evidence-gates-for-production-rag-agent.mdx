@@ -1,14 +1,14 @@
 ---
 locale: "en"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-09-10"
+lastReviewedAt: "2026-09-24"
 title: "Smarter Models Still Hallucinate: Evidence Gates for Production RAG Agents"
 summary: "A smarter model is still a fallible model. Better reasoning can
   improve average answer quality, but it does not turn a probabilistic generator
   into a factual database, nor does it…"
 featured: false
 date: "2026-09-10"
-updatedAt: "2026-09-10T03:30:13.608Z"
+updatedAt: "2026-09-24T03:52:49.639Z"
 kind: "engineering"
 topics:
   - "LLM Grounding"
@@ -22,10 +22,10 @@ tags:
   - "Evidence Gates"
   - "Agent Runtime"
   - "Production Evaluation"
-contentHash: "sha256:6ce81f90ad0ad3dfa5ab459470c61ef18b34622fa48a8d7a9706a940e4acd00f"
+contentHash: "sha256:56823b289b664e557472d17ba3ad0c7fbe96c486b64d1b18c81590a0d97139ef"
 ---
 
-**A smarter model is still a fallible model. Better reasoning can improve average answer quality, but it does not turn a probabilistic generator into a factual database, nor does it create a reliable publication boundary for business claims.** Production systems should therefore assume that any model may produce the most plausible answer available when evidence is incomplete—and verify critical claims before those claims reach a user.
+**A smarter model is still a fallible model. Better reasoning can improve average answer quality, but it does not turn a probabilistic generator into a factual database, nor does it create a reliable publication boundary for business claims.** Production systems should therefore assume that any model may produce the most plausible answer available when evidence is incomplete—and make the publication checks for critical claims explicit, testable, and observable.
 
 A real e-commerce support incident made this distinction concrete. Given a district, a building name, and several weakly related passages about pickup services, the model completed the missing street address, floor, opening hours, pickup policy, and customer notification promise. Upgrading to a stronger model did not eliminate the behavior: with the factual gate disabled, the upgraded system passed only 3 of 9 targeted scenarios.
 
@@ -33,7 +33,7 @@ The effective fix was neither another model switch nor a blacklist for addresses
 
 The central lesson is simple:
 
-> **Model upgrades raise the capability ceiling. Runtime evidence contracts set the factual floor.**
+> **Model upgrades raise the capability ceiling. Runtime evidence contracts create a checkable publication boundary; semantic support still needs verification.**
 
 ## 1. Intelligence Is Not a Reliability Contract
 
@@ -150,8 +150,8 @@ The structured response separates semantic judgment from runtime control.
 |---|---|---|
 | response_language | Determine the response language from the current conversation and configuration | Validate the structure |
 | draft | Form a candidate answer and expose the claims that require review | Never publish it directly |
-| evidence | Record required propositions, direct supporting excerpts, and unresolved items | Validate structural completeness |
-| use_limitation_only | Open the gate when critical facts lack sufficient evidence | Select the only publishable branch |
+| evidence | Record required propositions, direct supporting excerpts, and unresolved items | Validate structural completeness, not factual entailment |
+| use_limitation_only | Self-assess whether critical facts lack sufficient evidence | Select the only publishable branch |
 | limitation | State concisely what cannot be confirmed | Publish when the gate is open |
 | content | Provide the normal answer when evidence is sufficient | Publish when the gate is closed |
 
@@ -163,20 +163,9 @@ If parsing fails, the system retries or fails closed. The unchecked draft is nev
 
 Evidence sufficiency cannot stop at topical relevance. A business proposition normally contains a subject, relation, object, and material qualifiers. The evidence must support the relationship the user will actually rely on.
 
-<figure>
-<math display="block" xmlns="http://www.w3.org/1998/Math/MathML" aria-label="A claim is publishable if and only if the trusted source set contains evidence that entails the complete claim">
-  <mrow>
-    <mi>Publishable</mi><mo stretchy="false">(</mo><mi>c</mi><mo stretchy="false">)</mo>
-    <mo>⇔</mo>
-    <mo>∃</mo><mi>e</mi><mo>∈</mo><mi>T</mi>
-    <mo>:</mo>
-    <mi>Entails</mi><mo stretchy="false">(</mo><mi>e</mi><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo>
-    <mo>∧</mo>
-    <mi>Complete</mi><mo stretchy="false">(</mo><mi>e</mi><mo>,</mo><mi>c</mi><mo stretchy="false">)</mo>
-  </mrow>
-</math>
-<figcaption>Here, c is the claim being considered for publication and T is the set of trusted sources available in the current turn. A topically related but incomplete fragment is insufficient.</figcaption>
-</figure>
+> **Desired publication criterion:** Publishable(c) ⇔ there exists evidence e in trusted source set T such that e entails the complete claim c.
+
+Here, c is the claim being considered for publication and T is the set of trusted sources available in the current turn. A topically related but incomplete fragment is insufficient. This criterion describes the intended standard; the structural gate does not independently prove that it has been met.
 
 For example:
 
@@ -213,7 +202,23 @@ The regression matrix deliberately avoided overfitting to the original address q
 | Agent non-E2E regression | 1,312 passed, 4 skipped | Ordinary capabilities remained intact |
 | Full pre-production E2E | 37/37 scenarios, 49/49 turns | Request handling and content audits both passed |
 
-The 3/9 ablation set and the final 60/60 matrix were different in size, so they should not be interpreted as a controlled effect-size comparison. They establish a narrower but important result: after the model upgrade, the system still produced repeatable factual failures without the gate. Component-level impact should be measured through paired ablations on the same dataset, sampling parameters, and repetition count.
+The 3/9 ablation set and the final 60/60 matrix were different in size, so they should not be interpreted as a controlled effect-size comparison. They establish a narrower but important result: after the model upgrade, the system still produced repeatable factual failures without the gate. Passing the finite matrix does not establish that every emitted claim is correct, especially when a retrieved passage names a nearby but different entity. Component-level impact should be measured through paired ablations on the same dataset, sampling parameters, and repetition count.
+
+### A later preview trace: structural success, semantic gaps
+
+A later manually exercised trace contained **24 turns in one preview session against the online environment**. Five turns selected the limitation-only branch. The trace intentionally varied questions and languages; it is neither organic customer traffic nor a population-level failure-rate estimate. A private audit compared each user question, retrieved passage, model-written evidence record, final answer, and terminal-tool event. The source documents and customer identifiers are not published.
+
+| Observed situation | Trace evidence | What it shows |
+|---|---|---|
+| A requested panel thickness was absent from the available configuration attachment; a snow-depth question had load figures but no justified depth conversion | The model stated that the requested detail could not be confirmed instead of inventing a number | The gate can preserve useful uncertainty when the current evidence is incomplete |
+| A passage explicitly identified a neighboring product variant and specified its insulation build-up | The answer attributed the thickness to the requested variant; the evidence record quoted the numeric line without carrying over the variant identity | A true number from the wrong entity can pass a self-written evidence ledger |
+| A neighboring variant's engineering passage supplied a delivery weight, while the requested variant's separate configuration table gave a materially different value | The answer stated the neighboring variant's figure as the requested variant's weight and passed structural validation | “Evidence present” is not equivalent to “evidence entails this claim” |
+| A later question asked for the neighboring variant's insulation thickness | The model abstained, although a relevant passage had appeared earlier in the session but was not retrieved for this turn | This is a retrieval-coverage failure and a locally defensible abstention, not proof that the model refused available current-turn evidence |
+| The user requested a human sales transfer | The handoff tool returned success and the terminal action was committed before the final reply | The response contract remained compatible with a real workflow side effect |
+
+The runtime's “final response validated” event means that the structured envelope parsed, the terminal action was consistent, and the selected answer branch was nonempty. The parser does **not** independently compare each claim with the cited passage, verify product identity, or resolve contradictions between documents. The model wrote both the answer and its evidence record. These observations therefore qualify the earlier regression results: the design is a disciplined control over **how** an answer is published, but it is not independent proof of **what** the answer says.
+
+The next evaluation should pair each question with the correct source, a nearby-variant source, conflicting sources, and missing evidence. Label both final-answer correctness and whether the cited evidence belongs to the exact entity and scope. Report false assertions and unnecessary abstentions together. For high-consequence specifications, a typed product-data lookup or an independent claim-to-source verifier can be placed before publication; either addition needs its own measured error and latency profile.
 
 ## 8. Cost, Latency, and Operational Stability
 
@@ -240,8 +245,10 @@ The design shares the “generate, then inspect” intuition of several factuali
 | [Self-RAG](https://arxiv.org/abs/2310.11511) | Trains reflection tokens for adaptive retrieval and generation | Requires a training mechanism; this design is an inference-time contract |
 | [FActScore](https://arxiv.org/abs/2305.14251) and [SAFE](https://arxiv.org/abs/2403.18802) | Decompose and evaluate atomic facts | Primarily evaluate outputs; this design moves proposition analysis into the online publication path |
 | [ALCE](https://arxiv.org/abs/2305.14627) | Evaluates citation correctness and completeness | Having a citation still does not mean that every material claim is fully supported |
+| [Correctness is not Faithfulness in RAG Attributions](https://arxiv.org/abs/2412.18004) | Separates attribution correctness from faithful source use | A plausible citation or self-written evidence ledger may be post hoc rather than proof of reliance |
+| [GRAB-RAG](https://arxiv.org/abs/2608.22228) | Pairs supportive, degraded, missing, and misleading retrieval contexts in small-model experiments | Abstaining on missing context does not establish resistance to misleading context |
 
-A single-call Evidence Gate is not a formal fact prover. The same model still produces the evidence record, while the runtime validates structure and branch selection rather than independently proving semantic entailment. Its value is pragmatic: it tightens the publication path at modest latency. Extremely high-risk workflows can add independent verification, human approval, or deterministic data interfaces on top of the same boundary.
+A single-call Evidence Gate is not a formal fact prover. The same model still produces the evidence record, while the runtime validates structure and branch selection rather than independently proving semantic entailment. The later preview trace illustrates the resulting entity-attribution and retrieval-coverage gaps. Its value is pragmatic: it tightens the publication path at modest latency. High-consequence workflows can add independent verification, human approval, or deterministic data interfaces on top of the same boundary.
 
 ## 10. Production Lessons
 
@@ -249,14 +256,15 @@ A single-call Evidence Gate is not a formal fact prover. The same model still pr
 2. **Make evidence an object, not a label.** “Supported by instructions” is meaningless unless the relevant instruction directly supports the complete proposition.
 3. **Do not confuse relevance with entailment.** Nearby truths can produce more convincing hallucinations than obviously unrelated content.
 4. **Define publication conditions, not incident keywords.** Policies should state when a fact may be published, rather than enumerate fact types that must not be invented.
-5. **Let the model judge semantics and let the runtime enforce the contract.** Each side owns a responsibility that can be observed and tested.
+5. **Separate self-assessment from independent verification.** The model can propose whether a claim is supported; the runtime currently enforces structure and branch selection, while source identity and entailment require additional checks.
 6. **Fail closed without becoming useless.** Unchecked drafts must not bypass the gate, while positive cases must detect excessive refusal.
 7. **Regress language and ordinary workflows.** Increasing factual-safety weight can affect language adherence, procedures, tool use, and normal answers.
 8. **Complete the loop with observability.** Gate decisions, unresolved claims, parse failures, latency, and token cost reveal whether safety is being purchased with unacceptable utility loss.
+9. **Bind evidence to its entity and scope.** Record stable source identity, product variant, document section, and any validity period; evaluate near-neighbor retrieval and missing-evidence cases separately.
 
 The durable boundary is larger than any single address incident:
 
-> **An answer should not be publishable because it sounds plausible. It should be publishable only when trusted evidence from the current turn fully supports the material propositions the user will rely on.**
+> **An answer should not be publishable because it sounds plausible. The publication process should check that evidence supports the complete claim for the right entity and scope; a structural gate alone cannot certify that match.**
 
 ## References
 
@@ -268,3 +276,5 @@ The durable boundary is larger than any single address incident:
 - Min et al. [FActScore: Fine-grained Atomic Evaluation of Factual Precision in Long Form Text Generation](https://arxiv.org/abs/2305.14251), 2023.
 - Gao et al. [Enabling Large Language Models to Generate Text with Citations](https://arxiv.org/abs/2305.14627), 2023.
 - Wei et al. [Long-form Factuality in Large Language Models](https://arxiv.org/abs/2403.18802), 2024.
+- Wallat et al. [Correctness is not Faithfulness in RAG Attributions](https://arxiv.org/abs/2412.18004), 2024.
+- Setiawan. [Prompt-Based Abstention Fails Under Misleading Context: A Controlled Study of Small Frozen RAG Models](https://arxiv.org/abs/2608.22228), 2026.
