@@ -1,0 +1,80 @@
+name: Ge favicon and back-link verification
+on:
+  push:
+    branches: [implementation/ge-favicon-align-20260924]
+permissions:
+  contents: write
+concurrency:
+  group: ge-favicon-align-verification
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      ACTIVE_PROFILE: default
+      DEFAULT_LOCALE: zh
+      PUBLIC_SITE_URL: https://sunionpeaks.pages.dev
+      PUBLIC_VIEWS_ENABLED: 'true'
+      GITHUB_REPOSITORY: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Prepare a scoped candidate, preserving current content and analytics
+        run: |
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = b231c11830e1e708e4898bb70d37867c68b898e7
+          echo "GE_BASE=$(git rev-parse origin/main)" >> "$GITHUB_ENV"
+          python3 scripts/ui/apply-ge-favicon.py
+          git rm -f .github/workflows/ge-favicon-check.yml scripts/ui/apply-ge-favicon.py
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Generate transparent assets and freeze the tested tree
+        run: |
+          node scripts/ui/generate-brand-icons.mjs
+          git add AGENTS.md public src scripts/ui
+          test -z "$(git diff --cached --name-only origin/main -- profiles src/lib/view-counter migrations functions .github)"
+          echo "GE_TREE=$(git write-tree)" >> "$GITHUB_ENV"
+          git diff --cached --stat origin/main
+      - name: Content, routing, integrations and count regression checks
+        run: |
+          pnpm dossier generate-admin-config
+          pnpm test:views
+          pnpm test:notes
+          pnpm test:assets
+          pnpm test:integrations
+          pnpm exec tsx scripts/ui/locale-navigation.test.ts
+          pnpm validate
+          pnpm build
+          pnpm exec tsx scripts/export-publication.ts
+          node scripts/test-publication-build.mjs
+      - name: Isolated browser acceptance and transparent pixel checks
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          node scripts/ui/ge-favicon.test.mjs
+          node scripts/ui/brand-refresh.test.mjs
+          node scripts/ui/icon-actions.test.mjs
+      - name: Save the tested source-only candidate
+        run: |
+          git fetch origin main
+          test "$(git rev-parse origin/main)" = "$GE_BASE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          sha=$(printf '%s\n' 'fix: deploy transparent connected Ge favicon and align article back arrows' | git commit-tree "$GE_TREE" -p "$GE_BASE")
+          git push origin "$sha:refs/heads/candidate/ge-favicon-align-20260924"
+          printf '{"base":"%s","commit":"%s","tree":"%s","productionWrites":0}\n' "$GE_BASE" "$sha" "$GE_TREE" > artifacts/ge-favicon/candidate.json
+      - name: Store verification evidence without font files
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ge-favicon-verification
+          path: |
+            artifacts/ge-favicon/
+            artifacts/brand-refresh/
+          retention-days: 7
+          if-no-files-found: warn
