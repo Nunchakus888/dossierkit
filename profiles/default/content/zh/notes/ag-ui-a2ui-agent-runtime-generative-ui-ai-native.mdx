@@ -3,11 +3,11 @@ locale: "zh"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-09-24"
 title: "AG-UI 与 A2UI：构建跨 Agent、跨平台的交互架构"
-summary: "如果同一个产品未来要接多个 Agent，又要同时运行在 Web、移动端、桌面端甚至 Slack/Teams 这类平台里，怎样避免每增加一个
-  Agent 或一个 UI，就重写一遍交互层？"
+summary: "如果同一个产品未来要接多个 Agent，又要同时运行在 Web、移动端、桌面端甚至 Slack / Teams
+  这类平台里，真正的问题不是“聊天框要不要多几个卡片”，而是："
 featured: false
 date: "2026-09-24"
-updatedAt: "2026-09-24T09:42:49.704Z"
+updatedAt: "2026-09-24T11:45:26.112Z"
 kind: "research"
 topics:
   - "AG-UI"
@@ -23,622 +23,509 @@ tags:
   - "Generative UI"
   - "跨平台交互"
   - "AI-native"
-contentHash: "sha256:97a0da944c997a0d683ded22903646436e0b40cf92e985d2fed52013124b6bbe"
+contentHash: "sha256:4408a8b47d428091f53ae15dc703a82a190f41b42556f82a6f152b9c345b6f65"
 ---
 
-这篇文章先不从协议字段讲起，而从一个更实际的问题开始：
+如果同一个产品未来要接多个 Agent，又要同时运行在 Web、移动端、桌面端甚至 Slack / Teams 这类平台里，真正的问题不是“聊天框要不要多几个卡片”，而是：
 
-> **如果同一个产品未来要接多个 Agent，又要同时运行在 Web、移动端、桌面端甚至 Slack/Teams 这类平台里，怎样避免每增加一个 Agent 或一个 UI，就重写一遍交互层？**
+> **怎样让 Agent 不绑定某一个 UI，让 UI 也不绑定某一种 Agent Runtime，同时又保留自然语言、直接操作、状态恢复和业务安全？**
 
-AG-UI 和 A2UI 都在回答这个问题，但回答的是不同的部分。前者解决“Agent 和用户应用怎样持续交互”，后者解决“Agent 怎样把一个可交互界面交给不同客户端渲染”。真正可用的架构，还要在两者之间补上任务、权限、状态与能力边界。
+AG-UI 与 A2UI 正好解决这个问题的两个不同侧面。前者标准化 **Agent 与用户应用的运行交互**，后者标准化 **Agent 生成的声明式 UI**。真正可落地的系统，还需要应用自己补上 Task、Artifact、Action、Permission 与 Version。
 
-本文按“问题 → 名词 → 协议 → 组合 → 成本 → 落地”的顺序展开。目标不是介绍两个新名词，而是让读者看完后能判断：**自己到底需不需要 AG-UI、需不需要 A2UI，以及接入后还会剩下哪些工程问题。**
+本文按“先建立心智模型 → 怎么选 → 跨 Agent / 跨平台 → AI-native → 成本与落地”的顺序展开。
 
-## 1. 为什么传统前后端模式到了 Agent 场景会开始失效
+## 1. 先建立心智模型：这是两个不同层的问题
 
-传统业务 UI 往往建立在一个很稳定的假设上：
+### 1.1 为什么 Agent 场景会需要新的交互协议
 
-用户点击按钮，前端调用 API，服务端返回结果，页面更新。
+传统 App 常见的是“点击 → API → 返回结果 → 更新页面”。
 
-一次交互的边界很清楚。
+Agent 则可能持续运行、流式输出、调用工具、修改状态、中途请求用户输入，甚至在不同设备上继续同一个任务。一次 HTTP Response 不再天然等于一次业务任务。[S01][s01]
 
-Agent 把这个模型打破了。官方 AG-UI 文档总结了几个关键变化：Agent 可能长时间运行、不断产生中间事件，同时混合文本、工具调用、状态变化和多模态数据，而且运行过程中还可能需要用户介入。[S01][s01]
+因此出现两类耦合：
 
-一条普通的 HTTP 请求很难自然表达下面这些事情：
-
-- Agent 已经开始执行，但还没有最终结果；
-- 正在调用工具，希望 UI 展示真实进度；
-- 中途需要用户审批，然后继续原来的任务；
-- Agent 更新了应用状态，前端需要实时同步；
-- 用户不是“再发一句聊天”，而是直接修改了表单、选中了某个对象；
-- 一个任务今天在电脑开始，晚上要在手机继续。
-
-因果关系可以先压缩成一张图：
-
-~~~mermaid
-flowchart LR
-  A["传统 App：请求 → 响应"] --> B["Agent 变成长运行、流式、可中断的执行体"]
-  B --> C["一次响应不再等于一次任务"]
-  B --> D["文本不再是唯一交互形式"]
-  B --> E["前端与 Agent 开始共享状态和动作"]
-  C --> F["需要统一运行生命周期"]
-  D --> G["需要动态、结构化 UI"]
-  E --> H["需要双向交互与能力协商"]
-  F --> I["AG-UI 解决运行交互"]
-  G --> J["A2UI 解决界面表达"]
-  H --> K["应用层补任务、权限和状态边界"]
-~~~
-
-所以问题不是“聊天框要不要加几个卡片”，而是**传统 request/response 契约已经不足以描述 Agentic Application**。
-
-## 2. 先把几个容易混淆的名词放到正确位置
-
-在理解 AG-UI / A2UI 之前，先分清系统里的角色。
-
-| 名词 | 可以先理解成 | 负责什么 |
-|---|---|---|
-| Agent | 会规划、调用工具并持续执行任务的软件主体 | 做决定、执行任务 |
-| Agent Runtime | Agent 真正运行的环境 | 状态、工具、检查点、子 Agent、执行生命周期 |
-| Host App / Client | 用户正在操作的应用 | Web、App、桌面端、聊天平台 |
-| Transport | 消息怎么传 | HTTP、SSE、WebSocket、A2A 等 |
-| Renderer | 把抽象 UI 变成真实控件的客户端实现 | React、Flutter、Angular 等 |
-| Catalog | Agent 被允许使用的 UI“词汇表” | Button、TextField、业务卡片及其 Schema |
-| Surface | 一块由 A2UI 管理的界面区域 | 对话卡片、侧栏、表单区域等 |
-| Tool | Agent 调用的能力 | 查询数据库、发邮件、执行后端操作 |
-| Action | 用户在生成 UI 中触发的交互 | 提交、选择、确认，也可以是本地函数 |
-
-还有四个经常一起出现的协议：
-
-- **MCP**：Agent ↔ 工具 / 数据。
-- **A2A**：Agent ↔ Agent。
-- **AG-UI**：Agent ↔ 用户应用。
-- **A2UI**：Agent → UI 的声明式界面表达，以及对应的 UI action。
-
-AG-UI 官方自己就把 MCP、A2A、AG-UI 放在互补的协议栈里，而不是当成替代关系。[S02][s02]
-
-![AG-UI 官方 AI Protocol Stack](https://raw.githubusercontent.com/ag-ui-protocol/ag-ui/e62b348680c41f52a5ea0ed4eb714a6600066fa1/docs/images/ai-protocol-stack.png)
-
-*官方协议分层图。来源：AG-UI 官方仓库与文档。[S02][s02] A2UI 不在这三条“连接关系”里，它属于 Generative UI 规范，可以通过 AG-UI、A2A 等通道承载。*
-
-这一层次关系很重要，因为很多架构误判都来自把“传输”“运行交互”“工具协议”“UI 描述”混成一个协议。
-
-## 3. 真正的工程问题其实是两侧耦合
-
-假设产品最开始只有：
-
-- 一个 Web UI；
-- 一个 LangGraph Agent。
-
-这种情况下，直接写专有接口完全没问题。
-
-但半年后需求变成：
-
-- Agent：LangGraph、Google ADK、自研 Agent、远程第三方 Agent；
-- UI：Web、Electron、移动 App、Slack、终端。
-
-这时会出现两种完全不同的耦合。
+- **UI ↔ Agent Runtime**：前端开始理解各框架自己的 streaming、tool、state、interrupt。
+- **Agent ↔ UI 技术栈**：Agent 如果直接输出 React / DOM / 页面方法，就无法自然进入 Flutter、CLI 或聊天平台。
 
 ~~~mermaid
 flowchart TB
-  subgraph L["问题 A：UI 被 Agent Runtime 绑死"]
-    L1["前端理解 LangGraph 私有事件"] --> L2["换成 ADK 又写一套"]
-    L2 --> L3["工具、状态、中断语义继续分叉"]
-  end
-
-  subgraph R["问题 B：Agent 被具体 UI 平台绑死"]
-    R1["Agent 输出 React 专用组件"] --> R2["移动端无法直接复用"]
-    R2 --> R3["Slack / CLI 更无法渲染"]
-  end
-
-  L --> AG["需要统一 Agent ↔ App 交互语义\nAG-UI"]
-  R --> A2["需要统一 UI 描述语义\nA2UI"]
+  A["Agent 应用从单次请求变成长运行、可中断任务"]
+  A --> B["问题 1：UI 被具体 Agent Runtime 绑住"]
+  A --> C["问题 2：Agent 被具体 UI 技术栈绑住"]
+  B --> D["AG-UI：统一 Agent ↔ App 的运行交互"]
+  C --> E["A2UI：统一 Agent → UI 的声明式表达"]
+  D --> F["仍需业务层：Task / Artifact / Action / Permission / Version"]
+  E --> F
 ~~~
 
-### 第一类：UI 接不通不同 Agent
+背景理解到这里就够了，后面重点讨论仍然需要解决的工程问题。
 
-不同 Runtime 会有不同的：
+### 1.2 几个名词先放到正确位置
 
-- streaming 事件；
-- tool-call 生命周期；
-- state / checkpoint；
-- interrupt / resume；
-- error；
-- cancellation；
-- sub-agent 模型。
+| 名词 | 可以先理解成 | 主要责任 |
+|---|---|---|
+| Agent | 会规划并调用工具执行任务的软件主体 | 决策与执行 |
+| Agent Runtime | Agent 真正运行的环境 | 状态、工具、检查点、运行生命周期 |
+| Host App | 用户实际操作的客户端 | Web、App、桌面端、聊天平台 |
+| Renderer | 把抽象 UI 变成本地控件 | React、Angular、Flutter 等 |
+| Catalog | Agent 可以使用的 UI “词汇表” | Button、TextField、业务组件及 Schema |
+| Surface | 一块由 A2UI 管理的动态界面区域 | 表单、结果卡、侧栏 |
+| Tool | Agent 调用的外部能力 | API、数据库、浏览器、MCP |
+| Action | 用户在生成 UI 中触发的结构化交互 | 选择、提交、确认 |
 
-如果前端直接理解这些框架私有概念，**前端其实已经和 Agent Runtime 耦合了**。
+还要分清 MCP、A2A、AG-UI、A2UI：
 
-### 第二类：Agent 接不通不同 UI
+- **MCP**：Agent ↔ Tool / Data。
+- **A2A**：Agent ↔ Agent。
+- **AG-UI**：Agent ↔ User App。
+- **A2UI**：Agent ↔ 声明式 UI / Renderer。
 
-如果 Agent 直接输出：
+AG-UI 官方把 MCP、A2A 与 AG-UI 放在互补的协议栈中，而不是替代关系。[S02][s02]
 
-“渲染这个 React Component”
-“调用页面里的某个 Modal”
-“更新 DOM 节点”
+![AG-UI 官方 AI Protocol Stack](https://raw.githubusercontent.com/ag-ui-protocol/ag-ui/e62b348680c41f52a5ea0ed4eb714a6600066fa1/docs/images/ai-protocol-stack.png)
 
-它实际上绑定的是某一个前端技术栈。
+*官方协议分层图。A2UI 不属于图中的三条“连接关系”，它属于 Generative UI 规范，可以由 AG-UI、A2A 等通道承载。*
 
-Web 可以运行，不代表 Flutter、原生 iOS、CLI 或 Slack 能运行。
+## 2. 先给答案：什么时候选 AG-UI，什么时候选 A2UI
 
-所以“双向解耦”不能只解决一边。
+先看选择，而不是先看协议细节。
 
-## 4. AG-UI 解决的是第一类问题：统一运行交互
+~~~mermaid
+flowchart TB
+  A["现在最主要的问题是什么？"]
+  A --> B{"需要接多个 Agent Runtime？"}
+  B -->|是| C["先建立 AG-UI / Runtime Adapter 边界"]
+  B -->|否| D{"需要 Agent 动态生成交互 UI？"}
+  C --> D
 
-AG-UI 的官方定义是一个开放、轻量、事件驱动的 Agent–User Interaction Protocol，用于标准化 Agent Backend 与用户应用之间的双向连接。[S01][s01]
+  D -->|否| E["保留宿主原生 UI\n不必引入 A2UI"]
+  D -->|是| F{"同一 UI 声明要跨多个 Renderer？"}
 
-它最核心的抽象可以简化成：
+  F -->|否| G["宿主自己的 Generative UI 也可以"]
+  F -->|是| H["A2UI + Catalog + Renderer"]
 
-> 应用给 Agent 一个标准化 Run 输入；Agent 在执行过程中持续产生标准化事件。
+  H --> I{"是否有 Slack / CLI 等受限平台？"}
+  I -->|是| J["再加 Channel Adapter / Fallback"]
+  I -->|否| K["直接使用目标平台 Renderer"]
 
-官方架构文档把核心接口概括为：
+  E --> L["Task / Action / Permission 保持独立"]
+  G --> L
+  J --> L
+  K --> L
+~~~
 
-RunAgentInput → Agent → Event Stream。[S03][s03]
+用一句话记：
 
-这样前端不需要知道：
+> **AG-UI 让 UI 不必认识每一种 Agent Runtime；A2UI 让 Agent 不必认识每一种 UI 技术栈。**
 
-“这是 LangGraph 的哪个 node”
-“这是 ADK 的哪种 callback”
-“这是 CrewAI 的哪种内部事件”
+但真正实现“跨 Agent、跨平台继续同一件事”的，是下面这一层：
 
-它只需要理解：
+> **Task、Artifact、Action、Permission、Version。**
 
-- Run 开始；
-- 消息开始 / 增量 / 结束；
-- Tool Call 开始 / 参数 / 结果；
-- State Snapshot / Delta；
-- Activity；
-- Interrupt；
-- Run 完成 / 失败。
+### 2.1 两者不是竞品
 
-### 4.1 AG-UI 真正降低的，是 Runtime 适配成本
+| 问题 | AG-UI | A2UI |
+|---|---|---|
+| 统一不同 Agent Runtime 的交互 | 核心职责 | 不是重点 |
+| 统一动态 UI 的声明格式 | 不规定具体 UI DSL | 核心职责 |
+| Tool / State / Interrupt | 有运行语义 | 通过承载 Runtime 配合 |
+| 跨 Renderer | UI 自己决定怎么呈现 | 通过 Catalog + Renderer |
+| 跨 Slack / CLI 等封闭平台 | 需要 Channel Adapter | 通常也需要 Channel Adapter |
+| 业务权限与幂等 | 不负责 | 不负责 |
+| 跨 Agent checkpoint 无损迁移 | 不保证 | 不负责 |
 
-官方 AG-UI 总览图的核心含义正是：不同 Agent Framework 和不同 Client，通过中间的 AG-UI 形成公共边界。[S01][s01]
+因此：
+
+- 已有成熟 UI，只想接多个 Agent：优先 AG-UI。
+- Runtime 已经稳定，只缺动态跨端 UI：可以单独采用 A2UI。
+- 多 Agent + 多端 + 动态 UI：AG-UI 与 A2UI 组合更自然。
+
+## 3. 两个协议到底做了什么：AG-UI 收敛运行交互，A2UI 收敛 UI 表达
+
+### 3.1 AG-UI：把已经成熟的 Runtime/UI 解耦标准化
+
+AG-UI 的核心很简单：
+
+> Host 给 Agent 一个标准化 Run 输入，Agent 持续返回标准化 Event Stream。[S03][s03]
+
+事件可以覆盖运行、消息、Tool、State、Activity、Interrupt 等语义。[S04][s04]
+
+这使前端不必直接理解 LangGraph、ADK 或其他 Runtime 的私有 callback。
 
 ![AG-UI 官方 Overview](https://raw.githubusercontent.com/ag-ui-protocol/ag-ui/e62b348680c41f52a5ea0ed4eb714a6600066fa1/docs/images/ag-ui-overview-with-partners.png)
 
-*AG-UI 官方 Overview。图中的具体集成状态会继续变化，本文使用的是本次研究固定提交中的官方图。*
+*AG-UI 官方 Overview。具体 Framework / Client 集成状态会继续演进。*
 
-一个自研 Agent 想接进来，理论上只要实现等价的运行接口和事件输出。
-
-一个新 UI 想接进来，只要能消费同样的事件，就不必理解每个 Agent Framework。
-
-这就是 AG-UI 最核心的“通用性”。
-
-### 4.2 但它不是“装上 SDK，所有 Agent 自动一样”
-
-这是第一个非常重要的边界。
-
-协议可以统一事件形状，但**协议不能创造 Runtime 本来没有的能力**。
-
-例如：
-
-| UI 收到 / 想做的事情 | Runtime 真正需要具备什么 |
-|---|---|
-| 展示 Tool 执行过程 | Runtime 必须真实暴露工具生命周期 |
-| Cancel | 后端任务必须支持真实取消或中断 |
-| Resume | Runtime 必须有可恢复上下文 |
-| Shared State | 后端必须有对应状态模型 |
-| Human-in-the-loop | Runtime 必须知道如何挂起并恢复 |
-
-所以 Adapter 的职责不是“伪造所有 AG-UI 事件”，而是：
-
-> **把 Runtime 真实具备的语义映射到公共协议；没有的能力明确说没有。**
-
-### 4.3 AG-UI 会不会和服务端耦合？
-
-会。
-
-而且这是正常的。
-
-AG-UI 消除的是“每一个 UI 都理解每一个 Runtime”的耦合，不是消除所有耦合。
-
-服务端仍然需要一个 Adapter：
+这里不再展开大量 AG-UI 事件细节，因为这一层的工程模式已经相对清楚：
 
 ~~~mermaid
-flowchart LR
-  UI["Host App"] <--> P["AG-UI"]
-  P <--> A["Runtime Adapter"]
-  A <--> R1["LangGraph"]
-  A2["另一个 Adapter"] <--> R2["Google ADK"]
-  P <--> A2
+flowchart TB
+  U["Host UI"] <--> P["AG-UI"]
+  P <--> A1["Adapter → Runtime A"]
+  P <--> A2["Adapter → Runtime B"]
+  P <--> A3["Adapter → Runtime C"]
 ~~~
 
-真正得到的是：
+要注意的边界只有一个：
 
-- UI 不再耦合 Runtime 私有事件；
-- Runtime 只需要对接一次公共交互契约；
-- 耦合被集中到一个明确、可测试的 Adapter 层。
+**协议只能表达 Runtime 真正拥有的能力，不能凭 Adapter 凭空制造 Pause、Resume、Cancel 或 Shared State。**
 
-这叫**稳定耦合**，不是零耦合。
+AG-UI 解决的是“接线统一”，并不自动把所有 Runtime 变成能力完全相同的 Runtime。[S07][s07]
 
-## 5. A2UI 解决的是第二类问题：不要让 Agent 直接写具体平台 UI
+### 3.2 A2UI：让 Agent 输出 UI 语义，而不是输出前端代码
 
-A2UI 的出发点更容易理解。
+A2UI 的问题更值得展开。
 
-官方文档给出的典型问题是：纯文本 Agent 想订餐，本来要一轮一轮追问日期、时间、人数；更自然的方式其实是直接给用户一个日期选择器、人数选择和提交按钮。[S09][s09]
-
-问题随之出现：
-
-**远程 Agent 要怎样把这个 UI 发给客户端？**
-
-一个直接方案是发送 HTML / JavaScript，再塞进 iframe。
+远程 Agent 如果想让用户填写日期、人数、筛选项，一个方案是生成 HTML / JavaScript，再丢给 iframe。
 
 但这会带来：
 
-- 任意代码执行风险；
+- 任意代码风险；
 - 宿主样式割裂；
-- Web 优先，很难自然映射到 native mobile；
-- 第三方 Agent 直接获得过大的界面控制能力。
+- Web 技术栈绑定；
+- 很难迁移到 Native / Flutter；
+- 第三方 Agent 获得过大的 UI 控制权。
 
-A2UI 的答案是：
+A2UI 的核心设计是：
 
-> **Agent 不发送可执行 UI 代码，而发送声明式 UI 数据；客户端用自己受信任的本地组件渲染。** [S09][s09]
+> **Agent 发送声明式 UI 数据，客户端只用自己注册、信任的本地组件渲染。** [S09][s09]
 
-## 6. 理解 A2UI，只需要先记住 5 个对象
+理解 A2UI 只需要记住五个对象：
 
-### Surface
+| 对象 | 作用 |
+|---|---|
+| Surface | 一块动态 UI 区域 |
+| Component | Text、Button、TextField 等抽象组件 |
+| Data Model | Surface 对应的数据状态 |
+| Catalog | 允许 Agent 使用哪些组件 / 函数 |
+| Renderer | 将抽象组件映射成 React / Flutter / Angular 等真实控件 |
 
-一块可被 Agent 更新的界面区域。
+因此 A2UI 复用的是**界面语义**，不是某一份 React 代码。
 
-例如“航班搜索结果”“审批卡片”“右侧助手面板”。
+### 3.3 A2UI 的核心数据流
 
-### Component
+下面按 A2UI v0.9.1 官方协议的数据流表达。[S18][s18]
 
-抽象组件。
+~~~mermaid
+sequenceDiagram
+  participant A as Agent
+  participant R as Renderer
+  participant U as User
 
-例如 Text、Button、TextField、Card。
+  A->>R: createSurface
+  A->>R: updateComponents
+  A->>R: updateDataModel
+  R-->>U: Render native UI
 
-Agent 表达的是“这里需要一个 TextField”，不是“调用 React 的某个组件文件”。
+  U->>R: Input / Click / Select
+  R->>A: action(name, context)
 
-### Data Model
+  A->>R: updateComponents / updateDataModel
+  R-->>U: Re-render
 
-Surface 使用的数据。
-
-A2UI 把结构和数据分开，因此更新价格、状态或输入值时，不必重建整棵 UI。[S13][s13]
-
-### Catalog
-
-客户端允许 Agent 使用哪些组件。
-
-这是 A2UI 里非常关键的安全和跨平台边界。
-
-例如：
-
-~~~text
-Basic Catalog:
-Text
-Button
-Card
-TextField
-
-Company Catalog:
-OrderCard
-ApprovalPanel
-EmployeeSelector
+  A->>R: deleteSurface
 ~~~
 
-Agent 不能凭空执行一个未知组件；客户端只渲染自己注册并信任的 Catalog。[S12][s12]
+关键点有三个：
 
-### Renderer
+1. Agent 决定“需要什么 UI”；
+2. Renderer 决定“这个平台怎么画”；
+3. 用户操作通过结构化 Action 回到 Agent。
 
-真正把 Component 变成 React / Angular / Flutter Widget 的实现。
+这比“模型生成 JSON”更重要，因为它建立了真正的双向 UI 协议。
+
+## 4. 真正关心的问题：跨 Agent 和跨平台到底能做到什么程度
+
+### 4.1 跨 Agent：可以统一交互，但不能假设 Runtime 内部状态可迁移
+
+“同一个 UI 能连接 Agent A 和 Agent B”并不难。
+
+难的是：
+
+> **Agent A 执行到一半，能不能让 Agent B 无损接管？**
+
+通常不能直接保证。
+
+因为不同 Runtime 可能各自持有：
+
+- 私有 checkpoint；
+- 内部 memory；
+- pending tool call；
+- planner 状态；
+- 调用栈；
+- 子 Agent 状态。
+
+更可靠的设计是把**可移交的业务事实**抽出来：
+
+~~~mermaid
+flowchart TB
+  A["Agent A Runtime"]
+  A --> H["Handoff"]
+  H --> T["Task"]
+  H --> AR["Artifact + Revision"]
+  H --> C["Constraints / User Decisions"]
+  H --> P["Pending Action / Permission"]
+  T --> B["Agent B 新 Runtime"]
+  AR --> B
+  C --> B
+  P --> B
+
+  A -. "通常不要求直接迁移" .-> X["私有 checkpoint / 调用栈"]
+~~~
 
 所以：
 
-> A2UI 复用的是“界面语义”，不是某一套具体 UI 代码。
+> **跨 Agent 的可靠边界是业务状态可移交，而不是 Runtime 内部状态完全可移植。**
 
-## 7. A2UI 官方的数据流到底是什么
+### 4.2 跨平台：A2UI 可以跨 Renderer，但不是一次实现覆盖所有平台
 
-下面的关系直接来自 A2UI v0.9.1 官方规范的数据流，只把 Server / Client 改成了更容易理解的 Agent / Renderer 名称，没有增加自定义架构层。[S18][s18]
+A2UI 当前提供 Web / Flutter 等 Renderer 路径。[S16][s16]
 
-~~~mermaid
-sequenceDiagram
-  participant User as User
-  participant Agent as Agent
-  participant Renderer as Renderer
-
-  Agent->>Renderer: createSurface
-  Agent->>Renderer: updateComponents
-  Agent->>Renderer: updateDataModel
-  Renderer-->>User: Render UI
-
-  User->>Renderer: Click / Input / Select
-  Renderer->>Agent: action(name, context)
-
-  Agent->>Renderer: updateComponents / updateDataModel
-  Renderer-->>User: Re-render
-
-  Agent->>Renderer: deleteSurface
-~~~
-
-这张图解释了 A2UI 的本质：
-
-1. Agent 决定“需要什么界面”；
-2. Renderer 决定“在这个平台怎样画”；
-3. 用户操作产生 Action；
-4. Action 回到 Agent；
-5. Agent 再更新 UI。
-
-它不是静态 JSON Schema，也不是一次性 Server Driven UI。
-
-## 8. A2UI 跨平台到底能跨到什么程度
-
-这是第二个经常被夸大的地方。
-
-A2UI 官方把自己定义为跨平台声明式 UI，当前文档提供 Web 侧 React、Angular、Lit 等路径，也提供 Flutter GenUI 这类移动 / 桌面路径。[S16][s16]
-
-但“跨平台”不是：
-
-> 写一份 React，自动变成 Flutter。
-
-而是：
-
-> Agent 输出相同的抽象组件语义，不同平台分别有自己的 Renderer。
+抽象关系是：
 
 ~~~mermaid
-flowchart LR
-  A["Agent 输出 A2UI"] --> B["Catalog: ProductCard"]
-  B --> W["Web Renderer\nReact ProductCard"]
-  B --> M["Flutter Renderer\nFlutter ProductCard"]
-  B --> D["Desktop Renderer\nDesktop ProductCard"]
+flowchart TB
+  A["Agent 输出 A2UI"]
+  A --> C["Catalog：例如 ProductCard"]
+  C --> W["Web Renderer\nReact ProductCard"]
+  C --> M["Mobile Renderer\nFlutter ProductCard"]
+  C --> D["Desktop Renderer\nDesktop ProductCard"]
 ~~~
 
-### Basic Catalog 越多，跨平台越容易
+基础组件越多，跨平台成本越低：
 
-Text、Button、Card、TextField 这种基础组件容易在不同平台找到等价实现。
+- Text；
+- Button；
+- Card；
+- TextField。
 
-### Custom Catalog 越多，体验越强，但适配成本越高
-
-真实产品往往需要：
+但生产产品一定会出现业务组件：
 
 - DiffReview；
 - OrderCard；
-- DashboardChart；
 - ApprovalPanel；
+- Chart；
 - RichEditor。
 
-A2UI 官方也明确建议生产系统定义自己的 Catalog，并直接对应应用本身的 Design System。[S21][s21]
+这时每个目标 Renderer 都需要实现对应组件或 fallback。
 
-这意味着每增加一个自定义业务组件，你都要问：
+因此：
 
-> Web 有实现，那 Flutter 呢？桌面呢？聊天平台呢？
+> **A2UI 降低的是 UI 组合逻辑和 Agent 输出协议的重复，不是消灭跨平台组件开发。**
 
-因此，A2UI 降低的是**页面组合逻辑的重复**，不是消灭跨平台组件开发。
+A2UI 官方也建议生产系统定义自己的 Catalog，并对应自己的 Design System。[S21][s21]
 
-## 9. 那 Slack、Teams、CLI 这种平台怎么办
+### 4.3 Slack / Teams / CLI 这类平台，需要另一种适配
 
-这里要把“平台”分成两类。
+如果平台允许你嵌入自己的 Renderer，例如 Web / Electron / Flutter，那么可以完整消费 A2UI。
 
-### 可嵌入 Renderer 的平台
+但 Slack、Teams、CLI 等平台通常不能直接运行你的 Renderer。
 
-例如自己的 Web、Electron、Flutter App。
-
-这类最适合完整 A2UI：
-
-Agent → A2UI → 本地 Renderer → Native UI。
-
-### 封闭、受限的平台
-
-例如 Slack、Teams、短信、终端。
-
-你无法随意把自己的 Renderer 装进它们的消息系统。
-
-这时通常需要 Channel Adapter：
+这时应该共享**任务和交互语义**，再做 Channel Adapter：
 
 ~~~mermaid
-flowchart LR
-  A["统一任务 / 交互语义"] --> W["Web\n完整 A2UI"]
-  A --> APP["Mobile\n完整或部分 A2UI"]
-  A --> S["Slack / Teams\n转换成平台卡片"]
-  A --> C["CLI\n转换成文本 + 结构化选择"]
+flowchart TB
+  T["统一 Task / Action / Permission"]
+  T --> W["Web\n完整 A2UI / Native UI"]
+  T --> M["Mobile\nA2UI Renderer"]
+  T --> S["Slack / Teams\n平台原生 Card / Action"]
+  T --> C["CLI\nText + Structured Selection"]
 ~~~
 
-所以跨平台真正应该保持一致的是：
-
-- Task；
-- Action；
-- 数据对象；
-- 用户意图；
-- 权限语义。
-
-而不是要求所有平台显示同一棵 UI Tree。
-
-## 10. AG-UI 和 A2UI 为什么可以组合
-
-A2UI 官方对两者关系有一个非常好的概括：
-
-> AG-UI 是 pipe，A2UI 是 content。[S11][s11]
-
-换成工程语言：
-
-- AG-UI 负责“这次 Agent Run 怎样和 App 持续通信”；
-- A2UI 负责“其中某个 UI payload 应该怎样描述”。
-
-所以两者并不是竞品。
-
-### 三种都合理的使用方式
-
-| 现有系统 | 需要什么 | 建议 |
-|---|---|---|
-| UI 已经很成熟，只想换 / 增加 Agent | 统一 Runtime 交互 | AG-UI |
-| Runtime 已经稳定，只缺动态跨端 UI | UI 协议 | A2UI |
-| Agent 多、客户端多，而且需要动态 UI | 两边都要解耦 | AG-UI + A2UI |
-
-A2UI 官方的 “Use A2UI with Any Agent Framework” 指南就是沿着这个组合思路：先建立 AG-UI 连接，再让 A2UI payload 通过该运行通道到达 Renderer。[S17][s17]
-
-当前 AG-UI 仓库也已经提供 A2UI middleware。它会注入 UI Schema 上下文、识别 A2UI operations，把 Surface 更新包装到 AG-UI activity，并把用户 Action 再传回 Agent。[S19][s19]
-
-端到端看起来是：
-
-~~~mermaid
-sequenceDiagram
-  participant U as 用户
-  participant UI as Host App
-  participant AG as AG-UI
-  participant A as Agent
-  participant R as A2UI Renderer
-
-  U->>UI: 自然语言目标
-  UI->>AG: RunAgentInput
-  AG->>A: Runtime Adapter
-  A-->>AG: Text / Tool / State Events
-  AG-->>UI: 运行过程
-
-  A-->>AG: A2UI Surface
-  AG-->>R: A2UI operations
-  R-->>U: 本地组件界面
-
-  U->>R: 修改表单 / 点击确认
-  R->>AG: Action
-  AG->>A: 用户交互
-  A-->>AG: 后续执行
-  AG-->>UI: 结果
-~~~
-
-这才是“AI-native interaction”开始成立的地方：**语言输入和直接 UI 操作共同推动同一个任务。**
-
-## 11. 能不能真正做到“一个 UI 接任何 Agent”
-
-可以把目标做到很接近，但不要把它理解成“任何 Agent URL 都能即插即用”。
-
-至少需要满足三层条件。
-
-### 第一层：协议能接
-
-Agent 要么原生支持 AG-UI，要么有 Adapter。
-
-官方目前列出多种一方、合作和社区 Framework 集成，但具体支持范围仍要以运行时版本为准。[S01][s01]
-
-### 第二层：能力真的存在
-
-UI 不能看到 AG-UI 就假定所有 Agent 都支持：
-
-- Tool streaming；
-- Interrupt；
-- Shared State；
-- Multimodal；
-- Resume。
-
-AG-UI 有能力发现机制，但官方同时明确：discovery 不等于 negotiation，缺省能力应该视为 unknown。[S07][s07]
-
-### 第三层：业务状态能够迁移
-
-这是最容易被忽略的。
-
-从 Agent A 切换到 Agent B 很容易。
-
-**让 Agent B 无损接管 Agent A 执行到一半的任务很难。**
-
-因为 Runtime 私有 checkpoint、memory、pending tool call 不一定可移植。
-
-真正应该跨 Agent 保存的是：
+所以真正跨平台保持一致的是：
 
 - Task；
 - Artifact；
-- 结构化约束；
-- 已确认决定；
-- 待处理 Action；
-- 权限；
-- 来源。
+- Action；
+- Permission；
+- 用户意图。
+
+而不是强行让所有平台显示同一棵 UI Tree。
+
+## 5. AI-native interaction：语言和直接操作应该推动同一个任务
+
+这一部分反而比“协议怎么接”更重要。
+
+如果最终体验还是：
+
+> 用户打一句话 → AI 回一段文字
+
+那即使底层用了 AG-UI，也没有真正进入新的交互范式。
+
+更 AI-native 的交互应该是：
+
+> **自然语言、直接 UI 操作和 Agent 执行，共同作用于同一个业务对象。**
+
+例如用户让 Agent 生成营销活动方案。
+
+Agent 给出多个候选方案，同时生成一个可编辑 Surface。
+
+用户可以：
+
+- 说“第二个方案保守一点”；
+- 直接修改预算；
+- 用日期控件改时间；
+- 删除一个渠道；
+- 最后点击批准发布。
 
 ~~~mermaid
-flowchart LR
-  A["Agent A 私有 Runtime"] --> H["Handoff Package"]
-  H --> T["Task / Artifact / Constraints / Pending Action"]
-  T --> B["Agent B 新 Runtime"]
-  A -. "不强求迁移" .-> X["私有 checkpoint / 调用栈"]
+sequenceDiagram
+  participant U as User
+  participant H as Host / Renderer
+  participant A as Agent
+  participant B as Business Service
+
+  U->>A: 生成活动方案
+  A-->>H: Proposal + A2UI
+  H-->>U: 可编辑界面
+
+  U->>H: 修改预算
+  H->>H: 本地更新 Data Model
+
+  U->>A: 第二个方案再保守一点
+  H->>A: 当前对象 + 最新语义状态
+  A-->>H: 更新方案
+
+  U->>H: 批准发布
+  H->>B: Action + Artifact Revision
+  B->>B: Permission / Revision / Idempotency
+  B-->>A: 真实执行结果
+  A-->>H: 完成状态
 ~~~
 
-所以“跨 Agent”最可靠的边界是**业务事实可移交**，不是内部执行栈可移交。
+这里有一个重要设计：
 
-## 12. 能不能真正做到“一个 Agent 接任何 UI / 平台”
+**不是所有 UI 操作都应该回模型。**
 
-也不是零成本。
+A2UI Actions 区分发往 Agent 的 Event 与 Renderer 本地执行的 Function。[S14][s14]
 
-需要满足：
+适合留在本地的有：
 
-1. 目标端能接收 Agent 的运行交互；
-2. 如果使用 A2UI，目标端要有兼容 Renderer；
-3. Catalog 必须匹配；
-4. 如果平台不支持对应组件，需要定义降级；
-5. 高风险动作不能因为平台能力不足而降低确认要求。
+- 输入；
+- 焦点；
+- 展开折叠；
+- 格式化；
+- 表单即时校验。
 
-因此更准确的说法不是：
+需要进入 Agent 的才是：
 
-> 一个 Agent 接任何 UI。
+- 理解自然语言；
+- 重新规划；
+- 生成内容；
+- 跨 Tool 执行；
+- 需要模型判断的修改。
 
-而是：
+这样才真正兼顾低延迟、低 Token 与确定性。
 
-> **一个 Agent 面向统一任务和交互语义输出，各平台通过标准 Renderer 或 Channel Adapter 接入。**
+## 6. 推荐架构：协议负责解耦，业务服务负责连续性
 
-这已经是很大的工程收益，但仍然需要平台适配。
+AG-UI 与 A2UI 的组合关系可以用 A2UI 官方很形象的一句话理解：
 
-## 13. 与服务端到底还会耦合多少
+> **AG-UI 是 pipe，A2UI 是 content。** [S11][s11]
 
-零耦合不是正确目标。
+但生产系统还要多一层业务事实。
 
-真正要做的是把耦合收敛到稳定边界。
+~~~mermaid
+flowchart TB
+  U["Web / App / Slack / CLI"]
+  U <--> H["Host / Channel Adapter"]
 
-| 过去的耦合 | 重构后的稳定边界 |
-|---|---|
-| UI 理解 LangGraph / ADK 私有事件 | Runtime Adapter → AG-UI |
-| Agent 理解 React / Flutter 页面结构 | A2UI Catalog |
-| UI 直接决定是否能执行工具 | 服务端授权 |
-| 一个 run 就代表一个业务任务 | Task 层 |
-| 按钮点击直接等于业务成功 | Action / Command Handler |
-| UI 本地状态承担跨端恢复 | 服务端 Task / Artifact 状态 |
+  H <--> AG["AG-UI Interaction"]
+  H <--> UI["Native UI / A2UI Renderer"]
 
-尤其是这些事情不能交给 AG-UI 或 A2UI 自动解决：
+  AG <--> AD["Agent Adapter"]
+  AD <--> A["Agent Runtime"]
+
+  A <--> MCP["MCP / Tools"]
+  A <--> A2A["A2A / Other Agents"]
+
+  H <--> CORE["Task · Artifact · Action · Permission · Version"]
+  A <--> CORE
+~~~
+
+这张图里最重要的不是 AG-UI 或 A2UI，而是底部的业务层。
+
+### 6.1 为什么服务端仍然不可替代
+
+以下能力都不应该依赖模型或 Renderer 决定：
 
 - 用户身份；
 - tenant；
 - 权限；
-- 幂等；
-- 业务事务；
 - Artifact 版本；
+- Action 幂等；
 - 审批；
 - 审计；
-- 长期任务持久化。
+- 事务；
+- 长任务状态；
+- 真实副作用是否成功。
 
-推荐把真正稳定的业务边界放在协议下面：
+因此“解耦”不是“零耦合”。
+
+更准确的目标是：
+
+> **把不稳定的 N×M 私有耦合，收敛到少数稳定、明确、可测试的边界。**
+
+## 7. 这套架构到底省了多少成本：N×M 只能在接线层降成 N+M
+
+没有公共边界时：
 
 ~~~mermaid
 flowchart TB
-  U["Web / App / Slack / CLI"] --> I["Interaction Layer"]
-  I --> AG["AG-UI"]
-  AG --> AR["Agent Runtime Adapter"]
-  AR --> A["Agent"]
+  A1["Agent 1"] --> U1["UI 1"]
+  A1 --> U2["UI 2"]
+  A1 --> U3["UI 3"]
 
-  I --> P["Presentation\nNative UI / A2UI / Channel Adapter"]
+  A2["Agent 2"] --> U1
+  A2 --> U2
+  A2 --> U3
 
-  A --> B["Business Command / Tool Layer"]
-  B --> T["Task · Artifact · Permission · Revision · Audit"]
-
-  P --> T
+  A3["Agent 3"] --> U1
+  A3 --> U2
+  A3 --> U3
 ~~~
 
-**AG-UI 和 A2UI 都不应该成为业务数据库。**
+建立公共协议边界后：
 
-## 14. 真正需要哪些团队配合
+~~~mermaid
+flowchart TB
+  A1["Agent 1"] --> P["公共交互 / UI 契约"]
+  A2["Agent 2"] --> P
+  A3["Agent 3"] --> P
 
-如果这是企业项目，接入并不是“前端装两个 SDK”这么简单。
+  P --> U1["UI 1"]
+  P --> U2["UI 2"]
+  P --> U3["UI 3"]
+~~~
+
+接线数量可以从接近 N×M，下降到 N+M。
+
+但仍然有三类组合成本：
+
+1. **Component × Renderer**：自定义 Catalog 要在不同平台实现。
+2. **Agent × Client**：协议一致不代表行为完全一致，仍要验收。
+3. **Business Action**：每个真实副作用都要做权限、版本和幂等校验。
+
+因此协议最大的价值是：
+
+> **减少重复接线，不是消灭互操作测试。**
+
+## 8. 真正的协作成本与工程阻碍
+
+### 8.1 谁需要配合
 
 | 角色 | 主要责任 |
 |---|---|
-| Agent / AI 工程 | 输出真实运行事件；定义可用 Tool；必要时生成 A2UI |
-| 前端 | AG-UI Client、Renderer、Catalog、本地交互、Host Tool |
-| 业务后端 | Task、Artifact、权限、Action、幂等、审计 |
+| Agent / AI 工程 | Runtime Adapter、Tool、真实能力、必要时生成 A2UI |
+| 前端 | AG-UI Client、Renderer、Catalog、本地交互 |
+| 业务后端 | Task、Artifact、Action、Permission、Revision、幂等、审计 |
 | 平台集成 | Slack / Teams / Mobile Channel Adapter |
-| Design System | 定义哪些组件应该进入业务 Catalog |
-| QA / Infra | 多 Runtime × 多 Client × 多版本兼容测试和观测 |
+| Design System | 哪些组件进入 Catalog、不同 Renderer 的一致语义 |
+| QA / Infra | 多 Runtime × 多 Client × 多版本兼容与可观测性 |
 
-### 谁的协作成本最高
+### 8.2 自定义 Catalog 是主要跨平台成本
 
-往往不是协议接入本身，而是以下三件事：
-
-**第一，自定义 Catalog。**
-
-每一个业务组件都需要定义：
+每一个高阶组件都至少要定义：
 
 - Schema；
 - 数据语义；
@@ -647,199 +534,66 @@ flowchart TB
 - Mobile Renderer；
 - fallback。
 
-**第二，Task / State 边界。**
+Catalog 越“业务化”，Agent 输出越简单，但跨 Renderer 实现成本越高。
 
-你必须明确哪些状态属于：
+Catalog 越“原子化”，跨平台越容易，但模型需要生成更长、更复杂的组件树。
 
-- Agent 私有；
-- 业务服务；
-- A2UI Surface；
-- 用户本地草稿。
+这本质上是一个粒度权衡。
 
-**第三，版本兼容测试。**
+### 8.3 State Ownership 必须先设计清楚
 
-Agent Adapter、AG-UI SDK、A2UI middleware、Renderer、Catalog、协议版本是一整组兼容面。
+至少有四类状态：
 
-## 15. N×M 会不会真的变成 N+M
+| 状态 | 推荐权威来源 |
+|---|---|
+| Agent checkpoint / private memory | Agent Runtime |
+| Task / Artifact / Revision | Business Backend |
+| A2UI Data Model | Surface / Renderer |
+| 未提交输入、焦点、滚动等 | Local UI |
 
-可以，但只在“接线层”近似成立。
+不要把它们合成一个巨大的共享 JSON，然后所有地方都能 patch。
 
-没有公共协议时：
+典型事故就是：用户正在编辑字段，Agent 同时刷新整个状态，把本地输入覆盖。
 
-~~~mermaid
-flowchart LR
-  A1["Agent 1"] --> U1["UI 1"]
-  A1 --> U2["UI 2"]
-  A1 --> U3["UI 3"]
-  A2["Agent 2"] --> U1
-  A2 --> U2
-  A2 --> U3
-  A3["Agent 3"] --> U1
-  A3 --> U2
-  A3 --> U3
-~~~
+### 8.4 多 Agent 还需要 Surface Ownership
 
-接入公共边界后：
+A2UI 官方 Actions 文档专门说明了多 Agent 下的 Surface Ownership：由哪个 Agent 创建的 Surface，其 Action 与相应数据应路由回正确的 Agent，而不是广播给所有 Agent。[S14][s14]
 
-~~~mermaid
-flowchart LR
-  A1["Agent 1"] --> P["公共交互 / UI 契约"]
-  A2["Agent 2"] --> P
-  A3["Agent 3"] --> P
-  P --> U1["UI 1"]
-  P --> U2["UI 2"]
-  P --> U3["UI 3"]
-~~~
+这是正确性问题，也是数据隔离问题。
 
-连接器数量从接近 N×M，下降为 N+M。
-
-但还剩三类成本：
-
-- 自定义 Component × Renderer；
-- Agent × Client 的行为兼容测试；
-- Business Action 的安全验证。
-
-所以协议降低的是**重复接线成本**，不是取消所有组合成本。
-
-## 16. AI-native interaction 到底应该是什么
-
-如果最后产品还是：
-
-“用户打字 → AI 回文字”
-
-那即使底层用了 AG-UI，也没有真正改变交互模型。
-
-更 AI-native 的形态应该是：
-
-> 自然语言、直接操作、Agent 执行，共同作用于同一个任务状态。
-
-例如用户让 Agent 生成一份营销活动方案。
-
-Agent 先返回候选方案和可编辑结构。
-
-用户可以：
-
-- 说“第二个方案再保守一点”；
-- 直接在 UI 里修改预算；
-- 拖动日期；
-- 删除一个渠道；
-- 最后点“批准发布”。
-
-这些输入最终应该作用于同一个语义对象。
-
-~~~mermaid
-sequenceDiagram
-  participant U as 用户
-  participant H as Host UI
-  participant A as Agent
-  participant B as 业务服务
-
-  U->>A: 生成活动方案
-  A-->>H: Proposal + A2UI
-  H-->>U: 可编辑界面
-
-  U->>H: 直接修改预算
-  H->>H: 本地更新 Data Model
-
-  U->>A: 第二个方案保守一点
-  H->>A: 当前选中对象 + 最新语义状态
-  A-->>H: 更新方案
-
-  U->>H: 批准发布
-  H->>B: Action + Artifact Revision
-  B->>B: 权限 / 版本 / 幂等校验
-  B-->>A: 执行结果
-  A-->>H: 完成状态
-~~~
-
-这里最关键的一点是：
-
-**不是每次 UI 操作都应该调用模型。**
-
-A2UI 本身就区分：
-
-- Renderer 本地执行的 Function；
-- 发回 Agent 的 Event。[S14][s14]
-
-输入、展开、格式化、前端校验等确定性动作，应尽量本地完成。
-
-只有需要理解、规划、生成或调用业务能力的动作，才进入 Agent。
-
-这同时降低延迟、Token 和不确定性。
-
-## 17. 当前最大的工程阻碍是什么
-
-### 17.1 协议还在快速演进
+### 8.5 协议和 Renderer 版本仍在演进
 
 A2UI 当前生产基线是 v0.9.1，v1.0 仍是 Candidate。[S18][s18] [S20][s20]
 
-AG-UI 与 A2UI 的 middleware / renderer 也可能存在版本推进不同步的问题。
+生产环境不应该只写：
 
-因此生产上不能只记录：
+“支持 A2UI”。
 
-“我们支持 A2UI。”
-
-而应该锁定：
+而应锁定一整组版本：
 
 ~~~text
 AG-UI SDK
 + Runtime Adapter
 + A2UI Middleware
-+ A2UI Protocol Version
-+ Renderer Version
-+ Catalog Version
++ A2UI Protocol
++ Renderer
++ Catalog
 ~~~
 
-### 17.2 State Ownership 容易混乱
-
-至少有四种状态：
-
-| 状态 | 权威来源 |
-|---|---|
-| Agent checkpoint | Runtime |
-| Task / Artifact | Business Backend |
-| A2UI Data Model | Surface / Renderer |
-| 未提交输入、焦点等 | Local UI |
-
-把它们合成一个大 JSON，然后所有地方互相 patch，几乎一定会出现覆盖和冲突。
-
-### 17.3 多 Agent 下的 Surface Ownership
-
-A2UI 官方 Actions 文档专门讨论了多 Agent 场景中的 Surface Ownership：哪个 Agent 创建的 Surface，Action 和 Data Model 应该路由回对应的 Agent，不能无差别广播。[S14][s14]
-
-这既是正确性问题，也是数据隔离问题。
-
-### 17.4 安全边界必须留在宿主和服务端
-
-A2UI 的“安全”来自：
-
-Agent 发声明，而不是发任意 JavaScript。
-
-但这不意味着：
-
-“Agent 生成一个 Delete 按钮，所以它有删除权限。”
-
-真正产生副作用的动作仍然需要服务端授权。
-
-## 18. 怎么落地：不要一开始就把所有协议全部接满
-
-更稳妥的顺序是：
+## 9. 怎么落地：先验证解耦，再开放生成式 UI
 
 ### Phase 1：先证明 UI 能换 Agent
 
-同一个 Web UI 接：
+同一个 Web UI 接两个不同 Runtime。
 
-- 一个现有 Agent；
-- 一个不同 Runtime 的 Agent。
-
-只做：
+先只做：
 
 - Text；
 - Tool Progress；
 - Error；
 - 一个 Human Input。
 
-目标是验证 UI 不再理解 Runtime 私有事件。
+验收目标：前端不再判断 Runtime 私有事件。
 
 ### Phase 2：把 Task 从 Run 里抽出来
 
@@ -851,95 +605,70 @@ Agent 发声明，而不是发任意 JavaScript。
 - actionId；
 - permission。
 
-让断线、重新打开页面、换 Agent 时，业务任务仍然存在。
+这样断线、换端、换 Agent 后，业务任务仍然存在。
 
-### Phase 3：再加入 A2UI，但先固定 Schema
+### Phase 3：接入 A2UI，但先用固定 Schema
 
-先做非常确定的场景：
+优先做明确场景：
 
-- 表单；
 - Result List；
+- Form；
 - Approval；
 - Diff Review。
 
-不要一上来让模型任意生成复杂 UI。
+不要一开始就让模型自由生成大型页面。
 
-### Phase 4：增加第二个平台
+### Phase 4：增加一个真正不同的平台
 
-最好不是另一个 Web 页面，而是：
+不要只做第二个 Web 页面。
+
+优先选择：
 
 - Flutter；
-- Slack；
+- Slack / Teams；
 - CLI。
 
-这样会立刻暴露“真正可移植的语义”和“只在浏览器成立的假设”。
+这样会很快暴露哪些抽象是真正跨平台的，哪些是假设浏览器永远存在。
 
-### Phase 5：最后才开放动态 UI
+### Phase 5：最后再开放动态 Catalog 组合
 
-只有当固定模板覆盖不了真实需求时，再让 Agent 在受控 Catalog 里动态组合。
+当固定模板确实覆盖不了真实需求时，再让 Agent 在审核过的 Catalog 内动态组合。
 
-## 19. 选型可以直接用这棵树
+这个顺序能显著降低“先造一套漂亮协议平台、最后找不到真实场景”的风险。
 
-~~~mermaid
-flowchart TD
-  A["现在的核心问题是什么？"] --> B{"需要接多个 Agent Runtime？"}
-  B -->|是| C["先引入 AG-UI / Adapter"]
-  B -->|否| D{"需要 Agent 动态生成 UI？"}
+## 10. 最终判断：怎么认识这两个协议
 
-  C --> D
+AG-UI 与 A2UI 最容易被误解为“两套 Generative UI 方案”。
 
-  D -->|否| E["保留宿主原生 UI\n不必引入 A2UI"]
-  D -->|是| F{"UI 是否要跨多个 Renderer？"}
-
-  F -->|否| G["可以使用宿主 Generative UI\nA2UI 不是必须"]
-  F -->|是| H["引入 A2UI + Catalog"]
-
-  H --> I{"是否存在 Slack / CLI 等受限平台？"}
-  I -->|是| J["增加 Channel Adapter / Fallback"]
-  I -->|否| K["直接使用对应 Renderer"]
-
-  J --> L["Task / Permission / Action 保持统一"]
-  K --> L
-  E --> L
-  G --> L
-~~~
-
-## 20. 最后，用一个心智模型记住它们
-
-如果只记住一句话，可以记：
-
-> **AG-UI 让 UI 不必认识每一种 Agent Runtime；A2UI 让 Agent 不必认识每一种 UI 技术栈。**
-
-但工程上还要再补一句：
-
-> **真正让任务跨 Agent、跨平台连续存在的，不是协议本身，而是独立于两端的 Task、Artifact、Action、Permission 和 Version。**
-
-因此一个更完整的分层是：
+其实更准确的是：
 
 ~~~mermaid
 flowchart TB
-  USER["用户"] <--> HOST["Host / Channel"]
-  HOST <--> UI["Native UI / A2UI Renderer"]
-  HOST <--> AG["AG-UI Interaction"]
-  AG <--> ADAPTER["Agent Adapter"]
-  ADAPTER <--> AGENT["Agent Runtime"]
+  A["用户与应用"]
+  A --> B["AG-UI\n运行交互语义"]
+  B --> C["Agent Runtime"]
 
-  AGENT <--> MCP["MCP / Tools"]
-  AGENT <--> A2A["A2A / Other Agents"]
+  C --> D["A2UI\n声明式 UI 语义"]
+  D --> E["Renderer / Host"]
 
-  HOST <--> CORE["Task · Artifact · Action · Permission · Version"]
-  AGENT <--> CORE
+  A <--> F["Task · Artifact · Action · Permission · Version"]
+  C <--> F
+  E <--> F
 ~~~
 
-这也回答了最开始的问题：
+所以最终可以得到几个清晰结论：
 
-- **哪种通用性更强？** 对“不同 Agent 后端接入”而言，AG-UI 更通用；对“同一份动态 UI 描述跨 Renderer”而言，A2UI 更直接。
-- **哪种更灵活？** AG-UI 对呈现形式更开放；A2UI 对动态界面组合更标准化。
-- **能不能组合？** 官方已经明确支持，而且已有 middleware。
-- **会不会和服务端耦合？** 会，但耦合被收敛到 Adapter、Task、Action、Permission 这些稳定边界。
-- **跨平台是否零成本？** 不是；基础组件容易，自定义 Catalog 需要各 Renderer 实现，封闭平台需要 Channel Adapter。
-- **跨 Agent 是否无损？** 协议交互可以统一，但 Runtime 私有 checkpoint 通常不可直接迁移；应迁移业务事实和任务状态。
-- **最终价值是什么？** 把原本散落在每个 Agent × 每个 UI 组合里的专有接线，收敛成可维护、可测试的公共边界。
+- **AG-UI 更适合解决多 Agent Runtime 的统一接入。**
+- **A2UI 更适合解决动态 UI 在不同 Renderer 之间的表达复用。**
+- **AG-UI + A2UI 是互补关系，不是二选一。**
+- **跨平台不是零适配：自定义 Catalog 仍需要 Renderer，封闭平台仍需要 Channel Adapter。**
+- **跨 Agent 不是无损迁移 Runtime：应该优先迁移 Task、Artifact、Decision 和 Pending Action。**
+- **服务端不会消失：权限、版本、幂等、审计与业务状态仍然必须由可信系统负责。**
+- **真正的 AI-native interaction，是语言和直接 UI 操作共同推动同一个任务，而不是聊天框里出现几个按钮。**
+
+如果只记住一句：
+
+> **用 AG-UI 解耦“谁在执行”，用 A2UI 解耦“怎么呈现”，用业务任务层保证“同一件事”能够跨 Agent、跨平台持续存在。**
 
 ## 参考资料
 
@@ -947,27 +676,27 @@ flowchart TB
 
 | 编号 | 官方资料 | 用途 |
 |---|---|---|
-| S01 | [AG-UI Overview][s01] | AG-UI 定位、Agentic App 背景、Client / Framework 生态 |
-| S02 | [MCP, A2A, and AG-UI][s02] | 协议分层与官方 Protocol Stack |
-| S03 | [AG-UI Core Architecture][s03] | Event-driven 架构、Agent / Client / Adapter |
+| S01 | [AG-UI Overview][s01] | AG-UI 定位与 Agentic App 背景 |
+| S02 | [MCP, A2A, and AG-UI][s02] | 官方 Protocol Stack |
+| S03 | [AG-UI Core Architecture][s03] | Run / Event / Adapter |
 | S04 | [AG-UI Events][s04] | 运行事件语义 |
 | S05 | [AG-UI Tools][s05] | 前端 / 后端 Tool 边界 |
 | S06 | [AG-UI Interrupts][s06] | Human-in-the-loop 与恢复 |
-| S07 | [AG-UI Capabilities][s07] | 能力发现及其边界 |
-| S08 | [AG-UI Serialization][s08] | 历史恢复与序列化 |
-| S09 | [What is A2UI?][s09] | A2UI 问题背景与核心设计 |
-| S10 | [A2UI Core Concepts][s10] | Surface、消息、结构与 Data Model |
-| S11 | [A2UI：How Does A2UI Compare?][s11] | AG-UI 与 A2UI 的官方关系 |
+| S07 | [AG-UI Capabilities][s07] | 能力发现与边界 |
+| S08 | [AG-UI Serialization][s08] | 历史恢复 |
+| S09 | [What is A2UI?][s09] | A2UI 背景与核心设计 |
+| S10 | [A2UI Core Concepts][s10] | Surface、消息与 Data Model |
+| S11 | [A2UI：How Does A2UI Compare?][s11] | AG-UI 与 A2UI 的关系 |
 | S12 | [A2UI Catalogs][s12] | Catalog 与能力边界 |
 | S13 | [A2UI Data Binding][s13] | Structure / State 分离 |
 | S14 | [A2UI Actions][s14] | Event、Local Function、Surface Ownership |
-| S15 | [A2UI Transports][s15] | Transport-agnostic 与 AG-UI / A2A |
-| S16 | [How to Use A2UI][s16] | Web、Flutter、Agent 三种接入路径 |
-| S17 | [A2UI with Any Agent Framework][s17] | AG-UI + A2UI 官方组合方式 |
-| S18 | [A2UI v0.9.1 Protocol][s18] | 当前生产协议与官方时序 |
-| S19 | [AG-UI A2UI Runtime / Renderer Wiring][s19] | Middleware、固定 / 动态 UI 接线 |
-| S20 | [A2UI v1.0 Candidate][s20] | 候选版演进方向 |
-| S21 | [Defining Your Own Catalog][s21] | Production Catalog 与跨 Renderer 成本 |
+| S15 | [A2UI Transports][s15] | Transport-independent 设计 |
+| S16 | [How to Use A2UI][s16] | Web、Flutter、Agent 接入 |
+| S17 | [A2UI with Any Agent Framework][s17] | AG-UI + A2UI 官方组合 |
+| S18 | [A2UI v0.9.1 Protocol][s18] | 当前生产协议 |
+| S19 | [AG-UI A2UI Runtime / Renderer Wiring][s19] | Middleware、固定 / 动态 UI |
+| S20 | [A2UI v1.0 Candidate][s20] | 候选版演进 |
+| S21 | [Defining Your Own Catalog][s21] | Production Catalog |
 
 [s01]: https://docs.ag-ui.com/introduction
 [s02]: https://docs.ag-ui.com/agentic-protocols
