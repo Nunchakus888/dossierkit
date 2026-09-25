@@ -6,7 +6,7 @@ title: "从聊天框到 AI 原生交互：跨 Agent、跨平台的应用架构"
 summary: "大多数 AI 产品最初都从聊天框开始：用户说一句，模型回一句。"
 featured: false
 date: "2026-09-24"
-updatedAt: "2026-09-25T00:04:32.752Z"
+updatedAt: "2026-09-25T00:08:49.170Z"
 kind: "research"
 topics:
   - "AI 原生交互"
@@ -22,7 +22,7 @@ tags:
   - "A2UI"
   - "MCP"
   - "Generative UI"
-contentHash: "sha256:3774d8f3ab50799ad0cf72d3a5c53e76c83a5122fa0db7b9f708816ea215f88c"
+contentHash: "sha256:f1fc5d746f20a5fc9ed8e31cab6344ffddf91556310b9a2abd04b358dcd1045c"
 ---
 
 大多数 AI 产品最初都从聊天框开始：用户说一句，模型回一句。
@@ -179,46 +179,49 @@ flowchart TB
 
 这里的核心协议可能首先是 A2A + MCP，而不是 AG-UI。
 
-### 2.3 AG-UI：专门处理 Agent Runtime 与用户应用的运行交互
+### 2.3 AG-UI：一个运行交互层
 
-AG-UI 的全称是 **Agent–User Interaction Protocol**。
+AG-UI（Agent–User Interaction Protocol）解决的是：
 
-官方把它定义为开放、轻量、事件驱动的协议，用于标准化 AI Agent 与面向用户应用之间的连接；它关注 Run、Message、Tool Call、State、Activity、Interrupt 等运行交互语义。[S01][s01] [S04][s04]
+> **Agent 正在做什么，用户应用怎样持续理解它，以及用户操作怎样再回到 Agent。**
 
-更通俗地说：
-
-> **AG-UI 解决的是“Agent 正在做什么，应用怎样实时理解它，以及用户怎样把操作再送回运行中的 Agent”。**
+官方将它定义为开放、轻量、事件驱动的 Agent ↔ User App 协议；Run、Message、Tool、State、Interrupt 等都只是为了让应用获得统一的运行语义。[S01][s01] [S04][s04]
 
 ![AG-UI 官方 Overview](https://raw.githubusercontent.com/ag-ui-protocol/ag-ui/e62b348680c41f52a5ea0ed4eb714a6600066fa1/docs/images/ag-ui-overview-with-partners.png)
 
-它是一条很清晰的 Agent Runtime ↔ Host 路线，但并不是唯一可能的实现。一个强控制的自有应用也完全可以维护自己的 Runtime Event Protocol；关键是是否值得承担长期私有协议成本。
+*官方 Overview 的核心含义：不同 Agent Runtime 和不同 Client 可以通过公共交互边界接线。协议统一的是运行语义，不要求 Runtime 内部实现一致。*
 
-### 2.4 A2UI：Agent 发送声明，Host 使用自己的组件渲染
+如果应用完全由自己控制，也可以维护自定义 Runtime Event Protocol。AG-UI 的价值主要在于：当 Agent / Client 数量增加时，不必让每个前端都理解每种 Runtime 的私有事件。
 
-A2UI（Agent to UI）解决的是：
+### 2.4 A2UI：一个声明式 UI 层
 
-> **Agent 如何安全地发送富 UI，而不直接发送任意可执行前端代码。**
+A2UI（Agent to UI）解决的是另一个问题：
 
-A2UI 官方将其描述为声明式 UI 语言：Agent 输出 Component Blueprint，Client 使用自己的原生组件进行渲染；Catalog 决定 Agent 可以使用哪些组件。[S09][s09]
+> **Agent 怎样表达“需要什么界面”，而不是直接发送 React、HTML 或任意 JavaScript。**
+
+官方将 A2UI 描述为声明式 UI 格式：Agent 发送 UI 数据，Host 根据 Catalog 用本地 Renderer 画出真实组件。[S09][s09]
 
 ~~~mermaid
 flowchart TB
   A["Agent"]
-  --> M["A2UI Messages"]
-  --> C["Catalog + Renderer"]
-  --> H["Host Native Components"]
+  --> M["A2UI 声明"]
+  --> C["Catalog：允许使用哪些组件"]
+  --> R["Renderer：映射到本地组件"]
+  --> H["Host UI"]
   --> U["User"]
 
-  U --> ACT["Action / Input"]
-  ACT --> A
+  U --> X["Action / Input"]
+  X --> A
 ~~~
 
-这一设计尤其适合：
+所以 A2UI 的核心不是消息字段本身，而是一个分工：
 
-- Host 希望保留自己的 Design System；
-- UI 需要跨 React / Flutter / Angular 等 Renderer；
-- 不希望远程 Agent 直接发送任意 JS；
-- UI 本身可以被 LLM 动态组合。
+- **Agent** 决定需要什么信息和交互；
+- **Catalog** 约束它可以使用什么 UI 能力；
+- **Renderer / Host** 决定这些能力在 React、Flutter 等平台怎样实现；
+- **用户 Action** 再回到 Agent 或应用。
+
+具体 JSON 操作、middleware 和内部消息格式属于实现细节，只有真正接入时才需要进入。
 
 ### 2.5 MCP Apps：不是描述 UI，而是直接交付一个受沙箱约束的小应用
 
@@ -394,23 +397,17 @@ flowchart TB
 | 单一 React 产品，前后端都自己控制 | Vercel AI SDK / Framework-native Generative UI |
 | 复杂 Editor / Canvas / 3D App | Native App / MCP Apps，Agent 通过 Tool / Action 控制；不一定适合全量声明式生成 |
 
-### 3.3 为什么这篇文章仍然会重点研究 AG-UI + A2UI
+### 3.3 为什么仍然把 AG-UI + A2UI 当作重点案例
 
-不是因为它们已经“赢了”。
+不是因为它们已经“赢了”，而是因为这一组合很适合观察一套开放的 AI Interaction Architecture：
 
-而是因为这一组合有几个非常适合研究通用架构的问题：
+1. **分层清楚**：运行交互和 UI 表达被拆成两个独立问题；
+2. **公开、可检查**：都有公开规范、SDK / Renderer 以及官方组合路径；A2UI 也不限定只能经 AG-UI 传输。[S15][s15] [S17][s17]
+3. **能暴露真正的架构问题**：Host-owned UI、跨 Renderer、State、Action、Capability、Permission 都会在这条路径上出现。
 
-1. **分层边界很清楚**：Runtime Interaction 与 UI Description 被明确拆开；
-2. **都是开放规范 / 开源实现路线**，可以阅读 Spec、SDK 和桥接源码；
-3. **A2UI 明确支持多种 Transport**，不要求只能经 AG-UI；官方文档也列出了 A2A、AG-UI 和自定义 JSON Transport。[S15][s15]
-4. **AG-UI 已经提供 A2UI middleware**，因此这不是纯理论组合，而是有明确工程接线方式。[S19][s19]
-5. **它非常适合讨论 Host-owned UI、跨 Renderer、状态和 Action 边界**，而这些问题对于其他技术体系同样存在。
+因此后文会拿它们做一个**较完整的开放案例**，但结论仍然适用于 MCP Apps、A2A + UI、Framework-native Generative UI 或自定义体系。
 
-所以后面的分析把 AG-UI + A2UI 作为一个**代表性、较完整的开放组合案例**，但结论不会限定为：
-
-> 所有 AI 应用最终都应该使用它们。
-
-事实上，如果你的产品是 MCP Tool-first、第三方 Chat Host-first，MCP Apps 可能更直接；如果是多 Agent Mesh，A2A 可能更靠近系统主干；如果只是 React App，Framework-native Generative UI 可能成本最低。
+如果产品是 Tool-first、第三方 Chat Host-first，MCP Apps 可能更直接；如果核心是跨组织 Agent Mesh，A2A 更重要；如果只有一个 React App，Framework-native Generative UI 往往更简单。
 
 ### 3.4 无论采用哪套技术，真正应该稳定的仍是业务语义
 
@@ -527,7 +524,131 @@ Host 负责：
 
 但它不应该成为业务数据库。
 
-### 4.4 Agent Runtime：保留内部自由度
+### 4.4 模型到底怎么参与：Prompt、Tool、Schema、Protocol 各管一层
+
+到这里容易产生一个实际问题：
+
+> **这些交互到底是靠 Prompt 让模型“听话”，还是靠 Tool Calling，还是协议本身在约束模型？**
+
+答案是：它们负责不同层，通常会同时存在。
+
+| 层 | 最简单的理解 | 能保证什么 | 不能保证什么 |
+|---|---|---|---|
+| Prompt / Context | 告诉模型“你有什么能力、什么时候用” | 引导模型选择和生成 | 不能作为安全边界 |
+| Tool / Function Schema | 给模型一组结构化动作接口 | 工具名和参数形状更稳定 | 不代表模型有执行权限 |
+| Structured Output / UI Schema | 约束模型生成的数据形状 | UI / 结果更容易解析和校验 | 不代表业务内容正确 |
+| AG-UI / A2UI / MCP 等协议 | 在系统之间传递运行事件、Tool、UI、Action | 统一通信和生命周期 | 不负责模型推理本身 |
+| Runtime / Business Validation | 真正执行前再次校验 | 权限、版本、幂等、业务规则 | 不能省略 |
+
+#### Tool Calling：最适合“模型需要选择一个动作”
+
+AG-UI 官方的 Tool 结构本质上就是：**name + description + JSON Schema parameters**。Schema 同时帮助 Agent 生成参数，也帮助应用解析和校验参数。[S05][s05]
+
+下面是厂商无关的简化示意，不对应某一家模型 API：
+
+~~~ts
+const tools = [
+  {
+    name: "searchOrders",
+    description: "查询用户订单",
+    parameters: {
+      type: "object",
+      properties: {
+        keyword: { type: "string" }
+      },
+      required: ["keyword"]
+    }
+  },
+  {
+    name: "requestApproval",
+    description: "请求用户确认一个高风险动作",
+    parameters: {
+      type: "object",
+      properties: {
+        actionId: { type: "string" },
+        summary: { type: "string" }
+      },
+      required: ["actionId", "summary"]
+    }
+  }
+];
+
+// 模型只负责：选哪个 tool、填什么参数
+const turn = await model.run({ messages, tools });
+
+// 系统仍然负责最终校验和执行
+for (const call of turn.toolCalls) {
+  const args = validateSchema(call.name, call.args);
+  await dispatchWithPermissionCheck(call.name, args);
+}
+~~~
+
+最重要的一点是：
+
+> **Tool Calling 是“模型提出一个结构化动作”，不是“模型获得这个动作的权限”。**
+
+#### 生成 UI：固定模板优先，动态生成再用 Schema / Structured Output
+
+A2UI 官方 Agent Development Guide 把模型侧流程概括成四步：
+
+> 理解意图 → 生成 A2UI → 校验并发送 → 处理用户 Action。[S27][s27]
+
+其中生成阶段可以使用 Prompt 或 Structured Output；Catalog 的 Schema 和示例可以被放进模型上下文，让模型知道自己允许使用哪些组件。[S27][s27]
+
+工程上可以简单分成两种方式：
+
+~~~mermaid
+flowchart TB
+  A["模型得到用户意图 + Tool / Catalog 描述"]
+  --> B{"UI 是否基本确定？"}
+
+  B -->|是| C["模型选业务 Tool"]
+  C --> D["代码 / 模板生成 UI"]
+  D --> V["Schema 校验"]
+
+  B -->|否| E["模型按 Catalog 动态生成 UI"]
+  E --> V
+
+  V -->|通过| R["发送给 Renderer"]
+  V -->|失败| F["修复 / fallback"]
+~~~
+
+**固定业务流程优先使用代码或模板。**  
+例如审批、订单确认、支付参数这类 UI，不需要为了“AI-native”强行让模型每次重新设计布局。
+
+只有当界面结构本身确实取决于任务内容时，才值得让模型动态生成 A2UI。
+
+#### Protocol：负责搬运，不负责“教模型思考”
+
+最后要把协议和模型能力彻底分开：
+
+- AG-UI 搬运 Run / Tool / State / Interrupt；
+- A2UI 搬运声明式 UI 和 Action；
+- MCP 暴露 Tool / Resource；
+- A2A 传递 Agent Task / Artifact。
+
+**这些协议并不会让模型自动知道什么时候该调用 Tool，也不会替代 Prompt、Tool Schema、Structured Output 和运行时校验。**
+
+更准确的链路是：
+
+~~~mermaid
+flowchart TB
+  U["User Intent"]
+  --> P["Prompt / Context
+告诉模型有哪些能力"]
+  --> M["Model
+选择 Tool 或生成结构化结果"]
+  --> S["Schema Validation"]
+  --> PR["Protocol / Runtime
+传输事件、UI、Action"]
+  --> B["Business Validation
+Permission / Version / Idempotency"]
+  --> X["真实执行或 Renderer"]
+~~~
+
+这也是为什么模型侧设计和协议侧设计应该分开评审：**前者决定模型会尝试做什么，后者决定系统怎样表达和传递，最后的 Business Gate 决定什么真的允许发生。**
+
+### 4.5 Agent Runtime：保留内部自由度
 
 Runtime 可以继续自由选择：
 
@@ -542,7 +663,7 @@ Runtime 可以继续自由选择：
 
 只要它在公共边界上暴露真实、可验证的能力，就不要求内部实现一致。
 
-### 4.5 Business Control Plane：为什么服务端不会消失
+### 4.6 Business Control Plane：为什么服务端不会消失
 
 以下能力不能依赖模型或 Renderer 决定：
 
@@ -1207,6 +1328,7 @@ flowchart TB
 | S24 | [MCP Apps Overview][s24] | Tool + HTML UI Resource + sandboxed iframe |
 | S25 | [OpenAI：Add UI to your MCP server][s25] | ChatGPT 对开放 MCP Apps 标准及 Host 扩展的实现 |
 | S26 | [Vercel AI SDK：Generative UI][s26] | Framework-native Generative UI 路线 |
+| S27 | [A2UI Agent Development Guide][s27] | Prompt / Structured Output / Schema Validation 的模型侧流程 |
 
 [s01]: https://docs.ag-ui.com/introduction
 [s02]: https://docs.ag-ui.com/agentic-protocols
@@ -1235,3 +1357,5 @@ flowchart TB
 [s24]: https://apps.extensions.modelcontextprotocol.io/api/documents/overview.html
 [s25]: https://developers.openai.com/plugins/build/chatgpt-ui
 [s26]: https://v4.ai-sdk.dev/docs/ai-sdk-ui/generative-user-interfaces
+
+[s27]: https://a2ui.org/guides/agent-development/
