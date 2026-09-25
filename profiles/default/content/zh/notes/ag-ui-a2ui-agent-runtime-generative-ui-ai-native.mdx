@@ -6,40 +6,40 @@ title: "从聊天框到 AI 原生交互：跨 Agent、跨平台的应用架构"
 summary: "大多数 AI 产品最初都从聊天框开始：用户说一句，模型回一句。"
 featured: false
 date: "2026-09-24"
-updatedAt: "2026-09-25T00:08:49.170Z"
+updatedAt: "2026-09-25T00:20:34.571Z"
 kind: "research"
 topics:
   - "AI 原生交互"
   - "Agent Protocol"
-  - "AG-UI"
-  - "A2UI"
-  - "MCP"
+  - "Agent Runtime"
   - "Generative UI"
+  - "MCP"
+  - "跨平台交互"
 tags:
   - "AI 原生交互"
   - "Agent Protocol"
-  - "AG-UI"
-  - "A2UI"
-  - "MCP"
+  - "Agent Runtime"
   - "Generative UI"
-contentHash: "sha256:f1fc5d746f20a5fc9ed8e31cab6344ffddf91556310b9a2abd04b358dcd1045c"
+  - "MCP"
+  - "跨平台交互"
+contentHash: "sha256:2bdb9ee814f10cd596593a679611f610c7419896624873e4d17410e603755af1"
 ---
 
 大多数 AI 产品最初都从聊天框开始：用户说一句，模型回一句。
 
 但 Agent 进入真实应用以后，系统开始发生根本变化。它不再只是“生成答案”，而是会持续执行任务、调用工具、产生中间状态、等待用户决定、生成可操作界面，并把真实业务动作交给后端执行。
 
-于是问题从“怎么做好聊天 UI”，扩展成了：
+于是问题不再是“应该选哪一个 Agent UI 协议”，而是更上游的三个问题：
 
-> **Agent 如何连接工具、其他 Agent、用户应用和动态 UI？这些连接里，哪些应该标准化，哪些应该保留实现自由？**
+> **Agent 应用出现了哪些新的连接边界？哪些语义应该稳定？模型、Runtime、UI 与业务系统应该怎样分工？**
 
-这也是为什么过去两年会集中出现 MCP、A2A、AG-UI、A2UI、MCP Apps、Apps SDK、Framework-native Generative UI 等不同技术路线。它们不是在争夺同一个协议层，而是在解决 **Agent 进入应用之后暴露出的不同连接边界**。
+MCP、A2A、AG-UI、A2UI、MCP Apps、Apps SDK、Framework-native Generative UI 都是这个问题空间里逐渐长出的实现路线。它们是“果”，不是文章的出发点。
 
-本文先建立完整的问题空间，再讨论技术选择。AG-UI + A2UI 会作为一个重点案例深入分析，但**不会被预设为唯一答案**。
+本文先从问题和设计原则出发，再看可选技术体系。后文会把“运行交互协议 + 声明式 UI”作为一个较完整的开放案例深入分析，但不会预设最终一定采用 AG-UI + A2UI。
 
-## 1. Agent 走进真实应用后，为什么会长出一整套新协议层
 
-### 1.1 从“回答问题”到“共同完成任务”
+
+## 1. Agent 走进真实应用：交互为什么从聊天变成系统问题
 
 传统应用常见的是：
 
@@ -71,7 +71,12 @@ flowchart TB
 
 这时，一个原本简单的“模型 API”问题，被拆成了多个不同的连接边界。
 
-### 1.2 Agent 应用实际上出现了至少四类连接问题
+
+
+
+## 2. 问题空间与技术版图：Tool、Agent、Host、UI 分别需要什么连接层
+
+从上面的体验变化继续往下拆，会看到至少四条不同连接边界。它们不是同一个问题，也因此长出了不同的协议和实现路线。
 
 ~~~mermaid
 flowchart TB
@@ -106,7 +111,6 @@ AG-UI 官方也用一张 Protocol Stack 把 MCP、A2A 与 AG-UI 放在不同连�
 
 > **Agent 交互并没有一个“总协议”可以解决所有问题。协议生态正在按连接边界分层。**
 
-### 1.3 UI 为什么又单独形成了一条技术路线
 
 Tool 能返回 JSON，不等于用户就愿意看 JSON。
 
@@ -127,11 +131,9 @@ Tool 能返回 JSON，不等于用户就愿意看 JSON。
 
 这正是 A2UI、MCP Apps，以及各类 Framework-native Generative UI 路线开始分化的地方。
 
-## 2. 当前公开技术路线：不是只有 AG-UI 和 A2UI
 
-如果只从 AG-UI / A2UI 开始讲，很容易误以为“Agent UI 已经有一个确定的标准答案”。
 
-实际上，当前公开生态至少存在下面几类不同思路。
+在这个问题空间里，当前公开生态至少有下面几类代表性路线。
 
 ### 2.1 MCP：先解决 Agent 如何获得外部能力
 
@@ -326,13 +328,63 @@ flowchart TB
   F -->|双方都在同一 Web 技术栈| FW["Framework-native Generative UI"]
 ~~~
 
-## 3. 如何选择：AG-UI + A2UI 是一个重点案例，不是预设答案
 
-到这里，才有必要讨论“应该选什么”。
 
-真正的选择应该基于**系统边界**，而不是哪个协议名字更新。
+## 3. 设计原则：先稳定任务语义，再选择协议和框架
 
-### 3.1 先回答五个问题
+协议和框架都可能变化，但用户正在完成的任务不应该跟着技术栈一起消失。
+
+协议可以替换，Task 不应该跟着消失。
+
+### 3.1 先稳定业务语义
+
+建议优先稳定：
+
+| 稳定对象 | 它回答的问题 |
+|---|---|
+| Task | 用户到底在持续完成哪件事？ |
+| Artifact | 当前工作的可交付对象是什么？ |
+| Action | 用户或 Agent 想产生什么业务效果？ |
+| State | 哪些状态需要被共享、恢复或持久化？ |
+| Capability | 当前 Agent / Host / Channel 实际能做什么？ |
+| Permission | 当前操作者是否允许执行这件事？ |
+| Version / Revision | 用户确认的内容是否还是即将执行的那一版？ |
+
+相反，不需要为了统一而强行标准化：
+
+- Agent 内部 Planner；
+- Runtime 私有 checkpoint；
+- Model private memory；
+- React / Flutter 的实现；
+- Slack 与 Web 的像素布局。
+
+~~~mermaid
+flowchart TB
+  A["长期稳定的业务语义"]
+  --> T["Task"]
+  --> AR["Artifact"]
+  --> AC["Action"]
+  --> S["State"]
+  --> C["Capability"]
+  --> P["Permission"]
+  --> V["Version / Revision"]
+
+  B["可以变化的技术实现"]
+  --> PROTO["AG-UI / A2A / MCP / Custom Protocol"]
+  --> UI["A2UI / MCP Apps / Native UI"]
+  --> R["Runtime / Framework / Renderer"]
+~~~
+
+核心原则是：
+
+> **技术体系可以替换；用户正在完成的“同一件事”必须保持稳定。**
+
+这也是后面所有架构设计的真正起点。
+
+
+
+
+### 3.2 再用五个问题决定技术边界
 
 #### 1. Host 是谁控制的？
 
@@ -385,7 +437,9 @@ flowchart TB
 
 > Runtime Interaction + Host-owned UI 的体系通常更自然。
 
-### 3.2 几种典型组合
+
+
+### 3.3 典型技术组合
 
 | 目标场景 | 更自然的技术组合 |
 |---|---|
@@ -397,7 +451,9 @@ flowchart TB
 | 单一 React 产品，前后端都自己控制 | Vercel AI SDK / Framework-native Generative UI |
 | 复杂 Editor / Canvas / 3D App | Native App / MCP Apps，Agent 通过 Tool / Action 控制；不一定适合全量声明式生成 |
 
-### 3.3 为什么仍然把 AG-UI + A2UI 当作重点案例
+
+
+### 3.4 为什么后文重点观察“运行交互 + 声明式 UI”
 
 不是因为它们已经“赢了”，而是因为这一组合很适合观察一套开放的 AI Interaction Architecture：
 
@@ -409,122 +465,10 @@ flowchart TB
 
 如果产品是 Tool-first、第三方 Chat Host-first，MCP Apps 可能更直接；如果核心是跨组织 Agent Mesh，A2A 更重要；如果只有一个 React App，Framework-native Generative UI 往往更简单。
 
-### 3.4 无论采用哪套技术，真正应该稳定的仍是业务语义
-
-协议可以替换，Task 不应该跟着消失。
-
-建议优先稳定：
-
-| 稳定对象 | 它回答的问题 |
-|---|---|
-| Task | 用户到底在持续完成哪件事？ |
-| Artifact | 当前工作的可交付对象是什么？ |
-| Action | 用户或 Agent 想产生什么业务效果？ |
-| State | 哪些状态需要被共享、恢复或持久化？ |
-| Capability | 当前 Agent / Host / Channel 实际能做什么？ |
-| Permission | 当前操作者是否允许执行这件事？ |
-| Version / Revision | 用户确认的内容是否还是即将执行的那一版？ |
-
-相反，不需要为了统一而强行标准化：
-
-- Agent 内部 Planner；
-- Runtime 私有 checkpoint；
-- Model private memory；
-- React / Flutter 的实现；
-- Slack 与 Web 的像素布局。
-
-~~~mermaid
-flowchart TB
-  A["长期稳定的业务语义"]
-  --> T["Task"]
-  --> AR["Artifact"]
-  --> AC["Action"]
-  --> S["State"]
-  --> C["Capability"]
-  --> P["Permission"]
-  --> V["Version / Revision"]
-
-  B["可以变化的技术实现"]
-  --> PROTO["AG-UI / A2A / MCP / Custom Protocol"]
-  --> UI["A2UI / MCP Apps / Native UI"]
-  --> R["Runtime / Framework / Renderer"]
-~~~
-
-核心原则是：
-
-> **技术体系可以替换；用户正在完成的“同一件事”必须保持稳定。**
-
-这也是后面所有架构设计的真正起点。
 
 
-## 4. 推荐架构：把任务、交互、执行和呈现拆成稳定边界
 
-理解协议之后，真正重要的是整个应用怎么组织。
-
-推荐把系统看成四个逻辑层：
-
-~~~mermaid
-flowchart TB
-  E["Experience Layer\nWeb / Mobile / IM / CLI"]
-  --> I["Interaction Layer\nAG-UI / A2UI / Channel Adapter"]
-  --> R["Agent Runtime\nPlanning / Tool / Memory / Sub-agent"]
-  --> B["Business Control Plane\nTask / Artifact / Action / Permission / Audit"]
-~~~
-
-它们不一定要部署成四个服务，但职责应该尽量清楚。
-
-### 4.1 完整架构
-
-~~~mermaid
-flowchart TB
-  U["Web / App / Slack / CLI"]
-  U <--> H["Host / Channel Adapter"]
-
-  H <--> AG["AG-UI Interaction"]
-  H <--> UI["Native UI / A2UI Renderer"]
-
-  AG <--> AD["Agent Adapter"]
-  AD <--> A["Agent Runtime"]
-
-  A <--> MCP["MCP / Tools"]
-  A <--> A2A["A2A / Other Agents"]
-
-  H <--> CORE["Task · Artifact · Action · Permission · Version"]
-  A <--> CORE
-~~~
-
-图里真正应该被长期稳定下来的，不是某个协议名称，而是底部的业务 Control Plane。
-
-### 4.2 Experience Layer：允许不同平台拥有不同体验
-
-Web、移动端、IM、CLI 不应该被迫使用同一种界面。
-
-Host 负责：
-
-- 呈现任务；
-- 收集用户输入；
-- 提供当前选中对象等语义上下文；
-- 运行本地交互；
-- 在支持时渲染 A2UI；
-- 在受限平台做 Channel Adapter。
-
-统一的是用户正在完成的任务，不是像素。
-
-### 4.3 Interaction Layer：协议只解决通信和表达
-
-这一层可以包括：
-
-- AG-UI；
-- A2UI；
-- Native Generative UI；
-- Channel Adapter；
-- Capability / Catalog 解析。
-
-它负责把 Agent 的运行过程和动态 UI 表达转换为 Host 可以理解的公共语义。
-
-但它不应该成为业务数据库。
-
-### 4.4 模型到底怎么参与：Prompt、Tool、Schema、Protocol 各管一层
+## 4. 模型与系统如何协作：Prompt、Tool、Schema、Protocol 各管什么
 
 到这里容易产生一个实际问题：
 
@@ -648,7 +592,83 @@ Permission / Version / Idempotency"]
 
 这也是为什么模型侧设计和协议侧设计应该分开评审：**前者决定模型会尝试做什么，后者决定系统怎样表达和传递，最后的 Business Gate 决定什么真的允许发生。**
 
-### 4.5 Agent Runtime：保留内部自由度
+
+
+
+## 5. 推荐架构：Experience、Interaction、Runtime、Control Plane 如何分工
+
+理解问题空间、设计原则和模型侧约束之后，再看完整系统如何组织。
+
+推荐把系统看成四个逻辑层：
+
+~~~mermaid
+flowchart TB
+  E["Experience Layer\nWeb / Mobile / IM / CLI"]
+  --> I["Interaction Layer\nProtocol / Generative UI / Channel Adapter"]
+  --> R["Agent Runtime\nPlanning / Tool / Memory / Sub-agent"]
+  --> B["Business Control Plane\nTask / Artifact / Action / Permission / Audit"]
+~~~
+
+它们不一定要部署成四个服务，但职责应该尽量清楚。
+
+### 5.1 完整架构
+
+~~~mermaid
+flowchart TB
+  U["Web / App / Slack / CLI"]
+  U <--> H["Host / Channel Adapter"]
+
+  H <--> AG["AG-UI Interaction"]
+  H <--> UI["Native UI / A2UI Renderer"]
+
+  AG <--> AD["Agent Adapter"]
+  AD <--> A["Agent Runtime"]
+
+  A <--> MCP["MCP / Tools"]
+  A <--> A2A["A2A / Other Agents"]
+
+  H <--> CORE["Task · Artifact · Action · Permission · Version"]
+  A <--> CORE
+~~~
+
+图里真正应该被长期稳定下来的，不是某个协议名称，而是底部的业务 Control Plane。
+
+
+
+### 5.2 Experience Layer：允许不同平台拥有不同体验
+
+Web、移动端、IM、CLI 不应该被迫使用同一种界面。
+
+Host 负责：
+
+- 呈现任务；
+- 收集用户输入；
+- 提供当前选中对象等语义上下文；
+- 运行本地交互；
+- 在支持时渲染 A2UI；
+- 在受限平台做 Channel Adapter。
+
+统一的是用户正在完成的任务，不是像素。
+
+
+
+### 5.3 Interaction Layer：协议只解决通信和表达
+
+这一层可以包括：
+
+- AG-UI；
+- A2UI；
+- Native Generative UI；
+- Channel Adapter；
+- Capability / Catalog 解析。
+
+它负责把 Agent 的运行过程和动态 UI 表达转换为 Host 可以理解的公共语义。
+
+但它不应该成为业务数据库。
+
+
+
+### 5.4 Agent Runtime：保留内部自由度
 
 Runtime 可以继续自由选择：
 
@@ -663,7 +683,9 @@ Runtime 可以继续自由选择：
 
 只要它在公共边界上暴露真实、可验证的能力，就不要求内部实现一致。
 
-### 4.6 Business Control Plane：为什么服务端不会消失
+
+
+### 5.5 Business Control Plane：为什么服务端不会消失
 
 以下能力不能依赖模型或 Renderer 决定：
 
@@ -688,13 +710,18 @@ Runtime 可以继续自由选择：
 
 > **把不稳定、散落的私有耦合，收敛成少数稳定、明确、可测试的边界。**
 
-## 5. 真正困难的部分：状态、权限、Catalog 与协作成本
+
+
+
+## 6. 治理边界：状态、权限、能力、组件和协作怎么管
+
+完整架构看起来很干净，但真正决定它能不能进入生产的，是所有权、权限、能力和版本边界。
 
 完整架构看起来很干净，但系统收敛并不是免费的。
 
 真正复杂的地方，往往不在“协议能不能连通”，而在下面这些边界怎样被团队共同维护。
 
-### 5.1 State Ownership：谁才是权威状态
+### 6.1 State Ownership：谁才是权威状态
 
 至少要区分四类状态：
 
@@ -718,7 +745,7 @@ Runtime 可以继续自由选择：
 - UI dirty field 如何处理；
 - 冲突是自动合并、提示用户，还是拒绝写入。
 
-### 5.2 Action：按钮不是权限
+### 6.2 Action：按钮不是权限
 
 A2UI 能让 Agent 生成一个“发布”按钮，但：
 
@@ -742,7 +769,7 @@ flowchart TB
 
 这样 Web、Slack 或自然语言“确认”只是不同输入形式，不会形成三个互相独立的业务执行入口。
 
-### 5.3 Catalog：跨平台能力和跨平台成本来自同一个地方
+### 6.3 Catalog：跨平台能力和跨平台成本来自同一个地方
 
 A2UI 最大的价值之一是 Catalog。
 
@@ -774,7 +801,7 @@ Catalog 越“原子化”，只提供 Text / Row / Button / Input，跨平台�
 
 A2UI 官方也建议生产系统定义自己的 Catalog，并映射到自己的 Design System。[S21][s21]
 
-### 5.4 多 Agent 还需要 Surface Ownership
+### 6.4 多 Agent 还需要 Surface Ownership
 
 多 Agent 同时工作的系统里，还必须知道：
 
@@ -784,7 +811,7 @@ A2UI Actions 文档专门讨论了 Surface Ownership：由哪个 Agent 创建的
 
 这既是正确性问题，也是数据隔离问题。
 
-### 5.5 Capability：能连接不等于能力相同
+### 6.5 Capability：能连接不等于能力相同
 
 同样是 AG-UI Agent，不代表都支持：
 
@@ -807,7 +834,7 @@ if (agent.protocol === "ag-ui") {
 
 而应该根据真实 Capability 决定功能和降级路径。
 
-### 5.6 版本矩阵不能只写“支持 A2UI”
+### 6.6 版本矩阵不能只写“支持 A2UI”
 
 A2UI 当前生产基线是 v0.9.1，v1.0 仍是 Candidate。[S18][s18] [S20][s20]
 
@@ -824,7 +851,7 @@ AG-UI SDK
 
 协议名相同，不代表任意版本组合都天然兼容。
 
-### 5.7 真正需要哪些团队配合
+### 6.7 真正需要哪些团队配合
 
 | 角色 | 主要责任 |
 |---|---|
@@ -839,7 +866,9 @@ AG-UI SDK
 
 > **让多个团队开始围绕同一组任务、状态、动作和能力语义工作。**
 
-## 6. 架构收益：从大量私有约定，收敛成一套可治理系统
+
+
+## 7. 系统收敛：真正降低的是语义版本数量和信息熵
 
 知道代价之后，才能准确讨论为什么值得做。
 
@@ -847,7 +876,7 @@ AG-UI SDK
 
 > **减少整个系统里同时存在的语义版本数量，降低工程上的信息熵。**
 
-### 6.1 交互语义收敛
+### 7.1 交互语义收敛
 
 原来不同 Agent 可能分别使用：
 
@@ -872,7 +901,7 @@ human_required
 
 当这些语义进入统一 Interaction Model 后，日志、UI、监控和测试都不需要重复解释。
 
-### 6.2 State 收敛
+### 7.2 State 收敛
 
 原来常见的状态混乱是：
 
@@ -894,7 +923,7 @@ flowchart TB
 
 系统因此减少的是**同一事实被多处当成权威来源**的情况。
 
-### 6.3 Action 收敛
+### 7.3 Action 收敛
 
 以前可能是：
 
@@ -922,7 +951,7 @@ flowchart TB
 
 这不仅降低开发重复，也大幅降低权限漂移和重复副作用的风险。
 
-### 6.4 Capability 收敛
+### 7.4 Capability 收敛
 
 不同 Agent 和不同 Channel 不需要再用大量产品硬编码描述：
 
@@ -937,7 +966,7 @@ Capability、Catalog 和 Channel 能力开始变成显式输入。
 - 隐藏；
 - 转到更可信的入口。
 
-### 6.5 N×M → N+M 只是表象
+### 7.5 N×M → N+M 只是表象
 
 没有公共边界时：
 
@@ -985,7 +1014,9 @@ flowchart TB
 
 真正减少的不是接口数量，而是**同一个概念需要被重新解释的次数**。
 
-## 7. 当系统完成收敛后：跨 Agent、跨平台能走多远
+
+
+## 8. 进阶能力：跨 Agent、跨平台能走多远
 
 跨 Agent、跨平台不应该是架构一开始的人为目标。
 
@@ -993,7 +1024,7 @@ flowchart TB
 
 > **当 Task、Action、State 和 Capability 已经从具体 Runtime / UI 中抽离，跨 Agent 与跨平台才成为系统收敛后的能力红利。**
 
-### 7.1 跨 Agent：迁移业务事实，不迁移 Runtime
+### 8.1 跨 Agent：迁移业务事实，不迁移 Runtime
 
 “同一个 UI 可以接 Agent A 和 Agent B”相对容易。
 
@@ -1035,7 +1066,7 @@ flowchart TB
 
 > **跨 Agent 的可靠边界，是业务状态和交接事实可移植，而不是 Runtime 内部执行状态完全可移植。**
 
-### 7.2 跨平台：迁移 UI 语义，不迁移像素
+### 8.2 跨平台：迁移 UI 语义，不迁移像素
 
 A2UI 当前提供 Web、Flutter 等 Renderer 路径。[S16][s16]
 
@@ -1063,7 +1094,7 @@ flowchart TB
 
 > **A2UI 降低的是 UI 组合逻辑和 Agent 输出协议的重复，不是消灭跨平台组件开发。**
 
-### 7.3 封闭平台要共享任务语义，而不是强行共享 UI Tree
+### 8.3 封闭平台要共享任务语义，而不是强行共享 UI Tree
 
 Slack、Teams、CLI 等平台通常不能直接运行你的完整 Renderer。
 
@@ -1089,7 +1120,7 @@ flowchart TB
 
 而不是同一棵 UI Tree。
 
-### 7.4 安全语义不能随着平台一起降级
+### 8.4 安全语义不能随着平台一起降级
 
 如果某个平台无法完整展示待批准内容，或者无法可靠绑定操作者身份，那么它可以：
 
@@ -1106,7 +1137,7 @@ flowchart TB
 
 > **体验可以降级，业务安全语义不能静默降级。**
 
-### 7.5 最终能得到什么
+### 8.5 最终能得到什么
 
 完成这些收敛以后，一个成熟系统可以更自然地实现：
 
@@ -1118,7 +1149,9 @@ flowchart TB
 
 这才是“跨 Agent、跨平台”真正有价值的含义。
 
-## 8. 怎么落地：从单点改造逐步走向系统收敛
+
+
+## 9. 演进路线：从单点功能到可治理系统
 
 前面描述的是目标架构。
 
@@ -1136,7 +1169,7 @@ flowchart TB
   --> F["6. 最后开放动态 Generative UI"]
 ~~~
 
-### 8.1 第一步：先定义 Task / Artifact / Action
+### 9.1 第一步：先定义 Task / Artifact / Action
 
 不要先安装 AG-UI 或 A2UI，然后再寻找业务模型。
 
@@ -1161,7 +1194,7 @@ permission
 
 这样未来断线、换端、换 Agent 时，业务事实不会只存在某一个 Runtime 或页面内存里。
 
-### 8.2 第二步：用第二个 Runtime 验证交互边界
+### 9.2 第二步：用第二个 Runtime 验证交互边界
 
 同一个 Web UI 接两个不同 Runtime。
 
@@ -1178,7 +1211,7 @@ permission
 
 这一步验证 AG-UI / Adapter 边界是否真的成立。
 
-### 8.3 第三步：A2UI 先做固定结构，不要先追求自由生成
+### 9.3 第三步：A2UI 先做固定结构，不要先追求自由生成
 
 优先选择高价值、确定性强的场景：
 
@@ -1191,7 +1224,7 @@ permission
 
 等 Action、Data Model、Renderer、权限链路跑通以后，再考虑让模型动态组合组件。
 
-### 8.4 第四步：专门验证最容易出事故的边界
+### 9.4 第四步：专门验证最容易出事故的边界
 
 不要只测“能不能渲染”。
 
@@ -1208,7 +1241,7 @@ permission
 - Renderer 版本不匹配；
 - Tool 已产生副作用但客户端取消连接。
 
-### 8.5 第五步：增加一个真正不同的平台
+### 9.5 第五步：增加一个真正不同的平台
 
 不要只做另一个 Web 页面。
 
@@ -1225,7 +1258,7 @@ permission
 - 哪些业务动作不能降级；
 - 哪些内容应该进入 Channel Adapter。
 
-### 8.6 第六步：最后才开放动态 UI
+### 9.6 第六步：最后才开放动态 UI
 
 只有当固定模板已经覆盖不了真实需求时，再开放 Agent 在受控 Catalog 内动态组合。
 
@@ -1243,7 +1276,7 @@ permission
 
 > 先建设一个很漂亮的“大一统 AI UI 平台”，最后却没有足够真实场景证明它值得存在。
 
-### 8.7 最终验收不应该只看“能不能跑”
+### 9.7 最终验收不应该只看“能不能跑”
 
 建议至少观察：
 
@@ -1260,16 +1293,20 @@ permission
 | 多 Agent / 多 Surface | Action 不串线、数据不广播 |
 | 受限平台 | 体验可降级，安全语义不降级 |
 
+
+
 ## 结语：真正应该统一的是“同一件事”
 
-AG-UI 与 A2UI 最容易被误解成“两套 Generative UI 技术”。
+回到全文，真正的问题从来不是“哪一个协议会成为最终标准”。
+
+协议、Framework、Renderer 和 Host 都可以继续演进；更重要的是，不管技术体系怎样变化，用户正在完成的 Task、Artifact、Action、Permission 与 Version 是否仍然具有稳定含义。
 
 更准确的心智模型是：
 
 ~~~mermaid
 flowchart TB
   A["用户 / Host"]
-  --> B["Interaction Layer\nAG-UI / A2UI / Channel Adapter"]
+  --> B["Interaction Layer\nProtocol / Generative UI / Channel Adapter"]
   --> C["Agent Runtime"]
 
   A <--> D["Task · Artifact · Action · Permission · Version"]
@@ -1282,8 +1319,8 @@ flowchart TB
 最后可以得到几个结论：
 
 - **AI-native interaction 的核心不是聊天框变漂亮，而是语言、UI 与执行开始共享同一个 Task。**
-- **AG-UI 适合收敛 Agent 与应用之间的运行交互。**
-- **A2UI 适合收敛动态 UI 的声明和 Renderer 边界。**
+- **运行交互层可以采用 AG-UI，也可以是经过治理的自定义 Runtime Protocol。**
+- **动态 UI 可以采用 A2UI、MCP Apps、Framework-native Generative UI 或其他适合 Host 所有权模型的方案。**
 - **真正长期稳定的不是协议本身，而是 Task、Artifact、Action、State、Capability、Permission 与 Version。**
 - **系统收敛最大的收益不是少写几个接口，而是降低语义版本数量，让状态、动作、权限和能力进入统一治理。**
 - **跨 Agent 和跨平台是这种收敛后的能力红利，而不是架构一开始的目的。**
