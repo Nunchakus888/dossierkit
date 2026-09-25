@@ -1,232 +1,422 @@
 ---
 locale: "zh"
 translationStatus: "reviewed"
-lastReviewedAt: "2026-09-24"
+lastReviewedAt: "2026-09-25"
 title: "从聊天框到 AI 原生交互：跨 Agent、跨平台的应用架构"
-summary: "大多数 AI 产品仍然从聊天框开始：用户输入一句话，模型返回一段内容。"
+summary: "大多数 AI 产品最初都从聊天框开始：用户说一句，模型回一句。"
 featured: false
 date: "2026-09-24"
-updatedAt: "2026-09-24T17:04:26.286Z"
+updatedAt: "2026-09-25T00:04:32.752Z"
 kind: "research"
 topics:
   - "AI 原生交互"
+  - "Agent Protocol"
   - "AG-UI"
   - "A2UI"
-  - "Agent Runtime"
-  - "跨平台交互"
+  - "MCP"
   - "Generative UI"
 tags:
   - "AI 原生交互"
+  - "Agent Protocol"
   - "AG-UI"
   - "A2UI"
-  - "Agent Runtime"
-  - "跨平台交互"
+  - "MCP"
   - "Generative UI"
-contentHash: "sha256:bde7f923d701bbe6349774a5691e33a5182a8e75ffaa9559ec2794f0610ab5ba"
+contentHash: "sha256:3774d8f3ab50799ad0cf72d3a5c53e76c83a5122fa0db7b9f708816ea215f88c"
 ---
 
-大多数 AI 产品仍然从聊天框开始：用户输入一句话，模型返回一段内容。
+大多数 AI 产品最初都从聊天框开始：用户说一句，模型回一句。
 
-但当 AI 真正进入工作流之后，用户需要的往往已经不是“回答”，而是和 AI **共同完成一项持续存在的任务**：生成方案、直接修改参数、选择对象、查看工具进度、补充信息、审批动作，并在任务真正执行后看到可核验的结果。
+但 Agent 进入真实应用以后，系统开始发生根本变化。它不再只是“生成答案”，而是会持续执行任务、调用工具、产生中间状态、等待用户决定、生成可操作界面，并把真实业务动作交给后端执行。
 
-这会把一个原本很简单的聊天问题，逐渐变成一个新的应用架构问题：
+于是问题从“怎么做好聊天 UI”，扩展成了：
 
-> **自然语言、直接 UI 操作、Agent 执行和业务系统，怎样共同作用于同一个任务，又不让 Agent、UI 和平台彼此绑死？**
+> **Agent 如何连接工具、其他 Agent、用户应用和动态 UI？这些连接里，哪些应该标准化，哪些应该保留实现自由？**
 
-AG-UI 与 A2UI 是目前两块很有代表性的标准化工作：前者关注 **Agent 与用户应用的运行交互**，后者关注 **Agent 生成的声明式 UI**。但协议只是其中两层。真正决定系统能否长期演进的，是 Task、Artifact、Action、State、Capability、Permission 与 Version 这些更稳定的业务边界。
+这也是为什么过去两年会集中出现 MCP、A2A、AG-UI、A2UI、MCP Apps、Apps SDK、Framework-native Generative UI 等不同技术路线。它们不是在争夺同一个协议层，而是在解决 **Agent 进入应用之后暴露出的不同连接边界**。
 
-本文不把它写成协议说明书，而是沿着一条完整的因果链展开：
+本文先建立完整的问题空间，再讨论技术选择。AG-UI + A2UI 会作为一个重点案例深入分析，但**不会被预设为唯一答案**。
 
-> **体验发生变化 → 哪些语义应该稳定 → 协议如何分工 → 系统怎样设计 → 真正难点是什么 → 为什么值得收敛 → 跨 Agent / 跨平台能走多远 → 怎样渐进落地。**
+## 1. Agent 走进真实应用后，为什么会长出一整套新协议层
 
-## 1. 从“聊天”到“共同完成任务”：什么是 AI-native interaction
+### 1.1 从“回答问题”到“共同完成任务”
 
-### 1.1 Chat UI 为什么开始不够用
-
-传统应用常见的交互是：
+传统应用常见的是：
 
 > 点击 → API 请求 → 返回结果 → 页面更新。
 
-一次请求通常对应一次相对明确的业务动作。
+Agent 应用则更像一个持续工作的协作者：
 
-Agent 场景则不同。一次任务可能持续运行很久，中间不断产生文本、Tool Call、状态变化，还可能等待用户补充输入或批准下一步；用户也可能在电脑发起任务，之后在手机继续。[S01][s01]
+- 一个 Task 可能跨很多轮执行；
+- 中间会调用搜索、数据库、浏览器、代码环境等 Tool；
+- 会产生 Text、Artifact、Progress、State；
+- 可能需要用户补充输入或审批；
+- 用户可能直接编辑 AI 生成的结构化内容；
+- 一个任务可能在不同设备、甚至不同 Agent 之间继续。
 
-因此真正的变化不是“聊天消息变长了”，而是：
+因此 AI-native interaction 的核心不是“聊天框更丰富”，而是：
 
-- 一次 Response 不再天然等于一次 Task；
-- 文本不再是唯一输入和输出形式；
-- 用户可能直接修改 AI 生成的结构化内容；
-- Agent 需要理解用户当前正在看的对象和状态；
-- 真实业务动作需要经过权限、版本和幂等检查；
-- 任务可能跨会话、跨设备，甚至跨 Agent 持续存在。
-
-更 AI-native 的交互因此不是“聊天 + 几张卡片”，而是：
-
-> **自然语言、直接操作与 Agent 执行，共同作用于同一个任务状态。**
+> **自然语言、直接 UI 操作、Agent 执行和业务系统，共同作用于同一个持续存在的任务。**
 
 ~~~mermaid
 flowchart TB
   A["用户提出目标"]
-  --> B["Agent 生成方案 / 调用工具"]
-  --> C["Host 把结果变成可操作工作区"]
-  --> D["用户修改 / 选择 / 补充"]
-  --> E["Agent 理解最新任务状态"]
-  --> F["用户确认真实业务动作"]
-  --> G["业务系统执行并返回可核验结果"]
-  --> C
+  --> B["Agent 规划并执行"]
+  --> C["调用工具 / 其他 Agent"]
+  --> D["产生文本、Artifact、状态或 UI"]
+  --> E["用户查看、编辑、选择、批准"]
+  --> F["Agent 根据新状态继续执行"]
+  --> G["业务系统产生真实结果"]
 ~~~
 
-### 1.2 一个具体例子：营销方案不应该只是聊天记录
+这时，一个原本简单的“模型 API”问题，被拆成了多个不同的连接边界。
 
-假设用户说：
-
-> 帮我设计一个秋季营销活动。
-
-Agent 给出三个候选方案。
-
-传统 Chat UI 往往只能继续追问：
-
-> 第二个预算是多少？  
-> 帮我把第二个改便宜一点。  
-> 日期改成下个月。  
-> 把渠道三删掉。
-
-而一个真正 AI-native 的应用可以同时提供：
-
-- 自然语言修改；
-- 可编辑预算字段；
-- 日期选择器；
-- 渠道多选；
-- Diff；
-- 最终发布确认。
-
-这些输入应该共同修改**同一个 Artifact**，而不是变成聊天历史和前端表单两套互不相干的数据。
+### 1.2 Agent 应用实际上出现了至少四类连接问题
 
 ~~~mermaid
 flowchart TB
-  A["用户：生成活动方案"] --> B["Agent：返回 Proposal + 可编辑 UI"]
-  B --> C["Host：展示结构化工作区"]
-  C --> D["用户直接修改预算"]
-  D --> E["Renderer：本地更新 Data Model"]
-  E --> F["用户：第二个方案再保守一点"]
-  F --> G["Host → Agent：当前对象 + 最新语义状态"]
-  G --> H["Agent：更新方案 Artifact"]
-  H --> I["用户批准发布"]
-  I --> J["Business Service：Action + Artifact Revision"]
-  J --> K["Permission / Revision / Idempotency 校验"]
-  K --> L["执行真实业务动作"]
-  L --> M["返回可核验结果"]
+  A["Agentic Application"]
+  --> T["Agent ↔ Tool / Data"]
+  --> AA["Agent ↔ Agent"]
+  --> H["Agent ↔ Host / User"]
+  --> UI["Agent ↔ Dynamic UI"]
+
+  T --> MCP["MCP 等 Tool / Context 协议"]
+  AA --> A2A["A2A 等 Agent Interop 协议"]
+  H --> AG["AG-UI / 自定义 Runtime Event Protocol"]
+  UI --> U1["A2UI：声明式 Native UI"]
+  UI --> U2["MCP Apps：HTML App / iframe"]
+  UI --> U3["Framework-native Generative UI"]
 ~~~
 
-这里有一个很重要的原则：
+| 连接边界 | 主要问题 | 当前代表性路线 |
+|---|---|---|
+| Agent ↔ Tool / Data | 如何发现和调用外部工具、资源、Prompt | MCP |
+| Agent ↔ Agent | 不同厂商 / Runtime 的 Agent 如何发现、委派、协作 | A2A |
+| Agent ↔ User App | 长运行、Tool、State、Interrupt 怎样实时进入应用 | AG-UI、应用自定义事件协议 |
+| Agent ↔ Dynamic UI | Agent 怎样产生可交互 UI，而不是只返回文本 | A2UI、MCP Apps、Framework-native Generative UI |
 
-**不是所有 UI 操作都应该回模型。**
+MCP 官方把自己定位为连接 AI 应用与 Tool / Data 的开放标准；A2A 则面向独立 Agent 之间的发现、任务和协作。[S22][s22] [S23][s23]
 
-A2UI Actions 区分发往 Agent 的 Event 和 Renderer 本地执行的 Function。[S14][s14]
+AG-UI 官方也用一张 Protocol Stack 把 MCP、A2A 与 AG-UI 放在不同连接关系中：[S02][s02]
 
-适合留在客户端的通常包括：
+![AG-UI 官方 AI Protocol Stack](https://raw.githubusercontent.com/ag-ui-protocol/ag-ui/e62b348680c41f52a5ea0ed4eb714a6600066fa1/docs/images/ai-protocol-stack.png)
 
-- 输入；
-- 焦点；
-- 展开 / 折叠；
-- 格式化；
-- 即时表单校验；
-- 不改变业务语义的局部交互。
+所以第一个重要结论是：
 
-需要重新进入 Agent 的，才是：
+> **Agent 交互并没有一个“总协议”可以解决所有问题。协议生态正在按连接边界分层。**
 
-- 理解自然语言；
-- 重新规划；
-- 生成内容；
-- 跨 Tool 执行；
-- 需要模型判断的修改。
+### 1.3 UI 为什么又单独形成了一条技术路线
 
-这能同时减少延迟、Token 和不必要的不确定性。
+Tool 能返回 JSON，不等于用户就愿意看 JSON。
 
-### 1.3 从体验问题落到两个标准：AG-UI 与 A2UI 分别是什么
+当用户需要：
 
-当语言、UI 和执行开始共同作用于一个任务后，系统会自然遇到两个连接问题：
+- 比较多个结果；
+- 填写结构化参数；
+- 操作图表；
+- 审阅 Diff；
+- 确认订单或审批；
+- 在任务执行中持续查看状态；
 
-1. 用户应用怎样理解 Agent 的运行过程，而不依赖某一个 Runtime 的私有事件；
-2. Agent 怎样表达动态界面，而不绑定 React、Flutter 或某一个具体平台。
+系统就需要从 **Agent Response** 进一步走向 **Agent-driven UI**。
 
-这两个问题名字很像，但并不是同一个协议层。
+这里又产生一个新的设计分叉：
 
-#### AG-UI：Agent–User Interaction Protocol
+> UI 到底应该是“Agent 发送结构，由 Host 渲染”，还是“服务端直接交付一个可运行的小应用”？
 
-**AG-UI 的全称是 Agent–User Interaction Protocol。**
+这正是 A2UI、MCP Apps，以及各类 Framework-native Generative UI 路线开始分化的地方。
 
-AG-UI 官方把它定义为一种**开放、轻量、事件驱动的协议**，用于标准化 AI Agent 如何连接面向用户的应用；目标是提供一条通用的、双向的连接，把 Agent state、UI intent 和用户交互在 Agent Runtime 与前端应用之间传递。[S01][s01]
+## 2. 当前公开技术路线：不是只有 AG-UI 和 A2UI
+
+如果只从 AG-UI / A2UI 开始讲，很容易误以为“Agent UI 已经有一个确定的标准答案”。
+
+实际上，当前公开生态至少存在下面几类不同思路。
+
+### 2.1 MCP：先解决 Agent 如何获得外部能力
+
+MCP（Model Context Protocol）首先解决的不是 UI，而是：
+
+> **AI 应用怎样以标准方式连接 Tool、Resource 与 Prompt。**
+
+当前 MCP SDK 文档将其定义为连接 AI 应用与数据、工具系统的开放标准；Server 暴露 Tool / Resource，Host 连接 Server，再让模型使用这些能力。[S22][s22]
+
+MCP 的意义在于把“能力接入”从各家 Agent SDK 的私有 Tool Schema 中抽出来。
+
+但 Tool 能被调用，并不自动解决：
+
+- Agent 运行状态怎样进入 UI；
+- 用户怎样在中途修改任务；
+- Tool Result 应该怎样变成富交互界面。
+
+所以 MCP 后来又自然延伸出了 **MCP Apps** 这样的 UI 扩展。
+
+### 2.2 A2A：当系统里不再只有一个 Agent
+
+A2A（Agent2Agent Protocol）面向的是另一类问题：
+
+> **一个 Agent 怎样发现、调用、委派任务给另一个独立 Agent。**
+
+A2A 1.0 官方规范强调，它面向不同框架、语言、厂商构建的独立 Agent，并通过 Agent Card、Task、Message、Artifact 等公共模型实现互操作，而不要求暴露对方内部 memory、tools 或实现细节。[S23][s23]
+
+因此在多 Agent Mesh 中，更自然的结构可能是：
+
+~~~mermaid
+flowchart TB
+  U["User / Host"]
+  --> A["Coordinator Agent"]
+  A --> B["Remote Agent B"]
+  A --> C["Remote Agent C"]
+  A --> D["Remote Agent D"]
+
+  A <-. "A2A" .-> B
+  A <-. "A2A" .-> C
+  A <-. "A2A" .-> D
+
+  B --> T1["Tools via MCP"]
+  C --> T2["Tools via MCP"]
+~~~
+
+这里的核心协议可能首先是 A2A + MCP，而不是 AG-UI。
+
+### 2.3 AG-UI：专门处理 Agent Runtime 与用户应用的运行交互
+
+AG-UI 的全称是 **Agent–User Interaction Protocol**。
+
+官方把它定义为开放、轻量、事件驱动的协议，用于标准化 AI Agent 与面向用户应用之间的连接；它关注 Run、Message、Tool Call、State、Activity、Interrupt 等运行交互语义。[S01][s01] [S04][s04]
 
 更通俗地说：
 
-> **AG-UI 关心的是“Agent 运行过程中，应用怎么持续看懂它、控制它，并把用户操作再传回去”。**
+> **AG-UI 解决的是“Agent 正在做什么，应用怎样实时理解它，以及用户怎样把操作再送回运行中的 Agent”。**
 
-因此它描述的是 Run、Message、Tool Call、State、Activity、Interrupt 等**运行交互语义**，而不是具体页面应该长什么样。
+![AG-UI 官方 Overview](https://raw.githubusercontent.com/ag-ui-protocol/ag-ui/e62b348680c41f52a5ea0ed4eb714a6600066fa1/docs/images/ag-ui-overview-with-partners.png)
 
-#### A2UI：Agent to UI
+它是一条很清晰的 Agent Runtime ↔ Host 路线，但并不是唯一可能的实现。一个强控制的自有应用也完全可以维护自己的 Runtime Event Protocol；关键是是否值得承担长期私有协议成本。
 
-**A2UI 的全称是 Agent to UI。**
+### 2.4 A2UI：Agent 发送声明，Host 使用自己的组件渲染
 
-A2UI 官方把它定义为一种面向 Agent-driven interface 的**声明式 UI 协议**：Agent 不发送任意 HTML / JavaScript 代码，而发送描述 UI 的结构化消息，客户端再使用自己受信任的原生组件进行渲染。[S09][s09]
+A2UI（Agent to UI）解决的是：
 
-它的目标可以理解成：
+> **Agent 如何安全地发送富 UI，而不直接发送任意可执行前端代码。**
 
-> **让 Agent 描述“需要什么界面”，而不是规定“必须用什么前端代码实现这个界面”。**
-
-因此 A2UI 关心的是 Surface、Component、Data Model、Catalog、Renderer 和 Action 这些**界面表达语义**。
-
-#### 两者放在一张图里就很清楚
+A2UI 官方将其描述为声明式 UI 语言：Agent 输出 Component Blueprint，Client 使用自己的原生组件进行渲染；Catalog 决定 Agent 可以使用哪些组件。[S09][s09]
 
 ~~~mermaid
 flowchart TB
-  U["User"]
-  <--> H["Host App
-Web / Mobile / Desktop / IM"]
+  A["Agent"]
+  --> M["A2UI Messages"]
+  --> C["Catalog + Renderer"]
+  --> H["Host Native Components"]
+  --> U["User"]
 
-  H <--> AG["AG-UI
-Agent ↔ User Interaction"]
-  AG <--> R["Agent Runtime"]
-
-  R --> A2["A2UI Messages
-声明式 UI"]
-  A2 --> UI["Renderer
-React / Flutter / Angular / ..."]
-  UI --> H
-  H --> ACT["User Action"]
-  ACT --> AG
-
-  R <--> T["MCP / Tools"]
-  R <--> AA["A2A / Other Agents"]
-
-  H <--> B["Business Control Plane
-Task · Artifact · Action · Permission · Version"]
-  R <--> B
+  U --> ACT["Action / Input"]
+  ACT --> A
 ~~~
 
-这张定位图表达的是三个不同层次：
+这一设计尤其适合：
 
-- **AG-UI**：Agent 与用户应用之间怎么持续交互；
-- **A2UI**：Agent 想呈现的动态 UI 怎么被结构化描述并由 Renderer 渲染；
-- **Business Control Plane**：任务、版本、权限和真实业务动作怎么保持连续与正确。
+- Host 希望保留自己的 Design System；
+- UI 需要跨 React / Flutter / Angular 等 Renderer；
+- 不希望远程 Agent 直接发送任意 JS；
+- UI 本身可以被 LLM 动态组合。
 
-AG-UI 官方也明确指出：A2UI 是 Generative UI specification，而 AG-UI 是 Agent↔User Interaction protocol，两者名称相似但职责不同，并且可以很好地组合。[S01][s01]
+### 2.5 MCP Apps：不是描述 UI，而是直接交付一个受沙箱约束的小应用
 
-所以从这里开始，后文不再把它们当作“两套 UI 技术”比较，而是把它们放回各自的系统层次。
+MCP Apps 是另一种很不同的路线。
 
-但在深入协议之前，还有一个更重要的问题：
+官方定义是：
 
-> **一套长期可演进的 AI 应用，到底应该统一什么？**
+> MCP Server 可以为 Tool 声明一个 ui:// UI Resource，Host 将 HTML App 放在 sandboxed iframe 里运行，并通过 postMessage / JSON-RPC 与它通信。[S24][s24]
 
-## 2. 一套 AI 交互系统，真正应该统一什么
+其架构更像：
 
-好的架构不是把所有东西都变成同一种格式，而是决定：
+~~~mermaid
+flowchart TB
+  S["MCP Server"]
+  --> T["Tool"]
+  S --> R["ui:// HTML Resource"]
 
-> **哪些差异应该被保留，哪些语义必须稳定。**
+  T --> H["MCP Host"]
+  R --> H
+  H --> V["Sandboxed iframe App"]
+  V --> U["User"]
+  V --> H
+  H --> S
+~~~
 
-### 2.1 应该稳定的是业务语义，不是内部实现
+这种方式的核心特点是：
 
-建议优先稳定下面这些对象：
+- Server / App 作者拥有完整 HTML / CSS / JS 表达能力；
+- Host 用 iframe 和 CSP 做隔离；
+- Tool 与 UI 可以一起分发；
+- 支持 MCP Apps 的 Host 可以复用同一个 App。
+
+它与 A2UI 的设计哲学并不相同：
+
+| | A2UI | MCP Apps |
+|---|---|---|
+| Agent / Server 发送什么 | 声明式 Component Blueprint | 预构建 HTML App |
+| 谁控制最终视觉 | Host / Renderer | App 作者 |
+| 隔离方式 | 不执行远程 UI 代码 | sandboxed iframe |
+| 跨 Native Renderer | 更自然 | 主要是 Web View / iframe 模型 |
+| 表达上限 | 受 Catalog 限制 | 接近完整 Web App |
+| 适合 | Host-owned Design System、动态生成 UI | Tool-backed 富应用、复杂自定义交互 |
+
+A2UI 官方自己的生态比较页也将这两种路线明确区分。[S11][s11]
+
+### 2.6 OpenAI Apps SDK：MCP Apps 路线上的一个 Host / 产品实现
+
+OpenAI Apps SDK 不是另一套完全独立的底层协议。
+
+当前 OpenAI 官方文档明确建议：新的 UI 先使用开放的 **MCP Apps standard**，ChatGPT 特有能力再通过可选的 window.openai 扩展增强；组件运行在 ChatGPT iframe 中，并通过 MCP Apps bridge 与 Host 通信。[S25][s25]
+
+因此如果目标是：
+
+- 把 Tool + UI 分发到 ChatGPT；
+- 同时希望尽量兼容其他 MCP Apps Host；
+
+这条路线可能比“自建 AG-UI Host + A2UI Renderer”更直接。
+
+### 2.7 Framework-native Generative UI：在自己控制的技术栈里最快
+
+还有一类路线根本不追求跨 Host 协议标准。
+
+例如 Vercel AI SDK 的 Generative UI 思路，是让模型 Tool Call 的结果直接映射到 React Component；AI SDK UI 提供构建 Chat / Generative UI 的 Framework hooks。[S26][s26]
+
+这种方式的优点非常实际：
+
+- 前端工程路径短；
+- React 组件可以直接复用；
+- 不需要额外设计跨平台 UI Protocol；
+- 适合自己同时控制 Agent 和 Web App 的产品。
+
+它的代价是：
+
+> **可移植边界更多停留在你的应用框架里，而不是跨 Host / 跨 Renderer 的开放协议层。**
+
+这并不是“不够先进”，而是目标不同。
+
+### 2.8 技术路线真正的分叉点
+
+因此 Agent UI 不应该被简化成“AG-UI vs A2UI”。
+
+更准确的技术地图是：
+
+~~~mermaid
+flowchart TB
+  A["你在构建什么？"]
+
+  A --> B{"需要接外部 Tool / Data？"}
+  B -->|是| MCP["MCP"]
+
+  A --> C{"需要独立 Agent 互操作？"}
+  C -->|是| A2A["A2A"]
+
+  A --> D{"需要自己 App 理解 Agent Runtime？"}
+  D -->|是| AG["AG-UI 或自定义 Runtime Protocol"]
+
+  A --> E{"需要 Agent-driven UI？"}
+  E -->|是| F{"谁应该拥有 UI 实现？"}
+
+  F -->|Host 拥有组件 / Design System| A2UI["A2UI / Declarative UI"]
+  F -->|Server/App 作者拥有完整 UI| APPS["MCP Apps / Apps SDK"]
+  F -->|双方都在同一 Web 技术栈| FW["Framework-native Generative UI"]
+~~~
+
+## 3. 如何选择：AG-UI + A2UI 是一个重点案例，不是预设答案
+
+到这里，才有必要讨论“应该选什么”。
+
+真正的选择应该基于**系统边界**，而不是哪个协议名字更新。
+
+### 3.1 先回答五个问题
+
+#### 1. Host 是谁控制的？
+
+如果 Web / Mobile / Desktop 都是自己的产品，Host 拥有很强控制权，可以选择：
+
+- AG-UI；
+- A2UI；
+- Framework-native UI；
+- 自定义协议。
+
+如果 UI 要进入 ChatGPT、Claude Desktop 等第三方 Host，MCP Apps 这种 Host Extension 标准会更自然。
+
+#### 2. 谁应该控制视觉和组件实现？
+
+如果必须严格继承企业 Design System：
+
+> Declarative UI / Host Renderer 更合适。
+
+如果集成方必须拥有完整视觉和交互：
+
+> Sandboxed App / iframe 路线更合适。
+
+#### 3. 是否真的需要跨 Renderer？
+
+如果产品只有 React Web：
+
+> Vercel AI SDK / CopilotKit / 自研 Generative UI 很可能已经足够。
+
+如果目标明确包含 Flutter、Angular、Native 等多个 Renderer：
+
+> A2UI 这类声明式中间表示才更有价值。
+
+#### 4. 是否需要跨独立 Agent？
+
+如果只是一个 Runtime 内部的 Sub-agent：
+
+> 不一定需要 A2A。
+
+如果多个 Agent 属于不同系统、团队或厂商：
+
+> A2A 的 Agent Card、Task、Artifact 模型会更重要。[S23][s23]
+
+#### 5. UI 是任务主体，还是 Tool 的附属交互？
+
+如果 UI 本质上是某个 MCP Tool 的“脸”：
+
+> MCP Apps 很自然。
+
+如果 UI 是整个 Agent Application 的长期工作区：
+
+> Runtime Interaction + Host-owned UI 的体系通常更自然。
+
+### 3.2 几种典型组合
+
+| 目标场景 | 更自然的技术组合 |
+|---|---|
+| 自有 Web App，需要替换多个 Agent Runtime | AG-UI / 自定义 Runtime Protocol + Native UI |
+| 自有多端 App，需要 Agent 动态生成 Native UI | AG-UI 或 A2A + A2UI |
+| 远程 Agent Mesh，同时携带可渲染结果 | A2A + A2UI |
+| MCP Tool 希望在 ChatGPT / Claude 等 Host 里提供富 UI | MCP + MCP Apps |
+| ChatGPT 内的业务 App，需要额外 Host 能力 | MCP Apps + OpenAI Apps SDK extensions |
+| 单一 React 产品，前后端都自己控制 | Vercel AI SDK / Framework-native Generative UI |
+| 复杂 Editor / Canvas / 3D App | Native App / MCP Apps，Agent 通过 Tool / Action 控制；不一定适合全量声明式生成 |
+
+### 3.3 为什么这篇文章仍然会重点研究 AG-UI + A2UI
+
+不是因为它们已经“赢了”。
+
+而是因为这一组合有几个非常适合研究通用架构的问题：
+
+1. **分层边界很清楚**：Runtime Interaction 与 UI Description 被明确拆开；
+2. **都是开放规范 / 开源实现路线**，可以阅读 Spec、SDK 和桥接源码；
+3. **A2UI 明确支持多种 Transport**，不要求只能经 AG-UI；官方文档也列出了 A2A、AG-UI 和自定义 JSON Transport。[S15][s15]
+4. **AG-UI 已经提供 A2UI middleware**，因此这不是纯理论组合，而是有明确工程接线方式。[S19][s19]
+5. **它非常适合讨论 Host-owned UI、跨 Renderer、状态和 Action 边界**，而这些问题对于其他技术体系同样存在。
+
+所以后面的分析把 AG-UI + A2UI 作为一个**代表性、较完整的开放组合案例**，但结论不会限定为：
+
+> 所有 AI 应用最终都应该使用它们。
+
+事实上，如果你的产品是 MCP Tool-first、第三方 Chat Host-first，MCP Apps 可能更直接；如果是多 Agent Mesh，A2A 可能更靠近系统主干；如果只是 React App，Framework-native Generative UI 可能成本最低。
+
+### 3.4 无论采用哪套技术，真正应该稳定的仍是业务语义
+
+协议可以替换，Task 不应该跟着消失。
+
+建议优先稳定：
 
 | 稳定对象 | 它回答的问题 |
 |---|---|
@@ -238,248 +428,37 @@ AG-UI 官方也明确指出：A2UI 是 Generative UI specification，而 AG-UI �
 | Permission | 当前操作者是否允许执行这件事？ |
 | Version / Revision | 用户确认的内容是否还是即将执行的那一版？ |
 
-相反，不应该为了“统一”而强行标准化：
+相反，不需要为了统一而强行标准化：
 
 - Agent 内部 Planner；
 - Runtime 私有 checkpoint；
-- 模型私有 memory；
-- React / Flutter 的组件实现；
-- Slack 和 Web 的像素布局；
-- 不同模型内部如何思考。
+- Model private memory；
+- React / Flutter 的实现；
+- Slack 与 Web 的像素布局。
 
 ~~~mermaid
 flowchart TB
-  A["AI 应用的稳定边界"]
-  A --> T["Task"]
-  A --> AR["Artifact"]
-  A --> AC["Action"]
-  A --> S["State"]
-  A --> C["Capability"]
-  A --> P["Permission"]
-  A --> V["Version / Revision"]
+  A["长期稳定的业务语义"]
+  --> T["Task"]
+  --> AR["Artifact"]
+  --> AC["Action"]
+  --> S["State"]
+  --> C["Capability"]
+  --> P["Permission"]
+  --> V["Version / Revision"]
 
-  B["应该允许差异存在"]
-  B --> R["Runtime 内部实现"]
-  B --> M["Model / Planner / Memory"]
-  B --> UI["React / Flutter / Platform UI"]
-  B --> CP["私有 checkpoint"]
+  B["可以变化的技术实现"]
+  --> PROTO["AG-UI / A2A / MCP / Custom Protocol"]
+  --> UI["A2UI / MCP Apps / Native UI"]
+  --> R["Runtime / Framework / Renderer"]
 ~~~
 
 核心原则是：
 
-> **好的 AI 应用架构，不是消除差异，而是把差异隔离在正确的位置。**
+> **技术体系可以替换；用户正在完成的“同一件事”必须保持稳定。**
 
-### 2.2 名词放到这个框架里就容易理解了
+这也是后面所有架构设计的真正起点。
 
-| 名词 | 可以先理解成 | 主要责任 |
-|---|---|---|
-| Agent | 会规划并调用工具执行任务的软件主体 | 决策与执行 |
-| Agent Runtime | Agent 真正运行的环境 | 工具、状态、检查点、执行生命周期 |
-| Host App | 用户实际操作的客户端 | Web、App、桌面端、聊天平台 |
-| Renderer | 把抽象 UI 变成本地控件 | React、Angular、Flutter 等 |
-| Catalog | Agent 可以使用的 UI“词汇表” | Button、TextField、业务组件及 Schema |
-| Surface | 一块由 A2UI 管理的动态界面区域 | 表单、结果卡、侧栏 |
-| Tool | Agent 调用的外部能力 | API、数据库、浏览器、MCP |
-| Action | 用户在生成 UI 中触发的结构化交互 | 选择、提交、确认 |
-
-同样需要分清 MCP、A2A、AG-UI 与 A2UI：
-
-- **MCP**：Agent ↔ Tool / Data；
-- **A2A**：Agent ↔ Agent；
-- **AG-UI**：Agent ↔ User App；
-- **A2UI**：Agent ↔ 声明式 UI / Renderer。
-
-AG-UI 官方把 MCP、A2A 与 AG-UI 放在互补协议栈中，而不是替代关系。[S02][s02]
-
-![AG-UI 官方 AI Protocol Stack](https://raw.githubusercontent.com/ag-ui-protocol/ag-ui/e62b348680c41f52a5ea0ed4eb714a6600066fa1/docs/images/ai-protocol-stack.png)
-
-*AG-UI 官方协议分层图。A2UI 不属于这三条“连接关系”，它是一种 Generative UI 规范，可以通过 AG-UI、A2A 等 Transport / Interaction Path 承载。*
-
-### 2.3 “降低信息熵”是比“少写几个接口”更重要的目标
-
-这里说的“信息熵”不是严格的 Shannon 信息熵计算，而是一个工程上的描述：
-
-> **同一个概念在多少系统里有多少种名字、状态机、异常路径和解释方式。**
-
-例如“等待用户确认”可能在不同系统里分别叫：
-
-~~~text
-waiting_for_user
-needs_input
-paused
-pending_confirmation
-approval_required
-modal_waiting
-~~~
-
-如果每个 Agent、每个 UI、每个平台都各自解释一次，系统会快速产生大量近似但不一致的局部协议。
-
-真正值得收敛的，是这些**语义版本的数量**。
-
-这也决定了后面评价 AG-UI / A2UI 时，不能只问：
-
-> 能少写多少代码？
-
-还应该问：
-
-> **它能不能让整个组织对 Task、Action、State、Capability 使用更少、更稳定的解释？**
-
-## 3. AG-UI 与 A2UI：分别解决哪一层问题
-
-### 3.1 AG-UI：收敛 Agent 与应用的运行交互
-
-AG-UI 的核心可以压缩成一句话：
-
-> **Host 给 Agent 一个标准化 Run 输入，Agent 持续返回标准化 Event Stream。** [S03][s03]
-
-事件可以覆盖：
-
-- Run 生命周期；
-- Message；
-- Tool Call；
-- State；
-- Activity；
-- Interrupt；
-- Error / Finish。[S04][s04]
-
-这样 Host 不需要理解 LangGraph、ADK 或其他 Runtime 的私有 callback。
-
-![AG-UI 官方 Overview](https://raw.githubusercontent.com/ag-ui-protocol/ag-ui/e62b348680c41f52a5ea0ed4eb714a6600066fa1/docs/images/ag-ui-overview-with-partners.png)
-
-*AG-UI 官方 Overview。具体 Framework / Client 集成状态会继续演进。*
-
-Runtime/UI 解耦这一层的工程模式已经相对清楚，因此这里只保留最重要的关系：
-
-~~~mermaid
-flowchart TB
-  U["Host UI"] <--> P["AG-UI"]
-  P <--> A1["Adapter → Runtime A"]
-  P <--> A2["Adapter → Runtime B"]
-  P <--> A3["Adapter → Runtime C"]
-~~~
-
-边界也很明确：
-
-> **协议可以统一事件语义，但不能凭 Adapter 创造 Runtime 本来没有的能力。**
-
-如果 Runtime 不支持真正的 Resume、Cancel 或 Shared State，Adapter 不能因为 AG-UI 有相应概念就假装支持。[S07][s07]
-
-因此 AG-UI 解决的是**运行交互的标准化接线**，不是把不同 Runtime 变成完全相同的 Runtime。
-
-### 3.2 A2UI：收敛 Agent 的动态 UI 表达
-
-A2UI 面对的是另一类问题。
-
-如果远程 Agent 需要日期选择器、审批面板、结果列表，最直接的方式可能是生成 HTML / JavaScript，再塞进 iframe。
-
-但这样会带来：
-
-- 任意代码执行风险；
-- Host 设计语言割裂；
-- Web 技术栈绑定；
-- 很难映射到 Native / Flutter；
-- 第三方 Agent 获得过大的 UI 控制面。
-
-A2UI 的设计是：
-
-> **Agent 不发送任意前端代码，而是发送声明式 UI 数据；客户端只用自己注册、信任的本地组件渲染。** [S09][s09]
-
-理解它只需要记住五个对象：
-
-| 对象 | 作用 |
-|---|---|
-| Surface | 一块动态 UI 区域 |
-| Component | Text、Button、TextField 等抽象组件 |
-| Data Model | Surface 对应的数据状态 |
-| Catalog | 允许 Agent 使用哪些组件 / 函数 |
-| Renderer | 将抽象组件映射成 React / Flutter / Angular 等真实控件 |
-
-所以 A2UI 复用的是**界面语义**，而不是一份 React 代码。
-
-### 3.3 A2UI 的核心数据流
-
-下面按 A2UI v0.9.1 官方协议的数据流表达。[S18][s18]
-
-~~~mermaid
-sequenceDiagram
-  participant A as Agent
-  participant R as Renderer
-  participant U as User
-
-  A->>R: createSurface
-  A->>R: updateComponents
-  A->>R: updateDataModel
-  R-->>U: Render native UI
-
-  U->>R: Input / Click / Select
-  R->>A: action(name, context)
-
-  A->>R: updateComponents / updateDataModel
-  R-->>U: Re-render
-
-  A->>R: deleteSurface
-~~~
-
-关键点只有三个：
-
-1. Agent 决定“需要什么 UI”；
-2. Renderer 决定“这个平台怎么画”；
-3. 用户操作通过结构化 Action 回到 Agent。
-
-这比“模型生成 JSON”更重要，因为它建立的是一条真正的双向 UI 语义通道。
-
-### 3.4 两者为什么是互补关系
-
-A2UI 官方对两者关系有一个很形象的概括：
-
-> **AG-UI 是 pipe，A2UI 是 content。** [S11][s11]
-
-换成工程语言：
-
-- AG-UI 负责“这次 Agent Run 怎样和 App 持续交互”；
-- A2UI 负责“其中一个 UI payload 怎样被描述和渲染”。
-
-A2UI 官方的 “Use A2UI with Any Agent Framework” 也沿着这个组合思路：先建立 Agent / App 的运行通道，再让 A2UI payload 到达 Renderer。[S17][s17]
-
-当前 AG-UI 仓库还提供 A2UI middleware，用来注入 UI Schema、识别 A2UI operations、把 Surface 更新放入 AG-UI activity，并把用户 Action 传回 Agent。[S19][s19]
-
-所以两者并不是竞品。
-
-### 3.5 什么时候只需要其中一个
-
-| 现有系统 | 核心问题 | 建议 |
-|---|---|---|
-| UI 已经成熟，只想换 / 增加 Agent | 统一 Runtime 交互 | AG-UI |
-| Runtime 已稳定，只缺动态跨端 UI | UI 协议 | A2UI |
-| 多 Agent、多端、动态 UI 都需要 | 两边都要解耦 | AG-UI + A2UI |
-| 编辑器 / 地图 / 画布已有复杂原生 UI | Agent 只需操作已有能力 | 保留 Native UI，A2UI 只做补充 |
-| 只是简单问答 | 没有复杂任务和生成式界面 | 两者都可能不是必须 |
-
-可以用下面这棵树快速判断：
-
-~~~mermaid
-flowchart TB
-  A["现在最主要的问题是什么？"]
-  A --> B{"需要接多个 Agent Runtime？"}
-  B -->|是| C["先建立 AG-UI / Runtime Adapter 边界"]
-  B -->|否| D{"需要 Agent 动态生成交互 UI？"}
-  C --> D
-
-  D -->|否| E["保留宿主原生 UI\n不必引入 A2UI"]
-  D -->|是| F{"同一 UI 声明要跨多个 Renderer？"}
-
-  F -->|否| G["宿主自己的 Generative UI 也可以"]
-  F -->|是| H["A2UI + Catalog + Renderer"]
-
-  H --> I{"是否有 Slack / CLI 等受限平台？"}
-  I -->|是| J["再加 Channel Adapter / Fallback"]
-  I -->|否| K["直接使用目标平台 Renderer"]
-
-  E --> L["Task / Action / Permission 保持独立"]
-  G --> L
-  J --> L
-  K --> L
-~~~
 
 ## 4. 推荐架构：把任务、交互、执行和呈现拆成稳定边界
 
@@ -1223,6 +1202,11 @@ flowchart TB
 | S19 | [AG-UI A2UI Runtime / Renderer Wiring][s19] | Middleware、固定 / 动态 UI |
 | S20 | [A2UI v1.0 Candidate][s20] | 候选版演进 |
 | S21 | [Defining Your Own Catalog][s21] | Production Catalog |
+| S22 | [Model Context Protocol TypeScript SDK][s22] | MCP 的 Tool / Data 开放标准定位 |
+| S23 | [A2A Protocol v1.0][s23] | 独立 Agent 的发现、Task、Artifact 与互操作 |
+| S24 | [MCP Apps Overview][s24] | Tool + HTML UI Resource + sandboxed iframe |
+| S25 | [OpenAI：Add UI to your MCP server][s25] | ChatGPT 对开放 MCP Apps 标准及 Host 扩展的实现 |
+| S26 | [Vercel AI SDK：Generative UI][s26] | Framework-native Generative UI 路线 |
 
 [s01]: https://docs.ag-ui.com/introduction
 [s02]: https://docs.ag-ui.com/agentic-protocols
@@ -1245,3 +1229,9 @@ flowchart TB
 [s19]: https://github.com/ag-ui-protocol/ag-ui/blob/e62b348680c41f52a5ea0ed4eb714a6600066fa1/skills/ag-ui-a2ui-integration/references/a2ui-runtime-and-renderer.md
 [s20]: https://a2ui.org/specification/v1.0-a2ui/
 [s21]: https://a2ui.org/guides/defining-your-own-catalog/
+
+[s22]: https://ts.sdk.modelcontextprotocol.io/v2/
+[s23]: https://a2a-protocol.org/v1.0.0/
+[s24]: https://apps.extensions.modelcontextprotocol.io/api/documents/overview.html
+[s25]: https://developers.openai.com/plugins/build/chatgpt-ui
+[s26]: https://v4.ai-sdk.dev/docs/ai-sdk-ui/generative-user-interfaces
