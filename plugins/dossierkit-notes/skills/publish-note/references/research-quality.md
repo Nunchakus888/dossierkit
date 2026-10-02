@@ -53,11 +53,14 @@ Update the existing note when the problem, evidence, and conclusion substantiall
 
 ## Argument shape
 
-Start with one evidence-grounded philosophical proposition that governs the note. Follow with the technical conclusion and its scope. Build the rest in this order:
+Start with the direct thesis and a 30-second layer. A philosophical proposition is optional; use it only when it sharpens the concrete problem. The scan path should communicate the argument before the reader commits to the full body:
 
 ```text
-source fact → mechanism → engineering implication → practical action
+title → direct thesis → 3–5 key takeaways → one primary visual/table if useful
+      → mechanism → evidence → boundary → practical action
 ```
+
+A skim reader should be able to reconstruct the central claim from headings, bold lead-ins, and structured elements. If the argument disappears when ordinary paragraphs are hidden, the structure is still too prose-dependent.
 
 Select only the modules supported by the material:
 
@@ -76,13 +79,13 @@ Each section should contribute new information. Article length follows evidence 
 
 Apply SKILL.md's global constraints. Produce the smallest complete explanation, not a mandatory collection of sections.
 
-1. Frame the task: identify one reader question, necessary prerequisites, and the judgment the note should support. Bring a short definition immediately before the first mechanism that needs it.
-2. Build the evidence record: read primary text and relevant figures; separate observations, normative requirements, author opinions, and editorial inferences. Preserve unavailable-source status. A title, search excerpt, or mirror alone does not prove the full original was read.
-3. Draft the argument: governing proposition, conclusion and scope, then problem, mechanism, evidence, and boundary. Include concrete implementation actions only when the subject calls for them. Keep conditions and causal words when shortening sentences.
-4. Ground the difficult step: use a small worked example and a relevant boundary or failure case where they clarify an abstraction. Mark invented inputs, simplified logic, and illustrative results. Do not attribute a constructed example to the source or a live product.
-5. Choose representations: apply visual-authoring.md to the specific difficulty. Progressive disclosure can hold supplementary detail, but key assumptions and limits remain adjacent to the main claim.
-6. Review understanding: attempt a plain-language restatement, a changed-condition prediction, a boundary diagnosis, and evidence tracing. Repair missing causal links. Do not force four quiz blocks into every published note or report a self-review as a user study.
-7. Verify publication: check the canonical identity, source links, example semantics, rendering, and supported interactions. Distinguish saved, CI-passed, and verified-live states.
+1. Frame the task: identify one reader question, necessary prerequisites, and the judgment the note should support.
+2. Build the evidence record: read primary text and relevant figures; separate observations, normative requirements, author opinions, and editorial inferences. Preserve unavailable-source status.
+3. Draft the 30-second layer first: one thesis, 3–5 takeaways, and at most one primary structured representation if it removes real decoding work.
+4. Expand only the hard parts: add mechanism, evidence, a worked example, and the boundary that changes interpretation. Do not repeat the 30-second layer in prose.
+5. Move non-critical detail out of the main scan path: use progressive disclosure or later sections for specifications, source inventories, secondary examples, and implementation notes.
+6. Run two reviews: a comprehension review (restate, predict, diagnose a boundary, trace evidence) and a skim review (hide ordinary paragraphs mentally; the remaining structure should still tell the story).
+7. Verify publication: check canonical identity, source links, example semantics, rendering, supported interactions, and mobile scanability. Distinguish saved, CI-passed, and verified-live states.
 
 ### STE-inspired language pass
 
@@ -108,8 +111,9 @@ Write as finished external publication copy. State ownership, scope, mechanisms,
 ## Review checklist
 
 - Exactly one H1 and one central problem.
-- The opening proposition is supported by the article and guides the argument.
-- The opening technical summary appears before diagrams and remains useful as an excerpt.
+- The direct thesis appears immediately; any philosophical proposition is optional and must improve understanding.
+- A 30-second layer exposes 3–5 key takeaways before the full body.
+- The skim path (headings, bold lead-ins, primary structured elements) reconstructs the argument without requiring every paragraph.
 - Every important number includes its metric meaning, baseline, and scope.
 - Facts, requirements, reported claims, and interpretation remain distinguishable.
 - Source versions, dates, protocol fields, and SDK methods are current and attributable.
