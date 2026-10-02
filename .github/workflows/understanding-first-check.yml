@@ -25,6 +25,44 @@ jobs:
           mkdir -p /tmp/understanding-first-input
           cp ops/understanding-first/* /tmp/understanding-first-input/
           git checkout --detach 83cfb8b4a020ab57f380289ac36d1d18aec2a57b
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          note=Path('/tmp/understanding-first-input/note.md')
+          text=note.read_text()
+          diagram='''```mermaid
+          sequenceDiagram
+            participant C as 客户端
+            participant S as 服务端
+            C->>S: 发送事件 E1
+            Note right of S: 提交并登记 E1
+            S--xC: 响应丢失
+            C->>S: 沿用 E1 重试
+            alt 去重记录仍有效
+              S-->>C: 返回原结果 不重复计数
+            else 记录缺失或过期
+              Note over S: 进入新请求处理路径
+            end
+          ```'''
+          text,n=re.subn(r'```mermaid\n[\s\S]*?```',lambda m:diagram,text)
+          assert n==1
+          text=text.replace('适合画成一条短流程','适合画成一张时序图')
+          note.write_text(text)
+          test=Path('/tmp/understanding-first-input/verify-note.mjs')
+          js=test.read_text()
+          marker="  assert.equal(await page.locator('.mermaid-failed').count(),0);"
+          assert js.count(marker)==1
+          js=js.replace(marker,marker+'''
+            const labels=await page.locator('[data-mermaid-diagram] > svg text').evaluateAll(els=>els.filter(e=>e.textContent.trim()).map(e=>({text:e.textContent,height:e.getBoundingClientRect().height})));
+            await writeFile(out+'/diagram-metrics-'+width+'.json',JSON.stringify(labels,null,2));
+            await writeFile(out+'/rendered-diagram-'+width+'.svg',await page.locator('[data-mermaid-diagram] > svg').evaluate(e=>e.outerHTML));
+            await page.locator('[data-mermaid-diagram]').scrollIntoViewIfNeeded();
+            await page.screenshot({path:out+'/legibility-'+width+'.png'});
+            assert.ok(labels.length>0,'Rendered diagram labels exist');
+            assert.ok(labels.every(l=>l.height >= (width<500?9:12)),'Diagram labels remain legible at actual viewport size');
+          ''')
+          test.write_text(js)
+          PY
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -66,7 +104,7 @@ jobs:
           execFileSync('git',['config','user.email','41898282+github-actions[bot]@users.noreply.github.com']);
           execFileSync('git',['commit','-m','docs: publish understanding-first note and apply STE-inspired authoring SOP'],{stdio:'inherit'});
           const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
-          execFileSync('git',['push','origin','HEAD:refs/heads/candidate/understanding-first-20261002'],{stdio:'inherit'});
+          execFileSync('git',['push','origin','HEAD:refs/heads/candidate/understanding-first-20261002-v2'],{stdio:'inherit'});
           const receipt={...note,base:'83cfb8b4a020ab57f380289ac36d1d18aec2a57b',candidate:sha,changedFiles:files,testsPassed:true,deployed:false};
           fs.writeFileSync('artifacts/understanding-first/candidate.json',JSON.stringify(receipt,null,2));
           fs.copyFileSync('/tmp/understanding-first-input/note.md','artifacts/understanding-first/note.md');
