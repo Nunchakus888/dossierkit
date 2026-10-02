@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { z } from "zod";
@@ -37,6 +38,20 @@ try {
     assert.ok("text" in content);
     const digest = `sha256:${createHash("sha256").update(content.text, "utf8").digest("hex")}`;
     assert.equal(digest, resource.digest);
+    const relative = resource.uri.replace('skill://dossierkit-notes/publish-note/', '');
+    assert.ok(relative !== resource.uri && !relative.includes('..'));
+    assert.equal(content.text, await readFile(new URL('../plugins/dossierkit-notes/skills/publish-note/' + relative, import.meta.url), 'utf8'));
+    if (relative === 'SKILL.md') {
+      assert.match(content.text, /Optimize for understanding/);
+      assert.match(content.text, /STE-inspired/);
+      assert.match(content.text, /Chinese/);
+    }
+    if (relative.endsWith('research-quality.md')) assert.match(content.text, /Understanding-first editorial workflow/);
+    if (relative.endsWith('visual-authoring.md')) {
+      assert.match(content.text, /flowchart TB/);
+      assert.match(content.text, /transcript/);
+      assert.match(content.text, /security boundary/);
+    }
   }
   console.log("Verified MCP Skill catalog, retrieval, resources, and SHA-256 digests.");
 } finally {

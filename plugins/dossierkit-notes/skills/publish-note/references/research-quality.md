@@ -72,6 +72,35 @@ Select only the modules supported by the material:
 
 Each section should contribute new information. Article length follows evidence density.
 
+## Understanding-first editorial workflow
+
+Apply SKILL.md's global constraints. Produce the smallest complete explanation, not a mandatory collection of sections.
+
+1. Frame the task: identify one reader question, necessary prerequisites, and the judgment the note should support. Bring a short definition immediately before the first mechanism that needs it.
+2. Build the evidence record: read primary text and relevant figures; separate observations, normative requirements, author opinions, and editorial inferences. Preserve unavailable-source status. A title, search excerpt, or mirror alone does not prove the full original was read.
+3. Draft the argument: governing proposition, conclusion and scope, then problem, mechanism, evidence, and boundary. Include concrete implementation actions only when the subject calls for them. Keep conditions and causal words when shortening sentences.
+4. Ground the difficult step: use a small worked example and a relevant boundary or failure case where they clarify an abstraction. Mark invented inputs, simplified logic, and illustrative results. Do not attribute a constructed example to the source or a live product.
+5. Choose representations: apply visual-authoring.md to the specific difficulty. Progressive disclosure can hold supplementary detail, but key assumptions and limits remain adjacent to the main claim.
+6. Review understanding: attempt a plain-language restatement, a changed-condition prediction, a boundary diagnosis, and evidence tracing. Repair missing causal links. Do not force four quiz blocks into every published note or report a self-review as a user study.
+7. Verify publication: check the canonical identity, source links, example semantics, rendering, and supported interactions. Distinguish saved, CI-passed, and verified-live states.
+
+### STE-inspired language pass
+
+The official ASD-STE100 Issue 9 includes terminology consistency (1.11), active voice with a limited unknown-agent exception (3.6), clear complete sentences (4.1-4.4), procedural writing (5.1-5.4), and gradual single-topic description (6.1-6.6). Use these as background, not as a claim that this house style reproduces or certifies the standard. Do not copy the controlled dictionary into the Skill.
+
+| Editorial question | Revision action |
+|---|---|
+| Who acts, on what, and under which condition? | State the actor and action when known; label an undisclosed actor as unknown. |
+| Did one concept acquire several names? | Retain one term and its short first-use definition; preserve distinctions between different concepts. |
+| Does a sentence combine several independent operations? | Separate the operations while keeping order and causal connectors. |
+| Is a paragraph switching topics? | Give each paragraph one question; keep complete sentences rather than disconnected fragments. |
+| Does brevity hide a safety, version, or evidence limit? | Restore the qualifier next to the claim. |
+| Is the text claiming formal standard compliance? | Use STE-inspired unless the full applicable standard, dictionary, and terminology have actually been checked. |
+
+For Chinese, use natural short clauses and explicit causal links. Do not convert English word limits into arbitrary Chinese character quotas. In English, a request for formal ASD-STE100 compliance requires the actual standard and complete lexical review; a request for roughly 80 percent of its style is only a preference. General research explanation need not imitate a maintenance checklist.
+
+Source provenance: Karpathy's [post](https://x.com/karpathy/status/2105819303471976479) supplies personal observations about output formats, not comparative comprehension data. The [official STE overview](https://www.asd-ste100.org/about_STE.html) and [Issue 9](https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf) support the standard description. The comprehension review and workflow here are project-specific editorial choices.
+
 ## Public voice
 
 Write as finished external publication copy. State ownership, scope, mechanisms, evidence, and outcomes with direct active language. Present limitations as part of the technical boundary. Omit internal planning language, unfinished markers, evaluator-directed remarks, and unavailable metrics.
