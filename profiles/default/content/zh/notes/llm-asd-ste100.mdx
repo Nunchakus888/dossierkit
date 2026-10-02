@@ -6,7 +6,7 @@ title: "让模型输出更容易理解：从受控写作到按需交互"
 summary: "模型输出的默认形态，不该是长文，而该是最省读者解码成本的表达。"
 featured: false
 date: "2026-10-02"
-updatedAt: "2026-10-02T11:14:53.814Z"
+updatedAt: "2026-10-02T11:26:20.908Z"
 kind: "learning"
 topics:
   - "LLM 输出"
@@ -20,7 +20,7 @@ tags:
   - "ASD-STE100"
   - "解释设计"
   - "知识管理"
-contentHash: "sha256:a2008c8c870d2da08d47cfb733072efa4d483095570d419d09a2688982c0e362"
+contentHash: "sha256:c6c606adda28a68139dd3414834bc7ea3545ca589a9ad83b7e73e9d854091f21"
 ---
 
 **模型输出的默认形态，不该是长文，而该是最省读者解码成本的表达。**
@@ -38,12 +38,19 @@ Karpathy 提出了四种做法：把文字写清楚，再尝试图、交互网�
 下面是根据这些思路整理的选择图，不是原帖给出的固定步骤。
 
 ```mermaid
+---
+config:
+  flowchart:
+    nodeSpacing: 12
+    rankSpacing: 28
+    padding: 8
+---
 flowchart TB
   Q{读者卡在哪里？}
-  Q -->|概念或结论| T[短文字]
-  Q -->|关系或状态| D[图 / Mermaid]
-  Q -->|需要改变条件| H[可验证交互]
-  Q -->|依赖连续动态| V[解释视频]
+  Q -->|概念| T[短文字]
+  Q -->|关系| D[图解]
+  Q -->|变量| H[可验证交互]
+  Q -->|动态| V[解释视频]
   T --> S[能理解就停止]
   D --> S
   H --> S
