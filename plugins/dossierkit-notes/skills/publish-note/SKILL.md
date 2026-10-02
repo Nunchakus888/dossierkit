@@ -13,7 +13,11 @@ The acceptance criterion is what the reader can explain, verify, and decide, not
 
 Use the least elaborate form that resolves the actual comprehension obstacle. The structured-representation order below is conditional on fitness, not a mandate to replace clear prose. Add an original, clearly labeled worked example or boundary case where an abstract mechanism needs grounding. Keep the primary explanation coherent before adding optional detail. Interactive HTML and explainer video are opt-in explanation layers: require a demonstrable learning purpose, supported delivery path, and authorization for new costs or deployment. Safe note content remains static; arbitrary scripts and inline styles stay outside the note pipeline. See the explanatory workflow in research-quality.md and the media escalation rules in visual-authoring.md.
 
-Before release, check whether a reader can restate the mechanism, predict one changed condition, identify an applicability boundary, and trace the central evidence. This is editorial review, not proof of comprehension or a fabricated reader test. Stop when another paragraph, diagram, or medium adds no explanatory value. Keep research, learning, and engineering notes neutral; personal career advice belongs only in explicitly requested career material.
+Before drafting the full body, build a **30-second layer**: one direct thesis, 3–5 high-signal takeaways, and at most one primary diagram or table when it materially reduces decoding work. A reader who scans only the title, this layer, headings, bold lead-ins, and primary visual should still recover the article's argument. Put specifications, source inventories, secondary examples, and implementation detail behind progressive disclosure or later sections unless they change the conclusion.
+
+Do a visible-density pass before release. Do not let several prose paragraphs accumulate where a table, diagram, example, or deletion would communicate faster. Each section should expose its point early; supporting prose earns space only when it adds mechanism, evidence, or a boundary. This is a structural heuristic, not a word-count quota. Narrative material may remain prose when compression would damage meaning.
+
+Before release, check whether a reader can restate the mechanism, predict one changed condition, identify an applicability boundary, and trace the central evidence. Also perform a skim test: ignore ordinary body paragraphs and verify that headings, bold lead-ins, structured elements, and the 30-second layer still reconstruct the main argument. This is editorial review, not proof of comprehension or a fabricated reader test. Stop when another paragraph, diagram, or medium adds no explanatory value. Keep research, learning, and engineering notes neutral; personal career advice belongs only in explicitly requested career material.
 
 ## Global authoring constraints
 
@@ -41,7 +45,7 @@ Check accessible existing notes by title and key concepts before creating a new 
 
 ## Compose one argument
 
-Use exactly one complete `markdown` or semantic `html` document with one H1. Preserve the user's requested language. Open every finished note with one concise philosophical proposition grounded in the article's evidence, expressed in plain language as the governing idea rather than an ornamental motto. It should concern a concept genuinely established by the material and should not obscure the concrete question. Follow it with the technical conclusion and scope, then the necessary body.
+Use exactly one complete `markdown` or semantic `html` document with one H1. Preserve the user's requested language. Open with the clearest direct thesis the evidence supports. A philosophical proposition is optional and belongs only when it makes the concrete question easier to understand; never add one as an ornamental or mandatory opening. Follow with the 30-second layer, then only the body needed to explain mechanism, evidence, and boundaries.
 
 Organize sections around one central problem. Select only the background, mechanism, evidence, architecture, implementation consequences, failure semantics, limits, and conclusion that advance that problem. Use a public, professional voice that states scope, contribution, and evidence directly. Keep qualifications beside the claims they constrain.
 
