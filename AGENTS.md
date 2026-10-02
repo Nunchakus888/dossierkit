@@ -29,6 +29,8 @@ The header and footer slogans share the `signature-wordmark` script treatment; k
 
 ## Note visual authoring
 
-Apply the canonical `plugins/dossierkit-notes/skills/publish-note/SKILL.md` and its visual-authoring reference. For content that genuinely benefits from structured explanation, prefer **Mermaid > Table > SVG > Text**. Use diagrams to reveal otherwise hard-to-follow branches, interactions, or abstractions, not to repaint clear prose or tables. Ordinary prose needs no extra image, and there is no body-image quota. Keep the topic-specific Open Graph cover independent of body visuals: preserve it during body simplification and verify its generated public PNG plus sharing metadata.
+Apply the canonical `plugins/dossierkit-notes/skills/publish-note/SKILL.md` and its visual-authoring reference. Every note starts with a scan-first 30-second layer: direct thesis, 3–5 key takeaways, and at most one primary diagram or table when it materially reduces decoding work. A reader scanning headings, bold lead-ins and structured elements should still recover the argument. Move secondary detail behind progressive disclosure or later sections instead of building a wall of prose.
+
+For content that genuinely benefits from structured explanation, prefer **Mermaid > Table > SVG > Text**. Use diagrams to reveal otherwise hard-to-follow branches, interactions, or abstractions, not to repaint clear prose or tables. Ordinary prose needs no extra image, and there is no body-image quota. Keep the topic-specific Open Graph cover independent of body visuals: preserve it during body simplification and verify its generated public PNG plus sharing metadata.
 
 Keep favicon backgrounds transparent, preserve connected-letter counters at 16/32px, and regenerate PNG/ICO fallbacks plus versioned links when artwork changes. Back-link arrow ink aligns with the article left edge while retaining the shared 44px touch target.
