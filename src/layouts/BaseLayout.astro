@@ -5,6 +5,7 @@ import SiteIcons from "../components/seo/SiteIcons.astro";
 import Footer from "../components/layout/Footer.astro";
 import CloudflareAnalytics from "../components/integrations/CloudflareAnalytics.astro";
 import NoteEngagement from "../components/notes/NoteEngagement.astro";
+import PromptCopy from "../components/notes/PromptCopy.astro";
 import ShareMetadata from "../components/seo/ShareMetadata.astro";
 import { defaultLocale, type Locale } from "../lib/config";
 import { loadProfilePack, findContentBySlug } from "../lib/profile-loader";
@@ -83,6 +84,7 @@ const cssVars = [
       <slot />
       {note && <NoteEngagement noteRef={noteRef} title={note.data.title} summary={note.data.summary} url={canonicalUrl} locale={locale} />}
     </main>
+    {note?.html.includes('language-prompt') && <PromptCopy locale={locale} />}
     <Footer locale={locale} pack={pack} pageRef={footerPageRef} />
     <CloudflareAnalytics />
     {publicPage && <ViewCounterClient />}
