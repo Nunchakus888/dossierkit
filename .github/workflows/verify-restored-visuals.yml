@@ -1,0 +1,118 @@
+name: Verify restored article visuals
+on:
+  push:
+    branches: [ops/verify-restored-visuals-20261002]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Check actual production HTML, rendered diagrams and interactions
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {mkdir,writeFile} from 'node:fs/promises';
+          import {createRequire} from 'node:module';
+          import {chromium} from 'playwright';
+          const require=createRequire(import.meta.url);
+          const sharp=createRequire(require.resolve('astro/package.json'))('sharp');
+          const origin='https://sunionpeaks.pages.dev';
+          const path='/zh/notes/llm-asd-ste100/';
+          const out='artifacts/restored-visuals';
+          await mkdir(out,{recursive:true});
+          const headers={'DNT':'1','Sec-GPC':'1','Cache-Control':'no-cache','User-Agent':'DossierKit-ReadOnly-Visual-Audit/1.0'};
+          const report={generatedAt:new Date().toISOString(),expectedCommit:'ee04764623b03a3296f4e2182f691318afc40e1e',productionMutation:false,checks:[],blockedRequests:0};
+          for(const suffix of ['', '?verify=ee047646']) {
+            const response=await fetch(origin+path+suffix,{headers,signal:AbortSignal.timeout(30000)});
+            assert.equal(response.status,200);
+            const html=await response.text();
+            assert.ok(html.includes('真正可复用的规则'),'Restored content missing: '+suffix);
+            assert.ok(html.includes('data-mermaid-diagram'),'Mermaid source missing');
+            assert.ok(html.includes('读者卡在哪里'),'Expected flowchart missing');
+            await writeFile(out+(suffix?'/uncached.html':'/canonical.html'),html);
+          }
+          const browser=await chromium.launch({headless:true});
+          try {
+            for(const width of [390,1440]) {
+              const context=await browser.newContext({viewport:{width,height:900},hasTouch:width<500,extraHTTPHeaders:headers,serviceWorkers:'block'});
+              await context.route('**/*',async route=>{
+                const req=route.request(),url=new URL(req.url());
+                if(url.hostname.includes('cloudflareinsights.com')||url.pathname.startsWith('/cdn-cgi/rum')||(url.pathname==='/api/views'&&req.method()!=='GET')) {
+                  report.blockedRequests++;return route.abort();
+                }
+                return route.continue();
+              });
+              const page=await context.newPage();
+              await page.goto(origin+path+'?verify=ee047646',{waitUntil:'domcontentloaded',timeout:60000});
+              const body=page.locator('.note-prose');
+              await body.getByRole('heading',{name:'真正可复用的规则',exact:true}).waitFor();
+              const text=await body.innerText();
+              assert.ok(!/DossierKit|\bSOP\b|以后怎么生成笔记/i.test(text));
+              assert.equal(await body.locator('table').count(),1);
+              assert.equal(await body.locator('details').count(),2);
+              assert.ok(text.includes('原句')&&text.includes('改成'));
+              const diagram=body.locator('[data-mermaid-diagram]');
+              assert.equal(await diagram.count(),1);
+              await diagram.locator(':scope > svg').waitFor({timeout:60000});
+              assert.equal(await body.locator('.mermaid-failed').count(),0);
+              const dimensions=await diagram.locator(':scope > svg').evaluate(svg=>{
+                const box=svg.getBoundingClientRect(),vb=svg.viewBox.baseVal;
+                const sizes=[...svg.querySelectorAll('.nodeLabel,.edgeLabel text,text')].map(el=>parseFloat(getComputedStyle(el).fontSize)*box.width/vb.width).filter(Number.isFinite);
+                return {width:box.width,height:box.height,viewBox:[vb.width,vb.height],minimumRenderedLabelPx:sizes.length?Math.min(...sizes):null};
+              });
+              assert.ok(dimensions.width>0&&dimensions.height>0);
+              assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+              await diagram.scrollIntoViewIfNeeded();
+              await diagram.screenshot({path:`${out}/diagram-${width}.png`});
+              await diagram.hover();
+              await diagram.locator('.mermaid-zoom-trigger').click();
+              const viewer=page.locator('[data-diagram-viewer]');
+              await viewer.waitFor({state:'visible'});
+              assert.ok(await viewer.evaluate(el=>el.open));
+              await viewer.locator('[data-diagram-close]').click();
+              await viewer.waitFor({state:'hidden'});
+              const disclosure=body.locator('details').first();
+              await disclosure.locator('summary').click();
+              assert.ok(await disclosure.evaluate(el=>el.open));
+              await disclosure.locator('summary').click();
+              assert.ok(!await disclosure.evaluate(el=>el.open));
+              if(width===390){await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:out+'/article-390.png'});}
+              const canonical=await page.locator('link[rel="canonical"]').getAttribute('href');
+              assert.equal(canonical,origin+path.slice(0,-1));
+              const cover=await page.locator('meta[property="og:image"]').first().getAttribute('content');
+              assert.ok(cover&&cover.startsWith(origin+'/_generated/og/'));
+              if(!report.cover){
+                const r=await fetch(cover,{headers,signal:AbortSignal.timeout(30000)});
+                assert.equal(r.status,200);assert.ok(r.headers.get('content-type').startsWith('image/png'));
+                const image=Buffer.from(await r.arrayBuffer());const m=await sharp(image).metadata();
+                assert.equal(m.width,1200);assert.equal(m.height,630);
+                report.cover={url:cover,status:r.status,width:m.width,height:m.height};
+              }
+              report.checks.push({width,renderedSvg:true,diagram:dimensions,table:true,example:true,disclosures:true,expandClose:true,internalContentAbsent:true,canonical});
+              await context.close();
+            }
+            report.passed=true;
+          } finally {
+            await browser.close();
+            await writeFile(out+'/receipt.json',JSON.stringify(report,null,2));
+            console.log(JSON.stringify(report,null,2));
+          }
+          JS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: restored-visuals-verification
+          path: artifacts/restored-visuals/
+          retention-days: 7
+          if-no-files-found: error
