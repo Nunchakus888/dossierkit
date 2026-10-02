@@ -1,0 +1,83 @@
+name: Understanding-first note and SOP verification
+on:
+  push:
+    branches: [implementation/understanding-first-20261002]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: understanding-first-verification
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      ACTIVE_PROFILE: default
+      DEFAULT_LOCALE: zh
+      PUBLIC_SITE_URL: https://sunionpeaks.pages.dev
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Use isolated input and pin the production base
+        run: |
+          mkdir -p /tmp/understanding-first-input
+          cp ops/understanding-first/* /tmp/understanding-first-input/
+          git checkout --detach 83cfb8b4a020ab57f380289ac36d1d18aec2a57b
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Prepare canonical note and persistent authoring rules
+        run: |
+          pnpm exec tsx /tmp/understanding-first-input/prepare-candidate.mjs /tmp/understanding-first-input
+          pnpm generate:mcp-skill
+      - name: Test existing contracts and updated MCP Skill catalog
+        run: |
+          pnpm test:notes
+          pnpm test:assets
+          pnpm test:integrations
+          pnpm test:views
+          pnpm validate
+          pnpm build
+          pnpm exec tsx scripts/export-publication.ts
+          node scripts/test-publication-build.mjs
+          node scripts/verify-note-covers.mjs
+          pnpm package:plugin
+          pnpm build:mcp
+      - name: Verify article layout without production traffic
+        run: |
+          pnpm exec playwright install --with-deps chromium
+          node /tmp/understanding-first-input/verify-note.mjs
+      - name: Save verified source-only candidate
+        run: |
+          node --input-type=module <<'JS'
+          import fs from 'node:fs';
+          import {execFileSync} from 'node:child_process';
+          const note=JSON.parse(fs.readFileSync('artifacts/understanding-first/note.json'));
+          const files=['AGENTS.md','plugins/dossierkit-notes/skills/publish-note/SKILL.md','plugins/dossierkit-notes/skills/publish-note/references/research-quality.md','plugins/dossierkit-notes/skills/publish-note/references/visual-authoring.md','functions/api/mcp.ts','scripts/test-mcp-skill.ts','src/generated/dossierkit-note-skill.ts',note.notePath,note.coverPath];
+          execFileSync('git',['add','--',...files],{stdio:'inherit'});
+          const staged=execFileSync('git',['diff','--cached','--name-only'],{encoding:'utf8'}).trim().split('\n');
+          if(JSON.stringify([...staged].sort())!==JSON.stringify([...files].sort()))throw new Error('Unexpected staged source files');
+          execFileSync('git',['config','user.name','github-actions[bot]']);
+          execFileSync('git',['config','user.email','41898282+github-actions[bot]@users.noreply.github.com']);
+          execFileSync('git',['commit','-m','docs: publish understanding-first note and apply STE-inspired authoring SOP'],{stdio:'inherit'});
+          const sha=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
+          execFileSync('git',['push','origin','HEAD:refs/heads/candidate/understanding-first-20261002'],{stdio:'inherit'});
+          const receipt={...note,base:'83cfb8b4a020ab57f380289ac36d1d18aec2a57b',candidate:sha,changedFiles:files,testsPassed:true,deployed:false};
+          fs.writeFileSync('artifacts/understanding-first/candidate.json',JSON.stringify(receipt,null,2));
+          fs.copyFileSync('/tmp/understanding-first-input/note.md','artifacts/understanding-first/note.md');
+          fs.copyFileSync(note.coverPath,'artifacts/understanding-first/cover.svg');
+          console.log(JSON.stringify(receipt,null,2));
+          JS
+      - name: Store private receipts and rendered evidence without fonts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: understanding-first-verification
+          path: artifacts/understanding-first/
+          if-no-files-found: error
+          retention-days: 14
