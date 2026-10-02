@@ -8,6 +8,12 @@ Ask what becomes easier to understand when the reader sees relationships, branch
 
 For content that benefits from structured explanation, the preference is **Mermaid > Table > SVG > Text**. Choose the first suitable form, not the first form that is merely possible. A parameter matrix fits a table better than a flowchart; a single definition fits prose better than a diagram. Keep one primary representation per relationship and put only interpretation, assumptions, or evidence in adjacent prose.
 
+## Design the scan path first
+
+The first screen should not be a wall of prose. After the direct thesis and 3–5 takeaways, place at most one primary diagram or table when it explains the core relationship faster than text. Do not put a decorative visual there just to break up paragraphs.
+
+A reader who scans only headings, bold lead-ins, and structured elements should recover the argument. If several visible paragraphs repeat a relationship that could be read from one table or diagram, compress or move the support into progressive disclosure. Key evidence limits remain visible beside the claim they constrain.
+
 ## Select one effective representation
 
 | Order | Question or relationship | Preferred representation |
