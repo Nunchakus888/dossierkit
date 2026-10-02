@@ -32,14 +32,22 @@ jobs:
           const out='artifacts/restored-visuals';
           await mkdir(out,{recursive:true});
           const headers={'DNT':'1','Sec-GPC':'1','Cache-Control':'no-cache','User-Agent':'DossierKit-ReadOnly-Visual-Audit/1.0'};
-          const report={generatedAt:new Date().toISOString(),expectedCommit:'ee04764623b03a3296f4e2182f691318afc40e1e',productionMutation:false,checks:[],blockedRequests:0};
-          for(const suffix of ['', '?verify=ee047646']) {
+          const report={generatedAt:new Date().toISOString(),expectedCommit:'7897ba3b4e4ace9ff52e09d117f43e73c45e0bc5',productionMutation:false,checks:[],blockedRequests:0};
+          for(let attempt=0;attempt<30;attempt++) {
+            const r=await fetch(origin+path+'?verify=7897ba3b',{headers,signal:AbortSignal.timeout(30000)});
+            const html=await r.text();
+            if(r.ok&&html.includes('nodeSpacing: 12'))break;
+            if(attempt===29)throw new Error('Compact Mermaid version did not reach production');
+            await new Promise(resolve=>setTimeout(resolve,5000));
+          }
+          for(const suffix of ['', '?verify=7897ba3b']) {
             const response=await fetch(origin+path+suffix,{headers,signal:AbortSignal.timeout(30000)});
             assert.equal(response.status,200);
             const html=await response.text();
             assert.ok(html.includes('真正可复用的规则'),'Restored content missing: '+suffix);
             assert.ok(html.includes('data-mermaid-diagram'),'Mermaid source missing');
             assert.ok(html.includes('读者卡在哪里'),'Expected flowchart missing');
+            assert.ok(html.includes('nodeSpacing: 12'),'Compact source missing');
             await writeFile(out+(suffix?'/uncached.html':'/canonical.html'),html);
           }
           const browser=await chromium.launch({headless:true});
@@ -54,7 +62,7 @@ jobs:
                 return route.continue();
               });
               const page=await context.newPage();
-              await page.goto(origin+path+'?verify=ee047646',{waitUntil:'domcontentloaded',timeout:60000});
+              await page.goto(origin+path+'?verify=7897ba3b',{waitUntil:'domcontentloaded',timeout:60000});
               const body=page.locator('.note-prose');
               await body.locator('h2').filter({hasText:'真正可复用的规则'}).waitFor();
               const text=await body.innerText();
@@ -75,6 +83,8 @@ jobs:
               assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
               await diagram.scrollIntoViewIfNeeded();
               await diagram.screenshot({path:`${out}/diagram-${width}.png`});
+              await writeFile(`${out}/dimensions-${width}.json`,JSON.stringify(dimensions,null,2));
+              assert.ok(dimensions.minimumRenderedLabelPx>=12,'Diagram labels too small: '+dimensions.minimumRenderedLabelPx);
               await diagram.hover();
               await diagram.locator('.mermaid-zoom-trigger').click();
               const viewer=page.locator('[data-diagram-viewer]');
