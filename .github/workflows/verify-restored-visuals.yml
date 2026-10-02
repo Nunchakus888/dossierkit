@@ -56,7 +56,7 @@ jobs:
               const page=await context.newPage();
               await page.goto(origin+path+'?verify=ee047646',{waitUntil:'domcontentloaded',timeout:60000});
               const body=page.locator('.note-prose');
-              await body.getByRole('heading',{name:'真正可复用的规则',exact:true}).waitFor();
+              await body.locator('h2').filter({hasText:'真正可复用的规则'}).waitFor();
               const text=await body.innerText();
               assert.ok(!/DossierKit|\bSOP\b|以后怎么生成笔记/i.test(text));
               assert.equal(await body.locator('table').count(),1);
