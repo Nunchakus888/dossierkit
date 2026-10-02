@@ -1,0 +1,116 @@
+name: Verify reader prompt
+on:
+  push:
+    branches: [ops/verify-reader-prompt-20261002]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Verify deployed prompt and copy interaction
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import {readFile,mkdir,writeFile} from 'node:fs/promises';
+          import {setTimeout as delay} from 'node:timers/promises';
+          import {createRequire} from 'node:module';
+          import {chromium} from 'playwright';
+          const require=createRequire(import.meta.url);
+          const sharp=createRequire(require.resolve('astro/package.json'))('sharp');
+          const origin='https://sunionpeaks.pages.dev';
+          const path='/zh/notes/llm-asd-ste100/';
+          const out='artifacts/reader-prompt';
+          await mkdir(out,{recursive:true});
+          const source=await readFile('profiles/default/content/zh/notes/llm-asd-ste100.mdx','utf8');
+          const expected=source.match(/```prompt\n([\s\S]*?)\n```/)[1]+'\n';
+          await writeFile(out+'/agent-prompt.txt',expected);
+          const headers={'DNT':'1','Sec-GPC':'1','Cache-Control':'no-cache'};
+          let ready=false;
+          for(let n=0;n<48;n++){
+            const response=await fetch(origin+path,{headers,signal:AbortSignal.timeout(20000)});
+            const html=await response.text();
+            if(response.ok&&html.includes('class="language-prompt"')&&html.includes('data-reader-prompt-template')){ready=true;break;}
+            await delay(5000);
+          }
+          assert.ok(ready,'New prompt did not reach production');
+          const report={expectedCommit:'d4d84f25a7833ce1602fa10c2cdc924e553d0956',generatedAt:new Date().toISOString(),blockedTracking:0,productionWrites:0,checks:[]};
+          const browser=await chromium.launch({headless:true});
+          try {
+            for(const width of [390,1440]){
+              const context=await browser.newContext({viewport:{width,height:900},extraHTTPHeaders:headers,permissions:['clipboard-read','clipboard-write'],serviceWorkers:'block',reducedMotion:'reduce'});
+              await context.route('**/*',route=>{
+                const req=route.request(),u=new URL(req.url());
+                if(u.hostname.includes('cloudflareinsights.com')||u.pathname.startsWith('/cdn-cgi/rum')||(u.pathname==='/api/views'&&req.method()!=='GET')){report.blockedTracking++;return route.abort();}
+                return route.continue();
+              });
+              const page=await context.newPage();
+              await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:60000});
+              const block=page.locator('.reader-prompt');
+              await block.waitFor({timeout:30000});
+              assert.equal(await block.count(),1);
+              const code=block.locator('code.language-prompt');
+              assert.equal(await code.textContent(),expected);
+              const button=block.locator('[data-copy-reader-prompt]');
+              assert.equal(await button.count(),1);
+              await block.scrollIntoViewIfNeeded();
+              await button.click();
+              await page.waitForFunction(()=>document.querySelector('[data-copy-reader-prompt]')?.getAttribute('aria-label')==='已复制');
+              assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),expected);
+              await page.evaluate(()=>document.dispatchEvent(new Event('astro:page-load')));
+              assert.equal(await page.locator('.reader-prompt [data-copy-reader-prompt]').count(),1);
+              await button.focus();await page.keyboard.press('Enter');
+              assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),expected);
+              assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+              const target=await button.boundingBox();assert.ok(target.width>=44&&target.height>=44);
+              await block.screenshot({path:`${out}/prompt-${width}.png`});
+              await page.evaluate(()=>{navigator.clipboard.writeText=async()=>{throw new DOMException('Denied','NotAllowedError');};});
+              await button.click();
+              await page.waitForFunction(()=>document.querySelector('.reader-prompt [role="status"]')?.textContent.includes('手动复制'));
+              assert.equal((await page.evaluate(()=>getSelection().toString())).trimEnd(),expected.trimEnd());
+              const body=page.locator('.note-prose');
+              assert.equal(await body.locator('table').count(),1);
+              assert.equal(await body.locator('details').count(),2);
+              assert.ok(!(await body.textContent()).includes('DossierKit'));
+              const diagram=body.locator('[data-mermaid-diagram]');
+              assert.equal(await diagram.count(),1);
+              await diagram.locator(':scope > svg').waitFor({timeout:60000});
+              assert.equal(await body.locator('.mermaid-failed').count(),0);
+              await diagram.scrollIntoViewIfNeeded();await diagram.hover();
+              await diagram.locator('.mermaid-zoom-trigger').click();
+              const viewer=page.locator('[data-diagram-viewer]');await viewer.waitFor({state:'visible'});
+              await viewer.locator('[data-diagram-close]').click();await viewer.waitFor({state:'hidden'});
+              const details=body.locator('details').first();await details.locator('summary').click();assert.ok(await details.evaluate(el=>el.open));
+              await details.locator('summary').click();
+              const cover=await page.locator('meta[property="og:image"]').first().getAttribute('content');
+              if(!report.cover){
+                const r=await fetch(cover,{headers,signal:AbortSignal.timeout(20000)});
+                assert.equal(r.status,200);assert.ok(r.headers.get('content-type').startsWith('image/png'));
+                const m=await sharp(Buffer.from(await r.arrayBuffer())).metadata();assert.equal(m.width,1200);assert.equal(m.height,630);
+                report.cover={url:cover,width:m.width,height:m.height};
+              }
+              report.checks.push({width,exactClipboardText:true,keyboard:true,fallbackSelection:true,noDuplicateButton:true,mermaidRendered:true,diagramExpand:true,tablePreserved:true,disclosuresPreserved:true,noHorizontalOverflow:true});
+              await context.close();
+            }
+            report.passed=true;
+          } finally {
+            await browser.close();await writeFile(out+'/receipt.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));
+          }
+          JS
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: reader-prompt-verification
+          path: artifacts/reader-prompt/
+          retention-days: 7
+          if-no-files-found: error
