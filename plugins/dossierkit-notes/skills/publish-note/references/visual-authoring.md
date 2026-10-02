@@ -20,11 +20,23 @@ For content that benefits from structured explanation, the preference is **Merma
 | 4. Text | Simple definitions, conclusions, qualifications, or a readable fallback | Concise prose; a minimal code or wire sample when syntax is the subject |
 | Separate cover requirement | Topic recognition in search/social sharing previews | Topic-specific `cover.svg`, rendered to PNG by the site |
 
-Keep diagram labels short and edges meaningful. Include rejection, timeout, retry, or recovery branches only where they matter to the argument. Prefer a few well-labeled states to a wide poster filled with paragraphs. Check mobile legibility and preserve intrinsic aspect ratio; do not force a narrow diagram to a minimum width. Explain the key consequence instead of narrating every arrow.
+Prefer `flowchart TB` for long flows and vertical reading. Use a sequence diagram for call/return semantics; split an oversized diagram at a meaningful boundary rather than shrinking its text. Keep diagram labels short and edges meaningful. Include rejection, timeout, retry, or recovery branches only where they matter to the argument. Prefer a few well-labeled states to a wide poster filled with paragraphs. Check mobile legibility and preserve intrinsic aspect ratio; do not force a narrow diagram to a minimum width. Explain the key consequence instead of narrating every arrow.
 
 DossierKit Markdown supports Mermaid code fences. For semantic HTML, use `<pre><code class="language-mermaid">…</code></pre>`. Keep Mermaid source in the document rather than duplicating it as an SVG asset. If a rendering path is unavailable, choose a useful table or concise prose rather than storing a second copy of the same diagram.
 
 The Markdown/MDX path can preserve supported MathML markup. The current semantic HTML sanitizer does not preserve MathML elements, so choose an accessible prose, table, or code representation for HTML notes unless the server contract changes and the rendering path is verified.
+
+## Escalate media only when it improves explanation
+
+Plain prose is the default for a simple definition or conclusion. A table handles exact values or aligned differences; Mermaid handles branches, state, responsibility, and calls. Their ordering is a fit test, not a universal superiority claim. A body SVG is for a mechanism the other static forms cannot show well. Each relation has one main representation, with prose for implications and caveats rather than label-by-label repetition.
+
+Distinguish reading interaction from computational interaction. Supported native details/summary can disclose supplementary evidence without custom JavaScript. Keep the central argument, critical assumptions, and failure limits visible. A simulation needs a meaningful input, an explicit rule or model, an observable output, reset behavior, and at least one boundary test. Clearly distinguish sample or simulated data from measured results. Animation without a testable relationship is not a simulation.
+
+The current Markdown and semantic HTML pipelines reject active scripts; semantic HTML also rejects inline styles and form controls. Keep that security boundary intact. A richer explainer is a separate, reviewed, authorized deployment or attachment linked from a canonical static note, with a useful static fallback. Do not insert script, iframe, remote executable dependencies, or secret keys into note content, and do not change the sanitizer merely to satisfy an output-format suggestion.
+
+Video is optional, not a new default deliverable. Use it when timing, continuous transformation, or spatial change is essential and the user authorizes the production cost. Review the storyboard before rendering; then verify the agreement of narration, labels, equations, and animation. Include captions, a transcript, playback controls, and an appropriate description of meaningful visual information. Use reduced-motion alternatives where applicable. Confirm an available production tool before promising a generated video, and keep service credentials out of artifacts. The [W3C media planning guide](https://www.w3.org/WAI/media/av/planning/) is the accessibility reference.
+
+Check actual supported rendering on mobile and desktop before reporting it verified. A requested HTML format does not automatically imply a working application, and a screenshot does not verify an interaction. Model self-review is not evidence of improved human understanding. Keep the independent Open Graph cover requirement unchanged.
 
 ## SVG asset contract
 

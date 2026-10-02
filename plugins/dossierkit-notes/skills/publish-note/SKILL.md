@@ -7,6 +7,14 @@ description: Deep-read, draft, illustrate, review, publish, edit, or delete a Do
 
 Turn source material into one focused, externally readable note whose claims, evidence, visuals, and publication state can be checked.
 
+## Optimize for understanding
+
+The acceptance criterion is what the reader can explain, verify, and decide, not output length or visual polish. Read the source before proposing a format. Establish one central question, the reader's prerequisites, and the decision or mental model the note should enable. Use STE-inspired prose: explicit actors and actions, stable terminology, complete short sentences, and one topic per paragraph. Preserve causal connectors, uncertainty, versions, denominators, and failure conditions. Define essential terms on first use. Chinese notes adapt these principles, not English word counts; neither Chinese prose nor an approximate style prompt establishes ASD-STE100 compliance. Present source-author experience as experience, not a measured universal ranking.
+
+Use the least elaborate form that resolves the actual comprehension obstacle. The structured-representation order below is conditional on fitness, not a mandate to replace clear prose. Add an original, clearly labeled worked example or boundary case where an abstract mechanism needs grounding. Keep the primary explanation coherent before adding optional detail. Interactive HTML and explainer video are opt-in explanation layers: require a demonstrable learning purpose, supported delivery path, and authorization for new costs or deployment. Safe note content remains static; arbitrary scripts and inline styles stay outside the note pipeline. See the explanatory workflow in research-quality.md and the media escalation rules in visual-authoring.md.
+
+Before release, check whether a reader can restate the mechanism, predict one changed condition, identify an applicability boundary, and trace the central evidence. This is editorial review, not proof of comprehension or a fabricated reader test. Stop when another paragraph, diagram, or medium adds no explanatory value. Keep research, learning, and engineering notes neutral; personal career advice belongs only in explicitly requested career material.
+
 ## Global authoring constraints
 
 Make each representation earn its place by reducing the reader's effort to understand the mechanism. For content that benefits from structured explanation, use the preference **Mermaid > Table > SVG > Text**, subject to fitness for the question. This is a representation-selection order, not a requirement to illustrate ordinary prose. Keep definitions and conclusions as concise prose when they are already clear; do not turn them into text-filled image cards or add a diagram merely to satisfy a picture count. Give each relationship one primary representation, with adjacent prose explaining implications rather than repeating every label.
@@ -33,7 +41,7 @@ Check accessible existing notes by title and key concepts before creating a new 
 
 ## Compose one argument
 
-Use exactly one complete `markdown` or semantic `html` document with one H1. Preserve the user's requested language. Open every finished note with one concise philosophical proposition grounded in the article's evidence; it should express the governing idea about agency, evidence, trust, state, responsibility, or another concept genuinely established by the material. Follow it with the technical conclusion and scope, then the necessary body.
+Use exactly one complete `markdown` or semantic `html` document with one H1. Preserve the user's requested language. Open every finished note with one concise philosophical proposition grounded in the article's evidence, expressed in plain language as the governing idea rather than an ornamental motto. It should concern a concept genuinely established by the material and should not obscure the concrete question. Follow it with the technical conclusion and scope, then the necessary body.
 
 Organize sections around one central problem. Select only the background, mechanism, evidence, architecture, implementation consequences, failure semantics, limits, and conclusion that advance that problem. Use a public, professional voice that states scope, contribution, and evidence directly. Keep qualifications beside the claims they constrain.
 

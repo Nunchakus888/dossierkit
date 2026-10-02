@@ -15,6 +15,10 @@ Use a public, professional voice:
 
 Before committing content changes, scan public content for placeholder or internal wording: `demo`, `example`, `待补`, `后续`, `短板`, `面试官`, `不需要`, `不作为`, `not a demo`, `to be filled`.
 
+## Understanding-first notes
+
+Research, learning, and engineering notes follow the canonical publish-note Skill rather than the career-presentation guidance above. Apply STE-inspired clear prose, define essential terms on first use, preserve causal and evidence boundaries, and ground difficult mechanisms in a labeled example or relevant failure case. Choose media by what the reader must understand; keep simple prose simple, long Mermaid flows vertical, and computational HTML or video opt-in and separately reviewed. Review whether the reader can explain, transfer, identify limits, and verify the argument. Do not add personal career advice to technical notes. The Skill and its references remain the source of truth; the build regenerates the MCP catalog and plugin package from them.
+
 ## Public UI actions
 
 Use the shared `IconAction` for familiar utility actions (share, copy, language, contact, download, print, back, zoom, close). Keep utility chrome icon-first, neutral, and quiet. Remove redundant action headings and explanatory prose. Retain meaningful navigation labels and content titles where an icon would be ambiguous. Every icon-only action needs a localized accessible name and hover title, visible keyboard focus, and a 44px touch target. Success feedback may be a temporary check mark with a live-region announcement; keep a usable fallback when an operation fails. Do not change collection semantics, metrics, content, or destinations during visual-only changes.
