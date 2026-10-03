@@ -1,28 +1,111 @@
-name: Hinton primary source review
+name: Hinton note verification
 on:
   push:
     branches: [ops/hinton-source-review-20261003]
 permissions:
   contents: read
 jobs:
-  fetch-primary:
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 12
+    env:
+      ACTIVE_PROFILE: default
+      DEFAULT_LOCALE: zh
+      PUBLIC_SITE_URL: https://sunionpeaks.pages.dev
     steps:
-      - name: Retrieve exact primary report without credentials
-        run: |
-          mkdir -p evidence
-          curl --fail --location --retry 2 --max-time 60 'https://casp.ac/__l5e/assets-v1/5efd4b41-deb5-4513-a0a3-b4f82d2b79ea/intelligence-explosion.pdf' -o evidence/intelligence-explosion.pdf
-          python3 - <<'PY'
-          from pathlib import Path
-          import hashlib, json, datetime
-          p=Path('evidence/intelligence-explosion.pdf')
-          assert p.read_bytes().startswith(b'%PDF-'), 'Not an actual PDF'
-          Path('evidence/provenance.json').write_text(json.dumps({'url':'https://casp.ac/__l5e/assets-v1/5efd4b41-deb5-4513-a0a3-b4f82d2b79ea/intelligence-explosion.pdf','sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'retrieved_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'private_research_copy':True}, indent=2))
-          PY
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+      - uses: actions/checkout@v7
         with:
-          name: hinton-primary-source
-          path: evidence/
-          retention-days: 3
-          if-no-files-found: error
+          ref: feb729ab9452505eceeff9b20c8884bad147e610
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check canonical preparation and original asset contract
+        run: |
+          cat > verify-hinton-metadata.ts <<'TS'
+          import assert from 'node:assert/strict';
+          import {readFile} from 'node:fs/promises';
+          import {parseCanonicalNote,prepareNote,deriveCanonicalNoteKey} from './src/lib/note-ingest';
+          import {validateSvg} from './src/lib/note-assets.mjs';
+          const p=parseCanonicalNote(await readFile('profiles/default/content/zh/notes/ai-r-d-intelligence-explosion.mdx','utf8'));
+          const n=await prepareNote({markdown:'# '+p.metadata.title+'\n\n'+p.body,topics:p.metadata.topics,kind:'research'},new Date(),p.metadata);
+          assert.equal(n.contentHash,p.contentHash);
+          assert.equal(n.summary,p.metadata.summary);
+          assert.equal(n.locale,'zh');
+          assert.equal(deriveCanonicalNoteKey(n),'ai-r-d-intelligence-explosion');
+          validateSvg(await readFile('profiles/default/assets/notes/zh/ai-r-d-intelligence-explosion/cover.svg','utf8'),'cover.svg');
+          assert.equal((p.body.match(/```mermaid/g)||[]).length,1);
+          assert.ok(!/DossierKit|SOP|CI #|以后怎么生成/.test(p.body));
+          console.log('Canonical metadata, identity, content hash and asset validated.');
+          TS
+          pnpm exec tsx verify-hinton-metadata.ts
+          pnpm test:notes
+          pnpm test:assets
+          pnpm validate
+          pnpm build
+          node scripts/verify-note-covers.mjs
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Verify rendered diagrams, disclosures and cover without production traffic
+        run: |
+          cat > verify-hinton-ui.mjs <<'JS'
+          import assert from 'node:assert/strict';
+          import {mkdir,writeFile,readFile} from 'node:fs/promises';
+          import {spawn} from 'node:child_process';
+          import {createRequire} from 'node:module';
+          import {chromium} from 'playwright';
+          const require=createRequire(import.meta.url);
+          const sharp=createRequire(require.resolve('astro/package.json'))('sharp');
+          const out='artifacts/hinton-note';
+          await mkdir(out,{recursive:true});
+          const server=spawn('python3',['-m','http.server','4173','--directory','dist'],{stdio:'ignore'});
+          const origin='http://127.0.0.1:4173';
+          const path='/zh/notes/ai-r-d-intelligence-explosion/';
+          const report={candidate:'feb729ab9452505eceeff9b20c8884bad147e610',productionMutation:false,scope:'isolated-built-candidate',checks:[]};
+          const browser=await chromium.launch({headless:true});
+          try {
+            for(let i=0;i<40;i++){try{if((await fetch(origin+path)).ok)break;}catch{} await new Promise(r=>setTimeout(r,250));}
+            for(const width of [390,1440]){
+              const context=await browser.newContext({viewport:{width,height:900},hasTouch:width<500,extraHTTPHeaders:{DNT:'1','Sec-GPC':'1'},serviceWorkers:'block'});
+              await context.route('**/*',route=>{const u=new URL(route.request().url());return (u.hostname.includes('cloudflareinsights.com')||u.pathname.startsWith('/cdn-cgi/rum')||u.pathname==='/api/views')?route.abort():route.continue();});
+              const page=await context.newPage();
+              const response=await page.goto(origin+path,{waitUntil:'domcontentloaded',timeout:60000});
+              assert.equal(response.status(),200);
+              const body=page.locator('.note-prose');
+              await body.locator('h2').filter({hasText:'四个瓶颈'}).waitFor();
+              const d=body.locator('[data-mermaid-diagram]');
+              assert.equal(await d.count(),1);
+              await d.locator(':scope > svg').waitFor({timeout:60000});
+              const dimensions=await d.locator(':scope > svg').evaluate(svg=>{const b=svg.getBoundingClientRect(),v=svg.viewBox.baseVal; const sizes=[...svg.querySelectorAll('.nodeLabel,.edgeLabel text,text')].map(e=>parseFloat(getComputedStyle(e).fontSize)*b.width/v.width).filter(Number.isFinite);return {width:b.width,height:b.height,minimumLabelPx:Math.min(...sizes)};});
+              assert.ok(dimensions.minimumLabelPx>=10,JSON.stringify(dimensions));
+              assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Document horizontal overflow');
+              assert.equal(await body.locator('table').count(),3);
+              assert.equal(await body.locator('details').count(),3);
+              assert.ok(!/DossierKit|SOP/.test(await body.innerText()));
+              await d.scrollIntoViewIfNeeded();
+              await d.screenshot({path:`${out}/diagram-${width}.png`});
+              await d.hover();await d.locator('.mermaid-zoom-trigger').click();
+              const dialog=page.locator('[data-diagram-viewer]');await dialog.waitFor({state:'visible'});
+              await dialog.locator('[data-diagram-close]').click();await dialog.waitFor({state:'hidden'});
+              for(const details of await body.locator('details').all()){await details.locator('summary').click();assert.ok(await details.evaluate(e=>e.open));await details.locator('summary').click();}
+              await body.locator('table').first().screenshot({path:`${out}/evidence-${width}.png`});
+              await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:`${out}/article-${width}.png`});
+              const canonical=await page.locator('link[rel=canonical]').getAttribute('href');
+              assert.equal(canonical,'https://sunionpeaks.pages.dev'+path.slice(0,-1));
+              const cover=await page.locator('meta[property="og:image"]').getAttribute('content');
+              if(!report.cover){const p=new URL(cover).pathname;const bytes=await readFile('dist'+p);const m=await sharp(bytes).metadata();assert.equal(m.width,1200);assert.equal(m.height,630);report.cover={url:cover,width:m.width,height:m.height};await writeFile(out+'/cover.png',bytes);}
+              report.checks.push({viewport:width,diagram:dimensions,canonical,disclosures:true,zoom:true,tables:3});
+              await context.close();
+            }
+            report.passed=true;
+          } finally {await browser.close();server.kill();await writeFile(out+'/receipt.json',JSON.stringify(report,null,2));}
+          JS
+          node verify-hinton-ui.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: hinton-note-verification
+          path: artifacts/hinton-note/
+          retention-days: 7
+          if-no-files-found: warn
