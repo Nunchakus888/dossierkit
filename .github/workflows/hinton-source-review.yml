@@ -45,6 +45,7 @@ jobs:
           pnpm test:assets
           pnpm validate
           pnpm build
+          pnpm exec tsx scripts/export-publication.ts
           node scripts/verify-note-covers.mjs
       - run: pnpm exec playwright install --with-deps chromium
       - name: Verify rendered diagrams, disclosures and cover without production traffic
@@ -78,13 +79,13 @@ jobs:
               assert.equal(await d.count(),1);
               await d.locator(':scope > svg').waitFor({timeout:60000});
               const dimensions=await d.locator(':scope > svg').evaluate(svg=>{const b=svg.getBoundingClientRect(),v=svg.viewBox.baseVal; const sizes=[...svg.querySelectorAll('.nodeLabel,.edgeLabel text,text')].map(e=>parseFloat(getComputedStyle(e).fontSize)*b.width/v.width).filter(Number.isFinite);return {width:b.width,height:b.height,minimumLabelPx:Math.min(...sizes)};});
+              await d.scrollIntoViewIfNeeded();
+              await d.screenshot({path:`${out}/diagram-${width}.png`});
               assert.ok(dimensions.minimumLabelPx>=10,JSON.stringify(dimensions));
               assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Document horizontal overflow');
               assert.equal(await body.locator('table').count(),3);
               assert.equal(await body.locator('details').count(),3);
               assert.ok(!/DossierKit|SOP/.test(await body.innerText()));
-              await d.scrollIntoViewIfNeeded();
-              await d.screenshot({path:`${out}/diagram-${width}.png`});
               await d.hover();await d.locator('.mermaid-zoom-trigger').click();
               const dialog=page.locator('[data-diagram-viewer]');await dialog.waitFor({state:'visible'});
               await dialog.locator('[data-diagram-close]').click();await dialog.waitFor({state:'hidden'});
