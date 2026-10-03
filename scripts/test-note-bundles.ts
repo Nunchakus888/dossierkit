@@ -99,6 +99,22 @@ function mockRepository() {
         if (!names.length) return json({message:'Not Found'},404);
         return json(names.map((key) => ({name:key.slice(prefix.length),path:key,type:'file'})));
       }
+      if (method === 'POST' && u.hostname === 'api.github.com' && u.pathname === '/graphql') {
+        const expression = body?.variables?.expression;
+        assert.equal(typeof expression,'string');
+        const separator = expression.indexOf(':');
+        const revision = separator >= 0 ? expression.slice(0,separator) : head;
+        const directory = separator >= 0 ? expression.slice(separator + 1) : expression;
+        const snapshot = snapshots.get(revision) || snapshots.get(head)!;
+        const prefix = directory + '/';
+        const entries = [...snapshot.entries()]
+          .filter(([key]) => key.startsWith(prefix) && !key.slice(prefix.length).includes('/'))
+          .map(([key,value]) => ({
+            name:key.slice(prefix.length),
+            object:{oid:sha(value),text:value}
+          }));
+        return json({data:{repository:{object:{entries}}}});
+      }
       if (method === 'POST' && p === '/git/trees') {
         const files = new Map(snapshots.get(body.base_tree));
         for (const item of body.tree) item.sha === null ? files.delete(item.path) : files.set(item.path,item.content);
