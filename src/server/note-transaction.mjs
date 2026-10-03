@@ -42,10 +42,36 @@ export async function openNoteTransaction(env, requestFetch = fetch) {
     repository, profile, branch, sha, changes, read, stage,
     fetch: async (request, init) => {
       const url = new URL(request instanceof Request ? request.url : String(request));
+      const method = init?.method || 'GET';
+
+      if (url.origin === 'https://api.github.com' && url.pathname === '/graphql') {
+        if (method !== 'POST') throw new Error('Unexpected GitHub GraphQL request.');
+        const payload = JSON.parse(String(init?.body || '{}'));
+        const query = String(payload.query || '');
+        if (!/^\\s*query\\b/i.test(query) || /\\bmutation\\b/i.test(query)) {
+          throw new Error('Only read-only GitHub GraphQL queries are allowed in a note transaction.');
+        }
+        const expression = payload.variables?.expression;
+        if (typeof expression !== 'string') throw new Error('GitHub GraphQL note query is missing its expression.');
+        const separator = expression.indexOf(':');
+        const directory = separator >= 0 ? expression.slice(separator + 1) : expression;
+        const allowedPrefix = `profiles/${profile}/content/`;
+        if (!directory.startsWith(allowedPrefix) || !/\\/(?:zh|en)\\/notes$/.test(directory)) {
+          throw new Error('GitHub GraphQL note query is outside the canonical note namespace.');
+        }
+        const body = JSON.stringify({
+          ...payload,
+          variables: {
+            ...payload.variables,
+            expression: `${sha}:${directory}`
+          }
+        });
+        return requestFetch(url, { ...init, method: 'POST', headers, body });
+      }
+
       const prefix = base + '/contents/';
       if (!url.href.startsWith(prefix)) throw new Error('Unexpected canonical repository request.');
       const path = decodeURIComponent(url.pathname.split('/contents/')[1]);
-      const method = init?.method || 'GET';
       if (method === 'GET') return readResponse(path);
       if (!['PUT','DELETE'].includes(method)) throw new Error('Unexpected canonical mutation.');
       const payload = JSON.parse(String(init?.body));
