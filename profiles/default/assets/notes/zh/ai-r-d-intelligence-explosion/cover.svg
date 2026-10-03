@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+<title>AI 研发 AI：反馈加速与现实瓶颈</title>
+<desc>两条循环箭头连接研发与能力，循环中的检查点代表实验、资源和验证约束。正反馈并不保证无限加速。</desc>
+<defs>
+<linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f1fc"/><stop offset="1" stop-color="#eef5fc"/></linearGradient>
+<linearGradient id="loop" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7756c5"/><stop offset="1" stop-color="#4f86bb"/></linearGradient>
+</defs>
+<rect width="1200" height="630" fill="url(#paper)"/>
+<circle cx="983" cy="298" r="260" fill="#e9e5f7" fill-opacity="0.55"/>
+<circle cx="966" cy="306" r="205" fill="none" stroke="#d8d3e9" stroke-width="1.5"/>
+<path d="M72 75H129" stroke="#7756c5" stroke-width="5" stroke-linecap="round"/>
+<text x="72" y="126" font-family="Noto Sans CJK SC, sans-serif" font-size="19" font-weight="500" letter-spacing="2" fill="#605575">RESEARCH NOTES</text>
+<text x="67" y="242" font-family="Noto Sans CJK SC, sans-serif" font-size="72" font-weight="700" fill="#202336">AI 研发 AI</text>
+<text x="72" y="315" font-family="Noto Sans CJK SC, sans-serif" font-size="36" font-weight="500" fill="#414357">反馈会加速，</text>
+<text x="72" y="371" font-family="Noto Sans CJK SC, sans-serif" font-size="36" font-weight="500" fill="#414357">瓶颈会消失吗？</text>
+<path d="M73 419H516" stroke="#d4cedf" stroke-width="1.5"/>
+<text x="72" y="462" font-family="Noto Sans CJK SC, sans-serif" font-size="23" fill="#716881">智能爆炸的机制、证据与边界</text>
+<text x="72" y="561" font-family="Noto Sans CJK SC, sans-serif" font-size="17" fill="#868092">AUTOMATION ≠ INEVITABLE ACCELERATION</text>
+<path d="M775 204C846 119 1000 146 1050 256" fill="none" stroke="url(#loop)" stroke-width="16" stroke-linecap="round"/>
+<path d="M1032 249L1051 277L1062 246" fill="none" stroke="#5680bb" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M1000 425C922 507 769 469 728 356" fill="none" stroke="url(#loop)" stroke-width="16" stroke-linecap="round"/>
+<path d="M717 367L725 336L747 360" fill="none" stroke="#7756c5" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="757" cy="263" r="67" fill="#faf9fd" stroke="#8974c3" stroke-width="2.5"/>
+<text x="757" y="270" text-anchor="middle" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="700" fill="#544278">研发</text>
+<circle cx="1020" cy="356" r="67" fill="#f7fafd" stroke="#6c93bd" stroke-width="2.5"/>
+<text x="1020" y="363" text-anchor="middle" font-family="Noto Sans CJK SC, sans-serif" font-size="29" font-weight="700" fill="#385c80">能力</text>
+<rect x="847" y="151" width="77" height="37" rx="18" fill="#eee8fb"/>
+<text x="885.5" y="176" text-anchor="middle" font-family="Noto Sans CJK SC, sans-serif" font-size="17" fill="#6b529d">改进</text>
+<rect x="799" y="423" width="136" height="41" rx="20" fill="#faf0df" stroke="#e5c388" stroke-width="1.5"/>
+<text x="867" y="450" text-anchor="middle" font-family="Noto Sans CJK SC, sans-serif" font-size="18" fill="#856231">验证 · 资源</text>
+<text x="889" y="552" text-anchor="middle" font-family="Noto Sans CJK SC, sans-serif" font-size="18" fill="#7b718d">正反馈，需要跨过每一轮约束</text>
+</svg>
