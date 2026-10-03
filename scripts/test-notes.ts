@@ -428,8 +428,29 @@ function createGitHubMock(initial = new Map<string, string>()) {
   let writes = 0;
   const requestFetch: typeof fetch = async (request, init) => {
     const url = request instanceof URL ? request : new URL(typeof request === "string" ? request : request.url);
-    const path = decodeURIComponent(url.pathname.split("/contents/")[1] || "");
     const method = init?.method || "GET";
+
+    if (url.hostname === "api.github.com" && url.pathname === "/graphql" && method === "POST") {
+      const payload = JSON.parse(String(init?.body)) as {
+        variables?: { expression?: string };
+      };
+      const expression = payload.variables?.expression || "";
+      const separator = expression.indexOf(":");
+      const directory = separator >= 0 ? expression.slice(separator + 1) : "";
+      const prefix = `${directory}/`;
+      const entries = [...documents.entries()]
+        .filter(([candidate]) => candidate.startsWith(prefix))
+        .map(([candidate, document]) => ({
+          name: candidate.slice(prefix.length),
+          object: {
+            oid: `sha-${candidate}`,
+            text: document
+          }
+        }));
+      return json({ data: { repository: { object: { entries } } } }, 200);
+    }
+
+    const path = decodeURIComponent(url.pathname.split("/contents/")[1] || "");
     if (method === "GET" && /\/notes$/.test(path)) {
       const prefix = `${path}/`;
       const entries = [...documents.keys()]
