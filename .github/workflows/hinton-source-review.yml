@@ -1,0 +1,28 @@
+name: Hinton primary source review
+on:
+  push:
+    branches: [ops/hinton-source-review-20261003]
+permissions:
+  contents: read
+jobs:
+  fetch-primary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Retrieve exact primary report without credentials
+        run: |
+          mkdir -p evidence
+          curl --fail --location --retry 2 --max-time 60 'https://casp.ac/__l5e/assets-v1/5efd4b41-deb5-4513-a0a3-b4f82d2b79ea/intelligence-explosion.pdf' -o evidence/intelligence-explosion.pdf
+          python3 - <<'PY'
+          from pathlib import Path
+          import hashlib, json, datetime
+          p=Path('evidence/intelligence-explosion.pdf')
+          assert p.read_bytes().startswith(b'%PDF-'), 'Not an actual PDF'
+          Path('evidence/provenance.json').write_text(json.dumps({'url':'https://casp.ac/__l5e/assets-v1/5efd4b41-deb5-4513-a0a3-b4f82d2b79ea/intelligence-explosion.pdf','sha256':hashlib.sha256(p.read_bytes()).hexdigest(),'retrieved_at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'private_research_copy':True}, indent=2))
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: hinton-primary-source
+          path: evidence/
+          retention-days: 3
+          if-no-files-found: error
