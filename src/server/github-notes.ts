@@ -269,24 +269,91 @@ async function listStoredNotes(
   requestFetch: typeof fetch
 ) {
   const directory = `profiles/${context.profileId}/content/${locale}/notes`;
-  const url = new URL(githubContentUrl(context.owner, context.repo, directory));
-  url.searchParams.set("ref", context.branch);
-  const response = await requestFetch(url, { headers: githubHeaders(context.token) });
-  if (response.status === 404) return [];
+  const expression = `${context.branch}:${directory}`;
+  const query = `
+    query DossierKitNotes($owner: String!, $repo: String!, $expression: String!) {
+      repository(owner: $owner, name: $repo) {
+        object(expression: $expression) {
+          ... on Tree {
+            entries {
+              name
+              object {
+                ... on Blob {
+                  oid
+                  text
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  const response = await requestFetch("https://api.github.com/graphql", {
+    method: "POST",
+    headers: githubHeaders(context.token),
+    body: JSON.stringify({
+      query,
+      variables: {
+        owner: context.owner,
+        repo: context.repo,
+        expression
+      }
+    })
+  });
   if (!response.ok) throw await githubReadError(response);
-  const entries = await response.json() as GitHubContent[];
-  const files = entries.filter((entry) => entry.type === "file" && entry.name?.match(/\.(?:mdx?|html)$/));
+
+  const payload = await response.json() as {
+    data?: {
+      repository?: {
+        object?: {
+          entries?: Array<{
+            name: string;
+            object?: {
+              oid?: string;
+              text?: string | null;
+            } | null;
+          }>;
+        } | null;
+      } | null;
+    };
+    errors?: Array<{ message?: string }>;
+  };
+
+  if (payload.errors?.length) {
+    throw new Error(
+      `GitHub GraphQL read failed: ${payload.errors.map((error) => error.message || "Unknown error").join("; ")}`
+    );
+  }
+
+  const entries = payload.data?.repository?.object?.entries;
+  if (!entries) return [];
+
+  const notes: StoredNote[] = [];
   const keys = new Set<string>();
-  for (const entry of files) {
-    const key = entry.name!.replace(/\.(?:mdx?|html)$/, "");
+
+  for (const entry of entries) {
+    const match = entry.name.match(/^(.+)\.(mdx?|html)$/);
+    if (!match) continue;
+
+    const key = match[1];
     if (keys.has(key)) throw new Error(`Multiple canonical note files use the key ${key}.`);
     keys.add(key);
+
+    if (typeof entry.object?.text !== "string") {
+      throw new Error(`GitHub did not return readable text for note ${entry.name}.`);
+    }
+
+    notes.push({
+      key,
+      noteRef: `${locale}/${key}`,
+      path: `${directory}/${entry.name}`,
+      sha: entry.object.oid,
+      parsed: parseCanonicalNote(entry.object.text)
+    });
   }
-  return await Promise.all([...keys].map(async (key) => {
-    const stored = await getStoredNote(context, locale, key, requestFetch);
-    if (!stored) throw new Error(`GitHub listed ${key}, but the note could not be read.`);
-    return stored;
-  }));
+
+  return notes;
 }
 
 async function getStoredNote(
