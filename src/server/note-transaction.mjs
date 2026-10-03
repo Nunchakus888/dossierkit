@@ -48,7 +48,7 @@ export async function openNoteTransaction(env, requestFetch = fetch) {
         if (method !== 'POST') throw new Error('Unexpected GitHub GraphQL request.');
         const payload = JSON.parse(String(init?.body || '{}'));
         const query = String(payload.query || '');
-        if (!/^\\s*query\\b/i.test(query) || /\\bmutation\\b/i.test(query)) {
+        if (!/^\s*query\b/i.test(query) || /\bmutation\b/i.test(query)) {
           throw new Error('Only read-only GitHub GraphQL queries are allowed in a note transaction.');
         }
         const expression = payload.variables?.expression;
@@ -56,7 +56,7 @@ export async function openNoteTransaction(env, requestFetch = fetch) {
         const separator = expression.indexOf(':');
         const directory = separator >= 0 ? expression.slice(separator + 1) : expression;
         const allowedPrefix = `profiles/${profile}/content/`;
-        if (!directory.startsWith(allowedPrefix) || !/\\/(?:zh|en)\\/notes$/.test(directory)) {
+        if (!directory.startsWith(allowedPrefix) || !/\/(?:zh|en)\/notes$/.test(directory)) {
           throw new Error('GitHub GraphQL note query is outside the canonical note namespace.');
         }
         const body = JSON.stringify({
