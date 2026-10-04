@@ -39,12 +39,54 @@ export function canonicalArticleUrl(origin, noteRef) {
   return `${base.origin}/${locale}/notes/${key}`;
 }
 
+function sentenceParts(value) {
+  const text = plainText(value);
+  return text.match(/[^。！？!?]+[。！？!?]?/g)?.map((part) => part.trim()).filter(Boolean) || [];
+}
+
+function questionHook(title) {
+  const clean = plainText(title);
+  const parts = clean.split(/[：:]/).map((part) => part.trim()).filter(Boolean);
+  const tail = parts.at(-1) || clean;
+  return /[？?]$/.test(tail) ? tail : '';
+}
+
+export function defaultShareText({ title, summary, url }) {
+  const parsed = new URL(url);
+  const zh = /^\/zh(?:\/|$)/.test(parsed.pathname) || /[\u3400-\u9fff]/.test(`${title} ${summary}`);
+  const cleanTitle = plainText(title);
+  const summaryParts = sentenceParts(summary);
+  const contrast = zh
+    ? /(不等于|不是|并不|不该|关键|真正|别只|不要只|问题在于|值得)/
+    : /\b(not|isn't|doesn't|rather than|instead of|the key|what matters|worth)\b/i;
+  const question = questionHook(cleanTitle);
+
+  let hook = question;
+  if (!hook && summaryParts[0] && contrast.test(summaryParts[0])) hook = summaryParts[0];
+  if (!hook) hook = cleanTitle || summaryParts[0] || '';
+
+  let insight = summaryParts.find((part) => part !== hook);
+  if (!insight && cleanTitle && cleanTitle !== hook) insight = cleanTitle;
+
+  const cta = zh
+    ? '把关键机制、证据边界和最容易误读的地方拆开了 ↓'
+    : 'I broke down the mechanism, evidence, and the easy-to-miss caveats ↓';
+  const budget = 236;
+  const separatorWeight = 2; // two line breaks between blocks
+  const ctaWeight = weightedUpperBound(cta);
+  const hookBudget = Math.max(24, Math.min(104, budget - ctaWeight - separatorWeight));
+  const hookText = shorten(hook, hookBudget);
+  const used = weightedUpperBound(hookText) + ctaWeight + separatorWeight * 2;
+  const insightBudget = Math.max(0, budget - used);
+  const insightText = insightBudget >= 24 && insight ? shorten(insight, insightBudget) : '';
+
+  return [hookText, insightText, cta].filter(Boolean).join('\n\n');
+}
+
 export function composePost({ title, summary, url, text: override }) {
   const parsed = new URL(url);
   if (parsed.protocol !== 'https:' || parsed.username || parsed.password) throw new Error('Invalid sharing URL.');
-  const heading = shorten(title, 132);
-  const text = override ? shorten(override, 236)
-    : [heading, shorten(summary, Math.max(0, 234 - weightedUpperBound(heading)))].filter(Boolean).join('\n');
+  const text = override ? shorten(override, 236) : defaultShareText({ title, summary, url });
   if (!text || weightedUpperBound(text) + 24 > 260) throw new Error('Invalid X draft length.');
   const intent = new URL('https://x.com/intent/tweet');
   intent.searchParams.set('text', text);
