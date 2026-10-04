@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { canonicalArticleUrl, composePost, plainText, weightedUpperBound, shorten } from '../../src/lib/social-text.mjs';
+import { canonicalArticleUrl, composePost, defaultShareText, plainText, weightedUpperBound, shorten } from '../../src/lib/social-text.mjs';
 import { validateManifest, deliveryId, buildDraft, issueMetadata, renderIssue, validateArticleHtml, verifyArticle, confirmPostUrl } from './core.mjs';
 import { reconcile } from './reconcile.mjs';
 const sha = 'a'.repeat(40);
@@ -35,6 +35,31 @@ test('CJK budgeting, normalization and grapheme-safe truncation', () => {
 });
 test('draft strips markup, unintended mentions and extra URLs', () => {
   assert.equal(plainText('[事实] **架构** [原文](https://example.org) @someone <b>安全</b>'), '架构 原文 ＠someone 安全');
+});
+test('default X copy is hook-first while manual social text stays authoritative', () => {
+  const hinton = {
+    title: 'AI 研发 AI：Hinton 所说的智能爆炸，离现实还有哪些条件？',
+    summary: 'AI 写出更多代码，不等于智能爆炸已经发生。关键是：研发成果能否持续反哺下一轮研发，让进步本身越变越快。',
+    url: 'https://notes.example.org/zh/notes/intelligence-explosion'
+  };
+  assert.equal(defaultShareText(hinton), [
+    'Hinton 所说的智能爆炸，离现实还有哪些条件？',
+    'AI 写出更多代码，不等于智能爆炸已经发生。',
+    '把关键机制、证据边界和最容易误读的地方拆开了 ↓'
+  ].join('\n\n'));
+  const draft = composePost(hinton);
+  assert.equal(draft.text, defaultShareText(hinton));
+  assert.ok(!draft.text.startsWith(hinton.title));
+  assert.ok(weightedUpperBound(draft.text) + 24 <= 260);
+  assert.equal(composePost({ ...hinton, text: '手写活动文案：保持原样。' }).text, '手写活动文案：保持原样。');
+
+  const english = defaultShareText({
+    title: 'Why agent evaluation still fails?',
+    summary: 'Passing a benchmark is not the same as being reliable in production.',
+    url: 'https://notes.example.org/en/notes/agent-evaluation'
+  });
+  assert.ok(english.startsWith('Why agent evaluation still fails?'));
+  assert.ok(english.includes('I broke down the mechanism'));
 });
 test('manifest binds instance and deployed SHA; disabled templates remain inert', () => {
   assert.equal(validateManifest(manifest, run, 'owner/notes'), manifest);
