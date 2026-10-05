@@ -1,0 +1,654 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-10-05"
+title: "科研 Agent Skills 精读：从“装 Skill”到构建可验证的 Research OS"
+summary: "来源：Fred-New 在 X 上整理的科研 Skills 清单（2026-10-05）。原帖把 11 个开源项目分成 6
+  类。本文不直接复述推荐，而是逐一核对仓库、README、项目定位与活跃度，重新回答三个问题：这些…"
+featured: false
+date: "2026-10-05"
+updatedAt: "2026-10-05T16:29:19.841Z"
+kind: "research"
+topics:
+  - "AI Agent"
+  - "Research Skills"
+  - "科研自动化"
+  - "Agent Runtime"
+  - "Evidence & Eval"
+tags:
+  - "AI Agent"
+  - "Research Skills"
+  - "科研自动化"
+  - "Agent Runtime"
+  - "Evidence & Eval"
+contentHash: "sha256:3aeefa3c65037e1f0a5c2880cd9e65a52d1005c9cd3a4c658bb86d95cf16375a"
+---
+
+> 来源：Fred-New 在 X 上整理的科研 Skills 清单（2026-10-05）。原帖把 11 个开源项目分成 6 类。本文不直接复述推荐，而是逐一核对仓库、README、项目定位与活跃度，重新回答三个问题：这些项目到底是什么、哪些能力真正可复用、科研 Agent 应该怎样设计。
+
+## 先给结论
+
+这批项目看似都叫“科研 Skill”，实际上至少分成三层：
+
+1. **Research OS / 工作流编排层**：负责把选题、检索、实验、写作、审稿串成完整流程，并设置人工确认、证据核验、迭代与质量门禁。
+2. **领域能力库 / Tool & Knowledge Skills**：把某个学科、数据库、训练框架、统计方法或工程经验封装成 Agent 可调用的专业能力。
+3. **单点生产力 Skill**：只解决论文写作、审校、科研绘图、排版、引用核验等局部任务。
+
+真正有价值的趋势不是“Skill 越多越好”，而是：
+
+**Research Runtime + 可组合 Skills + Evidence / Eval / Review Gates + Human-in-the-loop**
+
+这更接近科研 Agent 的长期形态。
+
+## 1. 原帖列出的项目
+
+原帖将项目分为：
+
+- 全流程自动科研 Agent
+  - Academic Research Skills
+  - ARIS（Auto Research in Sleep）
+- 选题与创新点
+  - Supervisor-Skills
+  - PaperSpine
+- 跨学科 AI for Science
+  - Scientific Agent Skills
+  - Auto-Empirical Research Skills
+- 科研绘图
+  - Academic Figure Generator
+- 顶刊写作与排版
+  - Nature Skills
+  - AI Research Writing Skill
+- 可信科研助手
+  - AI Research Skills
+  - Deep Research Skill
+
+这个分类便于传播，但从工程视角不够准确。部分项目已经演化为远超最初定位的完整系统。
+
+## 2. 第一层：Research OS / 全流程编排
+
+### Academic Research Skills
+
+GitHub：Imbad0202/academic-research-skills
+
+截至核验时约 **5 万 Stars**，定位是 Claude Code 的完整学术研究流水线：
+
+**research → write → review → revise → finalize**
+
+它最值得学习的不是“能写论文”，而是明确强调：
+
+> AI is your copilot, not the pilot.
+
+架构上非常重视：
+
+- 分阶段 pipeline
+- Human-in-the-loop
+- integrity gate
+- citation provenance
+- claim-level audit
+- review calibration
+- formatter hard gate
+
+尤其重要的是它没有把“生成结果”视为任务完成，而是把：
+
+**生成 → 核验 → 审查 → 拒绝不合格输出**
+
+做成系统的一部分。
+
+这是科研 Agent 和普通聊天 Prompt 最大的区别。
+
+### ARIS：Auto Research in Sleep
+
+GitHub：wanshuiyin/Auto-claude-code-research-in-sleep
+
+截至核验时约 **1.7 万 Stars**。
+
+ARIS 的核心不是“睡觉时帮你写论文”，而是一套持续运行的科研 Agent 方法论：
+
+- executor 负责执行
+- independent model 负责 review
+- cross-model review loop
+- 自动实验
+- idea discovery
+- paper/code workflow
+- Claude Code、Codex、Cursor、OpenClaw 等多 Agent 适配
+
+它提出一个非常值得借鉴的结构：
+
+```text
+Executor
+   │
+   ▼
+Experiment / Search / Writing
+   │
+   ▼
+Independent Reviewer
+   │
+   ├── pass → next stage
+   │
+   └── fail → revise / rerun
+```
+
+这比单模型自我反思更可靠，因为 reviewer 与 executor 至少在角色、上下文甚至模型层面解耦。
+
+### PaperSpine
+
+GitHub：WUBING2023/PaperSpine
+
+原帖把它归在“从顶会论文反推 Motivation”，但最新版已经明显超出这一范围。
+
+PaperSpine5 是一个完整论文生产工作流：
+
+- 查文献
+- 梳理论点
+- 搭大纲
+- 写全文
+- 生成科研配图
+- 引用核验
+- 审阅修改
+- 排版
+- 输出 Word / LaTeX / PDF
+
+它非常强调：
+
+- local-first
+- evidence-bound
+- citation support bank
+- artifact checks
+- reference inventory
+- LaTeX / Word guard
+
+所以它更适合归入 Research OS，而不是单纯“选题 Skill”。
+
+### Orchestra AI Research Skills 的 Autoresearch
+
+GitHub：Orchestra-Research/AI-Research-SKILLs
+
+整个仓库有约 **1.3 万 Stars**，共 98 个 AI Research Skills。
+
+其中最关键的是 `autoresearch`：
+
+- inner optimization loop
+- outer synthesis loop
+- 自动路由到专业 Skill
+- literature survey
+- ideation
+- experiment
+- paper writing
+
+它明确形成两层：
+
+```text
+Research Orchestrator
+       │
+       ├── Ideation
+       ├── Training
+       ├── Evaluation
+       ├── Inference
+       ├── Safety
+       ├── MLOps
+       └── Paper Writing
+```
+
+这实际上已经非常接近“科研 Agent Runtime + Skill Registry”。
+
+## 3. 第二层：领域能力与方法论 Skills
+
+### Supervisor-Skills
+
+GitHub：HKUSTDial/Supervisor-Skills
+
+截至核验时约 **8200 Stars**。
+
+它最有价值的地方不是 Prompt，而是：
+
+**把导师的隐性判断经验结构化。**
+
+项目采用：
+
+**Guide + Skills**
+
+双轨结构。
+
+Guide 保存：
+
+- 如何判断论文质量
+- Idea 生命周期
+- Introduction 逻辑
+- Benchmark 论文结构
+- 科研绘图
+- 投稿前 Checklist
+
+Skills 则将经验变为可执行流程，例如：
+
+- idea-evaluator
+- deep-research
+- paper-writer
+- pre-submission-reviewer
+- rebuttal-guidance
+- figure-designer
+
+这说明 Skill 的高价值来源并不是“Prompt 技巧”，而是：
+
+> 把专家 Tacit Knowledge 转化为可执行判断程序。
+
+这是 Agent Skill 最值得长期积累的资产。
+
+### Scientific Agent Skills
+
+原仓库地址已迁移为：
+
+K-Dense-AI/scientific-agent-skills
+
+截至核验时约 **4.7 万 Stars**。
+
+项目定位已经非常明确：
+
+- 177 个 validated skills
+- 100+ scientific databases
+- biology
+- chemistry
+- medicine
+- drug discovery
+- genomics
+- proteomics
+- materials science
+
+它的价值不是科研工作流，而是：
+
+**把专业数据库与科研工具变成 Agent Native Capability。**
+
+未来真正的 AI Scientist 不可能只依赖语言模型参数知识，而必须大量调用外部真实数据源。
+
+### Auto-Empirical Research Skills
+
+GitHub：brycewang-stanford/Auto-Empirical-Research-Skills
+
+截至核验时约 **4500 Stars**。
+
+原帖称其有“两万多个细分技能”，仓库当前 README 的口径已经变化：
+
+- catalog 中约 1100 个 skills
+- 覆盖经济学、教育、政治学、心理学、社会学等
+- 强调实证研究
+- 支持 Python / Stata / R
+- 覆盖 DID / RD / IV / SCM / DML / matching
+
+更值得关注的是它加入了：
+
+- benchmark tasks
+- eval scenarios
+- pass/fail fixtures
+- external scoreboard
+- security audit
+- rigor coverage
+
+这说明它不仅在“收集 Skills”，而是在开始解决一个更关键的问题：
+
+**Skill 怎么评测？**
+
+这是 Skill 生态未来一定会面临的基础设施问题。
+
+## 4. 第三层：单点生产力 Skill
+
+### Academic Figure Generator
+
+GitHub：dongzhuoyao/academic-figure-generator
+
+这个项目目前 Stars 很少，原帖对它的描述也偏泛化。
+
+真实能力更明确：
+
+- image → draw.io
+- text prompt → draw.io
+- Draft DSL → draw.io
+- 导出 PNG / SVG / PDF
+
+它本质是：
+
+**结构化科研图生成器**
+
+而不是一个成熟的通用“论文自动配图 Agent”。
+
+不过它体现了一个很好的方向：
+
+不要只生成图片，而是生成 **editable artifact**。
+
+### Nature Skills
+
+GitHub：Yuan1z0825/nature-skills
+
+截至核验时约 **4.6 万 Stars**。
+
+原帖把它概括为“Nature 写作和绘图规范”，实际范围更广：
+
+- paper reader
+- translation
+- polishing
+- writing
+- reviewer
+- response
+- paper-to-PPT
+- figure
+
+项目自身提出一个很值得关注的观点：
+
+> 标准化流程可以封装成可复用技能。
+
+Nature Skills 更像科研内容生产的 Skill Pack，而非 Research Runtime。
+
+适合被上层 orchestrator 调用。
+
+### AI Research Writing Skill
+
+GitHub：jin-s13/ai-research-writing-skill
+
+它的定位反而很清晰：
+
+- 面向 ML / AI / CV / NLP
+- 输入代码、实验日志、笔记、venue template
+- 生成 auditable、evidence-backed LaTeX draft
+- 强调 submission package
+
+关键词是：
+
+**auditable**
+
+不是简单“润色英文”。
+
+这种设计比泛化 academic writing Prompt 更成熟，因为论文内容应该从代码、实验日志、笔记与结果建立 Evidence Mapping 后再形成 Claim 与 LaTeX，而不是从模型记忆中“脑补”。
+
+## 5. Deep Research Skill：流程设计值得参考，但不要迷信宣传
+
+GitHub：ravmike/deep-research-skill
+
+仓库目前 Stars 很少。
+
+它提出了：
+
+**Scope → Plan → Retrieve → Triangulate → Outline → Synthesize → Critique → Refine → Package**
+
+以及：
+
+- source credibility scoring
+- citation validation
+- parallel retrieval
+- graph-of-thought
+- iterative refinement
+
+方法论本身合理。
+
+但 README 中有不少强营销表述，例如：
+
+- “enterprise-grade”
+- “outperforms OpenAI / Gemini / Claude”
+- “TRUE unlimited length”
+
+这些如果没有公开、可复现 benchmark，就只能视为项目自述。
+
+所以学习时应该：
+
+**学 pipeline，不直接采信 performance claim。**
+
+## 6. 为什么“装很多 Skills”不是正确方向
+
+假设 Agent 安装了 100 个 Skills，真正的问题很快会变成：
+
+- 什么时候调用哪个？
+- 多个 Skill 冲突怎么办？
+- Skill 输出可信吗？
+- 引用是真的吗？
+- 实验结果有没有被篡改？
+- 中间状态怎么保存？
+- 失败后怎么恢复？
+- 哪一步必须人确认？
+- Skill 升级后结果是否退化？
+
+所以最终问题不是 Skill 数量，而是 Runtime。
+
+## 7. 一个更合理的科研 Agent 架构
+
+```text
+Research Goal
+     │
+     ▼
+┌──────────────────────┐
+│ Research Orchestrator│
+└─────────┬────────────┘
+          │
+          ▼
+┌──────────────────────┐
+│ Task / Stage Planner │
+└─────────┬────────────┘
+          │
+ ┌────────┼─────────┐
+ ▼        ▼         ▼
+Search   Domain    Experiment
+Skill    Skill      Skill
+ │        │          │
+ └────────┼──────────┘
+          ▼
+┌──────────────────────┐
+│ Evidence Store       │
+│ source / claim / run │
+└─────────┬────────────┘
+          ▼
+┌──────────────────────┐
+│ Independent Reviewer │
+└─────────┬────────────┘
+          │
+      pass/fail
+          │
+          ▼
+┌──────────────────────┐
+│ Human Decision Gate  │
+└─────────┬────────────┘
+          ▼
+      Final Artifact
+```
+
+关键模块不是 Skill，而是：
+
+### Planner
+
+把科研目标拆成阶段任务。
+
+### Skill Router
+
+根据任务、学科、上下文选择 Skill。
+
+### Evidence Store
+
+保存 source、claim、citation、experiment、artifact 与 provenance。
+
+### Eval / Review Runtime
+
+判断 claim 是否有证据、citation 是否支持 claim、实验是否可复现、输出是否违反约束。
+
+### Human Gate
+
+在 Research Question、Methodology、Dataset、Experiment Interpretation、Final Claims 等高风险节点要求人确认。
+
+## 8. 从这些项目可以提炼出的 Skill 设计原则
+
+### 原则一：Skill 应该描述“可执行过程”，而不是角色 Prompt
+
+弱 Skill：
+
+```text
+You are an expert academic researcher.
+```
+
+强 Skill：
+
+```text
+1. define question
+2. retrieve sources
+3. score sources
+4. build evidence table
+5. draft claims
+6. verify claim-source relation
+7. reject unsupported claims
+8. produce artifact
+```
+
+### 原则二：结果必须 Evidence Bound
+
+科研 Agent 最危险的问题不是语言差，而是：
+
+**生成一个看起来正确但没有证据的结论。**
+
+因此最好形成：
+
+```text
+Claim
+ ├── Source
+ ├── Locator
+ ├── Experiment
+ ├── Confidence
+ └── Reviewer Status
+```
+
+### 原则三：Executor 与 Reviewer 应解耦
+
+ARIS 的 cross-model review 很值得借鉴。
+
+不要让同一个上下文中的模型只做“自我感觉良好”的反思。更合理的是：
+
+```text
+Executor
+   ↓
+Artifact
+   ↓
+Reviewer
+   ↓
+Rubric / Evidence
+   ↓
+Pass / Fail
+```
+
+如果条件允许，Reviewer 应使用不同上下文、不同 Prompt、不同模型与固定 rubric。
+
+### 原则四：Skill 需要 Eval
+
+目前大部分 Skill 仓库都没有系统评测。
+
+AERS 已开始加入 benchmark、fixture、scoreboard、rigor coverage。
+
+未来 Skill 应该像代码包一样具备：
+
+```text
+SKILL.md
+tests/
+evals/
+fixtures/
+references/
+scripts/
+version
+```
+
+而不是只有一份 Prompt。
+
+## 9. 这些项目应该怎么选
+
+不要按 Stars 选，按问题选。
+
+| 当前瓶颈 | 更值得看 |
+|---|---|
+| 想搭完整论文流水线 | Academic Research Skills |
+| 想做长时间自动科研/实验 | ARIS |
+| 想学习导师式科研判断 | Supervisor-Skills |
+| 想做完整论文生产与交付 | PaperSpine |
+| 生物/化学/医学/材料科研 | Scientific Agent Skills |
+| 社科/计量实证 | Auto-Empirical Research Skills |
+| AI/ML 工程科研能力库 | Orchestra AI Research Skills |
+| Nature 写作/审稿/科研图 | Nature Skills |
+| 可编辑科研图 | Academic Figure Generator |
+| ML/CV/NLP 论文写作 | AI Research Writing Skill |
+| 通用 Deep Research pipeline | Deep Research Skill |
+
+## 10. 真正值得长期学习的，不是这些仓库本身
+
+这些仓库未来都会变化。
+
+真正值得留下的是四个抽象：
+
+### Skill
+
+把专家知识与工具使用流程封装成 Agent 可调用能力。
+
+### Runtime
+
+决定什么时候调用哪些 Skill，以及怎样管理状态。
+
+### Evidence
+
+保证每个重要结论都能回到真实来源或实验。
+
+### Evaluation
+
+判断 Agent 是否真的做对，而不是只判断输出是否“看起来不错”。
+
+因此一个成熟科研 Agent 的核心公式更像：
+
+```text
+Research Agent
+=
+Runtime
++ Skills
++ Tools
++ Evidence
++ Eval
++ Human Judgment
+```
+
+而不是：
+
+```text
+Research Agent
+=
+LLM
++ 100 prompts
+```
+
+## 11. 对 Agent 工程更普遍的启示
+
+科研只是一个非常典型的高可靠 Agent 场景。
+
+同样的结构也适用于 Coding Agent、Financial Agent、Legal Agent、Medical Research Agent、Enterprise Analyst。
+
+一旦 Agent 从“回答问题”进入“完成任务”，工程重点就会从模型能力转移到：
+
+```text
+Task decomposition
+        ↓
+Tool / Skill routing
+        ↓
+State & artifact management
+        ↓
+Evidence
+        ↓
+Evaluation
+        ↓
+Approval
+        ↓
+Execution
+```
+
+所以 Skills 的真正意义，不是 Prompt Marketplace。
+
+它更可能成为 **Agent Runtime 的能力包格式**。
+
+## References
+
+- Fred-New, X post: https://x.com/Fred834567/status/2107014348661248242
+- https://github.com/Imbad0202/academic-research-skills
+- https://github.com/wanshuiyin/Auto-claude-code-research-in-sleep
+- https://github.com/HKUSTDial/Supervisor-Skills
+- https://github.com/WUBING2023/PaperSpine
+- https://github.com/K-Dense-AI/scientific-agent-skills
+- https://github.com/brycewang-stanford/Auto-Empirical-Research-Skills
+- https://github.com/dongzhuoyao/academic-figure-generator
+- https://github.com/Yuan1z0825/nature-skills
+- https://github.com/jin-s13/ai-research-writing-skill
+- https://github.com/Orchestra-Research/AI-Research-SKILLs
+- https://github.com/ravmike/deep-research-skill

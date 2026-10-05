@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+<title>科研 Agent Skills 精读</title>
+<rect width="1200" height="630" fill="#0b1020"/>
+<circle cx="1010" cy="110" r="180" fill="#9333ea" opacity="0.28"/>
+<circle cx="1080" cy="500" r="230" fill="#4d91ff" opacity="0.20"/>
+<circle cx="190" cy="570" r="230" fill="#fa5560" opacity="0.18"/>
+<text x="80" y="155" fill="#ffffff" font-size="34" font-family="sans-serif" font-weight="700">RESEARCH AGENT</text>
+<text x="80" y="235" fill="#ffffff" font-size="64" font-family="sans-serif" font-weight="700">从“装 Skill”</text>
+<text x="80" y="315" fill="#ffffff" font-size="64" font-family="sans-serif" font-weight="700">到 Research OS</text>
+<text x="82" y="380" fill="#c8d1e8" font-size="26" font-family="sans-serif">Runtime · Skills · Evidence · Eval · Human Judgment</text>
+<g transform="translate(760,210)">
+<rect x="0" y="0" width="280" height="64" rx="18" fill="#ffffff" opacity="0.10"/>
+<text x="28" y="41" fill="#ffffff" font-size="24" font-family="sans-serif">Orchestrator</text>
+<path d="M140 64 V110" stroke="#9fb4ff" stroke-width="4"/>
+<rect x="-40" y="110" width="105" height="58" rx="14" fill="#ffffff" opacity="0.10"/>
+<rect x="88" y="110" width="105" height="58" rx="14" fill="#ffffff" opacity="0.10"/>
+<rect x="216" y="110" width="105" height="58" rx="14" fill="#ffffff" opacity="0.10"/>
+<text x="-18" y="146" fill="#fff" font-size="19" font-family="sans-serif">Skill</text>
+<text x="110" y="146" fill="#fff" font-size="19" font-family="sans-serif">Tool</text>
+<text x="228" y="146" fill="#fff" font-size="19" font-family="sans-serif">Experiment</text>
+<path d="M140 168 V215" stroke="#9fb4ff" stroke-width="4"/>
+<rect x="30" y="215" width="220" height="58" rx="14" fill="#ffffff" opacity="0.10"/>
+<text x="73" y="252" fill="#fff" font-size="22" font-family="sans-serif">Evidence + Eval</text>
+</g>
+<text x="82" y="555" fill="#8e9ab8" font-size="21" font-family="sans-serif">11 open-source projects · verified 2026-10</text>
+</svg>
