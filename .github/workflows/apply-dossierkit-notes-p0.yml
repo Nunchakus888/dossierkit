@@ -1,0 +1,142 @@
+name: Apply DossierKit Notes P0 guard
+
+on:
+  push:
+    branches:
+      - feat/dossierkit-notes-p0-skill-guard-20261006
+    paths:
+      - .github/workflows/apply-dossierkit-notes-p0.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/dossierkit-notes-p0-skill-guard-20261006
+          fetch-depth: 0
+
+      - name: Apply Skill-first P0 safeguards
+        shell: python
+        run: |
+          from pathlib import Path
+          import json
+
+          version = "1.7.0+codex.20261006013400"
+          prompts = [
+              "Use $publish-note to deep-read this source and prepare a focused DossierKit note for review.",
+              "Use $publish-note to update this DossierKit note while preserving its identity and artwork.",
+              "Use $publish-note to publish the reviewed note with a topic-specific cover.",
+          ]
+
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              if text.count(old) != 1:
+                  raise RuntimeError(f"{label}: expected one match, found {text.count(old)}")
+              return text.replace(old, new, 1)
+
+          mcp_path = Path("functions/api/mcp.ts")
+          mcp = mcp_path.read_text(encoding="utf-8")
+          marker = "// Delivered to the authoring client at MCP initialization, never appended to a note."
+          preflight = (
+              "export const AUTHORING_WORKFLOW_PROMPT = 'Before creating or updating a DossierKit note, apply the canonical publish-note Skill and its relevant references. For an edit, call get_note first and preserve noteRef, format and unchanged assets. Save only the exact final reader-facing document. save_note proves only a repository commit; report published only after CI deployment and live article plus Open Graph verification.';\n\n"
+          )
+          mcp = replace_once(mcp, marker, preflight + marker, "insert authoring preflight")
+          mcp = replace_once(mcp, "version:'1.6.0'", "version:'1.7.0'", "server version")
+          mcp = replace_once(
+              mcp,
+              "PUBLICATION_BOUNDARY_PROMPT + '\\n\\n' + 'Save only a finished note.",
+              "AUTHORING_WORKFLOW_PROMPT + '\\n\\n' + PUBLICATION_BOUNDARY_PROMPT + '\\n\\n' + 'Save only a finished note.",
+              "prepend authoring preflight",
+          )
+          mcp = replace_once(
+              mcp,
+              "description:'Create or update one finished reader-facing Markdown/HTML article",
+              "description:'Apply the canonical publish-note Skill and its relevant references before calling this tool. Create or update one finished reader-facing Markdown/HTML article",
+              "save tool Skill requirement",
+          )
+          mcp = replace_once(
+              mcp,
+              "Saves do not imply deployment.'",
+              "A successful save proves only a repository commit; report published only after CI deployment and live article plus Open Graph verification.'",
+              "save tool publication boundary",
+          )
+          mcp_path.write_text(mcp, encoding="utf-8")
+
+          test_path = Path("scripts/test-mcp-skill.ts")
+          test = test_path.read_text(encoding="utf-8")
+          test = replace_once(
+              test,
+              'import { createServer, PUBLICATION_BOUNDARY_PROMPT } from "../functions/api/mcp";',
+              'import { AUTHORING_WORKFLOW_PROMPT, createServer, PUBLICATION_BOUNDARY_PROMPT } from "../functions/api/mcp";',
+              "test import",
+          )
+          test = replace_once(
+              test,
+              "  assert.ok(instructions?.startsWith(PUBLICATION_BOUNDARY_PROMPT));",
+              "  assert.ok(instructions?.startsWith(AUTHORING_WORKFLOW_PROMPT));\n  assert.ok(instructions?.includes(PUBLICATION_BOUNDARY_PROMPT));\n  assert.match(instructions, /canonical publish-note Skill/);\n  assert.match(instructions, /save_note proves only a repository commit/);",
+              "instruction assertions",
+          )
+          test = replace_once(
+              test,
+              "  assert.match(tools.tools.find((tool) => tool.name === 'save_note')?.description || '', /Keep internal authoring SOP/);",
+              "  const saveDescription = tools.tools.find((tool) => tool.name === 'save_note')?.description || '';\n  assert.match(saveDescription, /Apply the canonical publish-note Skill/);\n  assert.match(saveDescription, /Keep internal authoring SOP/);\n  assert.match(saveDescription, /repository commit/);\n  assert.match(saveDescription, /live article plus Open Graph verification/);",
+              "save tool assertions",
+          )
+          test_path.write_text(test, encoding="utf-8")
+
+          for relative in [
+              "plugins/dossierkit-notes/plugin.json",
+              "plugins/dossierkit-notes/.codex-plugin/plugin.json",
+          ]:
+              path = Path(relative)
+              data = json.loads(path.read_text(encoding="utf-8"))
+              data["version"] = version
+              interface = data.get("interface") or data["extensions"]["com.openai"]["interface"]
+              interface["defaultPrompt"] = prompts
+              path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+          plugin_test_path = Path("scripts/plugin.test.mjs")
+          plugin_test = plugin_test_path.read_text(encoding="utf-8")
+          plugin_test = replace_once(
+              plugin_test,
+              "  assert.match(plugin.version,/^1\\.6\\.0\\+codex\\.[a-z0-9-]+$/);",
+              "  assert.match(plugin.version,/^1\\.7\\.0\\+codex\\.[a-z0-9-]+$/);",
+              "plugin version assertion",
+          )
+          plugin_test = replace_once(
+              plugin_test,
+              "  assert.deepEqual(codex.interface,plugin.extensions['com.openai'].interface);",
+              "  assert.deepEqual(codex.interface,plugin.extensions['com.openai'].interface);\n  assert.equal(codex.skills,'./skills/');\n  const defaultPrompts=plugin.extensions['com.openai'].interface.defaultPrompt;\n  assert.equal(defaultPrompts.length,3);\n  for (const prompt of defaultPrompts) assert.match(prompt,/^Use \\$publish-note /);",
+              "plugin prompt assertions",
+          )
+          plugin_test_path.write_text(plugin_test, encoding="utf-8")
+
+          readme_path = Path("plugins/dossierkit-notes/README.md")
+          readme = readme_path.read_text(encoding="utf-8")
+          readme = replace_once(
+              readme,
+              "The MCP Skill catalog is generated from the packaged Skill during the build. It is never maintained as an independent copy.\n",
+              "The MCP Skill catalog is generated from the packaged Skill during the build. It is never maintained as an independent copy.\n\nThe Plugin default prompts explicitly invoke `$publish-note`. MCP initialization repeats a short preflight before tool guidance: apply the Skill, read the canonical note before an edit, and distinguish a repository save from verified live publication. These routing safeguards do not duplicate the full authoring policy.\n",
+              "README P0 description",
+          )
+          readme_path.write_text(readme, encoding="utf-8")
+
+          Path(".github/workflows/apply-dossierkit-notes-p0.yml").unlink()
+
+      - name: Commit P0 safeguards
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add functions/api/mcp.ts scripts/test-mcp-skill.ts scripts/plugin.test.mjs \
+            plugins/dossierkit-notes/plugin.json \
+            plugins/dossierkit-notes/.codex-plugin/plugin.json \
+            plugins/dossierkit-notes/README.md \
+            .github/workflows/apply-dossierkit-notes-p0.yml
+          git commit -m "feat(notes): enforce Skill-first P0 publishing guidance"
+          git push origin HEAD:feat/dossierkit-notes-p0-skill-guard-20261006
