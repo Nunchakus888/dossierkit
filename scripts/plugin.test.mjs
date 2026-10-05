@@ -10,7 +10,7 @@ test('canonical plugin bundles one production MCP and one valid Skill', () => {
   const plugin = JSON.parse(fs.readFileSync(path.join(source,'plugin.json'),'utf8'));
   const codex = JSON.parse(fs.readFileSync(path.join(source,'.codex-plugin/plugin.json'),'utf8'));
   assert.equal(plugin.name,'dossierkit-notes');
-  assert.match(plugin.version,/^1\.6\.0\+codex\.[a-z0-9-]+$/);
+  assert.match(plugin.version,/^1\.7\.0\+codex\.[a-z0-9-]+$/);
   assert.equal(codex.version,plugin.version);
   assert.equal(plugin.$schema,'https://agent-plugins.org/schemas/1.0.0/plugin.schema.json');
   const portableMcp=JSON.parse(fs.readFileSync(path.join(source,'mcp.json'),'utf8')).mcpServers['dossierkit-notes'];
@@ -19,6 +19,10 @@ test('canonical plugin bundles one production MCP and one valid Skill', () => {
   assert.equal(portableMcp.url,'https://dossierkit-notes-mcp.pages.dev/api/mcp');
   assert.equal(codexMcp.url,portableMcp.url);
   assert.deepEqual(codex.interface,plugin.extensions['com.openai'].interface);
+  assert.equal(codex.skills,'./skills/');
+  const defaultPrompts=plugin.extensions['com.openai'].interface.defaultPrompt;
+  assert.equal(defaultPrompts.length,3);
+  for (const prompt of defaultPrompts) assert.match(prompt,/^Use \$publish-note /);
   assert.equal(codex.interface.websiteURL,'https://sunionpeaks.pages.dev/plugins/dossierkit-notes');
   assert.equal(codex.interface.privacyPolicyURL,'https://sunionpeaks.pages.dev/plugins/dossierkit-notes/privacy');
   assert.equal(codex.interface.termsOfServiceURL,'https://sunionpeaks.pages.dev/plugins/dossierkit-notes/terms');

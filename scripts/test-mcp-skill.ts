@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { z } from "zod";
-import { createServer, PUBLICATION_BOUNDARY_PROMPT } from "../functions/api/mcp";
+import { AUTHORING_WORKFLOW_PROMPT, createServer, PUBLICATION_BOUNDARY_PROMPT } from "../functions/api/mcp";
 import { skillCatalogEntry, skillsGetRequestSchema, skillsListRequestSchema } from "../src/server/mcp-note-skill";
 
 const skillResourceSchema = z.object({ uri: z.string(), digest: z.string() });
@@ -24,13 +24,20 @@ await Promise.all([server.connect(serverTransport), client.connect(clientTranspo
 try {
   // Test the instructions received over MCP, not just a source string on disk.
   const instructions = client.getInstructions();
-  assert.ok(instructions?.startsWith(PUBLICATION_BOUNDARY_PROMPT));
+  assert.ok(instructions?.startsWith(AUTHORING_WORKFLOW_PROMPT));
+  assert.ok(instructions?.includes(PUBLICATION_BOUNDARY_PROMPT));
+  assert.match(instructions, /canonical publish-note Skill/);
+  assert.match(instructions, /save_note proves only a repository commit/);
   assert.match(instructions, /Public notes are for external readers/);
   assert.match(instructions, /internal authoring instructions/);
   assert.match(instructions, /two separate deliverables/);
   assert.match(instructions, /not mandatory public headings/);
   const tools = await client.listTools();
-  assert.match(tools.tools.find((tool) => tool.name === 'save_note')?.description || '', /Keep internal authoring SOP/);
+  const saveDescription = tools.tools.find((tool) => tool.name === 'save_note')?.description || '';
+  assert.match(saveDescription, /Apply the canonical publish-note Skill/);
+  assert.match(saveDescription, /Keep internal authoring SOP/);
+  assert.match(saveDescription, /repository commit/);
+  assert.match(saveDescription, /live article plus Open Graph verification/);
 
   assert.deepEqual(client.getServerCapabilities()?.extensions?.["io.modelcontextprotocol/skills"], {});
   const listed = await client.request({ method: "skills/list", params: {} }, listResultSchema);

@@ -12,6 +12,8 @@ The repository is the source of truth for every surface:
 
 The MCP Skill catalog is generated from the packaged Skill during the build. It is never maintained as an independent copy.
 
+The Plugin default prompts explicitly invoke `$publish-note`. MCP initialization repeats a short preflight before tool guidance: apply the Skill, read the canonical note before an edit, and distinguish a repository save from verified live publication. These routing safeguards do not duplicate the full authoring policy.
+
 ## Production endpoint
 
 ```text
