@@ -1,0 +1,92 @@
+name: Verify unlisted CV on production
+
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/cv-agent-live.yml]
+  workflow_dispatch:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check live HTML, HTTP headers, PDFs and discovery boundaries
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, urllib.request
+          from html.parser import HTMLParser
+
+          base = 'https://sunionpeaks.pages.dev'
+          output = pathlib.Path('artifacts/cv-agent-live')
+          output.mkdir(parents=True, exist_ok=True)
+          receipt = []
+
+          class HeadParser(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.meta = {}
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if tag == 'meta' and 'name' in attrs:
+                      self.meta[attrs['name'].lower()] = attrs.get('content', '')
+
+          def get(route):
+              request = urllib.request.Request(base + route, headers={'User-Agent': 'DossierKit-CV-Acceptance/1.0', 'Cache-Control': 'no-cache'})
+              with urllib.request.urlopen(request, timeout=25) as response:
+                  assert response.status == 200, (route, response.status)
+                  return response.read(), response.headers
+
+          for language in ('zh', 'en'):
+              route = f'/{language}/cv-agent/'
+              body, headers = get(route)
+              html = body.decode('utf-8')
+              parser = HeadParser()
+              parser.feed(html)
+              result = {'path': route, 'status': 200, 'robots_meta': parser.meta.get('robots'), 'robots_header': headers.get('X-Robots-Tag'), 'referrer_header': headers.get('Referrer-Policy')}
+              print(json.dumps(result, ensure_ascii=False), flush=True)
+              assert 'noindex' in (result['robots_meta'] or '').lower(), result
+              assert 'noindex' in (result['robots_header'] or '').lower(), result
+              assert parser.meta.get('referrer') == 'no-referrer', parser.meta
+              assert result['referrer_header'] == 'no-referrer', result
+              assert 'data-pagefind-ignore="all"' in html
+              assert 'data-pagefind-body' not in html
+              (output / f'{language}.html').write_bytes(body)
+              receipt.append(result)
+
+              pdf_route = f'/resumes/cv-agent/george-{language}.pdf'
+              pdf, pdf_headers = get(pdf_route)
+              pdf_result = {'path': pdf_route, 'status': 200, 'content_type': pdf_headers.get('Content-Type'), 'robots_header': pdf_headers.get('X-Robots-Tag'), 'bytes': len(pdf)}
+              print(json.dumps(pdf_result), flush=True)
+              assert pdf.startswith(b'%PDF-'), pdf_result
+              assert 'application/pdf' in (pdf_result['content_type'] or ''), pdf_result
+              assert 'noindex' in (pdf_result['robots_header'] or '').lower(), pdf_result
+              receipt.append(pdf_result)
+
+              legacy, _ = get(f'/{language}/cv/')
+              assert b'cv-agent' not in legacy, 'Legacy CV exposes the unlisted variant'
+
+          sitemap, _ = get('/sitemap-0.xml')
+          assert b'/cv-agent/' not in sitemap
+          homepage, _ = get('/zh/')
+          assert b'/cv-agent/' not in homepage
+          receipt.append({'sitemap_absent': True, 'homepage_absent': True, 'legacy_cv_isolated': True})
+          (output / 'receipt.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + '\n')
+          print('PASS: live metadata, response headers, PDF delivery, legacy isolation and discovery exclusions.')
+          PY
+      - name: Store private acceptance receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cv-agent-live
+          path: artifacts/cv-agent-live/
+          if-no-files-found: warn
+          retention-days: 14
