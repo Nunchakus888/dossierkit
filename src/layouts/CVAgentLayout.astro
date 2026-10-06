@@ -43,7 +43,6 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
         <div>
           <h1>{name}</h1>
           <p class="headline">{text(pack.profile.headline)}</p>
-          <p class="focus">{text(view.focus)}</p>
         </div>
         <div class="contact">
           <a href={`mailto:${pack.profile.links.email}`}>{pack.profile.links.email}</a>
@@ -82,14 +81,14 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
       </section>
 
       <section class="architecture" aria-labelledby="architecture-heading">
-        <h2 id="architecture-heading">{zh ? "精选架构" : "Selected Architecture"}</h2>
+        <h2 id="architecture-heading">{zh ? "项目设计" : "Project Design"}</h2>
         <div class="architecture-heading"><h3>{text(view.architecture.title)}</h3><p class="stage">{text(view.architecture.stage)}</p></div>
         <p>{text(view.architecture.summary)}</p>
         <dl class="project-list">{view.architecture.points.map((point) => <div><dt>{text(point.title)}</dt><dd>{text(point.summary)}</dd></div>)}</dl>
       </section>
 
       {view.research.length > 0 && <section aria-labelledby="research-heading">
-        <h2 id="research-heading">{zh ? "精选研究与工程思考" : "Selected Research & Engineering"}</h2>
+        <h2 id="research-heading">{zh ? "技术研究" : "Selected Technical Research"}</h2>
         {view.research.map((item) => <article class="research">
           <h3>{text(item.title)}</h3>
           <p>{text(item.summary)}</p>
@@ -122,7 +121,6 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
   .cv-agent-document .identity { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding-bottom: 22px; border-bottom: 2px solid #25313d; }
   .cv-agent-document h1 { font-family: "Pacifico", "Brush Script MT", cursive; font-size: 36px; font-weight: 400; color: #247f74; }
   .cv-agent-document .headline { margin-top: 8px; font-size: 19px; font-weight: 650; }
-  .cv-agent-document .focus { margin-top: 4px; color: #556373; font-size: 13px; }
   .cv-agent-document .contact { flex-shrink: 0; text-align: right; font-size: 13px; color: #556373; }
   .cv-agent-document .contact > p { margin-top: 4px; }
   .cv-agent-document .utilities { display: flex; gap: 3px; justify-content: flex-end; margin-top: 5px; }
@@ -170,7 +168,7 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
     .cv-agent-document .identity { display: flex; padding-bottom: 12px; }
     .cv-agent-document h1 { font-size: 27pt; }
     .cv-agent-document .headline { font-size: 13pt; }
-    .cv-agent-document .focus, .cv-agent-document .contact, .cv-agent-document .period { font-size: 8pt; }
+    .cv-agent-document .contact, .cv-agent-document .period { font-size: 8pt; }
     .cv-agent-document .contact { text-align: right; }
     .cv-agent-document section { margin-top: 15px; }
     .cv-agent-document h2 { font-size: 10pt; margin-bottom: 8px; padding-bottom: 4px; break-after: avoid; }
