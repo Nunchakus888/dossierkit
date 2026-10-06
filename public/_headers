@@ -1,0 +1,10 @@
+# Unlisted share-only CV. Keep crawl access so compliant crawlers can see noindex.
+/zh/cv-agent*
+  X-Robots-Tag: noindex, nofollow, nosnippet, noimageindex
+  Referrer-Policy: no-referrer
+/en/cv-agent*
+  X-Robots-Tag: noindex, nofollow, nosnippet, noimageindex
+  Referrer-Policy: no-referrer
+/resumes/cv-agent/*
+  X-Robots-Tag: noindex, nofollow, nosnippet, noimageindex
+  Referrer-Policy: no-referrer

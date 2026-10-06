@@ -1,0 +1,194 @@
+---
+import IconAction from "../components/common/IconAction.astro";
+import SiteIcons from "../components/seo/SiteIcons.astro";
+import { localize } from "../lib/i18n";
+import type { Locale } from "../lib/config";
+import type { ProfilePack } from "../lib/profile-loader";
+import type { CvAgentView } from "../lib/cv-agent";
+
+type Props = { locale: Locale; pack: ProfilePack; view: CvAgentView };
+const { locale, pack, view } = Astro.props;
+const zh = locale === "zh";
+const text = (value: Parameters<typeof localize>[0]) => localize(value, locale);
+const name = text(pack.profile.name);
+const title = `${name} — ${text(pack.profile.headline)}`;
+const canonical = new URL(`/${locale}/cv-agent/`, Astro.site || Astro.url.origin).href;
+const alternate = `/${zh ? "en" : "zh"}/cv-agent/`;
+const pdfEnabled = process.env.CV_AGENT_PDF === "1";
+const sourceLanguage = (language: Locale) => language === locale ? "" : language === "zh" ? " · 中文" : " · English";
+---
+<!doctype html>
+<html lang={locale} class="cv-agent-document" data-pagefind-ignore="all">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow, nosnippet, noimageindex" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content={text(view.summary)} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={text(view.focus)} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary" />
+    <SiteIcons />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <main class="cv-agent-page">
+      <header class="identity">
+        <div>
+          <h1>{name}</h1>
+          <p class="headline">{text(pack.profile.headline)}</p>
+          <p class="focus">{text(view.focus)}</p>
+        </div>
+        <div class="contact">
+          <a href={`mailto:${pack.profile.links.email}`}>{pack.profile.links.email}</a>
+          <p>{text(pack.profile.location)} · {pack.profile.yearsOfExperience} {zh ? "年经验" : "years of experience"}</p>
+          <div class="utilities no-print" aria-label={zh ? "简历工具" : "CV tools"}>
+            {pack.profile.links.github && <IconAction icon="github" href={pack.profile.links.github} target="_blank" rel="noreferrer noopener" label="GitHub" />}
+            <IconAction icon="languages" href={alternate} hreflang={zh ? "en" : "zh"} label={zh ? "切换为英文简历" : "Switch to Chinese CV"} />
+            {pdfEnabled && <IconAction icon="download" href={view.pdfHref} download label={zh ? "下载 Agent 版 PDF" : "Download Agent CV PDF"} />}
+            <IconAction icon="printer" onclick="window.print()" label={zh ? "打印 / 另存为 PDF" : "Print / Save as PDF"} />
+          </div>
+        </div>
+      </header>
+
+      <section aria-labelledby="profile-heading">
+        <h2 id="profile-heading">{zh ? "概览" : "Profile"}</h2>
+        <p class="summary">{text(view.summary)}</p>
+        <dl class="metrics">
+          {pack.metrics.metrics.map((metric) => <div><dt>{text(metric.label)}</dt><dd>{text(metric.value)}</dd></div>)}
+        </dl>
+      </section>
+
+      <section aria-labelledby="experience-heading">
+        <h2 id="experience-heading">{zh ? "工作经历" : "Experience"}</h2>
+        {view.experiences.map((item) => (
+          <article class="experience">
+            <div class="experience-heading">
+              <h3>{text(item.company)} <span>· {text(item.role)}</span></h3>
+              <p class="period">{text(item.period)}</p>
+            </div>
+            <p>{text(item.summary)}</p>
+            {item.projects.length > 0 && <dl class="project-list">{item.projects.map((project) => (
+              <div><dt>{text(project.title)}</dt><dd>{text(project.summary)}</dd></div>
+            ))}</dl>}
+          </article>
+        ))}
+      </section>
+
+      <section class="architecture" aria-labelledby="architecture-heading">
+        <h2 id="architecture-heading">{zh ? "精选架构" : "Selected Architecture"}</h2>
+        <div class="architecture-heading"><h3>{text(view.architecture.title)}</h3><p class="stage">{text(view.architecture.stage)}</p></div>
+        <p>{text(view.architecture.summary)}</p>
+        <dl class="project-list">{view.architecture.points.map((point) => <div><dt>{text(point.title)}</dt><dd>{text(point.summary)}</dd></div>)}</dl>
+      </section>
+
+      {view.research.length > 0 && <section aria-labelledby="research-heading">
+        <h2 id="research-heading">{zh ? "精选研究与工程思考" : "Selected Research & Engineering"}</h2>
+        {view.research.map((item) => <article class="research">
+          <h3>{text(item.title)}</h3>
+          <p>{text(item.summary)}</p>
+          <p class="sources">{item.sources.map((source) => <a href={source.href} target="_blank" rel="noreferrer noopener">{text(source.label)}{sourceLanguage(source.sourceLocale)}</a>)}</p>
+        </article>)}
+      </section>}
+
+      <section aria-labelledby="skills-heading">
+        <h2 id="skills-heading">{zh ? "核心能力" : "Core Capabilities"}</h2>
+        <dl class="skills">{view.skillGroups.map((group) => <div><dt>{text(group.title)}</dt><dd>{group.skills.join(" / ")}</dd></div>)}</dl>
+      </section>
+
+      <section aria-labelledby="education-heading">
+        <h2 id="education-heading">{zh ? "教育" : "Education"}</h2>
+        {pack.education.education.map((item) => <div class="education"><p><strong>{text(item.school)}</strong> · {text(item.degree)}</p><p class="period">{item.period}</p></div>)}
+      </section>
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  .cv-agent-document { color-scheme: light; background: #f5f6f7; color: #25313d; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif; font-size: 15px; line-height: 1.65; }
+  .cv-agent-document * { box-sizing: border-box; }
+  .cv-agent-document body { margin: 0; }
+  .cv-agent-document a { color: inherit; text-underline-offset: 3px; }
+  .cv-agent-document a:focus-visible, .cv-agent-document button:focus-visible { outline: 2px solid #4c56a6; outline-offset: 3px; }
+  .cv-agent-document .cv-agent-page { max-width: 1020px; margin: 36px auto; padding: 44px 50px; background: #fff; border: 1px solid #e2e5e9; border-radius: 8px; box-shadow: 0 12px 40px #26323a0a; }
+  .cv-agent-document p, .cv-agent-document dl { margin: 0; }
+  .cv-agent-document h1, .cv-agent-document h2, .cv-agent-document h3 { margin: 0; line-height: 1.4; }
+  .cv-agent-document .identity { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; padding-bottom: 22px; border-bottom: 2px solid #25313d; }
+  .cv-agent-document h1 { font-family: "Pacifico", "Brush Script MT", cursive; font-size: 36px; font-weight: 400; color: #247f74; }
+  .cv-agent-document .headline { margin-top: 8px; font-size: 19px; font-weight: 650; }
+  .cv-agent-document .focus { margin-top: 4px; color: #556373; font-size: 13px; }
+  .cv-agent-document .contact { flex-shrink: 0; text-align: right; font-size: 13px; color: #556373; }
+  .cv-agent-document .contact > p { margin-top: 4px; }
+  .cv-agent-document .utilities { display: flex; gap: 3px; justify-content: flex-end; margin-top: 5px; }
+  .cv-agent-document .icon-action { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 0; border-radius: 7px; background: transparent; color: #556373; cursor: pointer; text-decoration: none; }
+  .cv-agent-document .icon-action:hover { background: #f1f3f5; color: #25313d; }
+  .cv-agent-document section { margin-top: 24px; }
+  .cv-agent-document h2 { margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #e2e5e9; font-size: 15px; font-weight: 750; letter-spacing: .02em; }
+  .cv-agent-document h3 { font-size: 14px; font-weight: 700; }
+  .cv-agent-document h3 span { font-weight: 500; }
+  .cv-agent-document .metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 17px; }
+  .cv-agent-document .metrics dt { color: #647080; font-size: 11px; }
+  .cv-agent-document .metrics dd { margin: 4px 0 0; font-size: 13px; font-weight: 650; line-height: 1.55; }
+  .cv-agent-document .experience { margin-top: 17px; }
+  .cv-agent-document .experience-heading, .cv-agent-document .education { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .cv-agent-document .period { flex-shrink: 0; color: #647080; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .cv-agent-document .experience > p, .cv-agent-document .architecture > p, .cv-agent-document .research > p { margin-top: 6px; }
+  .cv-agent-document .project-list { margin-top: 10px; padding-left: 14px; border-left: 2px solid #e5e9ed; }
+  .cv-agent-document .project-list > div + div { margin-top: 8px; }
+  .cv-agent-document .project-list dt, .cv-agent-document .skills dt { font-size: 13px; font-weight: 650; }
+  .cv-agent-document .project-list dd, .cv-agent-document .skills dd { margin: 2px 0 0; }
+  .cv-agent-document .stage { margin-top: 4px; color: #647080; font-size: 12px; }
+  .cv-agent-document .research + .research { margin-top: 12px; }
+  .cv-agent-document .sources { display: flex; flex-wrap: wrap; column-gap: 18px; font-size: 12px; color: #556373; }
+  .cv-agent-document .sources a { display: inline-flex; min-height: 32px; align-items: center; }
+  .cv-agent-document .skills { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+  .cv-agent-document .skills dd { color: #556373; font-size: 13px; }
+  .cv-agent-document .education + .education { margin-top: 6px; }
+  @media (max-width: 700px) {
+    .cv-agent-document .cv-agent-page { margin: 0; padding: 26px 22px 36px; border: 0; border-radius: 0; box-shadow: none; }
+    .cv-agent-document .identity { display: block; }
+    .cv-agent-document h1 { font-size: 32px; }
+    .cv-agent-document .contact { margin-top: 14px; text-align: left; }
+    .cv-agent-document .utilities { justify-content: flex-end; }
+    .cv-agent-document .metrics { grid-template-columns: 1fr 1fr; gap: 14px; }
+    .cv-agent-document .experience-heading, .cv-agent-document .education { display: block; }
+    .cv-agent-document .period { margin-top: 3px; }
+    .cv-agent-document .skills { grid-template-columns: 1fr; }
+    .cv-agent-document .sources a { min-height: 44px; }
+  }
+  @media print {
+    @page { size: A4; margin: 14mm 15mm; }
+    .cv-agent-document { background: #fff; font-size: 9.5pt; line-height: 1.48; }
+    .cv-agent-document .cv-agent-page { max-width: none; margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+    .cv-agent-document .no-print { display: none !important; }
+    .cv-agent-document .identity { display: flex; padding-bottom: 12px; }
+    .cv-agent-document h1 { font-size: 27pt; }
+    .cv-agent-document .headline { font-size: 13pt; }
+    .cv-agent-document .focus, .cv-agent-document .contact, .cv-agent-document .period { font-size: 8pt; }
+    .cv-agent-document .contact { text-align: right; }
+    .cv-agent-document section { margin-top: 15px; }
+    .cv-agent-document h2 { font-size: 10pt; margin-bottom: 8px; padding-bottom: 4px; break-after: avoid; }
+    .cv-agent-document h3 { font-size: 9.5pt; break-after: avoid; }
+    .cv-agent-document .metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+    .cv-agent-document .metrics dt { font-size: 7.5pt; }
+    .cv-agent-document .metrics dd { font-size: 8pt; }
+    .cv-agent-document .experience { margin-top: 11px; }
+    .cv-agent-document .experience-heading, .cv-agent-document .education { display: flex; break-after: avoid; }
+    .cv-agent-document .project-list { margin-top: 7px; }
+    .cv-agent-document .project-list dt, .cv-agent-document .skills dt { font-size: 9pt; }
+    .cv-agent-document .project-list > div + div { margin-top: 5px; }
+    .cv-agent-document .project-list > div, .cv-agent-document .research, .cv-agent-document .education, .cv-agent-document .skills > div { break-inside: avoid; }
+    .cv-agent-document .architecture { break-before: page; margin-top: 0; }
+    .cv-agent-document .stage, .cv-agent-document .sources { font-size: 8pt; }
+    .cv-agent-document .sources a { min-height: 0; }
+    .cv-agent-document .skills { grid-template-columns: 1fr 1fr; gap: 9px 20px; }
+    .cv-agent-document .skills dd { font-size: 8.5pt; }
+    .cv-agent-document p { orphans: 3; widows: 3; }
+  }
+</style>

@@ -1,0 +1,22 @@
+---
+import CVAgentLayout from "../../layouts/CVAgentLayout.astro";
+import { locales, type Locale } from "../../lib/config";
+import { loadProfilePack, readContentCollection } from "../../lib/profile-loader";
+import { readCvAgentConfig, buildCvAgentView } from "../../lib/cv-agent";
+
+export function getStaticPaths() {
+  const pack = loadProfilePack();
+  return readCvAgentConfig(pack.root)
+    ? locales.map((locale) => ({ params: { locale } }))
+    : [];
+}
+
+const locale = Astro.params.locale as Locale;
+const pack = loadProfilePack();
+const config = readCvAgentConfig(pack.root);
+if (!config) throw new Error("Missing cv-agent configuration for the active profile.");
+const notes = locales.flatMap((language) => readContentCollection(language, "notes"));
+const view = buildCvAgentView(pack, config, notes, locale);
+---
+
+<CVAgentLayout locale={locale} pack={pack} view={view} />
