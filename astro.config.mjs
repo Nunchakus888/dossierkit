@@ -6,7 +6,8 @@ import { defineConfig } from "astro/config";
 const site = process.env.PUBLIC_SITE_URL || "https://sunionpeaks.pages.dev";
 const visibleInSitemap = (page) => {
   const pathname = new URL(page).pathname;
-  return pathname !== "/" && !/^\/404(?:\.html|\/)?$/.test(pathname) && !pathname.startsWith("/admin");
+  return pathname !== "/" && !/^\/404(?:\.html|\/)?$/.test(pathname) && !pathname.startsWith("/admin")
+    && !/^\/(zh|en)\/cv-agent(?:\/|$)/.test(pathname);
 };
 
 export default defineConfig({

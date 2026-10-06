@@ -86,7 +86,12 @@ jobs:
       - name: Validate active profile
         run: pnpm validate
 
+      - name: Test isolated Agent CV data and references
+        run: pnpm exec tsx scripts/test-cv-agent.ts
+
       - name: Build static site
+        env:
+          CV_AGENT_PDF: "1"
         run: |
           pnpm build
           pnpm exec tsx scripts/export-publication.ts
@@ -95,6 +100,24 @@ jobs:
         run: |
           node scripts/test-publication-build.mjs
           node scripts/verify-note-covers.mjs
+
+      - name: Export and verify unlisted Agent CV
+        run: |
+          if [ -f "profiles/${ACTIVE_PROFILE}/cv-agent.yaml" ]; then
+            pnpm exec playwright install --with-deps chromium
+            sudo apt-get install -y fonts-noto-cjk
+            pnpm exec tsx scripts/generate-cv-agent-pdf.ts
+          fi
+          node scripts/verify-cv-agent-build.mjs --require-pdf
+
+      - name: Upload Agent CV review artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: cv-agent-review
+          path: artifacts/cv-agent/
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Package reusable Notes plugin
         run: pnpm package:plugin

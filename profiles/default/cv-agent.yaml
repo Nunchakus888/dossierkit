@@ -1,0 +1,121 @@
+# Private authoring configuration for the unlisted CV view. Not a public collection.
+focus:
+  zh: "Agent 平台 · Runtime · 生产工程"
+  en: "Agent Platforms · Runtime · Production Engineering"
+summary:
+  zh: "10 年大型平台与 AI 工程经验，历经阿里、商汤。负责生产级 AI Agent 平台架构、上下文与工具体系、质量运营和团队交付；围绕跨入口协作、持续任务执行与人机接管开展架构设计和工程研究。"
+  en: "10 years across large-scale platforms and AI engineering at Alibaba and SenseTime. Owns production AI Agent architecture, context and tool systems, quality operations, and team delivery, alongside architectural work on cross-channel collaboration, persistent execution, and human takeover."
+experiences:
+  - sourceCompany: "YC"
+    summary:
+      zh: "负责跨行业 WhatsApp AI Agent SaaS 的架构演进与生产运营，带领 4 人 AI Agent 小组，协同 20 人产研团队，统筹平台能力、业务质量、成本和交付。"
+      en: "Owns architecture and production operations for a cross-industry WhatsApp AI Agent SaaS; leads a 4-person Agent squad within a 20-person product-engineering team across platform capabilities, quality, cost, and delivery."
+    projects:
+      - title:
+          zh: "生产级 Agent 平台"
+          en: "Production Agent platform"
+        summary:
+          zh: "主导业务从规则编排演进为 LLM 驱动，将意图路由、SOP、知识、工具和人工转接沉淀为租户可配置能力，客户问题自动解决率达到 70%+。"
+          en: "Led the transition from rule flows to LLM-driven execution, making routing, SOPs, knowledge, tools, and handoff tenant-configurable; reached 70%+ customer-issue auto-resolution."
+      - title:
+          zh: "执行框架与上下文"
+          en: "Execution framework and context"
+        summary:
+          zh: "建设 Agentic RAG、会话与用户 Memory、多 Agent 协作及 Skill/MCP 工具体系，统一上下文与执行边界；平均 7k+ tokens 对话负载下端到端约 7s，token 消耗下降 60%。"
+          en: "Built Agentic RAG, session/user Memory, multi-agent collaboration, and Skill/MCP tools with shared context and execution controls; achieved about 7s end-to-end latency at 7k+ tokens per conversation and 60% lower token use."
+      - title:
+          zh: "评测与知识反馈"
+          en: "Evaluation and knowledge feedback"
+        summary:
+          zh: "贯通上线前评测、线上回放、问题归因和成本分析；将多语言未知问题聚类与人工会话学习接入知识回写，约 50% 聚类结果进入生产优化，高频主题覆盖约 70%。"
+          en: "Connected pre-release evaluation, production replay, issue attribution, and cost analysis with multilingual clustering and knowledge write-back; about 50% of clusters entered production optimization, with 70% high-frequency topic coverage."
+      - title:
+          zh: "AI 研发交付 Harness"
+          en: "AI engineering delivery harness"
+        summary:
+          zh: "以共享上下文、CLI、Skill 和 MCP 贯通开发、测试、发布、部署与验证，覆盖 40 个仓库；减少跨角色等待与重复排查，标准化交付效率达到原协作方式约 10 倍。"
+          en: "Connected development, testing, release, deployment, and verification through shared context, CLI, Skills, and MCP across 40 repositories; standardized delivery reached roughly 10x the prior collaboration model's efficiency."
+  - sourceCompany: "Independent Venture"
+    summary:
+      zh: "负责 AI 数据与模型服务产品的定义、架构、全栈实现及企业交付；建设多模态标注、模型产物、自动标注与质量校验闭环，封装可插拔 Serverless 推理服务。"
+      en: "Owned product definition, architecture, full-stack implementation, and enterprise delivery for AI data/model services, connecting multimodal annotation, model artifacts, auto-labeling, and validation with pluggable serverless inference."
+  - sourceCompany: "SenseTime"
+    summary:
+      zh: "参与秒画 AIGC SaaS 从 0 到 1 建设，负责模型接入与服务化架构，覆盖 LoRA 训练对接、异步队列、模型存储、后处理、RPC、负载均衡和生产监控。"
+      en: "Contributed to miaohua AIGC SaaS from 0 to 1, owning model integration and service architecture across LoRA training integration, async queues, model storage, post-processing, RPC, load balancing, and production monitoring."
+  - sourceCompany: "Alibaba Group"
+    summary:
+      zh: "负责本地生活商业推广与淘宝新零售的高流量跨端工程；主导淘宝直播互动层向 H5 微前端编排演进，以 SSR 与分级资源策略将 FCP 稳定在 1.5s 以内。"
+      en: "Built high-traffic, cross-platform systems for Local Services and Taobao new retail; led Taobao Live's transition to H5 micro-frontends, using SSR and tiered resources to keep FCP below 1.5s."
+  - sourceCompany: "Ningbo Senpu Rongxun"
+    summary:
+      zh: "建设 Spring Boot/MyBatis 金融报表服务，完成 AngularJS 到 Vue 的迁移与共享组件建设。"
+      en: "Built Spring Boot/MyBatis reporting services and migrated AngularJS to Vue with shared UI components."
+architecture:
+  title:
+    zh: "Cowork · 跨入口协作与持续任务执行"
+    en: "Cowork · Cross-channel Collaboration & Persistent Execution"
+  stage:
+    zh: "架构设计与工程研究"
+    en: "Architecture Design & Engineering Research"
+  summary:
+    zh: "面向个人与小团队，设计在不同应用、设备和群聊中持续推进同一项工作的 Agent 系统，让身份、任务状态、权限与交付记录围绕同一工作空间组织。"
+    en: "Designed an Agent system for individuals and small teams to continue the same work across applications, devices, and group chats, organizing identity, task state, permissions, and delivery records around a shared workspace."
+  points:
+    - title:
+        zh: "任务连续性"
+        en: "Task continuity"
+      summary:
+        zh: "设计入口与核心任务状态分离的模型，区分会话、执行记录和交付物，使跨入口接续不依赖单次聊天或临时计算机环境。"
+        en: "Designed the separation of entry points from core task state, distinguishing conversations, executions, and artifacts so continuation is not tied to one chat or temporary computer."
+    - title:
+        zh: "协作与授权"
+        en: "Collaboration and authorization"
+      summary:
+        zh: "围绕多人参与同一任务，设计参与者身份、资源授权与操作审批的边界，将共享工作上下文与共享执行权限分别处理。"
+        en: "Defined participant identity, resource authorization, and action-approval boundaries for shared tasks, treating shared work context and execution permissions separately."
+    - title:
+        zh: "执行环境与接管"
+        en: "Execution environments and takeover"
+      summary:
+        zh: "设计 Browser、Computer 与工具执行资源的适配边界，研究按需分配、产物保留及人工接手同一远程工作现场的控制权切换。"
+        en: "Designed adapter boundaries for browser, computer, and tool execution resources; studied on-demand allocation, artifact retention, and control transfer within the same remote workspace."
+research:
+  - title:
+      zh: "长期任务与执行系统"
+      en: "Long-running tasks and execution systems"
+    summary:
+      zh: "研究任务状态、事件日志与检查点、幂等重试和 CPU/GPU 资源调度的分工，区分任务正确性与推理吞吐优化。"
+      en: "Examined task state, event logs, checkpoints, idempotent retries, and CPU/GPU scheduling, separating workflow correctness from inference-throughput optimization."
+    sources:
+      - noteRef: "zh/agent-runtime-execution-system-task-state-orchestration"
+        label: { zh: "执行系统", en: "Execution systems" }
+  - title:
+      zh: "动作语义与运行治理"
+      en: "Action semantics and runtime governance"
+    summary:
+      zh: "分析 CAVA 对 Shell、MCP、Browser 等执行事件的语义归一化，研究动作身份与策略、审批、回执的绑定及覆盖边界。"
+      en: "Analyzed CAVA's semantic normalization of Shell, MCP, and Browser events, including the binding of action identity to policy, approval, and receipts, and limits of enforcement coverage."
+    sources:
+      - noteRef: "zh/cava-canonical-action-runtime-governance"
+        label: { zh: "动作身份", en: "Action identity" }
+  - title:
+      zh: "AI 原生交互与人机接管"
+      en: "AI-native interaction and human takeover"
+    summary:
+      zh: "比较 AG-UI、A2UI、MCP Apps 等交互边界，研究状态同步、用户介入与共享远程桌面，形成跨端任务协作的参考方案。"
+      en: "Compared AG-UI, A2UI, and MCP Apps boundaries; studied state synchronization, user intervention, and shared remote desktops as reference designs for cross-device task collaboration."
+    sources:
+      - noteRef: "zh/ag-ui-a2ui-agent-runtime-generative-ui-ai-native"
+        label: { zh: "交互架构", en: "Interaction architecture" }
+      - noteRef: "zh/chatgpt-dots-agent-harness-agent-codex-agent"
+        label: { zh: "接管实践", en: "Takeover reference" }
+skillGroups:
+  - title: { zh: "Agent 平台与执行", en: "Agent platforms & execution" }
+    skills: ["Agent Harness", "Multi-agent Orchestration", "Tool-use / MCP", "Skills"]
+  - title: { zh: "上下文与知识", en: "Context & knowledge" }
+    skills: ["Agentic RAG", "Memory", "Context Engineering", "Retrieval / Reranking", "Knowledge-gap Learning"]
+  - title: { zh: "可靠性与质量运营", en: "Reliability & quality operations" }
+    skills: ["Evaluation / Replay", "Observability", "Tool Permissions", "Cost Governance", "LLMOps"]
+  - title: { zh: "平台工程", en: "Platform engineering" }
+    skills: ["Python / FastAPI", "TypeScript / React", "PostgreSQL / Redis / Milvus", "Docker / Kubernetes", "CI/CD"]
