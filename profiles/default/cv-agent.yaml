@@ -1,37 +1,37 @@
 # Private authoring configuration for the unlisted CV view. Not a public collection.
 focus:
-  zh: "Agent 平台 · Runtime · 生产工程"
-  en: "Agent Platforms · Runtime · Production Engineering"
+  zh: "企业级 Agent 产品化、跨应用人机协作与 AI 研发提效"
+  en: "Enterprise Agent Products, Human–AI Collaboration, and AI-assisted Development"
 summary:
-  zh: "10 年大型平台与 AI 工程经验，历经阿里、商汤。负责生产级 AI Agent 平台架构、上下文与工具体系、质量运营和团队交付；围绕跨入口协作、持续任务执行与人机接管开展架构设计和工程研究。"
-  en: "10 years across large-scale platforms and AI engineering at Alibaba and SenseTime. Owns production AI Agent architecture, context and tool systems, quality operations, and team delivery, alongside architectural work on cross-channel collaboration, persistent execution, and human takeover."
+  zh: "10 年大型平台与 AI 产品研发经验，历经阿里、商汤。主导企业级 Agent 从 0 到 1 建设与规模化落地，支撑 2k+ 租户，客户问题自动解决率达 70%+；带领团队将 AI 融入研发交付，并围绕 Cowork 设计跨应用、跨设备的人机协作产品。"
+  en: "10 years building large-scale platforms and AI products, with experience at Alibaba and SenseTime. Led enterprise Agent development from inception to serving 2k+ tenants with 70%+ customer-issue auto-resolution. Leads AI-assisted engineering delivery and designs cross-application, cross-device collaboration through Cowork."
 experiences:
   - sourceCompany: "YC"
     summary:
-      zh: "负责跨行业 WhatsApp AI Agent SaaS 的架构演进与生产运营，带领 4 人 AI Agent 小组，协同 20 人产研团队，统筹平台能力、业务质量、成本和交付。"
-      en: "Owns architecture and production operations for a cross-industry WhatsApp AI Agent SaaS; leads a 4-person Agent squad within a 20-person product-engineering team across platform capabilities, quality, cost, and delivery."
+      zh: "负责跨行业 WhatsApp AI Agent SaaS 的产品架构与持续迭代，带领 4 人 Agent 小组，协同 20 人产研团队，对业务效果、运行成本与交付负责。"
+      en: "Leads architecture and delivery for a cross-industry WhatsApp AI Agent SaaS, heading a 4-person Agent squad within a 20-person product-engineering team and owning business outcomes, operating costs, and delivery."
     projects:
       - title:
-          zh: "生产级 Agent 平台"
-          en: "Production Agent platform"
+          zh: "跨行业业务 Agent 产品化"
+          en: "Configurable business agents across industries"
         summary:
           zh: "主导业务从规则编排演进为 LLM 驱动，将意图路由、SOP、知识、工具和人工转接沉淀为租户可配置能力，客户问题自动解决率达到 70%+。"
           en: "Led the transition from rule flows to LLM-driven execution, making routing, SOPs, knowledge, tools, and handoff tenant-configurable; reached 70%+ customer-issue auto-resolution."
       - title:
-          zh: "执行框架与上下文"
-          en: "Execution framework and context"
+          zh: "复杂对话的响应与成本优化"
+          en: "Faster, lower-cost handling of complex conversations"
         summary:
           zh: "建设 Agentic RAG、会话与用户 Memory、多 Agent 协作及 Skill/MCP 工具体系，统一上下文与执行边界；平均 7k+ tokens 对话负载下端到端约 7s，token 消耗下降 60%。"
           en: "Built Agentic RAG, session/user Memory, multi-agent collaboration, and Skill/MCP tools with shared context and execution controls; achieved about 7s end-to-end latency at 7k+ tokens per conversation and 60% lower token use."
       - title:
-          zh: "评测与知识反馈"
-          en: "Evaluation and knowledge feedback"
+          zh: "把未解决问题转化为知识改进"
+          en: "Turning unresolved questions into knowledge improvements"
         summary:
           zh: "贯通上线前评测、线上回放、问题归因和成本分析；将多语言未知问题聚类与人工会话学习接入知识回写，约 50% 聚类结果进入生产优化，高频主题覆盖约 70%。"
           en: "Connected pre-release evaluation, production replay, issue attribution, and cost analysis with multilingual clustering and knowledge write-back; about 50% of clusters entered production optimization, with 70% high-frequency topic coverage."
       - title:
-          zh: "AI 研发交付 Harness"
-          en: "AI engineering delivery harness"
+          zh: "AI 驱动的研发提效"
+          en: "AI-assisted engineering delivery"
         summary:
           zh: "以共享上下文、CLI、Skill 和 MCP 贯通开发、测试、发布、部署与验证，覆盖 40 个仓库；减少跨角色等待与重复排查，标准化交付效率达到原协作方式约 10 倍。"
           en: "Connected development, testing, release, deployment, and verification through shared context, CLI, Skills, and MCP across 40 repositories; standardized delivery reached roughly 10x the prior collaboration model's efficiency."
@@ -53,69 +53,69 @@ experiences:
       en: "Built Spring Boot/MyBatis reporting services and migrated AngularJS to Vue with shared UI components."
 architecture:
   title:
-    zh: "Cowork · 跨入口协作与持续任务执行"
-    en: "Cowork · Cross-channel Collaboration & Persistent Execution"
+    zh: "Cowork · 跨应用人机协作"
+    en: "Cowork · Human–AI Collaboration Across Applications"
   stage:
-    zh: "架构设计与工程研究"
-    en: "Architecture Design & Engineering Research"
+    zh: "产品与系统设计"
+    en: "Product & System Design"
   summary:
-    zh: "面向个人与小团队，设计在不同应用、设备和群聊中持续推进同一项工作的 Agent 系统，让身份、任务状态、权限与交付记录围绕同一工作空间组织。"
-    en: "Designed an Agent system for individuals and small teams to continue the same work across applications, devices, and group chats, organizing identity, task state, permissions, and delivery records around a shared workspace."
+    zh: "面向个人与小团队，设计可在不同应用、设备和群聊中接续工作的 AI 伙伴。以统一任务连接多人协作、工具调用、计算机执行与结果交付。"
+    en: "Designed an AI collaborator for individuals and small teams to continue work across applications, devices, and group chats, bringing team participation, tools, computer execution, and deliverables into a shared task."
   points:
     - title:
-        zh: "任务连续性"
-        en: "Task continuity"
+        zh: "跨端接续同一任务"
+        en: "Continuing the same task across devices"
       summary:
         zh: "设计入口与核心任务状态分离的模型，区分会话、执行记录和交付物，使跨入口接续不依赖单次聊天或临时计算机环境。"
         en: "Designed the separation of entry points from core task state, distinguishing conversations, executions, and artifacts so continuation is not tied to one chat or temporary computer."
     - title:
-        zh: "协作与授权"
-        en: "Collaboration and authorization"
+        zh: "多人协作与权限边界"
+        en: "Team collaboration with distinct permissions"
       summary:
         zh: "围绕多人参与同一任务，设计参与者身份、资源授权与操作审批的边界，将共享工作上下文与共享执行权限分别处理。"
         en: "Defined participant identity, resource authorization, and action-approval boundaries for shared tasks, treating shared work context and execution permissions separately."
     - title:
-        zh: "执行环境与接管"
-        en: "Execution environments and takeover"
+        zh: "按需执行与人工接管"
+        en: "On-demand execution and human takeover"
       summary:
-        zh: "设计 Browser、Computer 与工具执行资源的适配边界，研究按需分配、产物保留及人工接手同一远程工作现场的控制权切换。"
-        en: "Designed adapter boundaries for browser, computer, and tool execution resources; studied on-demand allocation, artifact retention, and control transfer within the same remote workspace."
+        zh: "设计浏览器、远程桌面与工具的适配接口，研究执行资源按需分配、产物保留，以及人与 Agent 接手同一工作现场的控制权切换。"
+        en: "Designed interfaces for browser, remote-desktop, and tool execution; studied on-demand resource allocation, artifact retention, and control transfer between people and Agents within the same workspace."
 research:
   - title:
-      zh: "长期任务与执行系统"
-      en: "Long-running tasks and execution systems"
+      zh: "长任务的可靠执行与故障恢复"
+      en: "Reliable execution and recovery for long-running tasks"
     summary:
-      zh: "研究任务状态、事件日志与检查点、幂等重试和 CPU/GPU 资源调度的分工，区分任务正确性与推理吞吐优化。"
-      en: "Examined task state, event logs, checkpoints, idempotent retries, and CPU/GPU scheduling, separating workflow correctness from inference-throughput optimization."
+      zh: "围绕工具等待、任务中断和重复执行，研究任务状态、检查点、幂等重试与资源调度，分析可靠完成任务与提高推理吞吐之间的取舍。"
+      en: "Studied task state, checkpoints, idempotent retries, and resource scheduling under tool waits, interruptions, and repeated execution, examining trade-offs between task reliability and inference throughput."
     sources:
       - noteRef: "zh/agent-runtime-execution-system-task-state-orchestration"
         label: { zh: "执行系统", en: "Execution systems" }
   - title:
-      zh: "动作语义与运行治理"
-      en: "Action semantics and runtime governance"
+      zh: "高风险操作的授权与追溯"
+      en: "Authorization and traceability for high-risk actions"
     summary:
-      zh: "分析 CAVA 对 Shell、MCP、Browser 等执行事件的语义归一化，研究动作身份与策略、审批、回执的绑定及覆盖边界。"
-      en: "Analyzed CAVA's semantic normalization of Shell, MCP, and Browser events, including the binding of action identity to policy, approval, and receipts, and limits of enforcement coverage."
+      zh: "基于 CAVA 研究 Shell、MCP、浏览器操作的统一动作身份，分析如何让审批绑定实际执行内容，并通过回执追溯副作用与授权边界。"
+      en: "Analyzed CAVA's shared action identity across Shell, MCP, and browser operations, including how approvals bind to actual execution and receipts trace side effects and authorization boundaries."
     sources:
       - noteRef: "zh/cava-canonical-action-runtime-governance"
         label: { zh: "动作身份", en: "Action identity" }
   - title:
-      zh: "AI 原生交互与人机接管"
-      en: "AI-native interaction and human takeover"
+      zh: "跨端交互与人工接管"
+      en: "Cross-device interaction and human takeover"
     summary:
-      zh: "比较 AG-UI、A2UI、MCP Apps 等交互边界，研究状态同步、用户介入与共享远程桌面，形成跨端任务协作的参考方案。"
-      en: "Compared AG-UI, A2UI, and MCP Apps boundaries; studied state synchronization, user intervention, and shared remote desktops as reference designs for cross-device task collaboration."
+      zh: "比较 AG-UI、A2UI、MCP Apps 的交互边界，研究任务状态同步与用户介入，并整理人与 Agent 共享远程工作现场的接管方案。"
+      en: "Compared AG-UI, A2UI, and MCP Apps boundaries; studied task-state synchronization and user intervention, documenting takeover designs where people and Agents share a remote workspace."
     sources:
       - noteRef: "zh/ag-ui-a2ui-agent-runtime-generative-ui-ai-native"
         label: { zh: "交互架构", en: "Interaction architecture" }
       - noteRef: "zh/chatgpt-dots-agent-harness-agent-codex-agent"
         label: { zh: "接管实践", en: "Takeover reference" }
 skillGroups:
-  - title: { zh: "Agent 平台与执行", en: "Agent platforms & execution" }
+  - title: { zh: "业务 Agent 设计与编排", en: "Business Agent design & orchestration" }
     skills: ["Agent Harness", "Multi-agent Orchestration", "Tool-use / MCP", "Skills"]
-  - title: { zh: "上下文与知识", en: "Context & knowledge" }
+  - title: { zh: "知识检索与长期记忆", en: "Knowledge retrieval & persistent memory" }
     skills: ["Agentic RAG", "Memory", "Context Engineering", "Retrieval / Reranking", "Knowledge-gap Learning"]
-  - title: { zh: "可靠性与质量运营", en: "Reliability & quality operations" }
+  - title: { zh: "效果评测与成本优化", en: "Evaluation & cost optimization" }
     skills: ["Evaluation / Replay", "Observability", "Tool Permissions", "Cost Governance", "LLMOps"]
-  - title: { zh: "平台工程", en: "Platform engineering" }
+  - title: { zh: "全栈开发与云端交付", en: "Full-stack development & cloud delivery" }
     skills: ["Python / FastAPI", "TypeScript / React", "PostgreSQL / Redis / Milvus", "Docker / Kubernetes", "CI/CD"]
