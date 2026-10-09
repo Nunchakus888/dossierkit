@@ -32,7 +32,7 @@ for (const locale of ["zh", "en"]) {
     if (url.origin !== "https://cv.invalid") continue;
     if (url.pathname.endsWith(".pdf")) {
       if (requirePdf) {
-        const pdf = fs.readFileSync(path.join(root, url.pathname.slice(1)));
+        const pdf = fs.readFileSync(path.join(root, decodeURIComponent(url.pathname.slice(1))));
         assert.equal(pdf.subarray(0, 5).toString(), "%PDF-");
       }
       continue;
@@ -40,7 +40,15 @@ for (const locale of ["zh", "en"]) {
     const target = path.join(root, url.pathname.slice(1));
     assert.ok(fs.existsSync(target), `Broken local link: ${url.pathname}`);
   }
-  if (requirePdf) assert.match(html, /href="\/resumes\/cv-agent\/[^"]+\.pdf"/);
+  for (const kind of ["email", "github", "online"]) {
+    assert.match(html, new RegExp(`data-cv-contact="${kind}"`), `Missing ${kind} link in CV`);
+  }
+  if (requirePdf) {
+    assert.match(html, /href="\/resumes\/cv-agent\/[^"]+\.pdf"/);
+    assert.match(html, new RegExp(`download="George-AI Agent开发专家-${locale}\\.pdf"`));
+    const previous = path.join(root, "resumes", "cv-agent", `george-${locale}.pdf`);
+    assert.ok(fs.existsSync(previous), `Previously shared Agent CV PDF path missing: ${previous}`);
+  }
   const legacy = fs.readFileSync(path.join(root, locale, "cv/index.html"), "utf8");
   assert.ok(!legacy.includes("cv-agent"), "Legacy CV must have no Agent CV entry point");
 }
