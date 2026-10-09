@@ -27,6 +27,7 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
     <meta name="referrer" content="no-referrer" />
     <meta name="description" content={text(view.summary)} />
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="text/plain" href={`/${locale}/cv-agent.txt`} title={zh ? "纯文本简历" : "Plain-text CV"} />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={text(view.focus)} />

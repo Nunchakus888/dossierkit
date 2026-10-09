@@ -3,6 +3,7 @@ import path from "node:path";
 import { parse } from "yaml";
 import { z } from "zod";
 import { localizedStringSchema } from "./schema";
+import { localize } from "./i18n";
 import type { Locale } from "./config";
 import type { ContentEntry, ProfilePack } from "./profile-loader";
 
@@ -105,3 +106,41 @@ export function buildCvAgentView(pack: ProfilePack, config: CvAgentConfig, notes
 }
 
 export type CvAgentView = ReturnType<typeof buildCvAgentView>;
+
+export function renderCvAgentPlainText(pack: ProfilePack, view: CvAgentView, locale: Locale, siteUrl: string): string {
+  const zh = locale === "zh";
+  const text = (value: Parameters<typeof localize>[0]) => localize(value, locale);
+  const lines = [
+    `${text(pack.profile.name)} | ${text(pack.profile.headline)}`,
+    `${text(pack.profile.location)} | ${pack.profile.yearsOfExperience} ${zh ? "年经验" : "years of experience"}`,
+    `Email: ${pack.profile.links.email}`,
+    ...(pack.profile.links.github ? [`GitHub: ${pack.profile.links.github}`] : []),
+    "",
+    zh ? "概览" : "Profile",
+    text(view.summary),
+    "",
+    zh ? "关键数据" : "Key metrics",
+    ...pack.metrics.metrics.map((metric) => `- ${text(metric.label)}: ${text(metric.value)}`),
+    "",
+    zh ? "工作经历" : "Experience"
+  ];
+  for (const item of view.experiences) {
+    lines.push("", `${text(item.company)} | ${text(item.role)} | ${text(item.period)}`, text(item.summary));
+    for (const project of item.projects) lines.push(`- ${text(project.title)}: ${text(project.summary)}`);
+  }
+  lines.push("", zh ? "架构实践" : "Architecture Practice", `${text(view.architecture.title)} | ${text(view.architecture.stage)}`, text(view.architecture.summary));
+  for (const point of view.architecture.points) {
+    const status = point.status === "implemented" ? (zh ? "已实现" : "Implemented") : (zh ? "设计方向" : "Designed");
+    lines.push(`- [${status}] ${text(point.title)}: ${text(point.summary)}`);
+  }
+  if (view.research.length) lines.push("", zh ? "技术研究" : "Selected Technical Research");
+  for (const item of view.research) {
+    lines.push(`- ${text(item.title)}: ${text(item.summary)}`);
+    for (const source of item.sources) lines.push(`  ${text(source.label)}: ${new URL(source.href, siteUrl).href}`);
+  }
+  lines.push("", zh ? "核心能力" : "Core Capabilities");
+  for (const group of view.skillGroups) lines.push(`- ${text(group.title)}: ${group.skills.join(" / ")}`);
+  lines.push("", zh ? "教育" : "Education");
+  for (const item of pack.education.education) lines.push(`- ${text(item.school)} | ${text(item.degree)} | ${item.period}`);
+  return `${lines.join("\n")}\n`;
+}

@@ -10,7 +10,7 @@ const enabled = fs.existsSync(path.join(profileRoot, "cv-agent.yaml"));
 const cvConfig = enabled ? parseYaml(fs.readFileSync(path.join(profileRoot, "cv-agent.yaml"), "utf8")) : null;
 const oldPdfStem = enabled ? parseYaml(fs.readFileSync(path.join(profileRoot, "resume.yaml"), "utf8")).filename : null;
 const requirePdf = process.argv.includes("--require-pdf");
-const isAgentPath = (pathname) => /^\/(zh|en)\/cv-agent(?:\/|$)/.test(pathname) || pathname.startsWith("/resumes/cv-agent/");
+const isAgentPath = (pathname) => /^\/(zh|en)\/cv-agent(?:\/|\.txt$|$)/.test(pathname) || pathname.startsWith("/resumes/cv-agent/");
 const files = [];
 function walk(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -33,6 +33,11 @@ for (const locale of ["zh", "en"]) {
   assert.match(html, /data-claim-status="implemented"/);
   assert.match(html, /data-claim-status="designed"/);
   assert.match(html, /class="contact-data"/);
+  assert.match(html, new RegExp(`<link\\s+rel="alternate"\\s+type="text/plain"\\s+href="/${locale}/cv-agent\\.txt"`));
+  const plainText = fs.readFileSync(path.join(root, locale, "cv-agent.txt"), "utf8");
+  assert.ok(plainText.includes(`Email: ${parseYaml(fs.readFileSync(path.join(profileRoot, "profile.yaml"), "utf8")).links.email}`));
+  assert.ok(plainText.includes(locale === "zh" ? "[已实现]" : "[Implemented]"));
+  assert.ok(plainText.includes(locale === "zh" ? "[设计方向]" : "[Designed]"));
   assert.match(html, new RegExp(`href="/${locale === "zh" ? "en" : "zh"}/cv-agent/"`));
   for (const match of html.matchAll(/href="([^"#]+)"/g)) {
     const url = new URL(match[1].replaceAll("&amp;", "&"), "https://cv.invalid/");
@@ -63,7 +68,7 @@ for (const locale of ["zh", "en"]) {
 let fragments = 0;
 for (const file of files) {
   const relative = path.relative(root, file).split(path.sep).join("/");
-  if (/^(zh|en)\/cv-agent\//.test(relative) || relative.startsWith("resumes/cv-agent/")) continue;
+  if (/^(zh|en)\/cv-agent(?:\/|\.txt$)/.test(relative) || relative.startsWith("resumes/cv-agent/")) continue;
   if (file.endsWith(".html")) {
     const html = fs.readFileSync(file, "utf8");
     for (const match of html.matchAll(/(?:href|src|action)="([^"]+)"/g)) {
@@ -72,7 +77,7 @@ for (const file of files) {
     }
   } else if (/\.(?:xml|json|txt)$/.test(file)) {
     const source = fs.readFileSync(file, "utf8");
-    assert.ok(!/\/(?:zh|en)\/cv-agent(?:\/|["<\s])|\/resumes\/cv-agent\//.test(source), `Public index exposes the Agent CV: ${relative}`);
+    assert.ok(!/\/(?:zh|en)\/cv-agent(?:\/|\.txt|["<\s])|\/resumes\/cv-agent\//.test(source), `Public index exposes the Agent CV: ${relative}`);
   } else if (file.endsWith(".pf_fragment")) {
     const buffer = fs.readFileSync(file);
     const decoded = buffer[0] === 0x1f && buffer[1] === 0x8b ? gunzipSync(buffer) : buffer;

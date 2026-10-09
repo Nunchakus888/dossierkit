@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { locales } from "../src/lib/config";
 import { loadProfilePack, readContentCollection } from "../src/lib/profile-loader";
-import { agentPdfFileName, agentPdfPath, buildCvAgentView, cvAgentSchema, readCvAgentConfig } from "../src/lib/cv-agent";
+import { agentPdfFileName, agentPdfPath, buildCvAgentView, cvAgentSchema, readCvAgentConfig, renderCvAgentPlainText } from "../src/lib/cv-agent";
 
 const pack = loadProfilePack();
 const config = readCvAgentConfig(pack.root);
@@ -25,6 +25,11 @@ if (!config) {
     assert.notEqual(view.pdfHref, `/resumes/${pack.resume.filename}-${locale}.pdf`);
     assert.match(view.pdfHref, /^\/resumes\/cv-agent\/.+-(zh|en)\.pdf$/);
     assert.ok(view.research.every((item) => item.sources.every((source) => notes.some((note) => source.href === `/${note.locale}/notes/${note.slug}/`))));
+    const plainText = renderCvAgentPlainText(pack, view, locale, "https://cv.example/");
+    assert.ok(plainText.includes(`Email: ${pack.profile.links.email}`));
+    assert.ok(plainText.includes(locale === "zh" ? "[已实现]" : "[Implemented]"));
+    assert.ok(plainText.includes(locale === "zh" ? "[设计方向]" : "[Designed]"));
+    assert.ok(plainText.includes("https://cv.example/zh/notes/"));
   }
   assert.equal(JSON.stringify(pack), before, "Variant must not mutate the legacy ProfilePack");
   assert.equal(cvAgentSchema.safeParse({ ...config, experiences: [...config.experiences, config.experiences[0]] }).success, false);
