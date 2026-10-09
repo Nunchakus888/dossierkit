@@ -91,7 +91,7 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
       </section>
 
       <section class="architecture" aria-labelledby="architecture-heading">
-        <h2 id="architecture-heading">{zh ? "项目设计" : "Project Design"}</h2>
+        <h2 id="architecture-heading">{zh ? "架构实践" : "Architecture Practice"}</h2>
         <div class="architecture-heading"><h3>{text(view.architecture.title)}</h3><p class="stage">{text(view.architecture.stage)}</p></div>
         <p>{text(view.architecture.summary)}</p>
         <dl class="project-list">{view.architecture.points.map((point) => <div><dt>{text(point.title)}</dt><dd>{text(point.summary)}</dd></div>)}</dl>

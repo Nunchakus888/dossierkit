@@ -4,8 +4,8 @@ focus:
   zh: "企业级 Agent 产品化、跨应用人机协作与 AI 研发提效"
   en: "Enterprise Agent Products, Human–AI Collaboration, and AI-assisted Development"
 summary:
-  zh: "10 年大型平台与 AI 产品研发经验，历经阿里、商汤。主导企业级 Agent 从 0 到 1 建设与规模化落地，支撑 2k+ 租户，客户问题自动解决率达 70%+；带领团队将 AI 融入研发交付，并围绕 Cowork 设计跨应用、跨设备的人机协作产品。"
-  en: "10 years building large-scale platforms and AI products, with experience at Alibaba and SenseTime. Led enterprise Agent development from inception to serving 2k+ tenants with 70%+ customer-issue auto-resolution. Leads AI-assisted engineering delivery and designs cross-application, cross-device collaboration through Cowork."
+  zh: "10 年大型平台与 AI 产品研发经验，历经阿里、商汤。主导企业级 Agent 从 0 到 1 建设与规模化落地，支撑 2k+ 租户，客户问题自动解决率达 70%+；带领团队将 AI 融入研发交付，并主导 Cowork 云端 Agent 工作系统的架构与核心实现。"
+  en: "10 years building large-scale platforms and AI products, with experience at Alibaba and SenseTime. Led enterprise Agent development from inception to serving 2k+ tenants with 70%+ customer-issue auto-resolution. Leads AI-assisted engineering delivery and the architecture and core implementation of Cowork, a cloud Agent work system."
 experiences:
   - sourceCompany: "YC"
     summary:
@@ -54,33 +54,39 @@ experiences:
       en: "Built Spring Boot/MyBatis reporting services and migrated AngularJS to Vue with shared UI components."
 architecture:
   title:
-    zh: "Cowork · 跨应用人机协作"
-    en: "Cowork · Human–AI Collaboration Across Applications"
+    zh: "Cowork · 云端 Agent 工作系统"
+    en: "Cowork · Cloud Agent Work System"
   stage:
-    zh: "产品与系统设计"
-    en: "Product & System Design"
+    zh: "产品架构与核心实现"
+    en: "Product Architecture & Core Implementation"
   summary:
-    zh: "面向个人与小团队，设计可在不同应用、设备和群聊中接续工作的 AI 伙伴。以统一任务连接多人协作、工具调用、计算机执行与结果交付。"
-    en: "Designed an AI collaborator for individuals and small teams to continue work across applications, devices, and group chats, bringing team participation, tools, computer execution, and deliverables into a shared task."
+    zh: "主导基于 Kubernetes 的 Cowork 架构与核心实现，以 Session/Run 串联 Agent Runtime、MCP/Skill、按需 Computer、事件、审批与成果交付。"
+    en: "Led the Kubernetes-based Cowork architecture and core implementation, connecting the Agent Runtime, MCP tools and Skills, on-demand Computer, events, approvals, and artifacts through Session/Run."
   points:
     - title:
-        zh: "跨端接续同一任务"
-        en: "Continuing the same task across devices"
+        zh: "长任务可靠执行"
+        en: "Reliable long-running tasks"
       summary:
-        zh: "设计入口与核心任务状态分离的模型，区分会话、执行记录和交付物，使跨入口接续不依赖单次聊天或临时计算机环境。"
-        en: "Designed the separation of entry points from core task state, distinguishing conversations, executions, and artifacts so continuation is not tied to one chat or temporary computer."
+        zh: "实现 Session/Run/Attempt/Operation 状态机、Actor 幂等、SSE 重放与 Pi 检查点；重启后对账，结果不明的外部操作不盲目重试。"
+        en: "Built a Session/Run/Attempt/Operation state machine with actor-scoped idempotency, replayable SSE events, and Pi checkpoints; reconciled restarts without blindly retrying uncertain external operations."
     - title:
-        zh: "多人协作与权限边界"
-        en: "Team collaboration with distinct permissions"
+        zh: "按需隔离执行与人机授权"
+        en: "On-demand isolation and human authorization"
       summary:
-        zh: "围绕多人参与同一任务，设计参与者身份、资源授权与操作审批的边界，将共享工作上下文与共享执行权限分别处理。"
-        en: "Defined participant identity, resource authorization, and action-approval boundaries for shared tasks, treating shared work context and execution permissions separately."
+        zh: "仅在需要网页或文件操作时创建 Sandbox，实现容量控制、Workspace 快照和成果校验下载；审批绑定具体工具请求，Web/Actor 与租户资源分别鉴权。"
+        en: "Provisioned Sandbox only for browser or file work, with capacity control, workspace snapshots, and verified artifact downloads; bound approval to exact tool requests and enforced Web, actor, and tenant boundaries."
     - title:
-        zh: "按需执行与人工接管"
-        en: "On-demand execution and human takeover"
+        zh: "自配置与连接治理"
+        en: "Self-configuration and connection governance"
       summary:
-        zh: "设计浏览器、远程桌面与工具的适配接口，研究执行资源按需分配、产物保留，以及人与 Agent 接手同一工作现场的控制权切换。"
-        en: "Designed interfaces for browser, remote-desktop, and tool execution; studied on-demand resource allocation, artifact retention, and control transfer between people and Agents within the same workspace."
+        zh: "实现分层配置、任务级能力快照和按需验真 Skill；对接 CP/OC 的连接与授权，分离任务身份、业务权限和 Provider 凭证。"
+        en: "Implemented layered configuration, per-run capability snapshots, and verified on-demand Skills; integrated CP/OC connections and grants while separating task identity, business permissions, and Provider credentials."
+    - title:
+        zh: "多入口与团队协作设计"
+        en: "Multi-entry and team collaboration design"
+      summary:
+        zh: "Web/嵌入工作台与外部 API 共用任务内核；设计 CLI、Channel、其他 Agent 接入和对外 Cowork MCP 服务，以及群聊 @Agent 的逐角色授权与结果回送。"
+        en: "Unified the Web/embedded workbench and external API around one task core; designed CLI, channel, other-Agent and inbound Cowork MCP adapters, plus role-scoped authorization and result delivery for group-chat @Agent tasks."
 research:
   - title:
       zh: "长任务的可靠执行与故障恢复"
@@ -104,8 +110,8 @@ research:
       zh: "跨端交互与人工接管"
       en: "Cross-device interaction and human takeover"
     summary:
-      zh: "比较 AG-UI、A2UI、MCP Apps 的交互边界，研究任务状态同步与用户介入，并整理人与 Agent 共享远程工作现场的接管方案。"
-      en: "Compared AG-UI, A2UI, and MCP Apps boundaries; studied task-state synchronization and user intervention, documenting takeover designs where people and Agents share a remote workspace."
+      zh: "比较 AG-UI、A2UI、MCP Apps 的交互边界；以 Task、Artifact、Action、Permission 为稳定语义，设计对话、界面操作、Agent 执行与人工审批在同一任务中接续。"
+      en: "Compared AG-UI, A2UI, and MCP Apps; used stable Task, Artifact, Action, and Permission semantics to design continuity across conversation, direct UI actions, Agent execution, and human approval."
     sources:
       - noteRef: "zh/ag-ui-a2ui-agent-runtime-generative-ui-ai-native"
         label: { zh: "交互架构", en: "Interaction architecture" }

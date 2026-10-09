@@ -8,7 +8,7 @@ There are no inbound navigation, homepage, role, note or case links. The standal
 
 ## Content provenance
 
-Current business metrics are carried from the existing career material, not newly measured. Cowork is explicitly presented as architecture design and engineering research. The repository `Nunchakus888/cowork` returned 404 to the connected reader on 2026-10-07; no implementation, production scale, or rollout claim was inferred from its roadmap. Research links point to existing notes; CAVA and other third-party research are attributed as analyses, not original inventions. English uses reviewed counterparts where available, otherwise labels and links the Chinese original.
+Current business metrics are carried from the existing career material, not newly measured. Cowork implementation claims were checked against the local `services/cowork` checkout at `dded701`: Session/Run execution, checkpoints, events, on-demand Computer, Web/API authorization, Skills, and CP integration have code and focused tests. CLI/Channel-specific adapters, inbound Cowork MCP service, and group-chat collaboration are presented as designs, not shipped features. No Cowork production scale, customer, or rollout metric is claimed. Research links point to existing notes; CAVA and other third-party research are attributed as analyses, not original inventions. English uses reviewed counterparts where available, otherwise labels and links the Chinese original.
 
 ## Validation and export
 
