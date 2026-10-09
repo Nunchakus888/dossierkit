@@ -139,7 +139,5 @@ export function renderCvAgentPlainText(pack: ProfilePack, view: CvAgentView, loc
   }
   lines.push("", zh ? "核心能力" : "Core Capabilities");
   for (const group of view.skillGroups) lines.push(`- ${text(group.title)}: ${group.skills.join(" / ")}`);
-  lines.push("", zh ? "教育" : "Education");
-  for (const item of pack.education.education) lines.push(`- ${text(item.school)} | ${text(item.degree)} | ${item.period}`);
   return `${lines.join("\n")}\n`;
 }

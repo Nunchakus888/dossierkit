@@ -111,11 +111,6 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
         <h2 id="skills-heading">{zh ? "核心能力" : "Core Capabilities"}</h2>
         <dl class="skills">{view.skillGroups.map((group) => <div><dt>{text(group.title)}</dt><dd>{group.skills.join(" / ")}</dd></div>)}</dl>
       </section>
-
-      <section aria-labelledby="education-heading">
-        <h2 id="education-heading">{zh ? "教育" : "Education"}</h2>
-        {pack.education.education.map((item) => <div class="education"><p><strong>{text(item.school)}</strong> · {text(item.degree)}</p><p class="period">{item.period}</p></div>)}
-      </section>
     </main>
   </body>
 </html>
@@ -149,7 +144,7 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
   .cv-agent-document .metrics dt { color: #647080; font-size: 11px; }
   .cv-agent-document .metrics dd { margin: 4px 0 0; font-size: 13px; font-weight: 650; line-height: 1.55; }
   .cv-agent-document .experience { margin-top: 17px; }
-  .cv-agent-document .experience-heading, .cv-agent-document .education { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .cv-agent-document .experience-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
   .cv-agent-document .period { flex-shrink: 0; color: #647080; font-size: 12px; font-variant-numeric: tabular-nums; }
   .cv-agent-document .experience > p, .cv-agent-document .architecture > p, .cv-agent-document .research > p { margin-top: 6px; }
   .cv-agent-document .project-list { margin-top: 10px; padding-left: 14px; border-left: 2px solid #e5e9ed; }
@@ -162,7 +157,6 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
   .cv-agent-document .sources a { display: inline-flex; min-height: 32px; align-items: center; }
   .cv-agent-document .skills { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
   .cv-agent-document .skills dd { color: #556373; font-size: 13px; }
-  .cv-agent-document .education + .education { margin-top: 6px; }
   @media (max-width: 700px) {
     .cv-agent-document .cv-agent-page { margin: 0; padding: 26px 22px 36px; border: 0; border-radius: 0; box-shadow: none; }
     .cv-agent-document .identity { display: block; }
@@ -171,7 +165,7 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
     .cv-agent-document .contact-links { justify-content: flex-start; }
     .cv-agent-document .utilities { justify-content: flex-end; }
     .cv-agent-document .metrics { grid-template-columns: 1fr 1fr; gap: 14px; }
-    .cv-agent-document .experience-heading, .cv-agent-document .education { display: block; }
+    .cv-agent-document .experience-heading { display: block; }
     .cv-agent-document .period { margin-top: 3px; }
     .cv-agent-document .skills { grid-template-columns: 1fr; }
     .cv-agent-document .sources a { min-height: 44px; }
@@ -196,11 +190,11 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
     .cv-agent-document .metrics dt { font-size: 7.5pt; }
     .cv-agent-document .metrics dd { font-size: 8pt; }
     .cv-agent-document .experience { margin-top: 9px; }
-    .cv-agent-document .experience-heading, .cv-agent-document .education { display: flex; break-after: avoid; }
+    .cv-agent-document .experience-heading { display: flex; break-after: avoid; }
     .cv-agent-document .project-list { margin-top: 7px; }
     .cv-agent-document .project-list dt, .cv-agent-document .skills dt { font-size: 9pt; }
     .cv-agent-document .project-list > div + div { margin-top: 4px; }
-    .cv-agent-document .project-list > div, .cv-agent-document .research, .cv-agent-document .education, .cv-agent-document .skills > div { break-inside: avoid; }
+    .cv-agent-document .project-list > div, .cv-agent-document .research, .cv-agent-document .skills > div { break-inside: avoid; }
     .cv-agent-document .architecture { break-before: page; margin-top: 0; }
     .cv-agent-document .stage, .cv-agent-document .sources { font-size: 8pt; }
     .cv-agent-document .sources a { min-height: 0; }
