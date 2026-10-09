@@ -30,6 +30,9 @@ for (const locale of ["zh", "en"]) {
   assert.ok(!html.includes("dossierkit:page-ref"), "Unlisted CV must not enter the public view manifest");
   assert.ok(!/<nav\b/i.test(html), "No global site navigation on the sharing CV");
   assert.ok(!/待补|后续补|当前短板|to be filled|not a demo/i.test(html));
+  assert.match(html, /data-claim-status="implemented"/);
+  assert.match(html, /data-claim-status="designed"/);
+  assert.match(html, /class="contact-data"/);
   assert.match(html, new RegExp(`href="/${locale === "zh" ? "en" : "zh"}/cv-agent/"`));
   for (const match of html.matchAll(/href="([^"#]+)"/g)) {
     const url = new URL(match[1].replaceAll("&amp;", "&"), "https://cv.invalid/");

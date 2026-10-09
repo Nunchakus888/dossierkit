@@ -8,6 +8,7 @@ import type { ContentEntry, ProfilePack } from "./profile-loader";
 
 const localized = localizedStringSchema;
 const project = z.object({ title: localized, summary: localized }).strict();
+const architecturePoint = project.extend({ status: z.enum(["implemented", "designed"]) });
 const reference = z.object({
   noteRef: z.string().regex(/^(zh|en)\/[a-z0-9]+(?:-[a-z0-9]+)*$/),
   label: localized
@@ -22,13 +23,13 @@ export const cvAgentSchema = z.object({
   experiences: z.array(z.object({
     sourceCompany: z.string().min(1),
     summary: localized,
-    projects: z.array(project).max(4).default([])
+    projects: z.array(project).max(5).default([])
   }).strict()).min(1),
   architecture: z.object({
     title: localized,
     stage: localized,
     summary: localized,
-    points: z.array(project).min(1).max(4)
+    points: z.array(architecturePoint).min(1).max(4)
   }).strict(),
   research: z.array(z.object({
     title: localized,

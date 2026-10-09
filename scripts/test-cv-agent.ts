@@ -28,6 +28,7 @@ if (!config) {
   }
   assert.equal(JSON.stringify(pack), before, "Variant must not mutate the legacy ProfilePack");
   assert.equal(cvAgentSchema.safeParse({ ...config, experiences: [...config.experiences, config.experiences[0]] }).success, false);
+  assert.equal(cvAgentSchema.safeParse({ ...config, architecture: { ...config.architecture, points: [{ ...config.architecture.points[0], status: "unknown" }, ...config.architecture.points.slice(1)] } }).success, false);
   assert.throws(() => buildCvAgentView(pack, { ...config, experiences: [{ ...config.experiences[0], sourceCompany: "missing-company" }] }, notes, "zh"), /expected one experience/);
   assert.throws(() => buildCvAgentView(pack, config, [], "zh"), /unresolved note/);
   assert.throws(() => agentPdfPath("../../legacy", "zh"), /Unsafe/);

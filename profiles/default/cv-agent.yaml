@@ -19,6 +19,12 @@ experiences:
           zh: "主导业务从规则编排演进为 LLM 驱动，将意图路由、SOP、知识、工具和人工转接沉淀为租户可配置能力，客户问题自动解决率达到 70%+。"
           en: "Led the transition from rule flows to LLM-driven execution, making routing, SOPs, knowledge, tools, and handoff tenant-configurable; reached 70%+ customer-issue auto-resolution."
       - title:
+          zh: "Cowork：持续任务与成果交付"
+          en: "Cowork: persistent tasks and deliverable work"
+        summary:
+          zh: "将跨系统处理与人工交接设计为持续任务：用户可跟进进度、批准关键操作并取得成果；Web/嵌入工作台与外部 API 共用任务服务。"
+          en: "Designed Cowork around persistent cross-system tasks: users track progress, approve critical actions, and receive artifacts through a shared Web, embedded, and API task service."
+      - title:
           zh: "复杂对话的响应与成本优化"
           en: "Faster, lower-cost handling of complex conversations"
         summary:
@@ -66,27 +72,31 @@ architecture:
     - title:
         zh: "长任务可靠执行"
         en: "Reliable long-running tasks"
+      status: implemented
       summary:
         zh: "实现 Session/Run/Attempt/Operation 状态机、Actor 幂等、SSE 重放与 Pi 检查点；重启后对账，结果不明的外部操作不盲目重试。"
         en: "Built a Session/Run/Attempt/Operation state machine with actor-scoped idempotency, replayable SSE events, and Pi checkpoints; reconciled restarts without blindly retrying uncertain external operations."
     - title:
         zh: "按需隔离执行与人机授权"
         en: "On-demand isolation and human authorization"
+      status: implemented
       summary:
         zh: "仅在需要网页或文件操作时创建 Sandbox，实现容量控制、Workspace 快照和成果校验下载；审批绑定具体工具请求，Web/Actor 与租户资源分别鉴权。"
         en: "Provisioned Sandbox only for browser or file work, with capacity control, workspace snapshots, and verified artifact downloads; bound approval to exact tool requests and enforced Web, actor, and tenant boundaries."
     - title:
         zh: "自配置与连接治理"
         en: "Self-configuration and connection governance"
+      status: implemented
       summary:
         zh: "实现分层配置、任务级能力快照和按需验真 Skill；对接 CP/OC 的连接与授权，分离任务身份、业务权限和 Provider 凭证。"
         en: "Implemented layered configuration, per-run capability snapshots, and verified on-demand Skills; integrated CP/OC connections and grants while separating task identity, business permissions, and Provider credentials."
     - title:
-        zh: "多入口与团队协作设计"
-        en: "Multi-entry and team collaboration design"
+        zh: "多入口与团队协作"
+        en: "Multi-entry and team collaboration"
+      status: designed
       summary:
-        zh: "Web/嵌入工作台与外部 API 共用任务内核；设计 CLI、Channel、其他 Agent 接入和对外 Cowork MCP 服务，以及群聊 @Agent 的逐角色授权与结果回送。"
-        en: "Unified the Web/embedded workbench and external API around one task core; designed CLI, channel, other-Agent and inbound Cowork MCP adapters, plus role-scoped authorization and result delivery for group-chat @Agent tasks."
+        zh: "为 CLI、消息渠道及其他 Agent 定义共享 Session/Run 的接入契约和对外 Cowork MCP 服务；设计群聊 @Agent 的逐角色授权、跨职责任务推进与结果回送。"
+        en: "Defined a shared Session/Run integration contract and inbound Cowork MCP service for CLI, channels, and other Agents; designed role-scoped authorization, cross-functional task execution, and result delivery for group-chat @Agent tasks."
 research:
   - title:
       zh: "长任务的可靠执行与故障恢复"
