@@ -2,9 +2,13 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
+import { parse as parseYaml } from "yaml";
 
 const root = path.resolve("dist");
-const enabled = fs.existsSync(path.join("profiles", process.env.ACTIVE_PROFILE || "default", "cv-agent.yaml"));
+const profileRoot = path.join("profiles", process.env.ACTIVE_PROFILE || "default");
+const enabled = fs.existsSync(path.join(profileRoot, "cv-agent.yaml"));
+const cvConfig = enabled ? parseYaml(fs.readFileSync(path.join(profileRoot, "cv-agent.yaml"), "utf8")) : null;
+const oldPdfStem = enabled ? parseYaml(fs.readFileSync(path.join(profileRoot, "resume.yaml"), "utf8")).filename : null;
 const requirePdf = process.argv.includes("--require-pdf");
 const isAgentPath = (pathname) => /^\/(zh|en)\/cv-agent(?:\/|$)/.test(pathname) || pathname.startsWith("/resumes/cv-agent/");
 const files = [];
@@ -32,7 +36,7 @@ for (const locale of ["zh", "en"]) {
     if (url.origin !== "https://cv.invalid") continue;
     if (url.pathname.endsWith(".pdf")) {
       if (requirePdf) {
-        const pdf = fs.readFileSync(path.join(root, url.pathname.slice(1)));
+        const pdf = fs.readFileSync(path.join(root, decodeURIComponent(url.pathname.slice(1))));
         assert.equal(pdf.subarray(0, 5).toString(), "%PDF-");
       }
       continue;
@@ -40,7 +44,16 @@ for (const locale of ["zh", "en"]) {
     const target = path.join(root, url.pathname.slice(1));
     assert.ok(fs.existsSync(target), `Broken local link: ${url.pathname}`);
   }
-  if (requirePdf) assert.match(html, /href="\/resumes\/cv-agent\/[^"]+\.pdf"/);
+  for (const kind of ["email", "github", "online"]) {
+    assert.match(html, new RegExp(`data-cv-contact="${kind}"`), `Missing ${kind} link in CV`);
+  }
+  if (requirePdf) {
+    assert.match(html, /href="\/resumes\/cv-agent\/[^"]+\.pdf"/);
+    const expectedName = `${cvConfig.pdfFilenameBase || oldPdfStem}-${locale}.pdf`;
+    assert.ok(html.includes(`download="${expectedName}"`), `Wrong PDF download filename: ${expectedName}`);
+    const previous = path.join(root, "resumes", "cv-agent", `${oldPdfStem}-${locale}.pdf`);
+    assert.ok(fs.existsSync(previous), `Previously shared Agent CV PDF path missing: ${previous}`);
+  }
   const legacy = fs.readFileSync(path.join(root, locale, "cv/index.html"), "utf8");
   assert.ok(!legacy.includes("cv-agent"), "Legacy CV must have no Agent CV entry point");
 }

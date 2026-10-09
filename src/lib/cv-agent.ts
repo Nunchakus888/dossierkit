@@ -17,6 +17,8 @@ const reference = z.object({
 export const cvAgentSchema = z.object({
   focus: localized,
   summary: localized,
+  // Opt-in display filename, independent of the legacy resume export name.
+  pdfFilenameBase: z.string().min(1).max(100).optional(),
   experiences: z.array(z.object({
     sourceCompany: z.string().min(1),
     summary: localized,
@@ -59,9 +61,16 @@ export function readCvAgentConfig(root: string): CvAgentConfig | null {
   return result.data;
 }
 
-export function agentPdfPath(filename: string, locale: Locale): string {
-  if (!/^[a-zA-Z0-9_-]+$/.test(filename)) throw new Error("Unsafe CV PDF filename");
-  return `/resumes/cv-agent/${filename}-${locale}.pdf`;
+export function agentPdfFileName(filenameBase: string, locale: Locale): string {
+  const base = filenameBase.normalize("NFC").trim();
+  if (base.length > 100 || !/^[\p{L}\p{N}][\p{L}\p{N} ._-]*$/u.test(base) || base.includes("..") || base.endsWith(".")) {
+    throw new Error("Unsafe CV PDF filename");
+  }
+  return `${base}-${locale}.pdf`;
+}
+
+export function agentPdfPath(filenameBase: string, locale: Locale): string {
+  return `/resumes/cv-agent/${encodeURIComponent(agentPdfFileName(filenameBase, locale))}`;
 }
 
 export function buildCvAgentView(pack: ProfilePack, config: CvAgentConfig, notes: ContentEntry[], locale: Locale) {
@@ -86,7 +95,12 @@ export function buildCvAgentView(pack: ProfilePack, config: CvAgentConfig, notes
       return { ...reference, href: `/${selected.locale}/notes/${selected.slug}/`, sourceLocale: selected.locale };
     })
   }));
-  return { ...config, experiences, research, pdfHref: agentPdfPath(pack.resume.filename, locale) };
+  const pdfBase = config.pdfFilenameBase || pack.resume.filename;
+  return {
+    ...config, experiences, research,
+    pdfHref: agentPdfPath(pdfBase, locale),
+    pdfDownloadFilename: agentPdfFileName(pdfBase, locale)
+  };
 }
 
 export type CvAgentView = ReturnType<typeof buildCvAgentView>;

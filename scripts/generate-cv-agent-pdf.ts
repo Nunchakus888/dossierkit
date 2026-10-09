@@ -5,12 +5,14 @@ import assert from "node:assert/strict";
 import { chromium } from "playwright";
 import { locales } from "../src/lib/config";
 import { loadProfilePack } from "../src/lib/profile-loader";
-import { agentPdfPath, readCvAgentConfig } from "../src/lib/cv-agent";
+import { agentPdfFileName, agentPdfPath, readCvAgentConfig } from "../src/lib/cv-agent";
 
 // Explicitly consumes an existing build and only writes the cv-agent namespace.
 async function main() {
   const pack = loadProfilePack();
-  if (!readCvAgentConfig(pack.root)) return;
+  const config = readCvAgentConfig(pack.root);
+  if (!config) return;
+  const pdfBase = config.pdfFilenameBase || pack.resume.filename;
   const root = path.resolve("dist");
   const artifacts = path.resolve("artifacts/cv-agent");
   for (const locale of locales) {
@@ -31,7 +33,7 @@ async function main() {
   });
   await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
   let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
-  const receipt: Array<{ locale: string; path: string; pages: number; widths: number[]; links: string[] }> = [];
+  const receipt: Array<{ locale: string; path: string; fileName: string; previousPath: string; pages: number; widths: number[]; links: string[] }> = [];
   try {
     browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {});
     const address = server.address();
@@ -62,16 +64,40 @@ async function main() {
       });
       assert.ok(links.every((href) => !/^https?:\/\/(?:127\.0\.0\.1|localhost|\[::1\])(?::|\/)/.test(href)), "PDF contains local build references");
       await page.emulateMedia({ media: "print" });
-      const pdfPath = agentPdfPath(pack.resume.filename, locale);
-      const output = path.join(root, pdfPath.slice(1));
+      const contactTypes = ["email", ...(pack.profile.links.github ? ["github"] : []), "online"];
+      for (const kind of contactTypes) {
+        const anchor = page.locator(`a[data-cv-contact="${kind}"]`);
+        assert.equal(await anchor.count(), 1, `Printable ${kind} link is missing`);
+        assert.ok(await anchor.evaluate((element) => getComputedStyle(element).display !== "none"), `${kind} contact link is hidden in print`);
+        assert.equal(await anchor.locator("svg").count(), 1, `${kind} contact icon is missing`);
+      }
+      const pdfPath = agentPdfPath(pdfBase, locale);
+      const output = path.join(root, decodeURIComponent(pdfPath.slice(1)));
       fs.mkdirSync(path.dirname(output), { recursive: true });
       const buffer = await page.pdf({ path: output, format: "A4", printBackground: true, preferCSSPageSize: true });
       const pdfText = buffer.toString("latin1");
       const pages = (pdfText.match(/\/Type\s*\/Page\b/g) || []).length;
       assert.equal(pages, 2, `${locale} Agent CV should fit two A4 pages; found ${pages}`);
       assert.ok(!/\/URI\s*\(https?:\/\/(?:127\.0\.0\.1|localhost)/.test(pdfText), "PDF annotation exposes the temporary build server");
-      fs.copyFileSync(output, path.join(artifacts, `${pack.resume.filename}-agent-${locale}.pdf`));
-      receipt.push({ locale, path: pdfPath, pages, widths, links });
+      const contactDestinations = [
+        `mailto:${pack.profile.links.email}`,
+        ...(pack.profile.links.github ? [pack.profile.links.github] : []),
+        new URL(`/${locale}/cv-agent/`, process.env.PUBLIC_SITE_URL || "https://sunionpeaks.pages.dev").href
+      ];
+      for (const destination of contactDestinations) {
+        assert.ok(links.includes(destination), `PDF HTML does not link to ${destination}`);
+        assert.ok(pdfText.includes(`/URI (${destination})`), `PDF annotation is missing: ${destination}`);
+      }
+      // Previously shared URLs continue working; the new download uses the complete descriptive name.
+      const previousPath = agentPdfPath(pack.resume.filename, locale);
+      if (previousPath !== pdfPath) {
+        const alias = path.join(root, decodeURIComponent(previousPath.slice(1)));
+        fs.mkdirSync(path.dirname(alias), { recursive: true });
+        fs.copyFileSync(output, alias);
+      }
+      const fileName = agentPdfFileName(pdfBase, locale);
+      fs.copyFileSync(output, path.join(artifacts, fileName));
+      receipt.push({ locale, path: pdfPath, fileName, previousPath, pages, widths, links });
       await page.close();
     }
     fs.writeFileSync(path.join(artifacts, "receipt.json"), JSON.stringify(receipt, null, 2) + "\n");
