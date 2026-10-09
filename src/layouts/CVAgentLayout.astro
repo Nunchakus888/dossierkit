@@ -15,8 +15,6 @@ const name = text(pack.profile.name);
 const title = `${name} — ${text(pack.profile.headline)}`;
 const canonical = new URL(`/${locale}/cv-agent/`, Astro.site || Astro.url.origin).href;
 const alternate = `/${zh ? "en" : "zh"}/cv-agent/`;
-const onlineCvLabel = new URL(canonical).host + new URL(canonical).pathname;
-const githubLabel = pack.profile.links.github.replace(/^https?:\/\//, "").replace(/\/$/, "");
 const pdfEnabled = process.env.CV_AGENT_PDF === "1";
 const sourceLanguage = (language: Locale) => language === locale ? "" : language === "zh" ? " · 中文" : " · English";
 ---
@@ -48,15 +46,15 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
           <p class="headline">{text(pack.profile.headline)}</p>
         </div>
         <div class="contact">
-          <div class="contact-links" aria-label={zh ? "联系方式与在线简历" : "Contact and online CV"}>
-            <a class="contact-link" data-cv-contact="email" href={`mailto:${pack.profile.links.email}`} title={zh ? "发送邮件" : "Send email"}>
-              <Icon name="mail" size={14} /><span>{pack.profile.links.email}</span>
+          <div class="contact-links" role="group" aria-label={zh ? "联系与在线简历" : "Contact and online CV"}>
+            <a class="contact-link" data-cv-contact="email" href={`mailto:${pack.profile.links.email}`} aria-label={zh ? "发送邮件" : "Send email"} title={zh ? "发送邮件" : "Send email"}>
+              <Icon name="mail" size={18} />
             </a>
-            {pack.profile.links.github && <a class="contact-link" data-cv-contact="github" href={pack.profile.links.github} target="_blank" rel="noreferrer noopener" title="GitHub">
-              <Icon name="github" size={14} /><span>{githubLabel}</span>
+            {pack.profile.links.github && <a class="contact-link" data-cv-contact="github" href={pack.profile.links.github} target="_blank" rel="noreferrer noopener" aria-label="GitHub" title="GitHub">
+              <Icon name="github" size={18} />
             </a>}
-            <a class="contact-link" data-cv-contact="online" href={canonical} target="_blank" rel="noreferrer noopener" title={zh ? "打开在线 CV" : "Open online CV"}>
-              <Icon name="link" size={14} /><span>{zh ? "在线 CV" : "Online CV"} · {onlineCvLabel}</span>
+            <a class="contact-link" data-cv-contact="online" href={canonical} target="_blank" rel="noreferrer noopener" aria-label={zh ? "在线简历" : "Online CV"} title={zh ? "在线简历" : "Online CV"}>
+              <Icon name="globe" size={18} />
             </a>
           </div>
           <p>{text(pack.profile.location)} · {pack.profile.yearsOfExperience} {zh ? "年经验" : "years of experience"}</p>
@@ -135,10 +133,10 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
   .cv-agent-document .headline { margin-top: 8px; font-size: 19px; font-weight: 650; }
   .cv-agent-document .contact { flex-shrink: 0; text-align: right; font-size: 13px; color: #556373; }
   .cv-agent-document .contact > p { margin-top: 4px; }
-  .cv-agent-document .contact-links { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
-  .cv-agent-document .contact-link { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; white-space: nowrap; }
+  .cv-agent-document .contact-links { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
+  .cv-agent-document .contact-link { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: 8px; color: #556373; text-decoration: none; }
   .cv-agent-document .contact-link svg { flex: none; }
-  .cv-agent-document .contact-link:hover span { text-decoration: underline; text-underline-offset: 3px; }
+  .cv-agent-document .contact-link:hover { background: #f1f3f5; color: #25313d; }
   .cv-agent-document .utilities { display: flex; gap: 3px; justify-content: flex-end; margin-top: 5px; }
   .cv-agent-document .icon-action { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 0; border-radius: 7px; background: transparent; color: #556373; cursor: pointer; text-decoration: none; }
   .cv-agent-document .icon-action:hover { background: #f1f3f5; color: #25313d; }
@@ -169,8 +167,7 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
     .cv-agent-document .identity { display: block; }
     .cv-agent-document h1 { font-size: 32px; }
     .cv-agent-document .contact { margin-top: 14px; text-align: left; }
-    .cv-agent-document .contact-links { align-items: flex-start; }
-    .cv-agent-document .contact-link { white-space: normal; overflow-wrap: anywhere; }
+    .cv-agent-document .contact-links { justify-content: flex-start; }
     .cv-agent-document .utilities { justify-content: flex-end; }
     .cv-agent-document .metrics { grid-template-columns: 1fr 1fr; gap: 14px; }
     .cv-agent-document .experience-heading, .cv-agent-document .education { display: block; }
@@ -188,9 +185,9 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
     .cv-agent-document .headline { font-size: 13pt; }
     .cv-agent-document .contact, .cv-agent-document .period { font-size: 8pt; }
     .cv-agent-document .contact { text-align: right; }
-    .cv-agent-document .contact-links { gap: 1px; }
-    .cv-agent-document .contact-link { font-size: 7.7pt; }
-    .cv-agent-document .contact-link svg { width: 11px; height: 11px; }
+    .cv-agent-document .contact-links { gap: 6px; }
+    .cv-agent-document .contact-link { width: 22px; height: 22px; border-radius: 0; }
+    .cv-agent-document .contact-link svg { width: 16px; height: 16px; }
     .cv-agent-document section { margin-top: 15px; }
     .cv-agent-document h2 { font-size: 10pt; margin-bottom: 8px; padding-bottom: 4px; break-after: avoid; }
     .cv-agent-document h3 { font-size: 9.5pt; break-after: avoid; }
