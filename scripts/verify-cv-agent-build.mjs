@@ -32,12 +32,13 @@ for (const locale of ["zh", "en"]) {
   assert.ok(!/待补|后续补|当前短板|to be filled|not a demo/i.test(html));
   assert.match(html, /data-claim-status="implemented"/);
   assert.match(html, /data-claim-status="designed"/);
-  assert.match(html, /class="contact-data"/);
+  assert.ok(!html.includes('class="contact-data"'));
+  assert.ok(!html.includes('class="claim-status"'));
   assert.match(html, new RegExp(`<link\\s+rel="alternate"\\s+type="text/plain"\\s+href="/${locale}/cv-agent\\.txt"`));
   const plainText = fs.readFileSync(path.join(root, locale, "cv-agent.txt"), "utf8");
   assert.ok(plainText.includes(`Email: ${parseYaml(fs.readFileSync(path.join(profileRoot, "profile.yaml"), "utf8")).links.email}`));
-  assert.ok(plainText.includes(locale === "zh" ? "[已实现]" : "[Implemented]"));
-  assert.ok(plainText.includes(locale === "zh" ? "[设计方向]" : "[Designed]"));
+  assert.ok(!plainText.includes(locale === "zh" ? "[已实现]" : "[Implemented]"));
+  assert.ok(!plainText.includes(locale === "zh" ? "[设计方向]" : "[Designed]"));
   assert.match(html, new RegExp(`href="/${locale === "zh" ? "en" : "zh"}/cv-agent/"`));
   for (const match of html.matchAll(/href="([^"#]+)"/g)) {
     const url = new URL(match[1].replaceAll("&amp;", "&"), "https://cv.invalid/");

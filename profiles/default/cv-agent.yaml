@@ -95,8 +95,8 @@ architecture:
         en: "Multi-entry and team collaboration"
       status: designed
       summary:
-        zh: "为 CLI、消息渠道及其他 Agent 定义共享 Session/Run 的接入契约和对外 Cowork MCP 服务；设计群聊 @Agent 的逐角色授权、跨职责任务推进与结果回送。"
-        en: "Defined a shared Session/Run integration contract and inbound Cowork MCP service for CLI, channels, and other Agents; designed role-scoped authorization, cross-functional task execution, and result delivery for group-chat @Agent tasks."
+        zh: "规划 CLI、消息渠道及其他 Agent 共用 Session/Run 的接入契约和对外 Cowork MCP 服务；设计群聊 @Agent 的逐角色授权、跨职责任务推进与结果回送。"
+        en: "Designed a shared Session/Run integration contract and inbound Cowork MCP service for CLI, channels, and other Agents, plus role-scoped authorization and result delivery for group-chat @Agent tasks."
 research:
   - title:
       zh: "长任务的可靠执行与故障恢复"

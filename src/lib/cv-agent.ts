@@ -130,8 +130,7 @@ export function renderCvAgentPlainText(pack: ProfilePack, view: CvAgentView, loc
   }
   lines.push("", zh ? "架构实践" : "Architecture Practice", `${text(view.architecture.title)} | ${text(view.architecture.stage)}`, text(view.architecture.summary));
   for (const point of view.architecture.points) {
-    const status = point.status === "implemented" ? (zh ? "已实现" : "Implemented") : (zh ? "设计方向" : "Designed");
-    lines.push(`- [${status}] ${text(point.title)}: ${text(point.summary)}`);
+    lines.push(`- ${text(point.title)}: ${text(point.summary)}`);
   }
   if (view.research.length) lines.push("", zh ? "技术研究" : "Selected Technical Research");
   for (const item of view.research) {

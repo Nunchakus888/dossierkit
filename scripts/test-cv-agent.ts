@@ -27,8 +27,8 @@ if (!config) {
     assert.ok(view.research.every((item) => item.sources.every((source) => notes.some((note) => source.href === `/${note.locale}/notes/${note.slug}/`))));
     const plainText = renderCvAgentPlainText(pack, view, locale, "https://cv.example/");
     assert.ok(plainText.includes(`Email: ${pack.profile.links.email}`));
-    assert.ok(plainText.includes(locale === "zh" ? "[已实现]" : "[Implemented]"));
-    assert.ok(plainText.includes(locale === "zh" ? "[设计方向]" : "[Designed]"));
+    assert.ok(!plainText.includes(locale === "zh" ? "[已实现]" : "[Implemented]"));
+    assert.ok(!plainText.includes(locale === "zh" ? "[设计方向]" : "[Designed]"));
     assert.ok(plainText.includes("https://cv.example/zh/notes/"));
   }
   assert.equal(JSON.stringify(pack), before, "Variant must not mutate the legacy ProfilePack");
