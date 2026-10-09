@@ -33,7 +33,7 @@ async function main() {
   });
   await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(0, "127.0.0.1", resolve); });
   let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
-  const receipt: Array<{ locale: string; path: string; pages: number; widths: number[]; links: string[] }> = [];
+  const receipt: Array<{ locale: string; path: string; fileName: string; previousPath: string; pages: number; widths: number[]; links: string[] }> = [];
   try {
     browser = await chromium.launch(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {});
     const address = server.address();
