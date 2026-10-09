@@ -34,8 +34,8 @@ if (!config) {
   assert.throws(() => agentPdfPath("oops\\bad", "en"), /Unsafe/);
   assert.throws(() => agentPdfPath("..", "zh"), /Unsafe/);
   if (config.pdfFilenameBase) {
-    assert.equal(agentPdfFileName(config.pdfFilenameBase, "zh"), "George-AI Agent开发专家-zh.pdf");
-    assert.equal(agentPdfFileName(config.pdfFilenameBase, "en"), "George-AI Agent开发专家-en.pdf");
+    assert.equal(agentPdfFileName(config.pdfFilenameBase, "zh"), `${config.pdfFilenameBase}-zh.pdf`);
+    assert.equal(agentPdfFileName(config.pdfFilenameBase, "en"), `${config.pdfFilenameBase}-en.pdf`);
   }
   const onlyChinese = notes.filter((note) => note.locale === "zh");
   if (config.research.every((item) => item.sources.every((source) => source.noteRef.startsWith("zh/")))) {
