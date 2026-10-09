@@ -70,6 +70,10 @@ async function main() {
         assert.equal(await anchor.count(), 1, `Printable ${kind} link is missing`);
         assert.ok(await anchor.evaluate((element) => getComputedStyle(element).display !== "none"), `${kind} contact link is hidden in print`);
         assert.equal(await anchor.locator("svg").count(), 1, `${kind} contact icon is missing`);
+        assert.equal((await anchor.textContent())?.trim(), "", `${kind} should display an icon only`);
+        assert.ok((await anchor.getAttribute("aria-label"))?.trim(), `${kind} needs an accessible label`);
+        const bounds = await anchor.boundingBox();
+        assert.ok(bounds && bounds.width >= 20 && bounds.height >= 20, `${kind} PDF clickable area is too small`);
       }
       const pdfPath = agentPdfPath(pdfBase, locale);
       const output = path.join(root, decodeURIComponent(pdfPath.slice(1)));
