@@ -64,7 +64,7 @@ async function main() {
             colorMatch: sloganStyle.color === headingStyle.color,
             sizeRatio: parseFloat(sloganStyle.fontSize) / parseFloat(headingStyle.fontSize),
             transform: sloganStyle.transform,
-            statsAligned: count ? Math.abs(count.getBoundingClientRect().right - identity.right) <= 1 : true
+            statsAligned: count && !count.hidden ? Math.abs(count.getBoundingClientRect().right - identity.right) <= 1 : true
           };
         });
         assert.ok(signature.headingLeftDelta <= 1, `CV heading not flush-left: ${locale} ${width}px`);
