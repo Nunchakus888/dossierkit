@@ -109,6 +109,14 @@ async function main() {
       });
       assert.ok(links.every((href) => !/^https?:\/\/(?:127\.0\.0\.1|localhost|\[::1\])(?::|\/)/.test(href)), "PDF contains local build references");
       await page.emulateMedia({ media: "print" });
+      const footer = page.locator("footer[data-cv-signature]");
+      assert.equal(await footer.count(), 1, `Missing signature: ${locale}`);
+      assert.match(await footer.innerText(), /Flux to Everything/);
+      assert.equal(await footer.evaluate((el) => getComputedStyle(el).display !== "none"), true, `Signature hidden in PDF: ${locale}`);
+      const stats = footer.locator(".cv-agent-signature-stats");
+      if (await stats.count()) {
+        assert.equal(await stats.evaluate((el) => getComputedStyle(el).display), "none", `Web-only view stats visible in PDF: ${locale}`);
+      }
       const contactTypes = ["email", ...(pack.profile.links.github ? ["github"] : []), "online"];
       for (const kind of contactTypes) {
         const anchor = page.locator(`a[data-cv-contact="${kind}"]`);
