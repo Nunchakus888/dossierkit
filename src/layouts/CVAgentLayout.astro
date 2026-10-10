@@ -2,6 +2,9 @@
 import IconAction from "../components/common/IconAction.astro";
 import Icon from "../components/common/Icon.astro";
 import SiteIcons from "../components/seo/SiteIcons.astro";
+import CVSignatureFooter from "../components/layout/CVSignatureFooter.astro";
+import ViewCounterClient from "../components/views/ViewCounterClient.astro";
+import { viewsEnabled } from "../lib/view-counter/config";
 import { localize } from "../lib/i18n";
 import type { Locale } from "../lib/config";
 import type { ProfilePack } from "../lib/profile-loader";
@@ -115,7 +118,9 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
         <h2 id="education-heading">{zh ? "教育" : "Education"}</h2>
         <div class="education"><p><strong>{text(view.education.school)}</strong> · {text(view.education.degree)}</p><p class="period">{view.education.period}</p></div>
       </section>}
+      <CVSignatureFooter tagline={text(view.signatureTagline || pack.navigation.footer?.tagline || { zh: "Flux to Everything", en: "Flux to Everything" })} pageRef={`page:/${locale}/cv-agent`} />
     </main>
+    {viewsEnabled && <ViewCounterClient />}
   </body>
 </html>
 
