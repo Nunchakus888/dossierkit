@@ -105,7 +105,7 @@ async function main() {
         assert.equal(footerLine.webText, 'The Emergence of Everything', `Web tagline must match main site: ${locale}`);
         assert.ok(footerLine.webVisible && footerLine.printHidden, `Wrong web/print slogan visibility: ${locale}`);
         assert.ok(footerLine.countLeft && footerLine.oneLine && footerLine.noWrap && footerLine.noOverflow && footerLine.rightAligned,
-          `Web footer eye+slogan must be a single right-aligned row: ${locale} ${width}px`);
+          `Web footer eye+slogan must be a single right-aligned row: ${locale} ${width}px; ${JSON.stringify(footerLine)}`);
         // Artwork should align with the content edge while its invisible hit area remains 44px.
         const chrome = await page.evaluate(() => {
           const identity = document.querySelector<HTMLElement>(".identity")!.getBoundingClientRect();
