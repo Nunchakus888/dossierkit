@@ -94,6 +94,7 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
         ))}
       </section>
 
+      <div class="cv-agent-print-page-2">
       <section class="architecture" aria-labelledby="architecture-heading">
         <h2 id="architecture-heading">{zh ? "架构实践" : "Architecture Practice"}</h2>
         <div class="architecture-heading"><h3>{text(view.architecture.title)}</h3><p class="stage">{text(view.architecture.stage)}</p></div>
@@ -118,7 +119,8 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
         <h2 id="education-heading">{zh ? "教育" : "Education"}</h2>
         <div class="education"><p><strong>{text(view.education.school)}</strong> · {text(view.education.degree)}</p><p class="period">{view.education.period}</p></div>
       </section>}
-      <CVSignatureFooter tagline={text(view.signatureTagline || { zh: "Flux to Everything", en: "Flux to Everything" })} webTagline={text(pack.navigation.footer?.tagline || view.signatureTagline || { zh: "Flux to Everything", en: "Flux to Everything" })} pageRef={`page:/${locale}/cv-agent`} />
+      <CVSignatureFooter tagline={text(pack.navigation.footer?.tagline || { zh: "The Emergence of Everything", en: "The Emergence of Everything" })} pageRef={`page:/${locale}/cv-agent`} />
+      </div>
     </main>
     {viewsEnabled && <ViewCounterClient />}
   </body>
@@ -176,6 +178,7 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
   }
   .cv-agent-document .contact-link:focus-visible,
   .cv-agent-document .icon-action:focus-visible { outline-color: #647080; }
+  .cv-agent-document .cv-agent-print-page-2 { display: contents; }
   .cv-agent-document section { margin-top: 24px; }
   .cv-agent-document h2 { margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #e2e5e9; font-size: 15px; font-weight: 750; letter-spacing: .02em; }
   .cv-agent-document h3 { font-size: 14px; font-weight: 700; }
@@ -238,7 +241,18 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
     .cv-agent-document .project-list dt, .cv-agent-document .skills dt { font-size: 9pt; }
     .cv-agent-document .project-list > div + div { margin-top: 4px; }
     .cv-agent-document .project-list > div, .cv-agent-document .research, .cv-agent-document .education, .cv-agent-document .skills > div { break-inside: avoid; }
-    .cv-agent-document .architecture { break-before: page; margin-top: 0; }
+    /* One fixed-height printable second-page frame: the flexible footer spacer
+       pins the signature to its bottom without repeating it on page one. */
+    .cv-agent-document .cv-agent-print-page-2 {
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      height: 266mm;
+      break-before: page;
+      break-inside: avoid;
+    }
+    .cv-agent-document .cv-agent-print-page-2 > .architecture { break-before: auto; margin-top: 0; }
+    .cv-agent-document .cv-agent-print-page-2 > .cv-agent-signature-footer { margin-top: auto; }
     .cv-agent-document .stage, .cv-agent-document .sources { font-size: 8pt; }
     .cv-agent-document .sources a { min-height: 0; }
     .cv-agent-document .skills { grid-template-columns: 1fr 1fr; gap: 9px 20px; }
