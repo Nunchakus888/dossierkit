@@ -54,12 +54,33 @@ try {
       await page.goto(`${base}/${locale}/cv-agent/`);
       const signature = page.locator('footer[data-cv-signature]');
       assert.equal(await signature.count(), 1);
-      assert.match(await signature.innerText(), /Flux to Everything/);
+      assert.equal(await signature.locator('.cv-agent-signature-web').innerText(), 'The Emergence of Everything');
+      assert.equal(await signature.locator('.cv-agent-signature-print').isVisible(), false);
       const widget = signature.locator('[data-view-count]');
       await widget.waitFor({ state: 'visible' });
       assert.equal(await widget.getAttribute('data-view-count'), `page:/${locale}/cv-agent`);
       assert.equal(await widget.locator('[data-view-number]').innerText(), '36');
       assert.equal(await widget.locator('[data-view-total-number]').count(), 0);
+      // A realistic longer count must stay on the LEFT of the web-only slogan, on the same line.
+      const line = await signature.evaluate((footer) => {
+        const row = footer.querySelector('.cv-agent-signature-row');
+        const count = footer.querySelector('.view-count');
+        const slogan = footer.querySelector('.cv-agent-signature-line');
+        const number = count.querySelector('[data-view-number]');
+        const previous = number.textContent;
+        number.textContent = '123,456';
+        const a = count.getBoundingClientRect(), b = slogan.getBoundingClientRect(), outer = row.getBoundingClientRect();
+        const state = {
+          leftToRight: a.right + 4 <= b.left,
+          onSameLine: Math.abs((a.top + a.bottom) / 2 - (b.top + b.bottom) / 2) <= 3,
+          noWrap: getComputedStyle(row).flexWrap === 'nowrap' && getComputedStyle(slogan).whiteSpace === 'nowrap',
+          fits: row.scrollWidth <= row.clientWidth + 1,
+          rightAligned: Math.abs(b.right - outer.right) <= 1
+        };
+        number.textContent = previous;
+        return state;
+      });
+      assert.deepEqual(line, { leftToRight: true, onSameLine: true, noWrap: true, fits: true, rightAligned: true });
       assert.deepEqual(requests, ['GET'], 'Browser audit must not write views');
       assert.equal(await page.locator('meta[name="dossierkit:page-ref"]').count(), 0);
       if (locale === 'zh') await page.screenshot({ path: `artifacts/views/ui/cv-agent-footer-${viewport.width}.png` });

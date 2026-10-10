@@ -75,6 +75,37 @@ async function main() {
         assert.ok(signature.sizeRatio > 0.3 && signature.sizeRatio < 0.6,
           `CV slogan should be notably smaller than name: ${locale} ${width}px`);
         assert.ok(signature.statsAligned, `CV view counter not flush-right: ${locale} ${width}px`);
+        const footerLine = await page.evaluate(() => {
+          const footer = document.querySelector<HTMLElement>('footer[data-cv-signature]')!;
+          const row = footer.querySelector<HTMLElement>('.cv-agent-signature-row')!;
+          const web = footer.querySelector<HTMLElement>('.cv-agent-signature-web')!;
+          const print = footer.querySelector<HTMLElement>('.cv-agent-signature-print')!;
+          const motto = footer.querySelector<HTMLElement>('.cv-agent-signature-line')!;
+          const widget = footer.querySelector<HTMLElement>('.view-count');
+          const number = widget?.querySelector<HTMLElement>('[data-view-number]');
+          const wasHidden = widget?.hidden;
+          const oldText = number?.textContent;
+          if (widget && number) { widget.hidden = false; number.textContent = '123,456'; }
+          const right = motto.getBoundingClientRect();
+          const eye = widget?.getBoundingClientRect();
+          const rowBounds = row.getBoundingClientRect();
+          const result = {
+            webText: web.textContent?.trim(),
+            webVisible: getComputedStyle(web).display !== 'none',
+            printHidden: getComputedStyle(print).display === 'none',
+            countLeft: !eye || eye.right + 4 <= right.left,
+            oneLine: !eye || Math.abs((eye.top + eye.bottom) / 2 - (right.top + right.bottom) / 2) <= 3,
+            noWrap: getComputedStyle(row).flexWrap === 'nowrap' && getComputedStyle(motto).whiteSpace === 'nowrap',
+            noOverflow: row.scrollWidth <= row.clientWidth + 1,
+            rightAligned: Math.abs(right.right - rowBounds.right) <= 1
+          };
+          if (widget && number) { widget.hidden = wasHidden!; number.textContent = oldText ?? ''; }
+          return result;
+        });
+        assert.equal(footerLine.webText, 'The Emergence of Everything', `Web tagline must match main site: ${locale}`);
+        assert.ok(footerLine.webVisible && footerLine.printHidden, `Wrong web/print slogan visibility: ${locale}`);
+        assert.ok(footerLine.countLeft && footerLine.oneLine && footerLine.noWrap && footerLine.noOverflow && footerLine.rightAligned,
+          `Web footer eye+slogan must be a single right-aligned row: ${locale} ${width}px; ${JSON.stringify(footerLine)}`);
         // Artwork should align with the content edge while its invisible hit area remains 44px.
         const chrome = await page.evaluate(() => {
           const identity = document.querySelector<HTMLElement>(".identity")!.getBoundingClientRect();
@@ -140,6 +171,8 @@ async function main() {
       const footer = page.locator("footer[data-cv-signature]");
       assert.equal(await footer.count(), 1, `Missing signature: ${locale}`);
       assert.match(await footer.innerText(), /Flux to Everything/);
+      assert.equal(await footer.locator('.cv-agent-signature-web').isVisible(), false, `Web tagline leaked into PDF: ${locale}`);
+      assert.equal(await footer.locator('.cv-agent-signature-print').isVisible(), true, `Print tagline not visible: ${locale}`);
       assert.equal(await footer.evaluate((el) => getComputedStyle(el).display !== "none"), true, `Signature hidden in PDF: ${locale}`);
       const printSignature = await footer.evaluate((element) => {
         const slogan = element.querySelector<HTMLElement>(".cv-agent-signature-line")!;
