@@ -21,6 +21,7 @@ export const cvAgentSchema = z.object({
   summary: localized,
   // Opt-in display filename, independent of the legacy resume export name.
   pdfFilenameBase: z.string().min(1).max(100).optional(),
+  educationSourceSchool: z.string().min(1).optional(),
   experiences: z.array(z.object({
     sourceCompany: z.string().min(1),
     summary: localized,
@@ -76,6 +77,12 @@ export function agentPdfPath(filenameBase: string, locale: Locale): string {
 }
 
 export function buildCvAgentView(pack: ProfilePack, config: CvAgentConfig, notes: ContentEntry[], locale: Locale) {
+  const educationMatches = config.educationSourceSchool
+    ? pack.education.education.filter((item) => item.school.en === config.educationSourceSchool)
+    : [];
+  if (config.educationSourceSchool && educationMatches.length !== 1) {
+    throw new Error(`cv-agent: expected one education for ${config.educationSourceSchool}; found ${educationMatches.length}`);
+  }
   const experiences = config.experiences.map((selection) => {
     const matches = pack.experience.experiences.filter((item) => item.company.en === selection.sourceCompany);
     if (matches.length !== 1) throw new Error(`cv-agent: expected one experience for ${selection.sourceCompany}; found ${matches.length}`);
@@ -99,7 +106,7 @@ export function buildCvAgentView(pack: ProfilePack, config: CvAgentConfig, notes
   }));
   const pdfBase = config.pdfFilenameBase || pack.resume.filename;
   return {
-    ...config, experiences, research,
+    ...config, education: educationMatches[0] ?? null, experiences, research,
     pdfHref: agentPdfPath(pdfBase, locale),
     pdfDownloadFilename: agentPdfFileName(pdfBase, locale)
   };
@@ -139,5 +146,8 @@ export function renderCvAgentPlainText(pack: ProfilePack, view: CvAgentView, loc
   }
   lines.push("", zh ? "核心能力" : "Core Capabilities");
   for (const group of view.skillGroups) lines.push(`- ${text(group.title)}: ${group.skills.join(" / ")}`);
+  if (view.education) {
+    lines.push("", zh ? "教育" : "Education", `- ${text(view.education.school)} | ${text(view.education.degree)} | ${view.education.period}`);
+  }
   return `${lines.join("\n")}\n`;
 }

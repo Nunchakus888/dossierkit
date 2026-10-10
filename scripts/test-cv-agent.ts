@@ -12,6 +12,7 @@ if (!config) {
   const notes = locales.flatMap((locale) => readContentCollection(locale, "notes"));
   for (const locale of locales) {
     const view = buildCvAgentView(pack, config, notes, locale);
+    assert.equal(view.education?.school.en ?? null, config.educationSourceSchool ?? null);
     assert.equal(view.experiences.length, config.experiences.length);
     for (const item of view.experiences) {
       const source = pack.experience.experiences.find((entry) => entry.company.en === item.company.en)!;
@@ -26,6 +27,12 @@ if (!config) {
     assert.match(view.pdfHref, /^\/resumes\/cv-agent\/.+-(zh|en)\.pdf$/);
     assert.ok(view.research.every((item) => item.sources.every((source) => notes.some((note) => source.href === `/${note.locale}/notes/${note.slug}/`))));
     const plainText = renderCvAgentPlainText(pack, view, locale, "https://cv.example/");
+    if (view.education) {
+      assert.ok(plainText.includes(view.education.school[locale]));
+      for (const item of pack.education.education.filter((item) => item !== view.education)) {
+        assert.ok(!plainText.includes(item.school[locale]));
+      }
+    }
     assert.ok(plainText.includes(`Email: ${pack.profile.links.email}`));
     assert.ok(!plainText.includes(locale === "zh" ? "[已实现]" : "[Implemented]"));
     assert.ok(!plainText.includes(locale === "zh" ? "[设计方向]" : "[Designed]"));
@@ -36,6 +43,7 @@ if (!config) {
   assert.equal(cvAgentSchema.safeParse({ ...config, architecture: { ...config.architecture, points: [{ ...config.architecture.points[0], status: "unknown" }, ...config.architecture.points.slice(1)] } }).success, false);
   assert.throws(() => buildCvAgentView(pack, { ...config, experiences: [{ ...config.experiences[0], sourceCompany: "missing-company" }] }, notes, "zh"), /expected one experience/);
   assert.throws(() => buildCvAgentView(pack, config, [], "zh"), /unresolved note/);
+  assert.throws(() => buildCvAgentView(pack, { ...config, educationSourceSchool: "missing-school" }, notes, "zh"), /expected one education/);
   assert.throws(() => agentPdfPath("../../legacy", "zh"), /Unsafe/);
   assert.throws(() => agentPdfPath("oops\\bad", "en"), /Unsafe/);
   assert.throws(() => agentPdfPath("..", "zh"), /Unsafe/);

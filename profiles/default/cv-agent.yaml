@@ -1,5 +1,6 @@
 # Private authoring configuration for the unlisted CV view. Not a public collection.
 pdfFilenameBase: "George-AI Agent开发专家"
+educationSourceSchool: "Xi'an Aeronautical Polytechnic Institute"
 focus:
   zh: "企业级 Agent 产品化、跨应用人机协作与 AI 研发提效"
   en: "Enterprise Agent Products, Human–AI Collaboration, and AI-assisted Development"
