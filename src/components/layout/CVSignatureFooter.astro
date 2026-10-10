@@ -1,12 +1,20 @@
 ---
+import ViewCount from "../views/ViewCount.astro";
+import { viewsEnabled } from "../../lib/view-counter/config";
+import "../../styles/wordmarks.css";
+
 type Props = {
   tagline: string;
+  pageRef: string;
 };
-const { tagline } = Astro.props;
+const { tagline, pageRef } = Astro.props;
 ---
 
-<footer class="cv-agent-signature-footer" aria-label="Personal motto">
+<footer class="cv-agent-signature-footer" aria-label="Personal motto" data-cv-signature>
   <p class="cv-agent-signature-line signature-wordmark">{tagline}</p>
+  {viewsEnabled && <div class="cv-agent-signature-stats no-print" data-pagefind-ignore>
+    <ViewCount noteRef={pageRef} />
+  </div>}
 </footer>
 
 <style>
@@ -45,6 +53,16 @@ const { tagline } = Astro.props;
     text-wrap: balance;
   }
 
+  .cv-agent-signature-stats {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 6px;
+    min-height: 20px;
+    --color-muted: #7b8794;
+  }
+  .cv-agent-signature-stats :global(.view-count) { font-size: 11px; opacity: .82; }
+
   @media (max-width: 700px) {
     .cv-agent-signature-footer {
       margin-top: 28px;
@@ -54,6 +72,7 @@ const { tagline } = Astro.props;
   }
 
   @media print {
+    .cv-agent-signature-stats { display: none !important; }
     .cv-agent-signature-footer {
       margin-top: 28px;
       padding: 13px 0 0;
