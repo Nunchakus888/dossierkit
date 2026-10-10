@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { inspectViewMarkup } from './html-inspect.mjs';
+import { parse as parseYaml } from 'yaml';
+const navigation = parseYaml(await readFile(`profiles/${process.env.ACTIVE_PROFILE || 'default'}/navigation.yaml`, 'utf8'));
 const infra = JSON.parse(await readFile('artifacts/views/infrastructure.json', 'utf8'));
 const manifest = JSON.parse(await readFile('src/lib/view-counter/manifest.json', 'utf8'));
 const articlePath = Object.keys(manifest.pages).find((path) => manifest.pages[path]);
@@ -62,7 +64,7 @@ for (let attempt = 0; attempt < 5; attempt++) {
         assert.equal(pageResponse.status, 200);
         const pageHtml = await pageResponse.text();
         assert.ok(pageHtml.includes('data-cv-signature'));
-        assert.match(pageHtml, /Flux to Everything/);
+        assert.ok(pageHtml.includes(navigation.footer.tagline[locale]), 'Live CV motto must match main site');
         assert.match(pageHtml, /name="robots"[^>]*noindex/);
         assert.ok(!pageHtml.includes('dossierkit:page-ref'));
         verifyFooter(pageHtml, `page:/${locale}/cv-agent`, false);
