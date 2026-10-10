@@ -118,7 +118,7 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
         <h2 id="education-heading">{zh ? "教育" : "Education"}</h2>
         <div class="education"><p><strong>{text(view.education.school)}</strong> · {text(view.education.degree)}</p><p class="period">{view.education.period}</p></div>
       </section>}
-      <CVSignatureFooter tagline={text(view.signatureTagline || pack.navigation.footer?.tagline || { zh: "Flux to Everything", en: "Flux to Everything" })} pageRef={`page:/${locale}/cv-agent`} />
+      <CVSignatureFooter tagline={text(view.signatureTagline || { zh: "Flux to Everything", en: "Flux to Everything" })} webTagline={text(pack.navigation.footer?.tagline || view.signatureTagline || { zh: "Flux to Everything", en: "Flux to Everything" })} pageRef={`page:/${locale}/cv-agent`} />
     </main>
     {viewsEnabled && <ViewCounterClient />}
   </body>
