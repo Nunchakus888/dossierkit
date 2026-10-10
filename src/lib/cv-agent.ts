@@ -19,7 +19,6 @@ const reference = z.object({
 export const cvAgentSchema = z.object({
   focus: localized,
   summary: localized,
-  signatureTagline: localized.optional(),
   // Opt-in display filename, independent of the legacy resume export name.
   pdfFilenameBase: z.string().min(1).max(100).optional(),
   educationSourceSchool: z.string().min(1).optional(),
