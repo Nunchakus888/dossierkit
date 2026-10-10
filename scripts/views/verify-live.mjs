@@ -57,7 +57,7 @@ for (let attempt = 0; attempt < 5; attempt++) {
       assert.ok(!JSON.stringify(sourceData).includes('visitor_hash'));
       for (const locale of ['zh', 'en']) {
         const route = `/${locale}/cv-agent/`;
-        if (!Object.hasOwn(manifest.pages, route.replace(/\\/+$/, ''))) continue;
+        if (!Object.hasOwn(manifest.pages, route.slice(0, -1))) continue;
         const pageResponse = await get(route);
         assert.equal(pageResponse.status, 200);
         const pageHtml = await pageResponse.text();
