@@ -1,0 +1,185 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-10-10"
+title: "AQuA 深度拆解：生产 Agent 的质量反馈闭环"
+summary: "Google 于 2026 年 10 月 8 日开源 Ambient Quality
+  Agent（AQuA）。它是一套旁路运行的质量调查方案：从线上执行轨迹中识别隐性任务失败，将故障归类、核验，再定位到具体部署版本的源码…"
+featured: false
+date: "2026-10-10"
+updatedAt: "2026-10-10T05:14:04.378Z"
+kind: "engineering"
+topics:
+  - "AI Agent"
+  - "Agent Evaluation"
+  - "Observability"
+  - "Multi-Agent"
+  - "Google ADK"
+  - "Coding Agent"
+tags:
+  - "AI Agent"
+  - "Agent Evaluation"
+  - "Observability"
+  - "Multi-Agent"
+  - "Google ADK"
+  - "Coding Agent"
+contentHash: "sha256:d1dbc6d3ae94f85784df0cbc8619c9129822a97146b709c92d9d3794f8dd4a48"
+---
+
+> Google 于 2026 年 10 月 8 日开源 Ambient Quality Agent（AQuA）。它是一套旁路运行的质量调查方案：从线上执行轨迹中识别隐性任务失败，将故障归类、核验，再定位到具体部署版本的源码或外部依赖。本文结合官方案例与开源实现分析其机制、边界和复用价值。
+
+## 1. 为什么传统监控看不见 Agent 的失败？
+
+HTTP 200、工具未抛错、延迟正常，只能证明执行链路运行，不代表业务任务完成。Google 的旅行助手案例中，规划 Agent 在未咨询选座 Subagent 的情况下，把用户指定的座位直接写入状态；另一次交接中，vegan 用户画像没有传给下游地点推荐 Agent。执行层没有异常，业务约束却被破坏。
+
+Agent 的错误可发生在**模型判断、Harness 编排、跨 Agent 状态交接、工具契约、领域指令**等不同层。只看输出文本或成功率，无法确定责任归属。
+
+AQuA 为两个工程循环搭桥：
+
+- **Inner loop：** 已知测试用例 → 离线 Eval → 修改 → 回归。
+- **Outer loop：** 生产轨迹 → 发现未知失败 → 聚类核验 → 追溯原因 → 固化回归样例。
+
+它是**请求路径以外的质量分析 Agent**，不承担实时授权、工具拦截或自动上线。
+
+## 2. 总体架构与关键边界
+
+~~~mermaid
+flowchart TB
+ A["业务 Agent / Subagents"] --> B["Trace / Logs / BigQuery"]
+ A --> C["部署 Revision + 源码快照"]
+ B --> D["AQuA 定时 / 部署后 / 按需调查"]
+ D --> E["Review：Actual vs Expected"]
+ E --> F["Cluster：相似失败归类"]
+ F --> G["Verify：独立核验"]
+ G --> H["Insight：新问题 / 复现 / 解决"]
+ C --> I["按需根因定位"]
+ H --> I
+ I --> J["受控修复 + Replay / Eval"]
+ J -. "新版执行" .-> A
+~~~
+
+| 组件 | 主要职责 | 边界 |
+| --- | --- | --- |
+| Telemetry ingestion | 从 ADK BigQuery Analytics、Cloud Trace 关联数据或 Cloud Logging 恢复会话 | 对轨迹字段与数据采集完整度有要求 |
+| Session Reviewer | 用当时的 Agent 指令和工具评价整个会话 | 模型 Judge 有误判可能 |
+| Cluster + Verify | 合并重复症状、核验候选问题 | 不会逐条核实一个簇内的全部会话 |
+| Insight Store | 跨调查去重，维护生命周期 | 生产部署以 BigQuery 为核心 |
+| Root Cause | 对齐部署时的代码与 Trace，提出修复位置 | 自身不提交代码、不发 PR |
+
+一个易被忽视的细节是**评审必须读取当时的 Agent 配置**。同一个部署版本中，不同用户、不同步骤能使用的工具也可能不同。源码中的 FindingSet 按 session 保存当时的 agent_revisions / tools，避免拿其他会话的能力边界评判本次执行。
+
+开源入口：[AQuA 项目](https://github.com/google/adk-recipes/tree/main/core/python/ambient-quality-agent) · [Workflow 定义](https://github.com/google/adk-recipes/blob/main/core/python/ambient-quality-agent/src/ambient_quality_agent/core/workflow.py)
+
+## 3. 五阶段调查怎样运作？
+
+~~~mermaid
+flowchart TB
+ S["Sample<br/>抽取会话"] --> R["Review<br/>评估偏差"]
+ R --> C["Cluster<br/>合并失效机制"]
+ C --> V{"Verify<br/>二次核验"}
+ V -->|有证据| T["Track<br/>匹配历史 Insight"]
+ V -->|证据不足| F["Flag / Reject / Unjudged"]
+ T --> O["按需诊断代码根因"]
+~~~
+
+**Sample：** 默认在指定时间窗随机抽样，单次上限 1,000 个会话；成本可控但可能漏掉低频关键事故。
+
+**Review：** 默认 session_review 模式用一次 LLM 调用审查一段会话，以九类故障检查点对照程序要求、工具选择和参数、输出约束、Grounding、任务完成等。每一条 Finding 含 expected_behavior、actual_behavior、session_id、agent_id 和 deployment revision。开发者可用 goal.md 强化领域要求；确定性 Python metrics 作为附加评估，而非替代 Review。
+
+**Cluster：** 通过 Actual / Expected 对将跨会话的相似缺陷归成候选问题。这里是模式归纳，不是因果证明。
+
+**Verify：** 独立模型对候选簇最多检查三份完整转录和各 Agent 的配置，拒绝缺乏证据的聚类。验证成本随轨迹长度上升，因此单次校验簇数量也有限制；未被核验的应显示独立状态。
+
+**Track：** 将本轮簇匹配历史 Insight，区分 NEW、RECURRING、RESOLVED。默认 14 天未再次观察到可自动标记解决，但“抽样窗口未出现”不是根治证据。
+
+### 源码中的重要差别：验证与阻断是两个开关
+
+[insight_correlation.py](https://github.com/google/adk-recipes/blob/main/core/python/ambient-quality-agent/src/ambient_quality_agent/core/nodes/insight_correlation.py) 区分：
+
+- insights_verification_enabled：**默认开启**，执行验证调用。
+- insights_verification_enforced：**默认关闭**，意味着即使验证给出负面结论，该簇仍可带着 flagged 标识保留在追踪队列；显式开启 enforced 才将该簇拒绝。
+
+原因是生产 Trace 可能丢失工具错误、上下文或依赖信息。若把“不足以证实”直接等同“确认无问题”，反而会漏掉真正缺陷。工程上应将 **verified / flagged / unjudged / rejected** 分离显示，并允许人工校准。
+
+源码也暴露两种生产者：默认 session_review，以及可选的 Gemini 平台托管 Eval 分支；最终都汇入统一的 Insight correlation 节点。这是它可组合性的技术基础。
+
+## 4. 官方实验：结果、原因与外推限制
+
+Google 在 travel-concierge 上回放四组脚本化旅程，共 32 段会话、1,583 个 OpenTelemetry spans：
+
+| 阶段 | 结果 |
+| --- | --- |
+| 初始 | 5/32 会话完全通过，其余 27 个产生发现 |
+| Review | 共 42 条结构化 Findings |
+| Cluster | 归并成 9 个候选簇 |
+| Verify | 排除 3 个误报簇，保留 6 个有效问题 |
+| 修改两处 Prompt 后重放 | 完全通过 13/32；跳过选座检查 15→2；vegan 约束遗漏 7→0 |
+
+这些数字说明**可追溯的失败证据有助于定位和验证修复**。其中未修复的 poi_agent 问题还在队列中，不会因为整体通过率上升而消失。
+
+不过，32 段是四组脚本旅程的重复回放，不是 32 个独立生产场景，更不是随机对照实验。不能将 5/32→13/32 外推成真实线上平均收益。官方披露该多 Agent 实验调查约花费 **3.76 美元 / 32 会话（约 0.12 美元/会话）**；另一次短轨迹实验约为 0.007 美元/会话。成本由 Trace 长度、模型和策略共同决定，根因分析的模型调用还需额外计算。
+
+## 5. 连接源码版本：从“答错了”到“哪里需要修改”
+
+~~~mermaid
+flowchart TB
+ A["Insight + 出错会话"] --> B["按 Revision 取部署源码快照"]
+ B --> C{"缺陷来源？"}
+ C -->|仓库内| D["给文件 + 行范围 + 候选修改"]
+ C -->|外部依赖 / 工具结果| E["定位错误步骤，不编造代码 Diff"]
+ D --> F["Coding Agent 或工程师审查"]
+ E --> F
+ F --> G["复现 → 修改 → Eval → PR 审批"]
+~~~
+
+每条代码级建议必须锚定**执行时的源码快照**，服务端验证引用的文件与行号存在。如果是上游工具返回不正确或状态交接失败，允许把责任留在轨迹中的对应步骤，而不是强行归因到仓库文件。
+
+AQuA 不会直接修改业务代码，也不自行创建 PR。它的责任到**诊断与证据**为止；修复、复验、审批由独立工作流完成。
+
+## 6. 从演示到生产：两条不同的实践路径
+
+### Google ADK 原生路线
+
+~~~bash
+git clone https://github.com/google/adk-recipes.git
+cd adk-recipes/core/python/ambient-quality-agent
+make demo
+~~~
+
+这只运行**合成数据 Dashboard**，无需 GCP 凭据或真实模型调用，不等于已连接生产 Agent。
+
+正式接入需要 Python 3.11–3.13、uv、npm、Terraform、agents-cli 1.6+、GCP 权限和遥测；最新 README 推荐固定 AQuA 扩展版本并使用 --apply-aqua / --deploy-aqua 部署。仪表盘通常在 Cloud Run 上由 IAP 保护。以[当前 README](https://github.com/google/adk-recipes/blob/main/core/python/ambient-quality-agent/README.md)为准，不要混用官方博客中较早的命令样例。
+
+### Next.js、多 API 与自建 Harness 的通用路线
+
+AQuA 的现成运行时对 Google Cloud / ADK 耦合明显；**可以借鉴设计，但不能假设直接兼容任何 Agent 框架**。最小落地可按五步推进：
+
+1. **统一执行证据模型。** 至少有 session_id、trace_id、parent_span、agent_id、revision、tool_call/result、用户输入与脱敏字段；要能还原真实的工具和权限边界。
+2. **先写业务不变量。** 例如退款前必须查订单，外部写入要有授权；确定性断言优先于纯 LLM Judge。
+3. **设置旁路调查任务。** 抽样 → 语义评估 → Expected/Actual → 聚类 → 核验，保留原始 Trace 引用与失败状态。
+4. **把生产事故转为回归样本。** 固化会话输入与初始状态，确保能在同版复现、在修复版验证。
+5. **建立隔离与成本预算。** 控制模型调用、PII 保留、跨租户访问和高风险路径审查；禁止质量分析服务默认持有生产写权限。
+
+目标是让任何模型或工具层都能替换，而保留固定的**业务执行 → 只读观察 → 质量证据 → 受控修复**结构。
+
+## 7. 还没有被解决的难题
+
+| 难题 | 产生原因 | 改进思路 |
+| --- | --- | --- |
+| 低频高损失静默失败 | 均匀随机抽样易错过 | 关键路径分层抽样、业务事件触发 |
+| Judge 偏差 | 语义评价会与领域专家不一致 | 业务标注集、拒判机制、误报/漏报评估 |
+| Trace 缺损 | 看不到工具结果，易误诊 | 采集完整度检查、缺失标识、暂停下结论 |
+| 长轨迹的成本和隐私 | 上下文大、可能包含敏感数据 | 脱敏、预算、分级审查、较短复现片段 |
+| 修复的副作用 | Prompt 修改会影响别的任务 | 固定 Eval 集 + 新失败样本回放 |
+
+## 结论
+
+AQuA 的关键贡献，不是“再让一个 Agent 审核 Agent”，而是将**实际/预期行为、跨运行问题身份、版本化源码证据和回归测试**连接起来。即使不采用它的云服务，也值得将这四项能力作为下一代 Agent Harness 的基础设施。
+
+**一手资料**
+
+- [Google 官方发布，2026-10-08](https://developers.googleblog.com/the-outer-loop-insights-first-an-ambient-quality-agent-that-diagnoses-your-production-agent/)
+- [GitHub：Ambient Quality Agent](https://github.com/google/adk-recipes/tree/main/core/python/ambient-quality-agent)
+- [核心工作流源码](https://github.com/google/adk-recipes/blob/main/core/python/ambient-quality-agent/src/ambient_quality_agent/core/workflow.py)
+- [会话 Review 源码](https://github.com/google/adk-recipes/blob/main/core/python/ambient-quality-agent/src/ambient_quality_agent/tools/review/session_review.py)
+- [Insight correlation / Verification 源码](https://github.com/google/adk-recipes/blob/main/core/python/ambient-quality-agent/src/ambient_quality_agent/core/nodes/insight_correlation.py)
