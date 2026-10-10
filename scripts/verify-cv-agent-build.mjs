@@ -35,12 +35,14 @@ for (const locale of ["zh", "en"]) {
   assert.ok(!html.includes('class="contact-data"'));
   assert.ok(!html.includes('class="claim-status"'));
   assert.match(html, /<footer[^>]*data-cv-signature[^>]*>/, 'Missing signature footer');
-  assert.match(html, /Flux to Everything/, 'Missing original PDF-only CV signature');
   const mainNav = parseYaml(fs.readFileSync(path.join(profileRoot, "navigation.yaml"), "utf8"));
   const mainMotto = mainNav.footer?.tagline?.[locale];
-  if (mainMotto) assert.ok(html.includes(mainMotto), "Web CV slogan must match main site configuration");
-  assert.match(html, /class="cv-agent-signature-web"/);
-  assert.match(html, /class="cv-agent-signature-print"/);
+  assert.ok(mainMotto && html.includes(mainMotto), "CV and main site must share one slogan");
+  assert.ok(!html.includes('cv-agent-signature-web') && !html.includes('cv-agent-signature-print'),
+    'Remove divergent print/web slogan branches');
+  assert.match(html, /class="cv-agent-print-page-2"/, 'Missing dedicated PDF last-page frame');
+  const signature = html.match(/<footer[^>]*data-cv-signature[^>]*>[\s\S]*?<\/footer>/)?.[0] || '';
+  assert.ok(signature.includes(mainMotto), 'Single footer slogan must match navigation config');
   assert.ok(!html.includes('data-pagefind-body'));
   const viewManifest = JSON.parse(fs.readFileSync("src/lib/view-counter/manifest.json", "utf8"));
   assert.ok(Object.hasOwn(viewManifest.pages, `/${locale}/cv-agent`), "Unlisted CV missing from server-only counter allowlist");
