@@ -1,0 +1,205 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-10-10"
+title: "GitHub Copilot Local Sandbox 与 MXC：Coding Agent 的权限边界如何落地"
+summary: "2026 年 10 月 7 日，GitHub 宣布 Copilot CLI、Copilot App 和使用 Agent Host 的 VS
+  Code 会话中，本地沙箱正式 GA。它由 Microsoft eXecutio…"
+featured: false
+date: "2026-10-10"
+updatedAt: "2026-10-10T05:21:41.950Z"
+kind: "engineering"
+topics:
+  - "GitHub Copilot"
+  - "MXC"
+  - "Agent Sandbox"
+  - "AI Coding"
+  - "Tool Security"
+  - "Cross-platform"
+tags:
+  - "GitHub Copilot"
+  - "MXC"
+  - "Agent Sandbox"
+  - "AI Coding"
+  - "Tool Security"
+  - "Cross-platform"
+contentHash: "sha256:6fc33f3ed1546cefe7ad79f4c441f6acd28b5e531675adfe8823c870b08b8f48"
+---
+
+> 2026 年 10 月 7 日，GitHub 宣布 Copilot CLI、Copilot App 和使用 Agent Host 的 VS Code 会话中，本地沙箱正式 GA。它由 Microsoft eXecution Container（MXC）支撑，核心思路是将 Agent 的工具调用约束在操作系统可执行的权限边界内。本文基于 GitHub / Microsoft 官方发布与开源 SDK，说明哪些操作真正被隔离、哪些仍由 Harness 自己负责。
+
+## 1. 为什么 AI Coding Agent 需要新的执行边界？
+
+开发助手从补全代码变成了能读文件、调用 Shell、安装依赖、写 Git 历史、操作 MCP 的执行者。一次看似合理的自动修复，也可能读到与当前任务无关的秘密、误写仓库之外的文件，或把数据发送到错误的网络位置。
+
+提示词里写“不要读凭据”是行为要求，不是访问控制。面对模型错误、提示注入或恶意依赖，必须让**模型无法单方面扩大进程权限**。
+
+因此沙箱要回答三个具体问题：这次任务**可以读写哪些路径、可以连接哪些网络、可以使用哪些凭据**。然后由模型之外的执行系统检查和强制实施。
+
+## 2. 真实执行链：同一策略，对不同工具的保护强度并不相同
+
+~~~mermaid
+flowchart TB
+  U["用户发起 Coding Task"] --> H["Copilot Harness + 模型规划"]
+  H --> P["Effective Sandbox Policy"]
+  P --> M["MXC 选择宿主机隔离后端"]
+  M --> S["Shell / 搜索子进程"]
+  M --> L["本地 MCP / LSP 子进程"]
+  S --> O["操作系统强制执行"]
+  L --> O
+  P --> F["CLI 内置文件读写工具"]
+  F --> A["应用内软件策略检查"]
+  H --> R["远程 MCP / SaaS"]
+  R --> G["网络控制 + 远端鉴权"]
+  O --> T["结果 + 日志"]
+  A --> T
+  G --> T
+~~~
+
+| 调用路径 | 实际约束方式 | 工程含义 |
+| --- | --- | --- |
+| Shell、外部命令、文件搜索子进程 | MXC 在进程外启动受限执行，OS 限制访问 | 可形成系统级隔离 |
+| 本地 MCP、语言服务器 LSP | 默认随本地工具进程进入沙箱；可配置 | 应确认实际进程是否被纳入边界 |
+| Copilot CLI 内置文件读写/编辑 | CLI 主进程内执行，由软件判断权限 | **不受同一层 OS 沙箱直接强制** |
+| 远程 MCP / 外部 API | 请求经过 Harness 网络路径，远端独立执行 | 本地沙箱不能代替服务端授权与租户隔离 |
+
+GitHub 的[概念文档](https://docs.github.com/en/copilot/concepts/security-governance-and-network-settings/about-cloud-and-local-sandboxes)明确说，CLI 自己的内置文件工具不在被沙箱化的子进程里，只能按软件策略做 best-effort 检查；远程 MCP 也不在本地 OS 沙箱中。**“使用了沙箱”不等于 Harness 所有动作都受内核强制约束。**
+
+同样，**模型推理与工具隔离是两个独立问题**：调用不同云模型或本地模型，不应改变工具权限策略。
+
+## 3. MXC 的抽象：把一份 Policy 映射到 Windows、Linux 和 macOS
+
+[Microsoft 官方工程介绍（2026-10-07）](https://blogs.windows.com/windowsdeveloper/2026/10/07/microsoft-execution-containers-policy-driven-containment-for-ai-agents/)将 MXC 描述为跨平台、策略驱动的执行层。开发者声明 Containment、Process、Filesystem、Network、UI 约束，SDK 验证并选择当前系统支持的后端。
+
+~~~mermaid
+flowchart TB
+  A["Harness：Command + Policy"] --> B["MXC SDK / V1 Schema"]
+  B --> C{"平台及能力探测"}
+  C -->|Windows| D["ProcessContainer"]
+  C -->|Linux| E["Bubblewrap / LXC"]
+  C -->|macOS| F["Seatbelt"]
+  C -->|更强隔离需求| G["Session / WSLc / MicroVM"]
+  D --> H["受限进程"]
+  E --> H
+  F --> H
+  G --> H
+  H --> I["Exit / Output / Denial"]
+~~~
+
+| 平台 | Copilot Local Sandbox 主要后端 | MXC 可选能力 | 限制 |
+| --- | --- | --- | --- |
+| Windows 11 | ProcessContainer，使用 Windows 原生容器/权限基础设施 | Session、WSLc、实验性 MicroVM 等 | 网络和拒绝路径能力依 OS 构建版本而异 |
+| Linux | Bubblewrap | LXC、部分更强的实验性后端 | 依赖用户命名空间等内核能力；网络规则需额外组件 |
+| macOS | Seatbelt | 主要是进程级沙箱 | 与 Windows 的会话隔离不等价 |
+
+MXC **不是一台统一的虚拟机**。它按宿主环境选择隔离技术。轻量进程沙箱启动快、开发兼容性好，但不应等同独立 VM 或硬件级隔离。处理任意不可信代码或不可信多租户负载时，应按威胁模型选择更强边界。
+
+开源仓库 [microsoft/mxc](https://github.com/microsoft/mxc) 现在有 Rust、.NET、Node SDK，版本化 V1 API 与稳定 1.0.0 JSON Schema；有些较早的缓存文档仍显示早期预览提示。判断可用性应以**当前版本、所选后端的安全能力和实际策略验证**为准，而不能只看“GA”标签。
+
+## 4. GitHub 默认配置中的六个关键细节
+
+**A. 本地沙箱默认关闭。** GitHub 明确表示：未启用时，Agent 调用的 Shell 与当前 OS 账号有大致相同的文件、网络、凭据权限。产品功能 GA 不等于所有会话自动受到保护。
+
+**B. 开启不代表最小权限。** 默认可写工作目录以及仓库 Git 元数据；开发工具和缓存可能获得自动权限。CLI 和 App 的认证设置也默认允许某些 Git / gh 认证工作流。必须检查当前项目的真实权限，尤其是隐藏配置文件、依赖缓存和凭据辅助工具。
+
+**C. Bypass 默认可以向用户请求。** 沙箱拦截命令后，Agent 可以请求授权绕开沙箱重试；获批后可能使用普通账号环境并失去凭据掩码及代理限制。企业应评估禁止或严格审计 Bypass，不要把“一次人工同意”视为没有安全成本。
+
+**D. 不支持沙箱时，不能假设总是安全失败。** GitHub 当前说明，Copilot CLI 在某些仅有用户偏好的不支持宿主上会提示并令该会话以非沙箱运行；受控企业环境可同时设置 sandbox.enabled 与 sandbox.failIfUnavailable 强制无法隔离时停止。Copilot App 的具体失败路径不同。**服务端 Harness 应自己实现 fail-closed，不能依赖客户端默认行为。**
+
+**E. 不同操作使用不同执行者。** OS 约束外部 Shell；CLI 自己的文件编辑是软件检查；本地 MCP 才可能一起沙箱化，而远程 MCP 不能以此获得服务端权限保障。
+
+**F. 不同平台网络语义不完全相同。** GitHub 说明：macOS/Linux 的受限进程可被要求通过本地代理出站；Windows 部分主机规则依赖应用遵守代理，不能给出同样强的直连阻断承诺。Linux Bubblewrap 也存在不能独立限制所有子进程本地网络访问的限制。**同一配置文件不一定意味着同一强度的网络隔离。**
+
+这些并非推测，均来自[官方配置说明](https://docs.github.com/en/copilot/how-tos/cloud-and-local-sandboxes/configuring-local-sandbox-settings)和[沙箱机制说明](https://docs.github.com/en/copilot/concepts/security-governance-and-network-settings/about-cloud-and-local-sandboxes)。
+
+## 5. 直接使用：Copilot CLI 与 App 如何开启并自检
+
+在 **Copilot CLI 的交互会话**中运行以下斜杠命令：
+
+~~~text
+/sandbox enable
+/sandbox status
+/sandbox policy
+/sandbox config
+~~~
+
+这里 status 是实际会话状态，policy 用来查看有效权限，也可以预览特定命令的策略。一次性程序化命令可使用：
+
+~~~bash
+copilot --sandbox -p "Run the project tests and summarize the result"
+~~~
+
+**Copilot App** 在项目 Settings 中启用 Sandbox new sessions，当前会话也支持 /sandbox on 与 /sandbox off。CLI 与 App 设置分别保存，不自动同步。企业还应检查被管理策略是否禁止旁路，以及无法实施隔离时是否严格拒绝操作。
+
+诊断时不要只查看配置文件里的 enabled 字段；同时记录**执行时有效策略、OS 后端、当前工作目录、credential grant、network route、bypass 事件**。
+
+## 6. 从 MXC SDK 到自己的 Coding Agent Harness：先用最小路径验证
+
+[Microsoft Node SDK](https://github.com/microsoft/mxc/blob/main/sdk/node/README.md) 暴露 @microsoft/mxc-sdk/v1，支持平台检测、run、spawn、执行结果和持久容器生命周期操作。官方要求 Node.js 24 或以上。最简的执行接口可以这样表示：
+
+~~~typescript
+import { getPlatformSupport, run } from "@microsoft/mxc-sdk/v1";
+
+if (!getPlatformSupport().isSupported) {
+  throw new Error("Sandbox unavailable");
+}
+
+const result = await run({
+  command: 'node -e "console.log(42)"',
+  filesystem: { readonlyPaths: [process.cwd()] },
+  network: { egress: { default: "deny" } },
+  timeoutMs: 30_000,
+});
+console.log(result.stdout, result.exitCode);
+~~~
+
+这只是**官方类型化接口的最小演示**，并非完整的生产权限配置。还需要根据工具需要设定读写目录、进程环境、依赖缓存、密钥、网络策略、资源上限和异常回退，认真处理 SDK 返回的 warning。
+
+对只使用 Linux VPS 的自建服务，推荐先以 Bubblewrap + 最小用户权限验证隔离，然后再决定是否把 MXC SDK 封装成统一的 Tool Executor。操作系统缺少所需能力时直接拒绝任务，不要悄悄回退到普通 Node child_process。
+
+~~~mermaid
+flowchart TB
+  A["Task API / Queue"] --> B["Policy Decision<br/>用户、租户、任务"]
+  B --> C["Harness Tool Executor"]
+  C --> D{"能严格实施所需权限吗？"}
+  D -->|能| E["MXC / Bubblewrap<br/>最小 Workspace 权限"]
+  D -->|不能| X["Fail Closed + 任务暂停"]
+  E --> F["Build / Test / Shell"]
+  C --> G["Remote MCP / SaaS"]
+  G --> H["Tool Gateway + Scoped Token"]
+  F --> I["Trace / Artifact / Audit"]
+  H --> I
+  I --> J["回归验证 / 审批 / 交付"]
+~~~
+
+四个模块必须明确分工：**MXC 管本地进程可接触的资源，Harness 管任务及工具路由，Gateway 管远程服务的授权和审计，审批机制管高风险写操作**。没有任何单一层可以独自取代其他三层。
+
+## 7. 怎么证明隔离生效：建议的最小负向测试
+
+| 安全实验 | 预期结果 | 检验对象 |
+| --- | --- | --- |
+| 工作目录内创建测试文件 | 成功 | 正向授权完整性 |
+| 尝试访问明确禁止的模拟目录 | 拒绝，并保留拒绝原因 | OS 路径隔离 |
+| 对不相关的模拟凭据路径执行只读可达性测试 | 阻止 | 环境变量、家目录与缓存权限 |
+| 请求未授权测试域名 | 阻断 | 真实网络出口控制 |
+| 本地 MCP 子进程读取禁止路径 | 阻断 | MCP 继承隔离情况 |
+| 远程 MCP 尝试未授权的测试写入 | 服务端拒绝 | 独立远程授权 |
+| 所需后端/系统特性不可用 | 不运行任务 | Fail-closed 与降级 |
+| 人工批准一次 Bypass | 明示范围并留痕 | 人工解除边界的风险 |
+
+还应覆盖符号链接、共享构建缓存、Git Credential Helper、代理不生效、子进程继承与并发任务状态。真正有价值的度量包括：**有效策略覆盖率、被阻止的越权请求、Bypass 占比、未隔离工具调用数、无法实施时的安全失败率**。
+
+## 结论
+
+本次 GitHub / Microsoft 更新的关键，并不只是“本机有了一个新沙箱”，而是 Coding Agent 的**动态动作开始由独立于模型的策略执行层约束**。但 Copilot 的默认开关、CLI 内置工具、远程 MCP、网络后端与 Bypass 都留下需要由 Harness 和组织治理继续处理的边界。
+
+**最重要的架构原则：模型可以提出下一步，但不能自行提升执行下一步的权限。**
+
+**一手材料**
+
+- [GitHub：Local Sandboxing GA（2026-10-07）](https://github.blog/changelog/2026-10-07-local-sandboxing-for-github-copilot-now-generally-available/)
+- [GitHub Docs：云端与本地 Sandbox](https://docs.github.com/en/copilot/concepts/security-governance-and-network-settings/about-cloud-and-local-sandboxes)
+- [GitHub Docs：CLI 文件系统策略](https://docs.github.com/en/copilot/concepts/agents/copilot-cli/understanding-local-sandboxing)
+- [GitHub Docs：沙箱设置与 Bypass](https://docs.github.com/en/copilot/how-tos/cloud-and-local-sandboxes/configuring-local-sandbox-settings)
+- [Microsoft 官方：MXC 策略隔离（2026-10-07）](https://blogs.windows.com/windowsdeveloper/2026/10/07/microsoft-execution-containers-policy-driven-containment-for-ai-agents/)
+- [Microsoft MXC GitHub 仓库](https://github.com/microsoft/mxc) · [Node SDK](https://github.com/microsoft/mxc/blob/main/sdk/node/README.md) · [Policy Schema](https://github.com/microsoft/mxc/blob/main/docs/schema.md)
