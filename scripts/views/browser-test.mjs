@@ -49,6 +49,21 @@ try {
       await page.locator('footer').scrollIntoViewIfNeeded();
       if (locale === 'zh') await page.screenshot({ path: `artifacts/views/ui/home-footer-${viewport.width}.png` });
     }
+    for (const locale of ['zh', 'en']) {
+      requests.length = 0;
+      await page.goto(`${base}/${locale}/cv-agent/`);
+      const signature = page.locator('footer[data-cv-signature]');
+      assert.equal(await signature.count(), 1);
+      assert.match(await signature.innerText(), /Flux to Everything/);
+      const widget = signature.locator('[data-view-count]');
+      await widget.waitFor({ state: 'visible' });
+      assert.equal(await widget.getAttribute('data-view-count'), `page:/${locale}/cv-agent`);
+      assert.equal(await widget.locator('[data-view-number]').innerText(), '36');
+      assert.equal(await widget.locator('[data-view-total-number]').count(), 0);
+      assert.deepEqual(requests, ['GET'], 'Browser audit must not write views');
+      assert.equal(await page.locator('meta[name="dossierkit:page-ref"]').count(), 0);
+      if (locale === 'zh') await page.screenshot({ path: `artifacts/views/ui/cv-agent-footer-${viewport.width}.png` });
+    }
     for (const [path, label] of [[article + '/', 'article'], ['/zh/cv/', 'cv'], ['/en/cv/', 'cv-en'], ['/zh/contact/', 'contact'], ['/zh/notes/', 'notes-list']]) {
       requests.length = 0;
       await page.goto(base + path);

@@ -10,6 +10,12 @@ There are no inbound navigation, homepage, role, note or case links. The standal
 
 Current business metrics are carried from the existing career material, not newly measured. Cowork implementation claims were checked against the local `services/cowork` checkout at `dded701`: Session/Run execution, checkpoints, events, on-demand Computer, Web/API authorization, Skills, and CP integration have code and focused tests. CLI/Channel-specific adapters, inbound Cowork MCP service, and group-chat collaboration are presented as designs, not shipped features. No Cowork production scale, customer, or rollout metric is claimed. Research links point to existing notes; CAVA and other third-party research are attributed as analyses, not original inventions. English uses reviewed counterparts where available, otherwise labels and links the Chinese original.
 
+## Isolated signature and web-only analytics
+
+The Agent CV has its own minimal footer, visually derived from the main Notes footer (the shared Pacifico signature wordmark, a thin light gradient rule, centered spacing). Its message is configured only in `cv-agent.yaml` as `Flux to Everything` in both locales; the main site slogan remains unchanged. It contains no navigation, privacy link, statistics totals, or Notes UI. PDF print retains the signature itself but hides the page-view statistic widget.
+
+On production web views, the footer reuses the existing first-party D1 counter, registering only `/zh/cv-agent` and `/en/cv-agent` as countable, noindex routes in the server-side allowlist. It shows a quiet page-view count when the counter is enabled and healthy; no counter or fake zero is displayed if disabled. Raw IPs or contact paths are never displayed. Aggregate analyses remain available from the existing read-only `/api/views?mode=summary&path=/zh/cv-agent/` and `mode=sources&period=7d&path=/zh/cv-agent/` endpoints (equivalent for English), including trends, PV/UV and referral attribution. The public top-page rankings explicitly exclude unlisted CVs. This is anonymized aggregate analytics, not authenticated/private analytics and not proof of a unique human per view; browser opt-outs and anti-bot checks still apply. In offline PDF export the client can never report a production page view.
+
 ## Validation and export
 
 ```sh

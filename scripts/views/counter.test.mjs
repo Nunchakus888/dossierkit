@@ -6,7 +6,8 @@ import { handleViews, dayInZone, normalizePath } from '../../src/lib/view-counte
 import { startViewCounter } from '../../src/lib/view-counter/client.mjs';
 const origin = 'https://sunionpeaks.pages.dev';
 const manifest = { origin, timeZone: 'Asia/Shanghai', pages: {
-  '/zh': null, '/en': null, '/zh/notes': null, '/zh/notes/first': 'zh/first', '/en/notes/first': 'en/first'
+  '/zh': null, '/en': null, '/zh/notes': null, '/zh/notes/first': 'zh/first', '/en/notes/first': 'en/first',
+  '/zh/cv-agent': null, '/en/cv-agent': null
 }};
 const now = new Date('2026-09-21T18:00:00Z');
 function fixture() {
@@ -121,6 +122,20 @@ test('rankings are generated from aggregates, not extra tracking', async () => {
     assert.deepEqual(result.articles, [{ ref: 'zh/first', views: 2 }, { ref: 'en/first', views: 1 }]);
   }
   assert.equal((await f.get('?mode=top&period=36500d')).status, 400);
+});
+test('unlisted Agent CV is countable by exact path without appearing in top-page results', async () => {
+  const f = fixture();
+  await f.request({ path: '/zh/cv-agent/' });
+  await f.request({ path: '/en/cv-agent/' });
+  assert.equal((await (await f.get('?mode=summary&path=/zh/cv-agent/')).json()).total, 1);
+  assert.equal((await (await f.get('?mode=counts&path=/en/cv-agent/')).json()).articles['page:/en/cv-agent'], 1);
+  for (const type of ['all', 'pages']) {
+    for (const period of ['all', '7d', '30d']) {
+      const data = await (await f.get('?mode=top&type=' + type + '&period=' + period)).json();
+      assert.ok(data.articles.every((row) => !row.ref.includes('/cv-agent')), 'Unlisted CV leaked in top-page results');
+    }
+  }
+  assert.equal((await (await f.get()).json()).totalViews, 2);
 });
 function browser({ visible = true, exclude = false, available = true, configured = true } = {}) {
   const listeners = new Map(); const calls = [];

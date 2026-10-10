@@ -1,5 +1,5 @@
 /** Public aggregate counter. Never return event receipts or visitor hashes. */
-import { allRefs, keyForRef, refForPath } from './identity.mjs';
+import { allRefs, isUnlistedRef, keyForRef, refForPath } from './identity.mjs';
 import { prepareEvent, recordEvent, readUV, readSources } from './metrics.mjs';
 export const SITE_KEY = 'site:total';
 export const MAX_REFS = 60;
@@ -175,7 +175,7 @@ export async function handleViews(request, env, manifest, now = new Date()) {
       const result = await statement.all();
       return json({ period, type, timeZone: manifest.timeZone, day, articles: result.results
         .map((row) => ({ ref: row.key.startsWith('note:') ? row.key.slice(5) : row.key, views: Number(row.views) }))
-        .filter((row) => known.has(row.ref)).slice(0, 10) });
+        .filter((row) => known.has(row.ref) && !isUnlistedRef(row.ref)).slice(0, 10) });
     }
     if (mode !== 'counts') return json({ error: 'Unknown mode' }, 400);
     let refs;

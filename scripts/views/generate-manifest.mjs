@@ -20,6 +20,24 @@ async function walk(dir) {
   }
 }
 await walk(join(root, 'dist'));
+
+// Server-only allowlist for shared-by-link CV pages. They remain excluded from
+// Pagefind, sitemap, the public page-ref meta and aggregate top-page rankings.
+for (const locale of ['zh', 'en']) {
+  let html;
+  try {
+    html = await readFile(join(root, 'dist', locale, 'cv-agent', 'index.html'), 'utf8');
+  } catch (error) {
+    if (error?.code === 'ENOENT') continue;
+    throw error;
+  }
+  if (!html.includes('data-pagefind-ignore="all"') || html.includes('data-pagefind-body')
+    || !/<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i.test(html)
+    || !html.includes('data-cv-signature')) {
+    throw new Error(`Refusing to register non-unlisted Agent CV: ${locale}`);
+  }
+  pages[`/${locale}/cv-agent`] = null;
+}
 if (!Object.hasOwn(pages, '/zh') || !Object.values(pages).some(Boolean)) throw new Error('Public view manifest is empty');
 await writeFile(join(root, 'src/lib/view-counter/manifest.json'), JSON.stringify({ origin: settings.origin, timeZone: settings.timeZone, pages }, null, 2)+'\n');
-console.log(`View allowlist: ${Object.keys(pages).length} public pages; ${Object.values(pages).filter(Boolean).length} articles.`);
+console.log(`View allowlist: ${Object.keys(pages).length} countable routes (including unlisted CV when configured); ${Object.values(pages).filter(Boolean).length} articles.`);

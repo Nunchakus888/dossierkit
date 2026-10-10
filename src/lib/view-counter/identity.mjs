@@ -1,4 +1,6 @@
-// A note retains its v1 identity. Every other public page gets its own scope.
+// A note retains its v1 identity. Every other page gets its own scope.
+// These unlisted CV paths are countable on direct visits, but never appear in public rankings.
+export const isUnlistedRef = (ref) => /^page:\/(zh|en)\/cv-agent$/.test(ref);
 export function refForPath(path, manifest) {
   return Object.hasOwn(manifest.pages, path) ? (manifest.pages[path] || `page:${path}`) : null;
 }
