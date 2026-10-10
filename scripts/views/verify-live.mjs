@@ -55,9 +55,26 @@ for (let attempt = 0; attempt < 5; attempt++) {
       assert.equal(sourceResponse.status, 200);
       const sourceData = await sourceResponse.json(); assert.ok(Array.isArray(sourceData.sources));
       assert.ok(!JSON.stringify(sourceData).includes('visitor_hash'));
+      for (const locale of ['zh', 'en']) {
+        const route = `/${locale}/cv-agent/`;
+        if (!Object.hasOwn(manifest.pages, route.replace(/\\/+$/, ''))) continue;
+        const pageResponse = await get(route);
+        assert.equal(pageResponse.status, 200);
+        const pageHtml = await pageResponse.text();
+        assert.ok(pageHtml.includes('data-cv-signature'));
+        assert.match(pageHtml, /Flux to Everything/);
+        assert.match(pageHtml, /name="robots"[^>]*noindex/);
+        assert.ok(!pageHtml.includes('dossierkit:page-ref'));
+        verifyFooter(pageHtml, `page:/${locale}/cv-agent`, false);
+        const result = await get('/api/views?mode=summary&path=' + encodeURIComponent(route));
+        assert.equal(result.status, 200);
+        const summary = await result.json();
+        assert.ok(Number.isSafeInteger(summary.total));
+      }
       const privacy = await get('/zh/privacy/'); assert.equal(privacy.status, 200);
       const top = await (await get('/api/views?mode=top&period=7d')).json();
       assert.ok(Array.isArray(top.articles));
+      assert.ok(top.articles.every((item) => !item.ref.includes('/cv-agent')), 'Unlisted CV leaked in public ranking');
       assert.ok(homeMarkup.refs.includes('site:total'));
       assert.ok(articleMarkup.refs.includes(manifest.pages[articlePath]));
     } else {
