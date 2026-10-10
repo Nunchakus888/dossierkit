@@ -132,14 +132,45 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
   .cv-agent-document h1 { font-family: "Pacifico", "Brush Script MT", cursive; font-size: 36px; font-weight: 400; color: #247f74; }
   .cv-agent-document .headline { margin-top: 8px; font-size: 19px; font-weight: 650; }
   .cv-agent-document .contact { flex-shrink: 0; text-align: right; font-size: 13px; color: #556373; }
-  .cv-agent-document .contact > p { margin-top: 4px; }
-  .cv-agent-document .contact-links { display: flex; align-items: center; justify-content: flex-end; gap: 4px; }
-  .cv-agent-document .contact-link { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border-radius: 8px; color: #556373; text-decoration: none; }
-  .cv-agent-document .contact-link svg { flex: none; }
-  .cv-agent-document .contact-link:hover { background: #f1f3f5; color: #25313d; }
-  .cv-agent-document .utilities { display: flex; gap: 3px; justify-content: flex-end; margin-top: 5px; }
-  .cv-agent-document .icon-action { display: inline-flex; width: 44px; height: 44px; align-items: center; justify-content: center; border: 0; border-radius: 7px; background: transparent; color: #556373; cursor: pointer; text-decoration: none; }
-  .cv-agent-document .icon-action:hover { background: #f1f3f5; color: #25313d; }
+  /* Align the icon artwork, not a padded 44px box, with the page edges. */
+  .cv-agent-document .contact > p { margin-top: 13px; }
+  .cv-agent-document .contact-links,
+  .cv-agent-document .utilities { display: flex; align-items: center; justify-content: flex-end; gap: 26px; }
+  .cv-agent-document .utilities { margin-top: 13px; }
+  .cv-agent-document .contact-link,
+  .cv-agent-document .icon-action {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    padding: 0;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: #556373;
+    cursor: pointer;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cv-agent-document .contact-link svg,
+  .cv-agent-document .icon-action svg { flex: none; }
+  /* Invisible 44x44px touch targets; adjacent targets meet without overlapping. */
+  .cv-agent-document .contact-link::before,
+  .cv-agent-document .icon-action::before {
+    content: "";
+    position: absolute;
+    inset: -13px;
+  }
+  .cv-agent-document .contact-link:is(:hover, :active, :focus-visible),
+  .cv-agent-document .icon-action:is(:hover, :active, :focus-visible) {
+    background: transparent;
+    color: #25313d;
+  }
+  .cv-agent-document .contact-link:focus-visible,
+  .cv-agent-document .icon-action:focus-visible { outline-color: #647080; }
   .cv-agent-document section { margin-top: 24px; }
   .cv-agent-document h2 { margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #e2e5e9; font-size: 15px; font-weight: 750; letter-spacing: .02em; }
   .cv-agent-document h3 { font-size: 14px; font-weight: 700; }
@@ -184,8 +215,11 @@ const sourceLanguage = (language: Locale) => language === locale ? "" : language
     .cv-agent-document .headline { font-size: 13pt; }
     .cv-agent-document .contact, .cv-agent-document .period { font-size: 8pt; }
     .cv-agent-document .contact { text-align: right; }
+    .cv-agent-document .contact > p { margin-top: 4px; }
     .cv-agent-document .contact-links { gap: 6px; }
-    .cv-agent-document .contact-link { width: 22px; height: 22px; border-radius: 0; }
+    .cv-agent-document .contact-link { width: 22px; height: 22px; }
+    .cv-agent-document .contact-link::before,
+    .cv-agent-document .icon-action::before { content: none; }
     .cv-agent-document .contact-link svg { width: 16px; height: 16px; }
     .cv-agent-document section { margin-top: 13px; }
     .cv-agent-document h2 { font-size: 10pt; margin-bottom: 8px; padding-bottom: 4px; break-after: avoid; }
