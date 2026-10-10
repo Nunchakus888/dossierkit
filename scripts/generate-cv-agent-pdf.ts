@@ -47,6 +47,51 @@ async function main() {
       for (const width of widths) {
         await page.setViewportSize({ width, height: 1000 });
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Horizontal overflow: ${locale} at ${width}px`);
+        // Artwork should align with the content edge while its invisible hit area remains 44px.
+        const chrome = await page.evaluate(() => {
+          const identity = document.querySelector<HTMLElement>(".identity")!.getBoundingClientRect();
+          const contactIcons = Array.from(document.querySelectorAll<HTMLElement>(".contact-links .contact-link"));
+          const utilityIcons = Array.from(document.querySelectorAll<HTMLElement>(".utilities .icon-action"));
+          const isMobile = matchMedia("(max-width: 700px)").matches;
+          const first = contactIcons[0].getBoundingClientRect();
+          const last = contactIcons.at(-1)!.getBoundingClientRect();
+          const lastUtility = utilityIcons.at(-1)!.getBoundingClientRect();
+          const controls = [...contactIcons, ...utilityIcons].map((element) => {
+            const bounds = element.getBoundingClientRect();
+            const centerX = bounds.left + bounds.width / 2;
+            const centerY = bounds.top + bounds.height / 2;
+            const points = [
+              [centerX - 12, centerY], [centerX + 12, centerY],
+              [centerX, centerY - 12], [centerX, centerY + 12]
+            ];
+            const hit = points.every(([x, y]) => {
+              const target = document.elementFromPoint(x, y);
+              return target === element || (target != null && element.contains(target));
+            });
+            return { width: bounds.width, height: bounds.height, hit };
+          });
+          return {
+            isMobile,
+            alignContact: isMobile ? Math.abs(first.left - identity.left) : Math.abs(last.right - identity.right),
+            alignUtilities: Math.abs(lastUtility.right - identity.right),
+            controls
+          };
+        });
+        assert.ok(chrome.alignContact <= 1, `Contact icons not edge-aligned: ${locale} ${width}px`);
+        assert.ok(chrome.alignUtilities <= 1, `Utility icons not edge-aligned: ${locale} ${width}px`);
+        assert.ok(chrome.controls.length >= 5, `Missing icon controls: ${locale} ${width}px`);
+        for (const control of chrome.controls) {
+          assert.ok(control.width <= 24 && control.height <= 24, `Visible icon container too padded: ${locale} ${width}px`);
+          assert.ok(control.hit, `Invisible 44px hit target is blocked: ${locale} ${width}px`);
+        }
+        if (width === 390) {
+          for (const selector of [".contact-link[data-cv-contact=github]", ".utilities .icon-action"]) {
+            const icon = page.locator(selector).first();
+            await icon.hover();
+            const background = await icon.evaluate((element) => getComputedStyle(element).backgroundColor);
+            assert.ok(background === "rgba(0, 0, 0, 0)" || background === "transparent", `Icon hover background must stay transparent: ${selector}`);
+          }
+        }
         if (width !== 320) await page.screenshot({ path: path.join(artifacts, `${locale}-${width}.png`), fullPage: true });
       }
       // Chromium otherwise embeds the temporary local server in PDF link annotations.
