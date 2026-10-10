@@ -1,4 +1,7 @@
 # Private authoring configuration for the unlisted CV view. Not a public collection.
+signatureTagline:
+  zh: "Flux to Everything"
+  en: "Flux to Everything"
 pdfFilenameBase: "George-AI Agent开发专家"
 educationSourceSchool: "Xi'an Aeronautical Polytechnic Institute"
 focus:
