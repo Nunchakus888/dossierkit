@@ -47,6 +47,34 @@ async function main() {
       for (const width of widths) {
         await page.setViewportSize({ width, height: 1000 });
         assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Horizontal overflow: ${locale} at ${width}px`);
+        const signature = await page.evaluate(() => {
+          const heading = document.querySelector<HTMLElement>(".identity h1")!;
+          const identity = document.querySelector<HTMLElement>(".identity")!.getBoundingClientRect();
+          const footer = document.querySelector<HTMLElement>("footer[data-cv-signature]")!;
+          const slogan = footer.querySelector<HTMLElement>(".cv-agent-signature-line")!;
+          const headingStyle = getComputedStyle(heading);
+          const sloganStyle = getComputedStyle(slogan);
+          const stats = footer.querySelector<HTMLElement>(".cv-agent-signature-stats");
+          const count = stats?.querySelector<HTMLElement>(".view-count");
+          return {
+            headingLeftDelta: Math.abs(heading.getBoundingClientRect().left - identity.left),
+            sloganRightDelta: Math.abs(slogan.getBoundingClientRect().right - identity.right),
+            footerRightDelta: Math.abs(footer.getBoundingClientRect().right - identity.right),
+            fontMatch: sloganStyle.fontFamily === headingStyle.fontFamily,
+            colorMatch: sloganStyle.color === headingStyle.color,
+            sizeRatio: parseFloat(sloganStyle.fontSize) / parseFloat(headingStyle.fontSize),
+            transform: sloganStyle.transform,
+            statsAligned: count ? Math.abs(count.getBoundingClientRect().right - identity.right) <= 1 : true
+          };
+        });
+        assert.ok(signature.headingLeftDelta <= 1, `CV heading not flush-left: ${locale} ${width}px`);
+        assert.ok(signature.sloganRightDelta <= 1 && signature.footerRightDelta <= 1,
+          `CV footer/slogan not flush-right: ${locale} ${width}px`);
+        assert.ok(signature.fontMatch && signature.colorMatch && signature.transform === "none",
+          `CV name and slogan style mismatch: ${locale} ${width}px`);
+        assert.ok(signature.sizeRatio > 0.3 && signature.sizeRatio < 0.6,
+          `CV slogan should be notably smaller than name: ${locale} ${width}px`);
+        assert.ok(signature.statsAligned, `CV view counter not flush-right: ${locale} ${width}px`);
         // Artwork should align with the content edge while its invisible hit area remains 44px.
         const chrome = await page.evaluate(() => {
           const identity = document.querySelector<HTMLElement>(".identity")!.getBoundingClientRect();
@@ -113,6 +141,19 @@ async function main() {
       assert.equal(await footer.count(), 1, `Missing signature: ${locale}`);
       assert.match(await footer.innerText(), /Flux to Everything/);
       assert.equal(await footer.evaluate((el) => getComputedStyle(el).display !== "none"), true, `Signature hidden in PDF: ${locale}`);
+      const printSignature = await footer.evaluate((element) => {
+        const slogan = element.querySelector<HTMLElement>(".cv-agent-signature-line")!;
+        const name = document.querySelector<HTMLElement>(".identity h1")!;
+        const identity = document.querySelector<HTMLElement>(".identity")!.getBoundingClientRect();
+        return {
+          delta: Math.abs(slogan.getBoundingClientRect().right - identity.right),
+          color: getComputedStyle(slogan).color,
+          nameColor: getComputedStyle(name).color,
+          small: parseFloat(getComputedStyle(slogan).fontSize) < parseFloat(getComputedStyle(name).fontSize) * .6
+        };
+      });
+      assert.ok(printSignature.delta <= 1 && printSignature.color === printSignature.nameColor && printSignature.small,
+        `Printed footer must echo the name on the far right: ${locale}`);
       const stats = footer.locator(".cv-agent-signature-stats");
       if (await stats.count()) {
         assert.equal(await stats.evaluate((el) => getComputedStyle(el).display), "none", `Web-only view stats visible in PDF: ${locale}`);
