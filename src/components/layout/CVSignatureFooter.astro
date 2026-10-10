@@ -24,7 +24,7 @@ const { tagline, pageRef } = Astro.props;
     position: relative;
     margin-top: 34px;
     padding: 20px 0 4px;
-    text-align: center;
+    text-align: right;
     break-inside: avoid;
   }
 
@@ -44,18 +44,21 @@ const { tagline, pageRef } = Astro.props;
 
   .cv-agent-signature-line {
     display: inline-block;
-    max-width: calc(100% - 16px);
+    max-width: 100%;
     margin: 0;
-    padding: .12em .28em .18em;
-    color: #70808c;
-    font-size: clamp(1.08rem, 2.3vw, 1.38rem);
-    line-height: 1.6;
+    padding: .1em 0 .16em;
+    /* The CV starts with a left-aligned Pacifico name; end with its smaller twin. */
+    color: #247f74;
+    font-size: clamp(.95rem, 1.4vw, 1.05rem);
+    font-weight: 400;
+    line-height: 1.55;
+    transform: none;
     text-wrap: balance;
   }
 
   .cv-agent-signature-stats {
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
     margin-top: 6px;
     min-height: 20px;
@@ -68,7 +71,7 @@ const { tagline, pageRef } = Astro.props;
       margin-top: 28px;
       padding-top: 16px;
     }
-    .cv-agent-signature-line { font-size: 1.12rem; }
+    .cv-agent-signature-line { font-size: .95rem; }
   }
 
   @media print {
@@ -79,9 +82,9 @@ const { tagline, pageRef } = Astro.props;
       break-inside: avoid;
     }
     .cv-agent-signature-line {
-      font-size: 11pt;
+      font-size: 10pt;
       line-height: 1.42;
-      color: #71808d;
+      color: #247f74;
     }
   }
 </style>
