@@ -24,16 +24,13 @@ const canonical = new URL('/zh/engineering-map/', Astro.site || 'https://sunionp
     <meta name="robots" content="noindex, nofollow, noarchive" />
     <meta name="referrer" content="no-referrer" />
     <meta name="description" content={data.intro} />
-    <meta name="theme-color" content="#f6f7fa" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0c1019" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#141414" media="(prefers-color-scheme: dark)" />
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>{data.name} · {data.title}</title>
   </head>
   <body data-pagefind-ignore="all">
     <Fragment set:html={markup} />
-    <script>
-      import '../../lib/engineering-map/interactions.js';
-    </script>
   </body>
 </html>

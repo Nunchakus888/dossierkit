@@ -3,43 +3,39 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { validateMap, renderEngineeringMap } from '../src/lib/engineering-map/render.mjs';
 const data=JSON.parse(readFileSync(new URL('../profiles/default/engineering-map.json',import.meta.url),'utf8'));
-test('six domains, eighteen capabilities, three separately scoped projects',()=>{
+test('six groups, eighteen capabilities, three independent project records',()=>{
   validateMap(data);
   assert.equal(data.domains.length,6);assert.equal(data.nodes.length,18);assert.equal(data.projects.length,3);
-  assert.equal(data.domains.every(d=>d.nodes.length===3),true);
+  assert.ok(data.domains.every(d=>d.nodes.length===3));
 });
-test('every claim has a contribution mode, project, source, and validation boundary',()=>{
-  for(const n of data.nodes){assert.ok(n.boundary);for(const c of n.contributions){assert.ok(c.evidence.length);assert.ok(['own','integration','research','plan'].includes(c.mode));}}
-  assert.ok(data.nodes.find(n=>n.id==='agent-02').contributions.some(c=>c.mode==='integration'&&c.text.includes('Pi')));
-  assert.ok(data.nodes.find(n=>n.id==='arch-03').contributions.some(c=>c.mode==='plan'&&c.text.includes('多 Agent')));
+test('every node has concrete technologies, contribution, project, problem and boundary',()=>{
+  for(const n of data.nodes) {assert.ok(n.tech.length);assert.ok(n.work);assert.ok(n.problem);assert.ok(n.boundary);assert.ok(data.projects.some(p=>p.id===n.project));}
+  assert.equal(data.nodes.find(n=>n.id==='agent-02').mode,'integration');
+  assert.ok(data.extensions.some(x=>x.kind==='plan'&&x.title.includes('多 Agent')));
+  assert.ok(data.extensions.some(x=>x.kind==='research'));
 });
-test('invalid evidence, relation, and duplicate placement fail closed',()=>{
-  for(const mutate of [d=>d.nodes[0].contributions[0].evidence.push('missing'),d=>d.relations[0].to='missing',d=>d.domains[1].nodes[0]=d.domains[0].nodes[0]]){
-    const copy=structuredClone(data);mutate(copy);assert.throws(()=>validateMap(copy));
-  }
+test('all skills and contributions are initially visible, with no skill links or scripts',()=>{
+  const html=renderEngineeringMap(data);
+  const graph=html.slice(html.indexOf('<section class="graph"'),html.indexOf('<section class="dependencies"'));
+  assert.equal((graph.match(/data-capability=/g)||[]).length,18);
+  for(const n of data.nodes) assert.ok(graph.includes(n.work));
+  for(const forbidden of ['<details','<script','<button','<a ',' hidden','onclick=']) assert.ok(!graph.includes(forbidden),forbidden);
+  assert.ok(!html.includes('/cv-agent'));assert.ok(!html.includes('<script'));
+  assert.equal((html.match(/<details/g)||[]).length,3); // Optional in-place source records only.
 });
-test('HTML is escaped and source URLs are restricted',()=>{
-  const copy=structuredClone(data);copy.nodes[0].title='<img src=x onerror=alert(1)>';
-  const html=renderEngineeringMap(copy);assert.ok(html.includes('&lt;img'));assert.ok(!html.includes('<img src=x'));
-  copy.sources[0].href='javascript:alert(1)';assert.throws(()=>validateMap(copy));
+test('invalid IDs, projects, dependencies and duplicate placements fail',()=>{
+  const mutations=[d=>d.nodes[0].project='missing',d=>d.relations[0].to=['missing'],d=>d.domains[1].nodes[0]=d.domains[0].nodes[0],d=>d.nodes[0].mode='expert',d=>d.nodes[0].id='"><img>'];
+  for(const mutate of mutations){const copy=structuredClone(data);mutate(copy);assert.throws(()=>validateMap(copy));}
 });
-test('server rendering provides all details and stable, unique deep links',()=>{
-  const html=renderEngineeringMap(data);const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
-  assert.equal(ids.length,new Set(ids).size);
-  for(const n of data.nodes){assert.ok(html.includes(`id="node-${n.id}"`));assert.ok(html.includes(`id="cap-${n.id}"`));}
-  for(const m of html.matchAll(/href="#([^"]+)"/g))assert.ok(ids.includes(m[1]),`Broken anchor ${m[1]}`);
-  assert.equal((html.match(/data-capability=/g)||[]).length,18);
+test('source text is escaped and historical node fragments remain addressable',()=>{
+  const copy=structuredClone(data);copy.nodes[0].tech=['<img src=x onerror=alert(1)>'];
+  const html=renderEngineeringMap(copy);assert.ok(html.includes('&lt;img'));assert.ok(!html.includes('<img'));
+  const ids=[...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size);
+  for(const n of data.nodes){assert.ok(ids.includes(`node-${n.id}`));assert.ok(ids.includes(`cap-${n.id}`));}
 });
-test('unlisted route has crawler and Pagefind exclusion and no CV import',()=>{
+test('route remains unlisted and imports no interaction client or CV data',()=>{
   const route=readFileSync(new URL('../src/pages/[locale]/engineering-map.astro',import.meta.url),'utf8');
   assert.ok(route.includes('noindex, nofollow, noarchive'));assert.ok(route.includes('data-pagefind-ignore="all"'));
-  assert.ok(!route.includes('cv-agent.yaml'));assert.ok(route.includes("if (!existsSync(file)) return []"));
-});
-
-test('embedded evidence never links into the separately unlisted CV',()=>{
-  const html=renderEngineeringMap(data);
-  assert.ok(!html.includes('/cv-agent'));
-  assert.ok(html.includes('履历摘录 · 原文已内嵌'));
-  assert.ok(html.includes('作者提供 · 摘要已内嵌'));
-  for(const source of data.sources) assert.ok(html.includes(source.label));
+  assert.ok(!route.includes('cv-agent.yaml'));assert.ok(!route.includes('<script'));assert.ok(!route.includes('interactions'));
+  assert.ok(route.includes('if (!existsSync(file)) return []'));
 });
