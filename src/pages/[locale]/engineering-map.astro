@@ -1,0 +1,39 @@
+---
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { renderEngineeringMap } from '../../lib/engineering-map/render.mjs';
+import '../../lib/engineering-map/map.css';
+
+export function getStaticPaths() {
+  const profile = process.env.ACTIVE_PROFILE || 'default';
+  if (!/^[a-zA-Z0-9_-]+$/.test(profile)) throw new Error('Invalid ACTIVE_PROFILE');
+  const file = resolve(process.cwd(), 'profiles', profile, 'engineering-map.json');
+  if (!existsSync(file)) return [];
+  const data = JSON.parse(readFileSync(file, 'utf8'));
+  return [{ params: { locale: 'zh' }, props: { data } }];
+}
+const { data } = Astro.props;
+const markup = renderEngineeringMap(data);
+const canonical = new URL('/zh/engineering-map/', Astro.site || 'https://sunionpeaks.pages.dev');
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content={data.intro} />
+    <meta name="theme-color" content="#f6f7fa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0c1019" media="(prefers-color-scheme: dark)" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{data.name} · {data.title}</title>
+  </head>
+  <body data-pagefind-ignore="all">
+    <Fragment set:html={markup} />
+    <script>
+      import '../../lib/engineering-map/interactions.js';
+    </script>
+  </body>
+</html>

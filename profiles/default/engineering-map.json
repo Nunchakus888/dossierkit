@@ -1,0 +1,64 @@
+{
+  "version": 1,
+  "locale": "zh",
+  "name": "George",
+  "title": "工程能力图谱",
+  "intro": "从 0 到 1 建设跨端 AI 产品、业务 Agent 与 Cowork 任务执行系统。",
+  "tagline": "连接交互、推理与执行，明确系统边界。",
+  "featured": "dist-03",
+  "projects": [
+    {"id":"p1","code":"P1","name":"跨端 AI 产品","subtitle":"产品交付 / 模型服务化","summary":"参与跨端 AI 产品从 0 到 1 建设，实践覆盖模型接入、异步任务、RPC 与生产监控。","boundary":"本项目的产品与服务化经验单独归属，不迁移为 Cowork 的运行规模或验证成果。"},
+    {"id":"p2","code":"P2","name":"业务 Agent","subtitle":"业务编排 / 知识改进","summary":"主导业务从规则编排向 LLM 驱动演进，连接意图、SOP、检索、工具与人工转接。","boundary":"业务效果不移用于 Cowork；多 Agent 不作为本图谱的已实现成果。"},
+    {"id":"p3","code":"P3","name":"Cowork","subtitle":"持续任务 / 受控执行","summary":"主导任务执行系统的架构与核心实现，围绕 Session / Run 连接工具、审批、执行环境与成果。","boundary":"底层 LLM 循环与压缩集成 Pi；多 Agent 协作属于规划。部署拓扑与分布式运行验证待核。"}
+  ],
+  "domains": [
+    {"id":"arch","code":"01","name":"架构建模","en":"Architecture","question":"任务、状态与责任如何划分？","nodes":["arch-01","arch-02","arch-03"]},
+    {"id":"ux","code":"02","name":"跨端交互","en":"Cross-platform","question":"用户如何理解并接续工作？","nodes":["ux-01","ux-02","ux-03"]},
+    {"id":"dist","code":"03","name":"分布式与微服务","en":"Distributed systems","question":"异步执行如何保持边界与恢复？","nodes":["dist-01","dist-02","dist-03"]},
+    {"id":"cloud","code":"04","name":"云原生","en":"Cloud native","question":"执行环境如何部署与隔离？","nodes":["cloud-01","cloud-02","cloud-03"]},
+    {"id":"agent","code":"05","name":"AI / Agent","en":"Agent engineering","question":"模型如何使用知识与工具推进任务？","nodes":["agent-01","agent-02","agent-03"]},
+    {"id":"quality","code":"06","name":"工程质量","en":"Engineering quality","question":"系统行为如何约束与验证？","nodes":["quality-01","quality-02","quality-03"]}
+  ],
+  "sources": [
+    {"id":"cv-task","label":"Cowork · 长任务可靠执行","kind":"履历陈述","href":"/zh/cv-agent/","excerpt":"实现 Session/Run/Attempt/Operation 状态机、Actor 幂等、SSE 重放与 Pi 检查点；重启后对账，结果不明的外部操作不盲目重试。","scope":"支持任务控制与恢复的项目陈述；不等同于源码审计或运行验证。"},
+    {"id":"cv-isolation","label":"Cowork · 隔离执行与人机授权","kind":"履历陈述","href":"/zh/cv-agent/","excerpt":"仅在需要网页或文件操作时创建 Sandbox，实现容量控制、Workspace 快照和成果校验下载；审批绑定具体工具请求，Web/Actor 与租户资源分别鉴权。","scope":"支持隔离执行与授权边界的职责陈述；安全测试与生产拓扑待核。"},
+    {"id":"cv-config","label":"Cowork · 自配置与连接治理","kind":"履历陈述","href":"/zh/cv-agent/","excerpt":"实现分层配置、任务级能力快照和按需验真 Skill；分离任务身份、业务权限和 Provider 凭证。","scope":"支持配置与连接治理的项目陈述；具体 PR、接口契约和测试待核。"},
+    {"id":"cv-cowork","label":"Cowork · 任务服务与交付","kind":"履历陈述","href":"/zh/cv-agent/","excerpt":"将跨系统处理与人工交接设计为持续任务；Web/嵌入工作台与外部 API 共用任务服务。主导基于 Kubernetes 的架构与核心实现。","scope":"支持任务服务与架构实践；不推导集群规模或多副本一致性结论。"},
+    {"id":"cv-ai","label":"跨端 AI 产品 · 模型服务化","kind":"履历陈述","href":"/zh/cv-agent/","excerpt":"参与秒画 AIGC SaaS 从 0 到 1 建设，负责模型接入与服务化架构，覆盖 LoRA 训练对接、异步队列、模型存储、后处理、RPC、负载均衡和生产监控。","scope":"仅归属该产品；具体部署配置、故障记录与性能证据待核。"},
+    {"id":"cv-business","label":"业务 Agent · 规则到 LLM 驱动","kind":"履历陈述","href":"/zh/cv-agent/","excerpt":"主导业务从规则编排演进为 LLM 驱动，将意图路由、SOP、知识、工具和人工转接沉淀为租户可配置能力。","scope":"支持业务编排与配置化实践；不将业务指标归属到 Cowork。"},
+    {"id":"cv-learning","label":"业务 Agent · 问题学习与评测","kind":"履历陈述","href":"/zh/cv-agent/","excerpt":"贯通上线前评测、线上回放、问题归因和成本分析；将多语言未知问题聚类与人工会话学习接入知识回写。","scope":"支持评测和知识改进的工程陈述；实验集与指标口径待核。"},
+    {"id":"cv-rag","label":"业务 Agent · 检索与上下文","kind":"履历陈述","href":"/zh/cv-agent/","excerpt":"建设 Agentic RAG、会话与用户 Memory 及 Skill/MCP 工具体系，统一上下文与执行边界。","scope":"本图谱仅采用已提供的检索、记忆与工具实践，不采纳多 Agent 已落地的推断。"},
+    {"id":"brief","label":"作者补充 · 项目与集成边界","kind":"作者补充","excerpt":"从 0 到 1 建设跨端 AI 产品、业务 Agent 和 Cowork。实践涉及 ReAct、ARQs、Agentic RAG、NLP 与问题聚类。Cowork 底层 LLM 循环和压缩集成 Pi，多 Agent 协作仍属规划。","scope":"作者提供的事实范围；ARQs 的具体定义与实现映射待核。"},
+    {"id":"cv-research","label":"相关研究 · 动作授权与追溯","kind":"研究陈述","href":"/zh/cv-agent/","excerpt":"基于 CAVA 研究 Shell、MCP、浏览器操作的统一动作身份，分析审批与实际执行内容的绑定，以及副作用与授权边界的追溯。","scope":"属于机制研究，不计作 Cowork 的已实现功能或验证结果。"}
+  ],
+  "nodes": [
+    {"id":"arch-01","title":"领域与状态建模","problem":"把长对话、一次运行、重试和外部操作分开。","tech":["Session","Run","Attempt","Operation"],"contributions":[{"project":"p3","mode":"own","text":"建设 Session / Run / Attempt / Operation 状态模型，为任务推进、恢复与操作对账提供边界。","evidence":["cv-task"]}],"boundary":"实现职责来自履历陈述。状态转换完整性、并发测试与具体代码归属待核。","decision":"任务、运行与外部操作分别记录，讨论恢复时先确认恢复的是哪一层状态。"},
+    {"id":"arch-02","title":"配置驱动建模","problem":"业务差异如何配置，而不固化为分叉实现？","tech":["Profile","SOP","Capability snapshot"],"contributions":[{"project":"p2","mode":"own","text":"将意图路由、SOP、知识、工具和人工转接沉淀为租户可配置能力。","evidence":["cv-business"]},{"project":"p3","mode":"own","text":"实现分层配置与任务级能力快照，分离任务身份、业务权限与 Provider 凭证。","evidence":["cv-config"]}],"boundary":"两项贡献分别属于业务 Agent 与 Cowork；不合并配置模型或运行结果。版本迁移与生效测试待核。"},
+    {"id":"arch-03","title":"模块边界与服务演进","problem":"入口、任务控制和执行能力怎样各自演进？","tech":["Task service","Runtime","API"],"contributions":[{"project":"p3","mode":"own","text":"以共用任务服务连接 Web、嵌入工作台与外部 API，将任务控制与执行能力分开组织。","evidence":["cv-cowork"]},{"project":"p3","mode":"plan","text":"多 Agent 协作属于后续规划，不作为当前系统的已落地能力。","evidence":["brief"]}],"boundary":"模块拆分不等同于多节点分布式部署；实际服务拓扑与多副本运行验证待核。"},
+    {"id":"ux-01","title":"跨端产品交付","problem":"跨端入口如何形成完整 AI 产品体验？","tech":["Web","Desktop","Mobile"],"contributions":[{"project":"p1","mode":"own","text":"参与跨端 AI 产品从 0 到 1 建设，贯通用户交互与模型服务。","evidence":["brief","cv-ai"]}],"boundary":"仅采用已提供的跨端建设经历。各端的具体职责、代码与兼容性记录待核；不声明统一代码复用比例。"},
+    {"id":"ux-02","title":"任务状态与事件呈现","problem":"连接中断后，用户怎样继续理解任务进展？","tech":["SSE","Replay","Session / Run"],"contributions":[{"project":"p3","mode":"own","text":"将持续任务、进度跟进与成果交付组织在共用任务服务中，并实现 SSE 重放。","evidence":["cv-cowork","cv-task"]}],"boundary":"服务端事件能力与完整客户端交付分开核验。断线、事件游标和跨端接续测试待核。"},
+    {"id":"ux-03","title":"人工交接交互","problem":"工具执行与人工介入如何接续？","tech":["Human handoff","Approval","Artifact"],"contributions":[{"project":"p2","mode":"own","text":"将人工转接纳入租户可配置的业务 Agent 流程。","evidence":["cv-business"]},{"project":"p3","mode":"own","text":"将关键操作批准与成果取得纳入持续任务的交互设计。","evidence":["cv-cowork"]}],"boundary":"业务转接与 Cowork 操作审批属于不同项目；完整审批界面及异常交互验证待核。"},
+    {"id":"dist-01","title":"服务通信与 RPC","problem":"模型调用与后处理如何组织为服务链路？","tech":["RPC","Load balancing","Model serving"],"contributions":[{"project":"p1","mode":"own","text":"负责模型接入与服务化架构，实践覆盖 RPC、负载均衡、模型存储与后处理。","evidence":["cv-ai"]}],"boundary":"RPC 与服务化贡献归属跨端 AI 产品，不用于证明 Cowork 已完成分布式部署。协议、拓扑与容错验证待核。"},
+    {"id":"dist-02","title":"异步任务执行","problem":"耗时模型任务如何与请求生命周期解耦？","tech":["Async queue","Model jobs","Task state"],"contributions":[{"project":"p1","mode":"own","text":"在模型服务化中建设异步队列相关能力，连接训练对接、模型存储与后处理。","evidence":["cv-ai"]}],"boundary":"队列选型、投递语义、积压处理和重试策略待核；不声明吞吐或可用性指标。"},
+    {"id":"dist-03","title":"幂等、检查点与恢复","problem":"中断之后，哪些步骤可继续，哪些操作需对账？","tech":["Idempotency","Checkpoint","Reconciliation"],"contributions":[{"project":"p3","mode":"own","text":"建设任务状态机、Actor 幂等与 SSE 重放；重启后对账，结果不明的外部操作不盲目重试。","evidence":["cv-task"]},{"project":"p3","mode":"integration","text":"集成 Pi 检查点与运行时能力，不将 Pi 底层实现归为自主研发。","evidence":["cv-task","brief"]}],"boundary":"履历级证据；故障注入、恢复日志与代码归属待核。未声明跨节点恢复、任意外部操作 exactly-once 或生产 SLA。","decision":"把“任务可恢复”与“外部副作用可安全重试”分开处理；结果不明时先对账，避免把状态恢复写成效果保证。"},
+    {"id":"cloud-01","title":"容器与 Kubernetes","problem":"任务服务如何落到可部署的运行环境？","tech":["Kubernetes","Containers","Runtime"],"contributions":[{"project":"p3","mode":"own","text":"主导基于 Kubernetes 的 Cowork 架构与核心实现，连接任务服务、Agent Runtime 与执行环境。","evidence":["cv-cowork"]}],"boundary":"Kubernetes 架构经历不直接证明多副本一致性或高可用；部署清单、集群拓扑与运行记录待核。"},
+    {"id":"cloud-02","title":"隔离与按需执行","problem":"什么时候创建执行环境，如何限制资源边界？","tech":["Sandbox","Computer Use","Capacity"],"contributions":[{"project":"p3","mode":"own","text":"仅在网页或文件操作需要时创建 Sandbox，并建设容量控制与 Workspace 快照。","evidence":["cv-isolation"]}],"boundary":"隔离机制、安全强度、资源回收与逃逸防护测试待核；不以“Sandbox”名称替代安全证明。","decision":"任务持续存在，计算机环境按需创建；将任务生命周期与执行环境生命周期分开讨论。"},
+    {"id":"cloud-03","title":"工作空间与成果交付","problem":"临时环境中的工作如何成为可取得的成果？","tech":["Workspace","Snapshot","Artifact"],"contributions":[{"project":"p3","mode":"own","text":"建设 Workspace 快照与成果校验下载，将执行环境中的产物接入交付链路。","evidence":["cv-isolation"]}],"boundary":"已提供的是实现职责陈述；持久化策略、校验方式和跨环境恢复测试待核。"},
+    {"id":"agent-01","title":"业务推理、检索与学习","problem":"知识和工具如何参与业务问题解决？","tech":["ReAct","Agentic RAG","NLP","Clustering"],"contributions":[{"project":"p2","mode":"own","text":"推动规则编排向 LLM 驱动演进，建设 Agentic RAG、会话与用户 Memory，并将问题聚类接入知识改进。","evidence":["cv-business","cv-rag","cv-learning","brief"]}],"boundary":"不同方法的实现模块与效果分别核验；ARQs 的定义待核。未声明基础模型训练或自主研发底层模型。"},
+    {"id":"agent-02","title":"LLM 运行时与上下文","problem":"底层推理循环与外围任务控制怎样分工？","tech":["Pi","LLM loop","Compaction"],"contributions":[{"project":"p3","mode":"integration","text":"集成 Pi 的底层 LLM 循环与上下文压缩能力。","evidence":["brief"]},{"project":"p3","mode":"own","text":"在任务系统层组织 Session / Run、检查点接入与恢复边界。","evidence":["cv-task"]}],"boundary":"Pi 循环与压缩明确归属开源集成；外围适配的具体改动、长上下文测试及个人归属待核。","decision":"把成熟循环能力与产品控制面分层：集成边界明确，个人贡献落在任务语义和工程接续。"},
+    {"id":"agent-03","title":"Skill / MCP 能力装配","problem":"工具能力如何按任务装配并受控使用？","tech":["Skill","MCP","Profile","Computer Use"],"contributions":[{"project":"p3","mode":"own","text":"建设分层配置、任务级能力快照和按需验真 Skill，连接工具使用与授权边界。","evidence":["cv-config"]},{"project":"p3","mode":"integration","text":"将 MCP / Skill 与按需 Computer 接入任务执行体系；协议和上游能力不作为自主发明。","evidence":["cv-cowork","cv-isolation"]}],"boundary":"连接与能力装配属于实现范围；协议原创、多 Agent 协作与任意工具兼容性不作为已验证成果。"},
+    {"id":"quality-01","title":"Agent 权限与审批","problem":"批准的内容，如何与实际执行的工具请求对应？","tech":["Action","MCP","Approval","Identity"],"contributions":[{"project":"p3","mode":"own","text":"将审批绑定具体工具请求，区分 Web / Actor 与租户资源鉴权，并分离任务身份、业务权限与 Provider 凭证。","evidence":["cv-isolation","cv-config"]},{"project":"p3","mode":"research","text":"研究统一动作身份与授权回执的机制；相关研究单独呈现，不计为 Cowork 的已实现功能。","evidence":["cv-research"]}],"boundary":"代码路径、审批拒绝与超时测试、重启后的授权边界待核。未声明所有外部副作用都已受控或可回滚。","decision":"审批对象落在具体工具请求，而不是笼统批准一个 Agent；同时保留用户身份与业务资源权限边界。"},
+    {"id":"quality-02","title":"评测、回放与验证","problem":"如何把未解决的问题变成可复核的改进？","tech":["Evaluation","Replay","Knowledge feedback"],"contributions":[{"project":"p2","mode":"own","text":"贯通上线前评测、线上回放、问题归因与知识回写，将多语言未知问题聚类纳入改进链路。","evidence":["cv-learning"]}],"boundary":"数据集、回归门槛与指标口径待核。业务 Agent 的评测经历不直接证明 Cowork 已通过同等验证。"},
+    {"id":"quality-03","title":"可观测与操作追溯","problem":"出现失败时，能追到哪一个服务或外部操作？","tech":["Monitoring","Events","Operation"],"contributions":[{"project":"p1","mode":"own","text":"在模型服务化职责中覆盖生产监控。","evidence":["cv-ai"]},{"project":"p3","mode":"own","text":"围绕 Operation 状态、SSE 重放与重启对账组织任务执行结果。","evidence":["cv-task"]}],"boundary":"监控体系和任务操作记录分别归属对应项目；告警、事件保留与审计完整性测试待核。"}
+  ],
+  "relations": [
+    {"from":"dist-03","to":"arch-01","type":"depends","label":"恢复需要明确状态与执行边界"},
+    {"from":"dist-03","to":"quality-03","type":"depends","label":"对账需要可追溯的执行结果"},
+    {"from":"quality-01","to":"arch-01","type":"depends","label":"授权绑定到具体任务与操作"},
+    {"from":"agent-03","to":"quality-01","type":"depends","label":"工具装配受权限与审批约束"},
+    {"from":"agent-03","to":"arch-02","type":"depends","label":"能力集合由配置与快照确定"},
+    {"from":"dist-03","to":"ux-02","type":"applies","label":"恢复与事件回放应用于任务状态接续"},
+    {"from":"cloud-02","to":"agent-03","type":"applies","label":"隔离环境承载按需 Computer Use"},
+    {"from":"quality-02","to":"agent-01","type":"applies","label":"评测与问题学习用于业务 Agent 改进"}
+  ]
+}
