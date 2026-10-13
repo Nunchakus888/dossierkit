@@ -35,3 +35,11 @@ test('unlisted route has crawler and Pagefind exclusion and no CV import',()=>{
   assert.ok(route.includes('noindex, nofollow, noarchive'));assert.ok(route.includes('data-pagefind-ignore="all"'));
   assert.ok(!route.includes('cv-agent.yaml'));assert.ok(route.includes("if (!existsSync(file)) return []"));
 });
+
+test('embedded evidence never links into the separately unlisted CV',()=>{
+  const html=renderEngineeringMap(data);
+  assert.ok(!html.includes('/cv-agent'));
+  assert.ok(html.includes('履历摘录 · 原文已内嵌'));
+  assert.ok(html.includes('作者提供 · 摘要已内嵌'));
+  for(const source of data.sources) assert.ok(html.includes(source.label));
+});
