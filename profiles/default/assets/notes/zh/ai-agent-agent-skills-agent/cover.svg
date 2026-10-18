@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+<title>让 AI Agent 稳定交付：可组合的工程能力与验证闭环</title>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#111425"/><stop offset="1" stop-color="#1b1b38"/></linearGradient>
+<linearGradient id="signal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fa5560"/><stop offset="0.48" stop-color="#b14bf4"/><stop offset="1" stop-color="#4d91ff"/></linearGradient>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 1 L 8 5 L 0 9" fill="none" stroke="#a796fa" stroke-width="1.5"/></marker>
+</defs>
+<rect width="1200" height="630" fill="url(#bg)"/>
+<circle cx="1090" cy="95" r="235" fill="#6e48c9" opacity="0.08"/>
+<circle cx="790" cy="580" r="205" fill="#4d91ff" opacity="0.06"/>
+<rect x="68" y="73" width="63" height="5" rx="2.5" fill="url(#signal)"/>
+<g>
+<text x="68" y="124" font-size="22" fill="#c7c6dc">MATTPOCOCK / SKILLS</text>
+<text x="64" y="251" font-size="62" font-weight="700" fill="#f5f5fc">让 AI Agent</text>
+<text x="64" y="335" font-size="62" font-weight="700" fill="#f5f5fc">稳定交付</text>
+<text x="68" y="400" font-size="25" fill="#b5b4ca">触发清晰 · 能力可组合 · 完成有证据</text>
+<text x="68" y="553" font-size="18" fill="#83869e">ENGINEERING WORKFLOWS</text>
+</g>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M 740 205 L 809 205 L 809 292 L 881 292" stroke="#a796fa" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M 740 386 L 809 386 L 809 309 L 881 309" stroke="#a796fa" stroke-width="3" marker-end="url(#arrow)"/>
+<path d="M 963 353 L 963 462 Q 963 479 946 479 L 722 479 Q 699 479 699 456 L 699 440" stroke="#66698f" stroke-width="2.5" stroke-dasharray="6 8" marker-end="url(#arrow)"/>
+</g>
+<rect x="642" y="152" width="114" height="106" rx="20" fill="#25243d" stroke="#6d61a6" stroke-width="2"/>
+<rect x="642" y="333" width="114" height="106" rx="20" fill="#25243d" stroke="#6d61a6" stroke-width="2"/>
+<g stroke="url(#signal)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M 681 183 L 668 205 L 681 227 M 717 183 L 730 205 L 717 227 M 706 181 L 692 229"/>
+<path d="M 673 370 L 725 370 M 673 386 L 715 386 M 673 402 L 705 402"/>
+</g>
+<rect x="888" y="245" width="145" height="111" rx="24" fill="#252740" stroke="#a795fb" stroke-width="2"/>
+<path d="M 926 299 L 949 322 L 991 278" fill="none" stroke="url(#signal)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="809" cy="300" r="5" fill="#bda8ff"/>
+</svg>
