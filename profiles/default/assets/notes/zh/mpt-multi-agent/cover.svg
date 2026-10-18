@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <title>MPT：让 Agent 学会何时参与，最高出价者执行当前步骤</title>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1428"/>
+      <stop offset="1" stop-color="#17142c"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fa5560"/>
+      <stop offset="0.5" stop-color="#b14bf4"/>
+      <stop offset="1" stop-color="#4d91ff"/>
+    </linearGradient>
+    <linearGradient id="winner" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8958ed"/>
+      <stop offset="1" stop-color="#4d91ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="1030" cy="295" r="220" fill="#b14bf4" opacity="0.04"/>
+  <circle cx="1040" cy="310" r="172" fill="none" stroke="#929bd1" stroke-width="1" opacity="0.15"/>
+  <g>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="76" y="94" font-size="23" font-weight="600" letter-spacing="4" fill="#aeb8d8">MPT / RESEARCH NOTES</text>
+    <rect x="76" y="135" width="67" height="5" rx="2.5" fill="url(#accent)"/>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="72" y="264" font-size="68" font-weight="700" fill="#f4f6ff">下一步，谁来做？</text>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="76" y="351" font-size="43" font-weight="500" fill="#d5d9ef">让 Agent 学会分工</text>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="78" y="434" font-size="23" fill="#9ca9c7">行动能力 × 参与时机 × 训练反馈</text>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="76" y="558" font-size="19" letter-spacing="1.4" fill="#929ebd">LEARNING SELF-ORCHESTRATION</text>
+    <path d="M900 185 C1032 185 1060 265 1060 315" fill="none" stroke="#536385" stroke-width="3"/>
+    <path d="M900 446 C1032 446 1060 367 1060 315" fill="none" stroke="#536385" stroke-width="3"/>
+    <path d="M961 315 L1084 315" fill="none" stroke="#93b5ff" stroke-width="5"/>
+    <polygon points="1084,305 1103,315 1084,325" fill="#93b5ff"/>
+    <circle cx="859" cy="185" r="48" fill="#212b43" stroke="#596482" stroke-width="1.5"/>
+    <circle cx="859" cy="446" r="48" fill="#27243d" stroke="#645475" stroke-width="1.5"/>
+    <circle cx="873" cy="315" r="88" fill="#6190ff" opacity="0.07"/>
+    <circle cx="873" cy="315" r="72" fill="url(#winner)"/>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="859" y="197" text-anchor="middle" font-size="33" font-weight="500" fill="#b8c7e0">0.2</text>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="859" y="458" text-anchor="middle" font-size="33" font-weight="500" fill="#c8b9d7">0.4</text>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="873" y="331" text-anchor="middle" font-size="52" font-weight="700" fill="#ffffff">0.8</text>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="1037" y="357" text-anchor="middle" font-size="19" font-weight="500" fill="#b3caff">执行一步</text>
+    <path d="M842 529 C736 526 725 350 771 278" fill="none" stroke="#7788b6" stroke-width="2" stroke-dasharray="5 8" opacity="0.55"/>
+    <polygon points="762,279 777,266 775,286" fill="#7788b6" opacity="0.55"/>
+  </g>
+  <rect x="76" y="589" width="1048" height="4" rx="2" fill="url(#accent)"/>
+</svg>
