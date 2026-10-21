@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <title>把 Agent Compact 做成可控系统：模型容量、触发线与摘要上限分别控制，连续历史通过条件发布形成摘要</title>
+  <rect width="1200" height="630" fill="#0d1828"/>
+  <circle cx="1130" cy="78" r="212" fill="#152c40"/>
+  <circle cx="1058" cy="568" r="247" fill="#142237"/>
+  <g>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="76" y="85" font-size="18" letter-spacing="4" fill="#73dbc5">AGENT ENGINEERING</text>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="72" y="171" font-size="51" font-weight="700" fill="#f3f4ee">让 Compact 可控</text>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="76" y="220" font-size="23" fill="#b5c4d5">预算 · 连续覆盖 · 条件发布</text>
+    <g transform="translate(76 279)">
+      <rect width="314" height="179" rx="18" fill="#192d40" stroke="#30495d"/>
+      <text font-family="Noto Sans CJK SC, sans-serif" x="25" y="48" font-size="18" fill="#a7bfce">模型安全容量</text>
+      <text font-family="Noto Sans CJK SC, sans-serif" x="25" y="115" font-size="52" font-weight="700" fill="#90baff">M</text>
+      <line x1="103" y1="99" x2="283" y2="99" stroke="#3c5269" stroke-width="5"/>
+      <line x1="103" y1="99" x2="265" y2="99" stroke="#90baff" stroke-width="5"/>
+      <circle cx="265" cy="99" r="10" fill="#90baff"/>
+      <text font-family="Noto Sans CJK SC, sans-serif" x="25" y="151" font-size="16" fill="#c6d5e2">由模型能力推导</text>
+    </g>
+    <g transform="translate(410 279)">
+      <rect width="314" height="179" rx="18" fill="#192d40" stroke="#30495d"/>
+      <text font-family="Noto Sans CJK SC, sans-serif" x="25" y="48" font-size="18" fill="#a7bfce">独立触发线</text>
+      <text font-family="Noto Sans CJK SC, sans-serif" x="25" y="115" font-size="52" font-weight="700" fill="#73dbc5">K</text>
+      <line x1="103" y1="99" x2="283" y2="99" stroke="#3c5269" stroke-width="5"/>
+      <line x1="103" y1="99" x2="170" y2="99" stroke="#73dbc5" stroke-width="5"/>
+      <circle cx="170" cy="99" r="10" fill="#73dbc5"/>
+      <text font-family="Noto Sans CJK SC, sans-serif" x="25" y="151" font-size="16" fill="#c6d5e2">何时值得进行摘要</text>
+    </g>
+    <g transform="translate(744 279)">
+      <rect width="380" height="179" rx="18" fill="#192d40" stroke="#30495d"/>
+      <text font-family="Noto Sans CJK SC, sans-serif" x="25" y="48" font-size="18" fill="#a7bfce">摘要正文上限</text>
+      <text font-family="Noto Sans CJK SC, sans-serif" x="25" y="115" font-size="52" font-weight="700" fill="#ffce7e">S</text>
+      <line x1="103" y1="99" x2="345" y2="99" stroke="#3c5269" stroke-width="5"/>
+      <line x1="103" y1="99" x2="147" y2="99" stroke="#ffce7e" stroke-width="5"/>
+      <circle cx="147" cy="99" r="10" fill="#ffce7e"/>
+      <text font-family="Noto Sans CJK SC, sans-serif" x="25" y="151" font-size="16" fill="#c6d5e2">控制反复携带的表示大小</text>
+    </g>
+    <line x1="76" y1="521" x2="1124" y2="521" stroke="#31475a"/>
+    <rect x="76" y="512" width="516" height="18" rx="9" fill="#73dbc5"/>
+    <circle cx="592" cy="521" r="10" fill="#d7fff3"/>
+    <circle cx="1060" cy="521" r="8" fill="#90baff"/>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="76" y="568" font-size="18" fill="#b5c4d5">已覆盖前缀</text>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="580" y="568" font-size="18" fill="#73dbc5">c</text>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="732" y="568" font-size="18" fill="#b5c4d5">未覆盖原文</text>
+    <text font-family="Noto Sans CJK SC, sans-serif" x="1054" y="568" font-size="18" fill="#90baff">h</text>
+  </g>
+</svg>
