@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="description" content="交互计算 Agent 的模型安全容量、独立摘要阈值、摘要上限与读取额度；纯浏览器模拟，不连接模型或服务。" />
+    <title>Context Lab · 上下文预算控制器</title>
+    <link rel="stylesheet" href="controller.css" />
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="https://sunionpeaks.pages.dev/zh/notes/agent">AGENT / CONTEXT LAB</a
+      ><span class="badge">浏览器模拟 · 手动配置</span>
+    </header>
+    <main>
+      <section class="intro">
+        <div>
+          <p class="eyebrow">CONTEXT ENGINEERING</p>
+          <h1>上下文额度，一眼看清。</h1>
+          <p>
+            调整左侧参数，看原文额度如何收紧、摘要如何生成。只模拟，不修改环境。
+          </p>
+        </div>
+        <div class="actions">
+          <button id="compare">保存为对照</button
+          ><button id="reset">恢复示例</button
+          ><button id="import-open">导入场景</button
+          ><input
+            type="file"
+            id="import"
+            accept="application/json"
+            hidden
+          /><button id="save">下载场景</button>
+        </div>
+      </section>
+      <div id="error" role="alert" hidden></div>
+      <div class="layout">
+        <aside>
+          <section class="panel">
+            <h2>摘要触发阈值</h2>
+            <div class="budget-entry">
+              <input
+                id="budget"
+                type="number"
+                min="1"
+                step="1"
+                value="32000"
+                aria-label="摘要触发阈值"
+              /><span>tokens</span>
+            </div>
+            <input
+              id="budget-slider"
+              aria-label="摘要触发阈值滑杆"
+              type="range"
+              min="1"
+              max="936345"
+              value="32000"
+            />
+            <div id="presets" class="presets"></div>
+            <p class="hint">
+              默认 32,000 tokens（32k）；1k=1,000 tokens。摘要默认 8,192
+              tokens，不写作 8k。 主输入容量 M 自动计算，无 H 配置。字节使用
+              KiB=1,024 bytes、MiB=1,048,576 bytes。
+            </p>
+          </section>
+          <section class="panel">
+            <h2>额度策略</h2>
+            <div id="strategy"></div>
+          </section>
+          <details class="panel">
+            <summary>模型容量与资源限制</summary>
+            <p class="hint" id="profile-note">
+              默认采用代码已登记的 Gemini 3.8 Flash / 3 Flash preview：输入
+              1,048,576、输出 65,536。代码另行保守预留生成额度；这是本地策略，
+              不代表 Google 将两者合为一个窗口。资料核验：2026-10-19。<a
+                href="https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash"
+                target="_blank"
+                rel="noopener"
+                >模型资料</a
+              >。手工改容量属于自定义理论场景。
+            </p>
+            <div id="profiles"></div>
+            <div id="resources"></div>
+          </details>
+          <details class="panel" open>
+            <summary>工作负载与体量假设</summary>
+            <p class="hint">
+              F、实际摘要长度等是可编辑的场景输入，不由 M 自动推出，也不写入
+              配置中心。F=20k 只是本页示例，运行时按每轮真实输入重新计量。
+            </p>
+            <div id="workloads"></div>
+          </details>
+          <details class="panel">
+            <summary>可选：usage、生成速度与部署假设</summary>
+            <p class="hint">
+              usage 仅在相同发送前缀下可复用。速度按包含思考的总生成
+              tokens/秒填写；缺少配对样本时不计算耗时。
+            </p>
+            <div id="performance"></div>
+          </details>
+        </aside>
+        <div class="results">
+          <section class="panel flow-panel">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">API → LOADER → ENGINE</p>
+                <h2>主请求：原文漏斗与摘要分支</h2>
+              </div>
+              <span class="badge">漏斗层面积 ∝ tokens</span>
+            </div>
+            <p class="model-reference">
+              Gemini 参考上限：<strong>输入 I=1,048,576</strong>，
+              <strong>总输出 O=65,536 tokens</strong>（含思考）。
+              <a
+                href="https://ai.google.dev/gemini-api/docs/models/gemini-3.8-flash"
+                target="_blank"
+                rel="noopener"
+                >3.8 Flash</a
+              >
+              /
+              <a
+                href="https://ai.google.dev/gemini-api/docs/models/gemini-3-flash-preview"
+                target="_blank"
+                rel="noopener"
+                >3 Flash preview 官方资料</a
+              >。 下方 M
+              是自动计算的本地安全输入容量；手工改模型容量只改变本页场景。
+            </p>
+            <div id="flow-view" aria-live="polite"></div>
+          </section>
+          <details class="panel analysis-details">
+            <summary>查看派生值、公式、容量曲线与性能明细</summary>
+            <div class="metric-grid" id="metrics" aria-live="polite"></div>
+            <section class="detail-section">
+              <div class="section-heading">
+                <h2>输入空间如何分配</h2>
+                <span id="input-state" class="badge"></span>
+              </div>
+              <div id="input-bar"></div>
+              <div class="legend">
+                <span class="dot mandatory">必需输入</span
+                ><span class="dot summary">摘要正文</span
+                ><span class="dot raw">未覆盖原文</span>
+              </div>
+              <p id="input-note" class="hint"></p>
+            </section>
+            <section class="detail-section">
+              <h2>一次摘要调用的边界</h2>
+              <div id="summary-bar"></div>
+              <div class="legend">
+                <span class="dot mandatory">指令与包装</span
+                ><span class="dot summary">旧摘要</span
+                ><span class="dot raw">可新增连续前缀</span>
+              </div>
+              <p id="summary-note" class="hint"></p>
+              <p class="callout">
+                摘要输入与主回复输入是两次调用。正文上限 S 与总生成额度 G
+                数值相同；G 包含思考，实际正文可能更短。输入估算加 G
+                仅示意规模，费用按实际 usage 计算。
+              </p>
+            </section>
+            <section class="detail-section">
+              <div class="section-heading">
+                <h2>调整摘要上限，模型如何限幅？</h2>
+                <span class="hint">当前策略 · 真实模型能力限幅</span>
+              </div>
+              <div id="curve"></div>
+              <div class="legend">
+                <span class="dot summary">正文 S = 总生成 G</span
+                ><span class="dot raw">摘要输入容量 C · 独立纵轴</span>
+              </div>
+              <p id="limits" class="hint"></p>
+            </section>
+            <section class="detail-section">
+              <h2>直接从 token 估算体量</h2>
+              <div id="volume" class="volume-grid"></div>
+              <p class="hint">
+                bytes/token 来自同批资料的配对统计或手动假设。BSON、正文
+                UTF-8、模型 JSON 分别计量。预测不替代实际字节/token
+                准入；动态字节预取未启用。
+              </p>
+            </section>
+            <section class="detail-section">
+              <h2>触发、耗时与部署边界</h2>
+              <div id="performance-output" class="volume-grid"></div>
+              <p class="hint">
+                usage 假设不绕过调用前硬保护。生成预测假设用满 G；正文 bytes
+                仍受本地 S 对应上限约束，两种 token
+                口径不能直接相减。并发是进程数乘每进程限制，不是全局限流。
+              </p>
+            </section>
+          </details>
+          <details class="panel">
+            <summary>与对照场景比较</summary>
+            <div id="comparison" class="hint">
+              点击“保存为对照”，比较独立触发阈值和派生额度（tokens）。
+            </div>
+          </details>
+          <section class="panel">
+            <div class="section-heading">
+              <h2>配置覆盖</h2>
+              <button id="export">生成 配置中心 覆盖</button>
+            </div>
+            <p class="hint">
+              只生成运行端支持的覆盖，需手动发布。本页不连接
+              配置中心、数据库或模型。
+            </p>
+            <textarea
+              id="config-output"
+              aria-label="配置中心 配置覆盖"
+              readonly
+              placeholder="在这里查看可复制的配置 JSON"
+            ></textarea>
+            <p id="export-state" class="hint" aria-live="polite"></p>
+          </section>
+        </div>
+      </div>
+      <footer>
+        规则来源：<a href="https://sunionpeaks.pages.dev/zh/notes/agent">配套工程笔记</a> ·
+        
+        容量场景来自代码登记
+        profile，不代表在线探测。摘要有损，数量均值不决定覆盖边界。
+      </footer>
+    </main>
+    <script type="module" src="controller.mjs"></script>
+  </body>
+</html>

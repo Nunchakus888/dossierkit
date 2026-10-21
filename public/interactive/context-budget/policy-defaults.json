@@ -1,0 +1,17 @@
+{
+  "input_safety_margin_ratio": 0.1,
+  "message_page_size": 200,
+  "bson_batch_size": 16,
+  "read_max_bytes": 2097152,
+  "read_timeout_seconds": 3,
+  "query_timeout_seconds": 1,
+  "model_timeout_seconds": 30,
+  "execution_timeout_seconds": 90,
+  "lease_seconds": 120,
+  "compaction_concurrency": 2,
+  "read_history_max_calls": 4,
+  "read_history_max_tokens": 8192,
+  "read_history_fragment_codepoints": 8192,
+  "read_history_dialog_page_size": 50,
+  "read_history_message_page_size": 200
+}
