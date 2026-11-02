@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+<title>Pi Codemode：让 Agent 用代码编排工具</title>
+<desc>模型通过受限的代码运行环境组合多个工具，只接收精选结果。</desc>
+<rect width="1200" height="630" fill="#F3F2EC"/>
+<path d="M66 76H1134" stroke="#D6D8D1" stroke-width="2"/>
+<text x="70" y="56" fill="#59675D" font-size="16" font-weight="600" letter-spacing="3" font-family="Noto Sans CJK SC, sans-serif">AGENT ENGINEERING</text>
+<text x="70" y="212" fill="#152C2A" font-size="78" font-weight="700" letter-spacing="-2" font-family="Noto Sans CJK SC, sans-serif">Pi Codemode</text>
+<text x="75" y="287" fill="#29433F" font-size="32" font-weight="500" font-family="Noto Sans CJK SC, sans-serif">Compose tool calls in code</text>
+<rect x="75" y="328" width="53" height="5" rx="2" fill="#208477"/>
+<text x="75" y="386" fill="#5B6C62" font-size="21" font-family="Noto Sans CJK SC, sans-serif">Discover tools. Return what matters.</text>
+<text x="75" y="555" fill="#7A867D" font-size="15" letter-spacing="2" font-family="Noto Sans CJK SC, sans-serif">DISCOVER / COMPOSE / SELECT</text>
+<g transform="translate(735 141)">
+<rect x="0" y="72" width="240" height="248" rx="28" fill="#152C2A"/>
+<rect x="20" y="93" width="200" height="206" rx="17" fill="#1B3834"/>
+<text x="120" y="188" text-anchor="middle" fill="#E1EEE5" font-size="61" font-weight="600" font-family="Noto Sans CJK SC, sans-serif">{ }</text>
+<text x="120" y="239" text-anchor="middle" fill="#89CBBB" font-size="23" font-family="Noto Sans CJK SC, sans-serif">await · filter</text>
+<path d="M120 72V34M46 72V15M194 72V15" fill="none" stroke="#8CACA0" stroke-width="3"/>
+<rect x="18" y="-20" width="56" height="36" rx="9" fill="#CAD8CF"/>
+<rect x="92" y="-2" width="56" height="36" rx="9" fill="#CAD8CF"/>
+<rect x="166" y="-20" width="56" height="36" rx="9" fill="#CAD8CF"/>
+<path d="M240 140H279M240 195H299M240 250H279" fill="none" stroke="#8CACA0" stroke-width="3"/>
+<rect x="278" y="120" width="52" height="40" rx="10" fill="#D4DCD2"/>
+<rect x="298" y="175" width="52" height="40" rx="10" fill="#D4DCD2"/>
+<rect x="278" y="230" width="52" height="40" rx="10" fill="#D4DCD2"/>
+<path d="M120 320V364" fill="none" stroke="#208477" stroke-width="5"/>
+<path d="M109 353L120 366L131 353" fill="none" stroke="#208477" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="58" y="387" width="124" height="49" rx="24" fill="#DDE9DF"/>
+<circle cx="90" cy="411" r="6" fill="#208477"/>
+<circle cx="120" cy="411" r="6" fill="#208477"/>
+<circle cx="150" cy="411" r="6" fill="#208477"/>
+</g>
+</svg>
