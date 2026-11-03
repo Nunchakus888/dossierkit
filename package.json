@@ -7,8 +7,8 @@
   "scripts": {
     "generate:mcp-skill": "tsx scripts/generate-mcp-skill.ts",
     "dev": "pnpm generate:mcp-skill && tsx scripts/generate-note-covers.ts && astro dev",
-    "build": "pnpm generate:mcp-skill && tsx scripts/generate-note-covers.ts && astro build && node scripts/views/generate-manifest.mjs",
-    "build:mcp": "pnpm generate:mcp-skill && tsx scripts/build-mcp-static.ts",
+    "build": "pnpm generate:mcp-skill && tsx scripts/generate-note-covers.ts && astro build && node scripts/views/generate-manifest.mjs && tsx scripts/export-publication.ts",
+    "build:mcp": "pnpm generate:mcp-skill && tsx scripts/build-mcp-static.ts && tsx scripts/export-publication.ts",
     "postbuild": "pagefind --site dist --output-subdir pagefind",
     "preview": "astro preview",
     "validate": "tsx scripts/validate-profile.ts",
