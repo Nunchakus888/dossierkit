@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <title>Agent 时代的批判性思维：让证据检验判断</title>
+  <desc>多条自动生成的路径经过证据检验后，汇入一个保留开放缺口的判断圆环。</desc>
+  <rect x="0" y="0" width="1200" height="630" fill="#0b1424"/>
+  <circle cx="1090" cy="90" r="280" fill="#142840" opacity="0.65"/>
+  <circle cx="1190" cy="610" r="320" fill="#0d3136" opacity="0.48"/>
+  <g>
+    <text x="74" y="91" font-family="Noto Sans CJK SC, sans-serif" font-size="21" font-weight="600" letter-spacing="2" fill="#7edaca">AGENT · CRITICAL THINKING</text>
+    <rect x="74" y="127" width="62" height="5" rx="2" fill="#7edaca"/>
+    <text x="70" y="252" font-family="Noto Sans CJK SC, sans-serif" font-size="66" font-weight="700" fill="#f5f7fc">工作交给 Agent</text>
+    <text x="70" y="342" font-family="Noto Sans CJK SC, sans-serif" font-size="66" font-weight="700" fill="#f5f7fc">判断留给自己</text>
+    <text x="75" y="415" font-family="Noto Sans CJK SC, sans-serif" font-size="27" fill="#aebfd1">保留目标、证据与修正决定的能力</text>
+    <text x="75" y="557" font-family="Noto Sans CJK SC, sans-serif" font-size="20" fill="#7389a1">Addy Osmani 精读 · 原始研究核查</text>
+  </g>
+  <g fill="none" stroke="#47647e" stroke-width="3">
+    <path d="M775 176 L850 176 L911 260"/>
+    <path d="M767 310 L881 310"/>
+    <path d="M775 446 L850 446 L909 363"/>
+  </g>
+  <g fill="#15263b" stroke="#5b7993" stroke-width="2">
+    <rect x="730" y="147" width="58" height="62" rx="8"/>
+    <rect x="718" y="279" width="58" height="62" rx="8"/>
+    <rect x="730" y="415" width="58" height="62" rx="8"/>
+  </g>
+  <g stroke="#91a9bf" stroke-width="3" stroke-linecap="round">
+    <path d="M744 165 H773 M744 178 H765 M744 191 H770"/>
+    <path d="M732 297 H761 M732 310 H752 M732 323 H758"/>
+    <path d="M744 433 H773 M744 446 H765 M744 459 H770"/>
+  </g>
+  <circle cx="985" cy="311" r="99" fill="#102e39" stroke="#7edaca" stroke-width="3"/>
+  <circle cx="985" cy="311" r="78" fill="none" stroke="#7edaca" stroke-width="1" opacity="0.32"/>
+  <path d="M962 283 C962 259 1009 255 1011 283 C1013 300 986 302 986 323" fill="none" stroke="#f2cb7b" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="986" cy="342" r="5" fill="#f2cb7b"/>
+  <path d="M1045 390 L1075 421" fill="none" stroke="#7edaca" stroke-width="8" stroke-linecap="round"/>
+  <g>
+    <text x="985" y="466" font-family="Noto Sans CJK SC, sans-serif" text-anchor="middle" font-size="24" font-weight="600" fill="#b4e9df">什么证据会让我改判？</text>
+  </g>
+</svg>
