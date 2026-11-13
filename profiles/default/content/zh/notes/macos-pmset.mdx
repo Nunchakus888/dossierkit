@@ -2,12 +2,11 @@
 locale: "zh"
 translationStatus: "reviewed"
 lastReviewedAt: "2026-11-13"
-title: "Mac 合盖继续运行：pmset 全局睡眠开关与电池实测"
-summary: "在一台 Apple 芯片 MacBook Pro（型号标识 Mac16,1、macOS 26.2）上，sudo pmset -a
-  disablesleep 1 实现了电池供电时合盖继续运行。2026 年 11 月 13…"
+title: "Mac 合盖继续运行"
+summary: "看 SleepDisabled：1 = 已开启，0 = 已关闭。"
 featured: false
 date: "2026-11-13"
-updatedAt: "2026-11-13T11:53:49.286Z"
+updatedAt: "2026-11-13T12:00:20.102Z"
 kind: "engineering"
 topics:
   - "macOS"
@@ -21,71 +20,42 @@ tags:
   - "合盖运行"
   - "电池供电"
   - "睡眠管理"
-contentHash: "sha256:36a391dee3fec0cc03a20037a01ea8412fae3745056840f6b3e0a25a943a7e19"
+contentHash: "sha256:9656ce654206569a34cf448fcb26d328a72415fc0cc7a6ef2c50e095d8859ce6"
 ---
 
-在一台 Apple 芯片 MacBook Pro（型号标识 Mac16,1、macOS 26.2）上，`sudo pmset -a disablesleep 1` 实现了**电池供电时合盖继续运行**。2026 年 11 月 13 日的短时实测中，盖子关闭期间持续记录了 104 秒心跳，最大采样间隔为 3 秒。这个结果证明该组合下短时可用，不代表所有机型、系统版本或长时间运行都已验证。
+用 macOS 自带命令开启，**插电和电池供电都生效**。
 
-## 开启、确认和恢复
+## 1. 开启
 
-在终端执行，按提示输入管理员密码：
+打开终端，执行并输入管理员密码：
 
 ```bash
 sudo pmset -a disablesleep 1
 ```
 
-查看系统设置：
+开启后即可合盖继续运行。
+
+## 2. 查看状态
 
 ```bash
 pmset -g
 ```
 
-输出中应出现 `SleepDisabled 1`。还可以读取内核侧状态：
+看 `SleepDisabled`：**1 = 已开启，0 = 已关闭**。
 
-```bash
-ioreg -r -n IOPMrootDomain -d 1 | rg 'AppleClamshellState|SleepDisabled'
-```
-
-`AppleClamshellState = Yes` 表示盖子关闭，`SleepDisabled = Yes` 表示禁止系统睡眠。此命令的过滤步骤需要安装 ripgrep；未安装时可直接查看 `ioreg` 输出。
-
-**结束使用后，重新允许正常睡眠：**
+## 3. 恢复正常睡眠
 
 ```bash
 sudo pmset -a disablesleep 0
 ```
 
-再次运行 `pmset -g`，确认 `SleepDisabled 0`。开关会持续修改设置，关闭终端不会自动撤销。
+**关闭终端不会自动恢复。合盖运行时保持通风，装包前恢复睡眠。**
 
-## 电池模式为什么也生效
+<details>
+<summary>原理与实测（按需展开）</summary>
 
-Apple 的 [pmset 源码](https://github.com/apple-oss-distributions/PowerManagement/blob/main/pmset/pmset.m)将 `disablesleep` 写入系统全局设置 `kIOPMSleepDisabledKey`：非零值禁止睡眠，零值重新允许睡眠。源码也明确区分了电源类型设置与这种不绑定电源类型的全局设置。
+`disablesleep` 是禁止系统睡眠的全局开关，影响插电和电池状态。不能简单改成 `-c` 来实现“仅插电生效”。依据：[Apple pmset 源码](https://github.com/apple-oss-distributions/PowerManagement/blob/main/pmset/pmset.m)。
 
-因此，`disablesleep` 生效时会影响电池供电和插电状态。**不能仅把 `-a` 改为 `-c`，就把这个全局开关变成“只在插电时生效”。** 仅插电策略需要额外监听电源变化，并主动开启或恢复开关。
+2026-11-13，在 Apple 芯片 MacBook Pro（Mac16,1、macOS 26.2）上，电池供电合盖实测 104 秒：52 条心跳连续更新，最大间隔 3 秒，期间仍可执行新命令。恢复命令也已验证。其他机型、系统版本和长时间运行未验证。
 
-本机 `man pmset` 将 `sleep 0` 定义为关闭闲置睡眠计时器；本机 `man caffeinate` 将 `-i` 定义为防止闲置睡眠、`-s` 定义为仅在交流电供电时有效的睡眠请求。这些状态不能直接作为“电池合盖后仍持续运行”的证据，需要读取合盖状态并检查实际任务进度。
-
-## 这次实测验证了什么
-
-测试程序每约 2 秒写入时间戳、`AppleClamshellState` 和 `SleepDisabled`，以区分“合盖期间持续运行”和“开盖后恢复运行”。
-
-| 检查项 | 观测结果 |
-| --- | --- |
-| 测试环境 | Mac16,1，macOS 26.2（25C56） |
-| 供电方式 | 电池供电 |
-| 合盖采样区间 | 2026-11-13 19:45:47—19:47:31，UTC+8 |
-| 连续观测时长 | 104 秒 |
-| 合盖期间样本数 | 52 条 |
-| 最大采样间隔 | 3 秒 |
-| 合盖期间状态 | `AppleClamshellState = Yes`，`SleepDisabled = Yes` |
-| 额外观测 | 合盖期间仍可执行新命令 |
-| 恢复检查 | 19:47:48 恢复，确认 `SleepDisabled 0` |
-
-合盖首尾样本之间没有出现与整段合盖时长相当的心跳缺口，说明采样程序在合盖期间继续获得执行机会。测试结束后成功恢复原先允许睡眠的状态，也验证了撤销命令。
-
-这次验证范围是短时运行。整夜运行、耗电速度、重启后的状态以及系统升级后的兼容性，都没有在本次测试中验证。长任务应检查自身日志或进度，而不能只看睡眠开关的值。
-
-## 日常使用的边界
-
-这是持续生效的全局开关，手动执行开启命令不会附带定时恢复。需要限时使用时，应另外安排恢复机制，并在结束后检查实际状态。
-
-电池合盖运行仍会耗电。保持散热通畅，装包前执行恢复命令。再次验证时，应在盖子关闭期间记录心跳或实际任务进度；仅凭重新开盖后程序还在，无法证明它中间没有睡眠。
+</details>
