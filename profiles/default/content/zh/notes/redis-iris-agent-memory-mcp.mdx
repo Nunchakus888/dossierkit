@@ -1,0 +1,108 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-11-20"
+title: "Redis Iris 如何为 Agent 路由请求、检索记忆与调用工具"
+summary: "Redis Iris
+  把意图路由、记忆检索和工具发现放进同一套上下文服务。它能否省钱，取决于有多少请求可以直接命中已审核的答案、绕过一次模型调用，或减少进入模型的 Token。"
+featured: false
+date: "2026-11-20"
+updatedAt: "2026-11-20T10:14:18.023Z"
+kind: "engineering"
+topics:
+  - "Redis Iris"
+  - "Agent Memory"
+  - "意图路由"
+  - "MCP"
+tags:
+  - "Redis Iris"
+  - "Agent Memory"
+  - "意图路由"
+  - "MCP"
+contentHash: "sha256:944d0b333b5304d1bdad42cf1d33d6351fdccda098c1c29304f7b1efb114ec60"
+---
+
+Redis Iris 把意图路由、记忆检索和工具发现放进同一套上下文服务。它能否省钱，取决于有多少请求可以直接命中已审核的答案、绕过一次模型调用，或减少进入模型的 Token。
+
+本文讨论 Redis 于 2026 年 11 月 4 日发布的六项能力更新，资料截至 11 月 9 日。
+
+## 1. 位置与架构
+
+一次请求可以先由 Intent Router 识别意图。若 Playbooks 已有经审核的 FAQ，应用可直接返回答案。需要个性化信息时，应用读取 Memory。需要查询业务数据时，通过 Gateway 发现并调用工具。Lens 记录链路，Mesh 在需要时为跨进程交付保留可续传的事件。
+
+官方建议的处理路径是：**Route → Recall → Retrieve → Record**，不要求每次请求执行全部步骤。路由、查找 Playbooks 与 Memory 和受治理的工具获取可以发生在模型推理之前。模型回答后记录事件并异步提取长期事实。
+
+Iris 是 Context Engine，不是通用模型、完整 Agent SDK 或完整容错工作流调度引擎。
+
+## 2. 六项能力的原理与风险
+
+| 模块 | 机制 | 最有价值的场景 | 关键缺点 |
+|---|---|---|---|
+| Intent Router（GA） | 对 query 和意图例句生成 Embedding、向量检索和阈值判断。匹配时无需 LLM | 高频、边界清楚的 Agent/API 分流 | 复合意图及未知意图。阈值误判不能当授权 |
+| Agent Playbooks（GA） | FAQ 和 Skill Registry。按相似度发现、按需加载、版本发布、审核 | 重复咨询、稳定流程、团队共用 Skills | 过期流程、错误复用。需要审核发布 |
+| Agent Memory（GA） | Session 事件、自动摘要、异步长期事实抽取、向量检索、Namespace/Owner 隔离 | 长会话、跨会话偏好和知识 | Embedding/提取成本，事实污染、更新和遗忘复杂度 |
+| Context Gateway（GA） | 多个 Streamable HTTP MCP Server 聚合到单一 Gateway，工具 Search Mode、缓存/压缩 | 工具规模大、跨系统检索、MCP 集成 | 权限粗粒度、缓存跨调用方共享。Cloud 版部分能力禁用 |
+| Lens（Beta） | OTel Trace 汇总 Recall、Prompt、Tool 和 Model 轨迹，可选择仅捕获 ID/Hash | 调查错误上下文、成本归因 | Trace ≠ 质量评测。日志需防泄密 |
+| Agent Mesh（Beta） | Redis 中保存 A2A / SSE 事件和 Cursor，断线可补发 | 流式结果跨连接、跨副本 | 不是 Worker 容错。不保证重启计算或外部副作用 exactly-once |
+
+### Intent Router
+
+不把用户输入直接转到模型判定，而是配置几个意图的示例、Score 阈值和 Target。用向量检索返回匹配目标，由应用执行分发。**不要把 similarity score 当成可验证权限。** 对低置信度、多意图和高风险操作设置程序化回退或人工确认。
+
+### Agent Playbooks
+
+支持 FAQ（直接返回已审核答案，特定场景无需 LLM）和 Skills（先只提供概要，再按需取完整说明及附件）。与静态 `SKILL.md` 文件相比，新增集中发布、版本、权限及语义发现。仍然需要变更评审和真实效果评测。
+
+### Agent Memory
+
+Session 记录顺序事件，Long-term Memory 异步提取耐久事实，可在不同会话检索。正式实践应在记录里添加 `owner_id`、来源、版本、更新时间、有效期、置信度。防止同一用户不同任务的记忆冲突和跨租户数据混淆。
+
+### Context Gateway
+
+- 支持 Streamable HTTP MCP 上游与 Redis Context Surface。Search Mode 仅显示少数工具入口，按需发现具体工具。
+- **Gateway 级授权较粗：取得 Gateway 权限可调用该 Gateway 暴露的所有工具（包括写工具）。`readOnly` / `destructive` 注解不承担强制授权。** 按数据域、权限级别拆分 Gateway。
+- 工具 Result Cache 可能共享给可访问同一 Gateway 的不同调用者，必须明确权限边界、TTL 与敏感数据策略。不要缓存有副作用的调用。
+- **截至当前版本，Redis Cloud 的 Gateway 工具结果缓存和压缩功能被禁用**。不能直接依赖供应商的笼统降本宣传。
+- Stored Result 的压缩/分页聚合会遇到捕获上限，必须检查 completeness，不能将部分数据聚合误用为全量结果。
+
+### Lens
+
+区别于基础调用日志，Lens 比较「检索源返回」与「真正进入 Prompt」的数据。适合定位 Context 截断、检索错误、记忆错配。SDK 可与 OpenTelemetry 生态集成。敏感环境默认只采集 ID/Hash 和摘要统计，再按调查需要开启内容捕获。
+
+### Agent Mesh
+
+Agent Mesh 目前主要面向 Python（FastAPI SSE、A2A），要求 Python 3.11+、Redis Server 8.6.2+，A2A 还要求 JSON 支持。提供事件续传和跨服务副本消费，**不负责自动唤醒失效的 Agent 进程或恢复执行，也不保证外部动作 exactly-once**。离线 Webhook 处理依然需要独立的事件队列、ACK、幂等键、执行器和重试策略。
+
+## 3. 收益到底怎么测？
+
+`净收益 = LLM/API 开销减少 - Redis/Iris 费用 - Embedding 和记忆提取 - 平台运维`。
+
+具体检查：
+
+1. **Router**：准确率、未知意图误判率、路由耗时、替代 LLM 次数。
+2. **Playbooks**：经审核回答复用率、更新滞后率、避免的 LLM 调用次数。
+3. **Memory**：Recall 命中率、事实冲突率、降低的 Prompt Token、异步提取费用。
+4. **Gateway**：Tool Schema 总 Token、工具选择错误率、缓存命中率、缓存导致的过期结果率。
+5. **Lens/Mesh**：可定位故障比例、断线补发成功率、任务恢复与重复动作率。
+
+## 4. 商业版与自建成本
+
+Redis OSS / Redis Open Source 不等于完整 Iris 产品。官方自托管 Redis Iris Suite 需产品 License、Kubernetes、Redis 及 Identity Service，并通过 Helm Suite 安装，**不能把独立 Product Chart 当成受支持的部署方式**。官方集群基线建议 3 Worker 节点、合计 12 vCPU / 24 GiB 可分配内存。这是资源建议，不是小项目的最低可运行成本保证。
+
+小规模可先用：PostgreSQL/Redis + 轻量 Embedding Router + Git Skills Registry + 独立 MCP Gateway + OpenTelemetry + Redis Streams。中大型产品再采购/部署 Iris 以换取集成治理与运维一致性。
+
+## 5. 最小验证顺序
+
+1. 在当前 Agent 上观测工具定义 Token、Tool Result Token、LLM 路由调用次数。
+2. 先替换一个高频的 LLM Router，明确低置信度回退策略。
+3. 工具目录超过上下文可接受规模时试 Search Mode。检查发现准确率。
+4. 重复任务较多时引入 Playbook，长历史较多时引入 Memory。
+5. 多实例断线交付确有需求时，选 Redis Streams / Agent Mesh。不要过早引入六项服务。
+
+## 一手来源
+
+1. [Redis 工程详解（2026-11-04）](https://redis.io/blog/the-next-chapter-of-redis-iris-what-agents-need-to-work-in-the-real-world/)
+2. [Iris 数据流](https://redis.io/docs/latest/develop/ai/context-engine/concepts/)
+3. [Gateway 权限与缓存](https://redis.io/docs/latest/develop/ai/context-engine/context-gateway/concepts/)
+4. [Agent Mesh 限制](https://redis.io/docs/latest/develop/ai/context-engine/agent-mesh/)
+5. [自托管要求](https://redis.io/docs/latest/operate/iris/self-managed/)
