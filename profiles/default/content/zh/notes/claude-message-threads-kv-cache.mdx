@@ -1,0 +1,106 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-11-20"
+title: "Claude Message Threads 如何减少长会话的传输开销"
+summary: "Claude Message Threads 让客户端只上传新增消息，服务端沿用先前的会话历史。对长会话，这能缩短首个 Token
+  的等待时间。判断显存或账单会怎样变化，还要看模型读取了多少上下文，以及多少前缀命中了缓存…"
+featured: false
+date: "2026-11-20"
+updatedAt: "2026-11-20T10:14:12.108Z"
+kind: "engineering"
+topics:
+  - "Claude"
+  - "Message Threads"
+  - "KV Cache"
+  - "推理成本"
+tags:
+  - "Claude"
+  - "Message Threads"
+  - "KV Cache"
+  - "推理成本"
+contentHash: "sha256:1c2575386eaeed9ff4600ba38d318e78d4cfa08aa5ac32f89bd80cd8c84d6591"
+---
+
+Claude Message Threads 让客户端只上传新增消息，服务端沿用先前的会话历史。对长会话，这能缩短首个 Token 的等待时间。判断显存或账单会怎样变化，还要看模型读取了多少上下文，以及多少前缀命中了缓存。
+
+Anthropic 于 2026 年 11 月 2 日发布公开测试版，本文记录 11 月 9 日的接口行为。
+
+## 1. 研究问题
+
+LLM 是否真正从无状态变成有状态？用户是否因少传上下文而降低模型计算成本？服务端会不会因此增加显存负担？
+
+**拆开三个「状态」：**
+
+1. **Conversation State**：消息、system prompt、工具定义的历史。Threads 保存的是这类状态，服务端每轮重新组装完整输入。
+2. **Prompt Cache**：复用 Prompt 前缀产生的推理缓存。需独立配置 `cache_control`，Threads 不会自动启用。
+3. **KV Cache**：Attention 层的 K/V 中间结果。若跨轮驻留在 GPU 上，可减少 Prefill，但也占用显存。Threads 的公开文档没有承诺这种跨轮保留。
+
+Transformer 权重及参数并不因此持续更新。变化发生在 API/编排层，不是模型架构升级。
+
+## 2. 调用协议
+
+| 请求方式 | 首轮发送 | 续接成功时发送 | 服务端状态失效时 |
+|---|---|---|---|
+| 常规 Messages 请求 | 完整输入 | 历史消息和本轮新增内容 | 客户端照常发送完整历史 |
+| Message Threads | 完整输入，创建 Thread | 上轮消息 ID 和本轮新增内容 | 客户端从本地历史重新创建 Thread |
+
+原生 API：Create 发送完整历史并设置 `thread: {type: "create"}`。Continue 仅发送增量并设置 `thread: {type: "continue", previous_message_id: "..."}`。Beta header：`message-threads-2026-08-12`。
+
+固定字段包括 `model`、`tool_choice`、`thinking`、`mcp_servers` 和 `context_management` 等。MCP 授权令牌是例外，使用 MCP 时需在后续请求中重新提供令牌。修改固定字段须新建 Thread。`system`、`tools` 只能在 Create 轮传递。Thread 为 append-only，每个响应 ID 只能继续一次。工具返回消息可作为下一次增量。
+
+## 3. 性能收益与资源成本
+
+Anthropic 在部分 Claude Code 500K–1M Token 请求上报告 TTFT 中位数约下降 35%。这**不是** Token、GPU 工时或账单下降 35%。主要优化的是：减少重复 HTTP 上传、API 解析、校验及部分重复 Tokenization。模型仍读取完整历史，每次模型使用的输入 Token 不变。费率和 Rate Limits 不变。
+
+粗略分解：
+
+`TTFT = 上传 + 验证/Tokenize + 排队 + Prefill + 首 Token 生成`
+
+- Threads 优化前两项。
+- Prompt Cache 优化可复用的 Prefill。
+- Context Compaction / 检索压缩才有机会降低传入模型的 Token 总量。
+
+**显存成本质疑**：如果服务端为每条会话长期保留全量 KV，资源成本会高。理论 KV 存储公式：
+
+`KV_bytes ≈ 2 × layers × kv_heads × head_dim × tokens × bytes_per_element`
+
+假设 80 层、8 KV Heads、128 维、BF16：100K Token ≈ **32.8 GB**，1M Token ≈ **327.7 GB**（十进制），仅是特定假设下的理论原始大小，不代表 Claude 架构。实际存在量化、淘汰、卸载、共享前缀和分页等策略。
+
+相较之下，100K Token 的**纯文本会话**按照 4 字节/Token 粗估约 0.4 MB 原文，另有元数据、加密和索引开销。服务端保存文本当然增加内存和运维成本，但并不能推出会长期占用相同比例的 GPU 显存。
+
+**可核实结论**：Anthropic 明确表示服务端短时间、加密、仅内存持有会话，模型每轮仍读取完整上下文。目前没有公开证据支持「Threads 将整条 KV Cache 跨轮常驻 GPU」。
+
+## 4. 局限、异常和权衡
+
+- 5 分钟无请求过期。最后使用后最多 1 小时删除。Continue 失败通常返回 `thread_not_found`，需要完整 Replay。
+- 服务端保存属 best-effort。某轮成功返回不等于服务端一定保存。客户端须永远保存独立完整历史（SDK Helper 默认只保存在自身内存）。
+- API 不提供直接删除、读取或列出 Thread 的操作。官方将本功能列为不适用于零数据保留（ZDR）或 HIPAA 工作负载。
+- Thread 不能原地删除历史或执行 on-demand Compaction。要压缩需先生成摘要，再新建 Thread。
+- 与 Message Batches、Token Counting、部分 Context Editing 不兼容。
+- **当前与开启 Inference Hooks 的组织不兼容**：需要使用企业推理检查的团队应在接入前核对兼容性。
+- 不能并发从同一 response ID 继续多条独立分支。分支/模型切换需要建立新 Thread。
+- 需要额外维护状态、过期重放、重复消息及流式中断后的幂等恢复。
+
+## 5. 4 组 A/B 实验
+
+| 组别 | Threads | Prompt Cache | 作用 |
+|---|---|---|---|
+| A | 关 | 关 | 原始基线 |
+| B | 开 | 关 | 测量传输与解析收益 |
+| C | 关 | 开 | 测量 Prefix Cache 收益 |
+| D | 开 | 开 | 测量组合收益 |
+
+在相同模型、任务和上下文下记录 p50/p95 TTFT、端到端延迟、上行字节数、模型输入 Token、缓存读写 Token、计费成本、服务端 404 Replay 频率、客户端内存和错误率。再在 1、5、10 分钟空闲后重复测试，以检验失效恢复成本。
+
+## 6. 决策
+
+- **推荐**：活跃长会话 Coding Agent、Computer Use、图片/文件频繁重传、网络延迟明显且 API 支持的场景。
+- **慎用**：强制 ZDR / HIPAA、需要 Inference Hooks、频繁换模型/工具系统、每轮有复杂 Compaction 或并行分支的 Harness。
+- **架构原则**：客户端/自有数据库保存会话事实，Threads 仅作为可失效的传输优化。Prompt Cache 与 Context 管理独立设计。
+
+## 一手来源
+
+1. [Anthropic 发布文章（2026-11-02）](https://claude.com/resources/articles/message-threads)
+2. [Claude Platform 详细文档](https://platform.claude.com/docs/en/build-with-claude/message-threads)
+3. [Claude Prompt Caching](https://platform.claude.com/docs/en/build-with-claude/prompt-caching)
