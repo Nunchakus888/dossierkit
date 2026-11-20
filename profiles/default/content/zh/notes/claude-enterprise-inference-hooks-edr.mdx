@@ -1,0 +1,97 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-11-20"
+title: "Claude Enterprise 如何检查工具调用与追踪执行风险"
+summary: "一次工具调用会经过三个位置。Claude Enterprise 的 Inference Hooks
+  可以在执行前批准或拒绝请求，工具侧的身份与沙箱限定实际权限，部署在本地 Cowork 虚拟机里的 EDR 则记录执行活动…"
+featured: false
+date: "2026-11-20"
+updatedAt: "2026-11-20T10:14:23.255Z"
+kind: "engineering"
+topics:
+  - "Claude Enterprise"
+  - "Inference Hooks"
+  - "EDR"
+  - "工具授权"
+tags:
+  - "Claude Enterprise"
+  - "Inference Hooks"
+  - "EDR"
+  - "工具授权"
+contentHash: "sha256:c52d9e611bd97fd92209596a01c28de8f08de1ea6bd6c69b3a07dea91b988720"
+---
+
+一次工具调用会经过三个位置。Claude Enterprise 的 Inference Hooks 可以在执行前批准或拒绝请求，工具侧的身份与沙箱限定实际权限，部署在本地 Cowork 虚拟机里的 EDR 则记录执行活动。三处各能回答不同的安全问题。
+
+截至 2026 年 11 月 9 日，11 月 5 日宣布的 Inference Hooks 已正式可用，Security Center 和 Cowork EDR 处于测试阶段。
+
+## 1. 安全目标与架构
+
+| 检查位置 | 可见信息 | 能做出的决定 |
+|---|---|---|
+| 模型推理前 | 受管请求中的可见对话、已提取的附件文本 | 放行或拒绝本次请求 |
+| 模型提出工具调用后 | 开启工具检查时，本轮纳入检查的调用及参数 | 对同一帧中的调用统一放行或拒绝 |
+| 工具执行时 | 调用者身份、目标资源、所需权限 | 由工具服务和沙箱限制实际可执行的动作 |
+| 执行后 | 已采集的日志、虚拟机遥测和审计事件 | 回溯执行过程和外部影响 |
+
+**Prompt Hook** 在模型推理前。**Tool Call Hook** 在模型提出调用后、工具执行前。二者通过服务器端签名 HTTPS POST 向企业安全服务申请 Verdict。管理员需启用工具调用检查（Validate tool calls），才会收到第二类事件。
+
+Enterprise Inference Hooks 覆盖 Claude Enterprise 支持的产品，不等于覆盖普通 Claude Platform API 组织。也不适用于 Amazon Bedrock/Google Cloud 上的该 Enterprise Hook 产品功能。Claude Code 的本地 Hooks/Agent SDK 权限系统是另一套独立机制，不能混为一谈。
+
+## 2. 协议关键点
+
+- 两类事件：`prompt`、`tool_call`。后一类一个 Verdict 涵盖同一响应内的一批工具调用。**不可只批准部分工具**。
+- 仅支持 `{"action":"allow"}` 与 `{"action":"deny","deny_reason":"..."}`。暂不支持 `rewrite`、`redact` 或 `require_approval`。
+- 服务端应以 HTTP 200 返回 Verdict。非 200 是调用失败而不是拒绝。
+- 签名使用 Standard Webhooks HMAC-SHA256，参与签名的是原始 Body。验证 `webhook-id`、`webhook-timestamp`、`webhook-signature`，拒绝过期或错误签名并对重复 ID 去重。
+- 公开 HTTPS 443 端点、域名和合法证书。不支持 localhost 或 ngrok 等反向隧道地址。
+- Tool Call 帧通常只包含本轮模型刚提出的调用。风险策略需要同时理解用户、目标系统、方法和参数。不能只信 `tool_name` 或外部来源标签。
+- 客户端工具的实际执行结果通常要在下一个 Prompt Frame 才可见。这与「执行前检查」是两个阶段。
+
+## 3. 失败策略和可用性
+
+官方默认 Verdict Timeout 5,000 ms（可配置 1–10,000 ms），包括 TLS、网络和服务处理。模型轮次若经历 Prompt + Tool 两次检查，需要额外两次安全服务往返。默认初始故障策略为 **Fail Open**，也可选 **Fail Closed**。
+
+- **Fail Open**：错误、超时、Circuit Breaker 触发后可能不经扫描继续执行。保障可用性但无法保障始终检查。
+- **Fail Closed**：保护较强，但检查服务故障会让 Agent 任务中断。
+- **Shadow Mode**：仍发送请求与记录 Verdict，但不拒绝，适合灰度。Rollout 百分比小于 100% 会产生未被检查的请求。
+- **Circuit Breaker**：持续错误后平台暂停调用安全服务并采用失败策略。这可能导致安全缺口或可用性问题。
+
+需要观测：Hook p50/p95、失效率、Fail Open 放行次数、Denied Rate、策略误杀率、熔断时长、Webhook Body 大小、签名验证失败数。
+
+## 4. 威胁模型与漏洞边界
+
+1. **不完整视图**：Hook 看不到原始附件或图片像素、系统提示词、隐藏推理。某些内部工具和托管任务也不在全部检查范围。
+2. **执行能力仍是根本风险**：一个通过检查的 Shell 命令仍可能触发隐藏的网络、文件或供应链动作。需要操作系统沙箱、文件访问范围、出口网络策略和最小凭据。
+3. **外部扫描本身引入数据流**：完整历史、工具结果和文本提取内容被传给企业指定安全服务，需明确数据留存、隐私和审计授权。
+4. **大正文问题**：协议允许最大 64 MiB 的请求。应在代理与应用两层核对正文容量，并监控检查失败次数。
+5. **策略只能允许/拒绝整批工具**：无法直接对一个工具参数进行强制脱敏或逐条多结果审批。
+6. **API 生态边界**：Message Threads 与启用 Inference Hooks 的组织当前不兼容。两项功能无法直接叠加，选型时需要取舍。
+
+## 5. Cowork EDR 与 Security Center
+
+**EDR：**在本地 Cowork / unified Claude VM 中安装签名验证的企业 EDR Sensor，让原本看不到隔离 VM 内部的主机安全系统得到遥测。当前 Beta 只覆盖本地 VM，不覆盖云端 Cowork。只提供 Detection Mode，不负责阻断。支持适配厂商及 MDM/Windows 策略。传感器可能将 VM 内文件与执行内容直接发送到 EDR 厂商云端，这是独立的数据治理事项。
+
+**Security Center：**组织设置的一体化安全姿态检查、人工确认、变化跟踪、报告导出。它是对 Anthropic 推荐配置的比对，不是安全或法规合规认证，也不自动修复全部问题。
+
+**Centralized Management：**支持跨组织 SSO/SCIM/设置管理等。管理员远程登出不会自动撤销 API Keys、停止云端任务及定时任务，后者需要独立生命周期控制。
+
+## 6. 自建 Agent Security Runtime 的落地模型
+
+自建执行器可以分三步处理工具提案。首先，授权服务根据调用者、资源和参数判断是否允许，或转入审批。其次，执行器使用任务范围内的凭据，在沙箱内运行已获授权的动作。最后，审计记录将决策、执行结果和任务关联起来。
+
+`require_approval` 和 `sanitize` 是对自建 Runtime 的建议，不是 Enterprise Inference Hooks 原生协议。
+
+优先保障：工具 ACL 是代码强制执行。每个调用使用用户/任务作用域身份。不可把长期高权限令牌置入 Prompt。敏感动作有独立审批。Shell/Browser 沙箱受控。记录 `actor, tool, args_hash, policy_version, decision, task_id, timestamp`。错误时按动作敏感度决定 Fail Open/Closed。
+
+**验证顺序**：先 Shadow 模式采集误判与延迟 → 灰度保护只读与低风险工具 → 完成审计链与审批 → 对删除、支付、外发、生产写入实施强约束 → 故障注入验证超时、熔断与服务不可达。
+
+## 一手来源
+
+1. [Anthropic 发布公告（2026-11-05）](https://claude.com/resources/articles/claude-enterprise-security-updates)
+2. [Inference Hooks 概述](https://platform.claude.com/docs/en/manage-claude/inference-hooks)
+3. [Inference Hooks 详细协议](https://platform.claude.com/docs/en/manage-claude/inference-hooks-endpoint)
+4. [配置、失败策略](https://platform.claude.com/docs/en/manage-claude/inference-hooks-configuration)
+5. [Cowork EDR](https://support.claude.com/en/articles/17828685-run-your-endpoint-detection-and-response-edr-sensor-in-claude-cowork-on-claude-desktop)
+6. [Security Center](https://support.claude.com/en/articles/18246629-review-your-organization-s-security-posture-with-the-security-center)
