@@ -1,0 +1,90 @@
+---
+locale: "zh"
+translationStatus: "reviewed"
+lastReviewedAt: "2026-11-20"
+title: "Claude Code 的 Code Mode 与传统 Tool Calling，差在哪一步？"
+summary: "假设测试刚跑完，你问
+  Claude：“这次跑了多少条？哪些失败了？”报告里有一百条记录，答案只有四个编号。决定这次任务成本的，是谁来读那一百条记录，以及读完之后，谁已经知道下一\
+  步该做什么。"
+featured: false
+date: "2026-11-20"
+updatedAt: "2026-11-20T10:35:42.676Z"
+kind: "engineering"
+topics:
+  - "Claude Code"
+  - "Code Mode"
+  - "Tool Calling"
+  - "上下文工程"
+  - "工具权限"
+tags:
+  - "Claude Code"
+  - "Code Mode"
+  - "Tool Calling"
+  - "上下文工程"
+  - "工具权限"
+contentHash: "sha256:4d5435754b42d31c32360fe7f0801e2582a9db98e7ededdcc7f37dffcdaaf7c1"
+---
+
+假设测试刚跑完，你问 Claude：“这次跑了多少条？哪些失败了？”报告里有一百条记录，答案只有四个编号。决定这次任务成本的，是谁来读那一百条记录，以及读完之后，谁已经知道下一步该做什么。
+
+Claude Code 在 v2.1.323 加入了实验性的 Code Mode。开启后，Claude 可以写一小段 JavaScript，由当前终端会话执行。程序可以把第一次调用的结果保存在变量里，直接交给第二个工具，最后只把需要判断的部分返回给模型。这同时改变了两个东西：**中间结果的去向，以及下一步决策发生的位置。** [首发版本](https://github.com/anthropics/claude-code/releases/tag/v2.1.323) · [Claude Code 产品文档](https://code.claude.com/docs/en/code-mode)
+
+## 同一个任务，沿两条路径走一遍
+
+让任务再贴近工程现场一点。仓库里有一份最新运行清单，里面记录本轮报告的路径。任务需要先读清单，再读对应的报告。下面假设两边都从相同的两个只读操作开始。
+
+| 阶段 | 传统 Tool Calling，使用逐文件读取 | Claude Code 的 Code Mode |
+|---|---|---|
+| 找本轮报告 | 模型请求读取清单，宿主执行并返回内容 | Claude 生成脚本，脚本读取清单，把路径保存在变量里 |
+| 读取报告 | 模型看到路径，才能填入下一次读取的参数 | 脚本沿用刚得到的路径直接读取报告 |
+| 找出失败用例 | 读取工具交回明细，模型据此计算，或再请求一次计算 | 脚本按状态筛选，计数，只返回失败编号 |
+| 向用户解释 | 模型根据收到的结果作答 | 模型根据小结果作答，需要理解失败原因时再取相应日志 |
+
+底层都读了两份文件。传统路径多了一次“让模型看见路径，再决定去读它”的交接。路径在执行前未知，但“拿到路径就打开报告”这条规则已经确定，所以脚本可以提前表达它。反过来，如果接下来的调查方向取决于日志究竟是超时、断言失败还是测试数据过期，让模型看到有代表性的错误更有价值。
+
+传统调用也可以并行。模型能在一个响应里发出多个 `tool_use`，宿主用对应的 `tool_use_id` 一起交回结果。若两份文件的路径一开始就已知，它们可以同轮读取。若现成的 Bash 命令或业务 API 已经能定位、筛选并汇总报告，一次传统调用也能得到同样的小结果。比较这两种方式时，应分别数**底层操作数、必须等待新信息的模型轮数、返回模型的数据量**。[并行工具调用协议](https://platform.claude.com/docs/en/agents-and-tools/tool-use/parallel-tool-use)
+
+## 把返回边界缩到 40 字节
+
+以已经定位到 `reports/tests.json` 为例。假设报告是 JSON 数组，每条有数值 `id`、`status` 和日志 `log`。下面用 Claude Code 文档里的 shell 调用形式读取它。最后一个表达式给出模型需要的结果。
+
+```javascript
+const rows = JSON.parse(await $`cat reports/tests.json`.text());
+const failedIds = rows.filter(row => row.status === "failed").map(row => row.id);
+({ total: rows.length, failedIds });
+```
+
+我们用 Node 验证了这里的筛选和序列化。输入是 100 条合成记录，ID 从 1 到 100，25 的倍数标记为失败，每条日志都是 100 个 ASCII 字符 `x`。使用紧凑 JSON、UTF-8 编码、不含末尾换行，完整数组占 **13,693 字节**，下面的结果占 **40 字节**。
+
+```json
+{"total":100,"failedIds":[25,50,75,100]}
+```
+
+这两个数字描述的是**可选择交回的业务数据大小**。脚本仍须读取并解析完整文件。实验没有运行 Claude Code 会话，也没有测模型 Token、工具协议开销、缓存或账单。用 `jq` 在 shell 内做相同筛选，也能得到同样的 40 字节。如果问题改成“为什么这四条失败”，40 字节就不够了，合理的返回值应增加对应的错误类型和必要的日志片段。
+
+## 哪些成本会变，哪些要另外测
+
+对于已知规则的长链，脚本能省掉若干次模型往返，尤其适合“先取清单，按清单逐项读取，再按确定规则汇总”。对于一次精确查询，额外生成脚本、执行和处理异常都需要时间。对下一步高度依赖语义判断的任务，提前写一个覆盖所有情况的长脚本，往往会让错误恢复更复杂。
+
+| 指标 | 应该怎么数 | 容易误读的地方 |
+|---|---|---|
+| 模型往返 | 数模型实际参与判断的轮次，把最终回答也按相同口径计入 | 界面中的一行 Code 可以包含多次底层调用 |
+| 数据与费用 | 分别记录工具原始输出、返回模型的结果、输入和输出 Token、可用的缓存读写与实际费用 | 字节缩小的比例不能直接换算成账单；生成 JS 也消耗输出 Token |
+| 耗时 | 同时记录端到端耗时、模型等待、工具耗时及审批等待 | 串行 API 的网络等待仍然存在，传统调用本身也能并行 |
+| 质量与恢复 | 对照预期编号和日志证据，记录遗漏、误判与重试后重复动作 | 过度过滤能让结果变短，也可能让模型失去判断依据 |
+
+Anthropic 的 CLI 文档给出了机制和使用示例，没有给这项 CLI 功能发布一个通用节省比例。平台 API 的 **Programmatic Tool Calling** 使用托管代码执行环境，示例用 Python，应用仍执行它自己的客户端工具。另一个相邻方案是把 MCP 工具暴露给代码运行时，再按需发现和调用。三者共享“程序处理中间结果”这个想法，运行位置、权限和计量口径各有区别。[平台 API 的 Programmatic Tool Calling](https://platform.claude.com/docs/en/agents-and-tools/tool-use/programmatic-tool-calling) · [Anthropic 的 MCP 工程案例](https://www.anthropic.com/research/code-execution-with-mcp)
+
+## 谁在执行，谁还能叫停
+
+Code Mode 把多个动作编排到一起，工具权限仍逐项生效。内部调用沿用原工具名，接受相应的 `ask`、`deny` 规则和 `PreToolUse` 钩子。自动模式的分类器在运行前审整段代码，这时它还看不到运行中从清单读出的具体路径。需要按目标目录或业务资源限制访问时，约束应落在工具实际收到参数的位置。[官方权限与运行说明](https://code.claude.com/docs/en/code-mode#permissions-and-long-running-code)
+
+脚本也没有隐含的事务。如果批量编辑第十个文件时被叫停，前九个成功的修改仍然存在。涉及写入时，可以先生成待修改清单，核对范围后再执行独立、可重复的修改。Claude Code 的 shell sandbox 约束脚本启动的 shell 命令；JavaScript 自身及其文件、Web、MCP 调用处于该沙箱之外。需要隔离整个会话时，官方建议使用容器或虚拟机。[沙箱作用范围](https://code.claude.com/docs/en/code-mode#limit-shell-commands-with-the-sandbox)
+
+## 怎样在自己的仓库验证
+
+截至 2026 年 11 月 20 日，Code Mode 默认关闭。需要原生安装的 Claude Code v2.1.323 或以上、符合要求的 Anthropic 直连订阅或 Console 账户、受支持的模型，以及交互式终端。`-p`、Agent SDK、IDE 面板、云端会话和第三方网关均有适用限制。符合条件时，运行 `CLAUDE_CODE_EXPERIMENTAL_CODE_MODE=1 claude`，首次按提示确认，之后按 `Ctrl+O` 可展开 Code 行查看实际执行的 JavaScript。[启用条件与步骤](https://code.claude.com/docs/en/code-mode#requirements)
+
+做对照时，用同一仓库快照、同一模型、权限模式、测试报告和验收答案，分别新建开关两种会话。保留普通模式自然选择 Bash 或并行调用的自由度。先测仅需一次查询的任务，再测“清单 → 多份报告 → 汇总”，最后加入一份损坏的报告，记录两边是否明确报告缺失、完成了多少工作、是否需要回读。重复运行并区分冷、热缓存。**最值得采用 Code Mode 的证据，是答案同样正确、恢复代价可接受，而模型确实减少了只为搬运数据而发生的往返。**
+
+延伸阅读：[Pi 与 MCP 的工具编排](https://sunionpeaks.pages.dev/zh/notes/pi-codemode-mcp-agent-runtime)
